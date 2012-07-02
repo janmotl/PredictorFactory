@@ -394,16 +394,21 @@ public final class SQL {
 	// Subsample base table based on target class.
 	// Works only for classification! For sampling of regression problem neglect the target OR discretize the target. 
 	// Note: The selection is not guaranteed to be random.
-	// NOTE: ASSUMES THAT TARGET IS A STRING
-	public static void getSubSample(Setting setting) {
+	public static void getSubSample(Setting setting, SortedMap<String, Table> metaInput) {
 		
 		// Initialization
 		String sql = "";
-		List<String> targetValueList = getUniqueRecords(setting, setting.baseTable, setting.baseTarget, false);
+		List<String> targetValueList = metaInput.get(setting.targetTable).uniqueList.get(setting.targetColumn);
+		String quote = "";
+		
+		// Iff the target is nominal, quote the values with single quotes.
+		if (metaInput.get(setting.targetTable).nominalColumn.contains(setting.targetColumn)) {
+			quote = "'";
+		}
 		
 		// Create union 
 		for (int i = 0; i < targetValueList.size(); i++) {
-			sql = sql + "(" + Parser.limitResultSet(setting, "SELECT * FROM @outputSchema.base WHERE @baseTarget = '" + targetValueList.get(i) + "'\n", setting.sampleSize) + ")"; 
+			sql = sql + "(" + Parser.limitResultSet(setting, "SELECT * FROM @outputSchema.base WHERE @baseTarget = " + quote + targetValueList.get(i) + quote + "\n", setting.sampleSize) + ")"; 
 			sql = sql + " UNION ALL \n";	// Add "union all" between all the selects.
 		}
 		

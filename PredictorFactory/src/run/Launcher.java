@@ -49,7 +49,7 @@ public class Launcher{
 		setting = Network.openConnection(setting, connectionProperty, databaseProperty);
 		
 		// Collect information about tables, columns and relations in the database
-		SortedMap<String, Table> inputMeta = metaInformation.MetaInput.getMetaInput(setting);
+		SortedMap<String, Table> metaInput = metaInformation.MetaInput.getMetaInput(setting);
 		logger.info("#### Finished collecting metadata ####");
 		
 		// Remove all the tables from the previous run
@@ -61,10 +61,10 @@ public class Launcher{
 		
 		// Make base table
 		SQL.getBase(setting);
-		SQL.getSubSample(setting);
+		SQL.getSubSample(setting, metaInput);
 		
 		// Propagate base table
-		SortedMap<String, OutputTable> outputMeta = Propagation.propagateBase(setting, inputMeta);
+		SortedMap<String, OutputTable> outputMeta = Propagation.propagateBase(setting, metaInput);
 		MetaOutput.exportPropagationSQL(outputMeta);
 		logger.info("#### Finished base propagation into " + outputMeta.size() +  " tables ####");
 						

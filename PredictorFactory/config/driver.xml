@@ -203,7 +203,7 @@ Description of the fields:
 		randomCommand="random()"
 	/>
 	
-	<!-- Draft -->
+	<!-- Draft. Changed: {dateAddMonth, stdDevCommand, randomCommand} -->
 	<driver
 		name="SAS"
 		driverClass="com.sas.net.sharenet.ShareNetDriver"
@@ -218,8 +218,8 @@ Description of the fields:
 		supportsSchemas="true"
 		supportsCreateTableAs="true"
 		supportsWithData="false"
-		dateAddSyntax="(@baseDate + INTERVAL '@amount @datePart')"
-		dateAddMonth="(@baseDate + INTERVAL '@amount month')"
+		dateAddSyntax="(intnx('@datePart', @baseDate, @amount))"
+		dateAddMonth="intnx('month', @baseDate, @amount)"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="extract(epoch from @column)"
 		insertTimestampSyntax="@timestamp"
