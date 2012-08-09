@@ -88,8 +88,12 @@ public class Parser {
 		}
 		
 		// Set obs (SAS)
-		// Applies the condition on the first word immediately after "FROM"
-		// Warning: it's a limit on the input, not on the output
+		// Applies the condition on the first word immediately after "FROM".
+		// Literature: http://support.sas.com/documentation/cdl/en/sqlproc/62086/HTML/default/viewer.htm#a003278683.htm
+		// Warning: it's a limit on the input, not on the output.
+		// Warning: works only with tables. Fails on views.
+		// Also, SAS "eats" line breaks without replacing them with a space -> accidental concats may render the
+		// query invalid.
 		if ("obs".equals(setting.limitSyntax)) {
 			Pattern pattern = Pattern.compile("(?i)\\b(.*FROM\\s+\\S+)(.*)");
 			Matcher matcher = pattern.matcher(sql);
@@ -134,6 +138,25 @@ public class Parser {
 		}
 
 		return sql;
+	}
+
+	// Replace:
+	// 		CASE EXISTS (...)
+	// with:
+	//		SELECT COUNT(*)>1 FROM (...)
+	// This replacement is for SAS, because SAS does not support "generation" of data from subqueries.
+	public static String replaceExists(Setting setting, String sql) {
+		// Currently, this is only for SAS
+		if (!"SAS".equals(setting.databaseVendor)) return sql;
+
+		Pattern pattern = Pattern.compile("(?i)SELECT\\s*EXISTS([\\S\\s]*)");
+		Matcher matcher = pattern.matcher(sql);
+
+		if (matcher.find()) {
+			sql =  "SELECT COUNT(*)>0 FROM " + matcher.group(1);
+		}
+
+		return sql.trim();
 	}
 
 	public static String escape(Setting setting, String sql) {

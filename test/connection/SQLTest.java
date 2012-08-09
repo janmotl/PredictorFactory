@@ -171,13 +171,11 @@ public class SQLTest {
 
 		// No missing values
         boolean result = SQL.containsNull(setting, "trans", "date");
-        boolean expected = false;
-        Assert.assertEquals(expected, result);
+        Assert.assertFalse(result);
 
 		// Missing values
 		boolean result2 = SQL.containsNull(setting, "trans", "k_symbol");
-		boolean expected2 = true;
-		Assert.assertEquals(expected2, result2);
+		Assert.assertTrue(result2);
     }
 
 }

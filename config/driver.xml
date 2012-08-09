@@ -74,18 +74,18 @@ Description of the fields:
 
 	<!-- Identical to Microsoft SQL Server, but with an open version of the driver. -->
 	<driver
-			name="jTDS SQL Server"
-			driverClass="net.sourceforge.jtds.jdbc.Driver"
-			defaultPort="1433"
-			urlPrefix="jdbc:jtds:sqlserver://"
-			dbNameSeparator=";databaseName="
-			supportsCreateTableAs="false"
-			dateToNumber="cast(datediff(hour,'1990-1-1', @column) as decimal(38, 10))"
-			stdDevCommand="stdev"
-			charLengthCommand="len"
-			typeTimestamp="DATETIME"
-			limitSyntax="top"
-			randomCommand="RAND(CONVERT(varbinary, NEWID()))"
+		name="jTDS SQL Server"
+		driverClass="net.sourceforge.jtds.jdbc.Driver"
+		defaultPort="1433"
+		urlPrefix="jdbc:jtds:sqlserver://"
+		dbNameSeparator=";databaseName="
+		supportsCreateTableAs="false"
+		dateToNumber="cast(datediff(hour,'1990-1-1', @column) as decimal(38, 10))"
+		stdDevCommand="stdev"
+		charLengthCommand="len"
+		typeTimestamp="DATETIME"
+		limitSyntax="top"
+		randomCommand="RAND(CONVERT(varbinary, NEWID()))"
 	/>
 	
 	<driver
@@ -174,27 +174,29 @@ Description of the fields:
 
 	<!-- The same thing as PostgreSQL, but with a driver that promises JDBC4.1 functionality like IS_GENERATEDCOLUMN. -->
 	<driver
-			name="PostgreSQL_pgjdbc-ng"
-			driverClass="com.impossibl.postgres.jdbc.PGDriver"
-			defaultPort="5432"
-			urlPrefix="jdbc:pgsql://"
-			dbNameSeparator="/"
-			corrSyntax="corr(@column1, @column2)"
-			dateAddSyntax="(@baseDate + INTERVAL '@amount @datePart')"
-			dateAddMonth="(@baseDate + INTERVAL '@amount month')"
-			dateDiffSyntax="(@dateTo - @dateFrom)"
-			dateToNumber="extract(epoch from @column)"
-			charLengthCommand="char_length"
-			randomCommand="random()"
+		name="PostgreSQL_pgjdbc-ng"
+		driverClass="com.impossibl.postgres.jdbc.PGDriver"
+		defaultPort="5432"
+		urlPrefix="jdbc:pgsql://"
+		dbNameSeparator="/"
+		corrSyntax="corr(@column1, @column2)"
+		dateAddSyntax="(@baseDate + INTERVAL '@amount @datePart')"
+		dateAddMonth="(@baseDate + INTERVAL '@amount month')"
+		dateDiffSyntax="(@dateTo - @dateFrom)"
+		dateToNumber="extract(epoch from @column)"
+		charLengthCommand="char_length"
+		randomCommand="random()"
 	/>
 	
 	<!-- Draft. Changed: {dateAddMonth, stdDevCommand, randomCommand, charLengthCommand, dateDiff} -->
 	<!-- quoteEntityClose="'n" -->
+	<!-- appname can be up to 8 characters long -->
 	<driver
 		name="SAS"
 		driverClass="com.sas.net.sharenet.ShareNetDriver"
 		defaultPort="8561"
 		urlPrefix="jdbc:sharenet://"
+		urlSuffix="?appname=PF"
 		dbNameSeparator=""
 		quoteEntityOpen=""
 		quoteEntityClose=""
@@ -211,7 +213,7 @@ Description of the fields:
 		limitSyntax="obs"
 		indexNameSyntax="column"
 		randomCommand="ranuni(2001)"
-		testQuery="SELECT 1"
+		testQuery="SELECT 1 FROM sashelp.buy WHERE 1=0"
 	/>
 	
 	<!-- ADD_MONTHS intelligently identifies the Leap year and returns the correct date -->

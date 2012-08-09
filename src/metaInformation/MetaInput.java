@@ -75,7 +75,7 @@ public class MetaInput {
 
 		// QC that targetTable exists and we can use it
 		if (!tableMap.containsKey(setting.targetTable)) {
-			logger.warn("The target table is not between the permitted tables. Check your blacklist/whitelist.");
+			logger.warn("The target table is not among permitted tables. Check your blacklist/whitelist.");
 		}
 
 

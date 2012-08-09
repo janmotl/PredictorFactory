@@ -44,7 +44,7 @@ public class Meta {
 					String schemaName = rs.getString("TABLE_SCHEM");
 					
 					if ("SAS".equals(setting.databaseVendor)) {
-						schemaName = schemaName.replace(" ", "");	// Remove space padding
+						schemaName = schemaName.trim();	// Remove space padding
 					}
 					
 					schemaSet.add(schemaName);
@@ -99,7 +99,7 @@ public class Meta {
 				table.name = rs.getString("TABLE_NAME");
 				
 				if ("SAS".equals(setting.databaseVendor)) {
-					table.name = table.name.replace(" ", "");	// Remove space padding
+					table.name = table.name.trim();	// Remove tail space padding
 				}
 				
 				tableMap.put(table.name, table);
@@ -143,7 +143,7 @@ public class Meta {
 
 				// SAS stores entity names in chars instead of in varchars
 				if ("SAS".equals(setting.databaseVendor)) {
-					column.name = column.name.replace(" ", "");	// Remove space padding
+					column.name = column.name.trim();	// Remove space padding
 				}
 				
 				// Oracle decided that NVARCHAR2 should be classified as "other" type (1111)

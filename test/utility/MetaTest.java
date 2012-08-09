@@ -47,7 +47,7 @@ public class MetaTest {
 	
 	@Test
 	public void testCollectTables_SAS() {
-		Setting setting = new Setting("SAS", "SAS");		
+		Setting setting = new Setting("SAS", "SAS");
 		Network.openConnection(setting);
 		Set<String> tableList = Meta.collectTables(setting, setting.database, setting.inputSchema).keySet();
 		Network.closeConnection(setting);

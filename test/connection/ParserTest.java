@@ -5,6 +5,8 @@ import org.junit.Test;
 
 import run.Setting;
 
+
+
 public class ParserTest {
 
 
@@ -160,5 +162,18 @@ public class ParserTest {
 	}
 
 
+	@Test
+	public void replaceExists() {
+		// Setting
+		Setting setting = new Setting();
+		setting.databaseVendor = "SAS";
+		String sql = "SELECT EXISTS(...)";
+
+		// Test
+		String actual = Parser.replaceExists(setting, sql);
+		String expected = "SELECT COUNT(*)>0 FROM (...)";
+		System.out.println(actual);
+		Assert.assertEquals(expected, actual);
+	}
 
 }

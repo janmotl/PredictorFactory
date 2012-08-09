@@ -29,7 +29,7 @@ public final class SQL {
 	private static final Logger logger = Logger.getLogger(SQL.class.getName());
 
 	// Subroutine 1: Add "Create table as" sequence into the pattern. Moved from private -> protected for unit testing.
-	private static String addCreateTableAs(Setting setting, String sql) {
+	protected static String addCreateTableAs(Setting setting, String sql) {
 
 		// MSSQL syntax?
 		if (!setting.supportsCreateTableAs) {
@@ -309,27 +309,40 @@ public final class SQL {
 		
 		// Select tables for dropping
 		for (String table : tableMap.keySet()) {
-			if (table.startsWith(setting.mainTable)) dropMap.put(1 + table, table);			// Mainsample and it's temporary tables
+			if (table.startsWith(setting.mainTable)) dropMap.put(1 + table, table);			// MainSample and it's temporary tables
 			if (table.startsWith(setting.predictorPrefix)) dropMap.put(2 + table, table);	// Predictors
 			if (table.startsWith(setting.propagatedPrefix)) dropMap.put(3 + table, table);	// Propagated tables
 			if (table.equals(setting.baseSampled)) dropMap.put(4 + table, table);			// Sampled base table
-			if (table.equals(setting.journalPredictor)) dropMap.put(5 + table, table);		// Journal table
-			if (table.equals(setting.journalPattern)) dropMap.put(6 + table, table);		// Journal patterns
-			if (table.equals(setting.journalTable)) dropMap.put(7 + table, table);			// Journal propagated table
+			if (table.equals(setting.baseTable)) dropMap.put(5 + table, table);				// Base table
+			if (table.equals(setting.journalPredictor)) dropMap.put(6 + table, table);		// Journal table
+			if (table.equals(setting.journalPattern)) dropMap.put(7 + table, table);		// Journal patterns
+			if (table.equals(setting.journalTable)) dropMap.put(8 + table, table);			// Journal propagated table
 		}
 
 		// Drop the tables
 		for (String table : dropMap.values()) {
 			dropTable(setting, table);
 		}
-
-		// Drop the view
-		dropView(setting, setting.baseTable);				// Base table
 	}
 	
-	// Create index on {baseId, baseDate}.
+	// Create unique index on {baseId, baseDate}.
 	// Returns true if the update was successful.
+	//
+	// Design note: There are troubles with (obligatory - they can not be ommited) index names:
+	//	1) The created index name can be already taken (e.g.: a user may have backed up the table from a previous run).
+	//	2) The created index name can be too long. We could have truncated the index names, but then we could end up with duplicates.
+	//  3) Naming conventions differ database from database. E.g. in SAS:
+	// 		For a simple index, the index name must be the same as the column name.
+	//		Literature: http://support.sas.com/documentation/cdl/en/proc/61895/HTML/default/viewer.htm#a002473673.htm
+	//	   But PostgreSQL requires a unique index name per schema -> collisions could then happen.
 	public static boolean addIndex(Setting setting, String outputTable) {
+
+		// With SAS opt for a primary key to avoid the need to comply with their naming convention
+		if ("SAS".equals(setting.databaseVendor)) {
+			return setPrimaryKey(setting, outputTable);
+		}
+
+		// Otherwise just set the index
 		String columns = "(@baseId)";
 		if (setting.targetDate != null) {
 			columns = "(@baseId, @baseDate)";
@@ -344,7 +357,7 @@ public final class SQL {
 			name = "ix" + outputTable.substring(setting.mainTable.length(), outputTable.length());
 		}
 
-		String sql = "CREATE INDEX " + name + " ON @outputTable " + columns;
+		String sql = "CREATE UNIQUE INDEX " + name + " ON @outputTable " + columns;
 
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, outputTable);
@@ -355,17 +368,29 @@ public final class SQL {
 	}
 	
 	// Set primary key for a table in the output schema.
+	// Design note: On Azure it is necessary to first set the column as not null. Hence, we first set not-null constraint.
+	// Design note: There are generally just two ways how to create a table with a primary key constraint:
+	//	1) create table with primary key first, and use select into later
+	//	2) create table as first, and use add primary key later
+	// Of the two options, creating the primary key (and its associated index) after data is loaded will probably be faster.
+	// Alternatives in MySQL, Snowflake,... include CREATE TABLE LIKE. But that does not permit modification
+	// of the table content.
 	public static boolean setPrimaryKey(Setting setting, String outputTable) {
 		String columns = "(@baseId)";
 		if (setting.targetDate != null) {
 			columns = "(@baseId, @baseDate)";
 		}
 
-		String sql = "ALTER TABLE @outputTable ADD PRIMARY KEY " + columns;
-
+		// Unique constraint first
+		String sql = "ALTER TABLE @outputTable ADD UNIQUE " + columns;
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, outputTable);
+		Network.executeUpdate(setting.dataSource, sql);
 
+		// Primary key at the end
+		sql = "ALTER TABLE @outputTable ADD PRIMARY KEY " + columns;
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, outputTable);
 		boolean isOK = Network.executeUpdate(setting.dataSource, sql);
 
 		return isOK;
@@ -444,11 +469,12 @@ public final class SQL {
 
 	// Returns true if the column contains null.
 	// NOTE: May not work with Oracle. Necessary to test.
+	// NOTE: Should be simplified to: SELECT exists(...)
 	public static boolean containsNull(Setting setting, String table, String column) {
 
-		// Sometimes databases return t/f sometimes 1/0...
-		String sql = "SELECT case when exists(SELECT 1 FROM @inputTable WHERE @column is null) then 1 else 0 end";
+		String sql = "SELECT exists(SELECT 1 FROM @inputTable WHERE @column is null)";
 
+		sql = Parser.replaceExists(setting, sql);
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, table);
 
@@ -457,22 +483,21 @@ public final class SQL {
 		fieldMap.put("@inputTable", table);
 		sql = escapeEntityMap(setting, sql, fieldMap);
 
-		List<String> resultList = Network.executeQuery(setting.dataSource, sql);
-		return resultList.get(0).equals("1");
+		return Network.isTrue(setting.dataSource, sql);
 	}
 
 	// Returns true if the date column contains a date from the future.
 	// NOTE: May fail on a timestamp or different database dialect.
 	public static boolean containsFutureDate(Setting setting, String table, String column) {
 
-		// Sometimes databases return t/f sometimes 1/0...
 		// The good thing on "current_date" is that it is a standard. The bad thing is that it does not work in MSSQL.
 		// Hence we use ODBC standard of "{fn NOW()}", which should be automatically replaced in the JDBC driver to the
 		// database specific command. The ODBC command works in PostgreSQL.
 		// Plus the comparison works with: date, timestamp and datetime.
 		// Comparison with time fails.
-		String sql = "SELECT case when exists(SELECT 1 FROM @inputTable WHERE {fn NOW()} < @column) then 1 else 0 end";
+		String sql = "SELECT exists(SELECT 1 FROM @inputTable WHERE {fn NOW()} < @column)";
 
+		sql = Parser.replaceExists(setting, sql);
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, table);
 
@@ -483,8 +508,7 @@ public final class SQL {
 
 		sql = ANTLR.parseSQL(setting, sql);
 
-		List<String> resultList = Network.executeQuery(setting.dataSource, sql);
-		return (resultList.isEmpty() || resultList.get(0).equals("1"));  // If the comparison fails, return 1
+		return Network.isTrue(setting.dataSource, sql);
 	}
 
 	// Get count of tuples fulfilling the time constraint.
@@ -564,31 +588,31 @@ public final class SQL {
 	public static boolean isTargetTupleUnique(Setting setting, String table) {
 		// We could have used possibly faster: "ALTER TABLE @outputTable ADD UNIQUE (@baseId, @baseDate)".
 		// But it would not work in Netezza as Netezza doesn't support constraint checking and referential integrity.
-		String sql = "SELECT CASE WHEN EXISTS(" +
+		String sql = "SELECT EXISTS(" +
 						"SELECT @targetId " +
 						"FROM @targetTable " +
 						"GROUP BY @targetId" + (setting.targetDate==null ? " " : ", @targetDate ") +
 						"HAVING COUNT(*)>1" +
-				      ") THEN 0 ELSE 1 END";
+				      ")";
 
+		sql = Parser.replaceExists(setting, sql);
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, table);
 
-		List<String> resultList = Network.executeQuery(setting.dataSource, sql);
-		return resultList.get(0).equals("1");
+		return !Network.isTrue(setting.dataSource, sql); // Return negation
 	}
 
 	// Returns 1 if the baseId in the table in the outputSchema is unique.
 	// MUST BE TESTED ON ORACLE
 	public static boolean isTargetIdUnique(Setting setting, String table) {
-		String sql = "SELECT CASE WHEN EXISTS(" +
-					 "SELECT @baseId FROM @outputTable GROUP BY @baseId HAVING COUNT(*)>1) THEN 0 ELSE 1 END";
+		String sql = "SELECT EXISTS(" +
+					 "SELECT @baseId FROM @outputTable GROUP BY @baseId HAVING COUNT(*)>1)";
 
+		sql = Parser.replaceExists(setting, sql);
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, table);
 
-		List<String> resultList = Network.executeQuery(setting.dataSource, sql);
-		return resultList.get(0).equals("1");
+		return !Network.isTrue(setting.dataSource, sql); // Return negation
 	}
 
 
@@ -632,6 +656,14 @@ public final class SQL {
 				"GROUP BY @columnName " +
 				"ORDER BY COUNT(*) DESC";
 
+		// A query without an aggregate function in order by clause because of following limitation of SAS:
+		//	Summary functions are restricted to the SELECT and HAVING clauses only...
+		sql = "SELECT @columnName, count(*) " +
+				"FROM " + table + " " +
+				"WHERE @columnName is not null " +
+				"GROUP BY @columnName " +
+				"ORDER BY 2 DESC";
+
 		sql = Parser.limitResultSet(setting, sql, setting.valueCount);
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, tableName);
@@ -646,24 +678,18 @@ public final class SQL {
 	// Could the two columns in the table describe a symmetric relation (like in borderLength(c1, c2))?
 	// DEVELOPMENTAL AND LIKELY USELESS...
 	public static boolean isSymmetric(Setting setting, HashMap<String, String> map) {
-		String sql = "SELECT CASE "
-					+ "         WHEN EXISTS (SELECT @lagColumn, "
-					+ "                             @column "
-					+ "                      FROM @inputTable"
-					+ "                      EXCEPT "
-					+ "                      SELECT @column, "
-					+ "                             @lagColumn "
-					+ "                      FROM @inputTable) THEN 'no' "
-					+ "         ELSE 'yes' "
-					+ "         END AS symmetric";
-		
+		String sql = "SELECT EXISTS("
+						+ "SELECT @lagColumn, @column FROM @inputTable"
+						+ "EXCEPT "
+						+ "SELECT @column, @lagColumn FROM @inputTable"
+					+ ")";
+
+		sql = Parser.replaceExists(setting, sql);
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, "dummy");
 		sql = escapeEntityMap(setting, sql, map);
 
-		List<String> result = Network.executeQuery(setting.dataSource, sql);
-		
-		return "yes".equals(result.get(0));
+		return Network.isTrue(setting.dataSource, sql);
 	}
 	
 	// Get R2. For discrete variables, following method is used:
@@ -728,6 +754,8 @@ public final class SQL {
 	}
 	
  	// Get Chi2.
+	// Note: For maintenance purpose, the query should be decomposed into subqueries
+	// that are put together with String concatenation (necessary for databases without "with" clause support).
 	// SHOULD BE EXTENDED TO SUPPORT BOOLEANS
  	public static double getChi2(Setting setting, String table, String column) {
  		// Initialization
@@ -751,15 +779,15 @@ public final class SQL {
 				+ "			 , bin "
 				+ "			 , target "
 				+ "		from ( "
-				+ "			select @baseTarget target "
-				+ "				 , cast(count(*) as DECIMAL)/max(t2.nrow) AS prob "
+				+ "			select @baseTarget AS target "
+				+ "				 , count(*)/max(t2.nrow) AS prob "
 				+ "			from @outputTable, ( "
-				+ "				select cast(count(*) as DECIMAL) AS nrow "
+				+ "				select count(*) AS nrow "
 				+ "				from @outputTable "
 				+ "			) t2 "
 				+ "			GROUP BY @baseTarget "
 				+ "		) expected_target, ( "
-				+ "			select cast(count(*) as DECIMAL) AS count "
+				+ "			select count(*) AS count "
 				+ "				 , @column AS bin "
 				+ "			from @outputTable "
 				+ "			group by @column "
@@ -767,7 +795,7 @@ public final class SQL {
 				+ "	) expected "
 				+ "	left join ( "
 				+ "		select @baseTarget AS target "
-				+ "			 , cast(count(*) as DECIMAL) AS count "
+				+ "			 , count(*) AS count "
 				+ "			 , @column AS bin "
 				+ "		from @outputTable "
 				+ "		group by @column, @baseTarget "
@@ -788,14 +816,14 @@ public final class SQL {
 				+ "			 , target "
 				+ "		from ( "
 				+ "			select @baseTarget AS target "
-				+ "				 , cast(count(*) as DECIMAL)/max(t2.nrow) AS prob "
+				+ "				 , count(*)/max(t2.nrow) AS prob "
 				+ "			from @outputTable, ( "
-				+ "				select cast(count(*) as DECIMAL) AS nrow "
+				+ "				select count(*) AS nrow "
 				+ "				from @outputTable "
 				+ "			) t2 "
 				+ "			GROUP BY @baseTarget "
 				+ "		) expected_target, ( "
-				+ "			select cast(count(*) as DECIMAL) AS count "
+				+ "			select count(*) AS count "
 				+ "				 , floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) AS bin " // Bin really into 10 bins.
 				+ "			from @outputTable, ( "
 				+ "					select (max(@column)-min(@column)) / 10 AS bin_width "
@@ -806,8 +834,8 @@ public final class SQL {
 				+ "		) expected_bin "
 				+ "	) expected "
 				+ "	left join ( "
-				+ "		select @baseTarget target "
-				+ "			 , cast(count(*) as DECIMAL) AS count "
+				+ "		select @baseTarget AS target "
+				+ "			 , count(*) AS count "
 				+ "			 , floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) AS bin "
 				+ "		from @outputTable, ( "
 				+ "				select (max(@column)-min(@column)) / 10 AS bin_width "
@@ -819,7 +847,13 @@ public final class SQL {
 				+ "	on expected.bin = measured.bin "
 				+ "	and expected.target = measured.target "
 				+ ") chi2";
- 			
+
+			// For databases that suffer from overflow whenever calculating an average, cast to DECIMAL.
+			// Note that SAS does not support anything like DECIMAL/NUMERIC... Hence, code bifurcation is necessary.
+			if ("Microsoft SQL Server".equals(setting.databaseVendor)) {
+				sql = sql.replace("count(*)", "cast(count(*) as DECIMAL)");
+			}
+
  			// For time columns just cast time to number.
  			if ("temporal".equals(predictorType)) {
  				sql = sql.replace("@column", setting.dateToNumber);
@@ -912,7 +946,8 @@ public final class SQL {
 	// Note: Default values are not supported on SAS data sets -> avoid them.
 	public static boolean getJournal(Setting setting) {
 		logger.debug("# Setting up journal table #");
-		
+
+		// The primary key is set directly behind the column name, not at the end, because SAS supports only the first declaration.
 		String sql = "CREATE TABLE @outputTable ("+
 	      "predictor_id " + setting.typeInteger + " NOT NULL PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
 	      "group_id " + setting.typeInteger + ", " +
@@ -998,7 +1033,7 @@ public final class SQL {
 				"table_name " + setting.typeVarchar + "(255), " +
 				"original_name " + setting.typeVarchar + "(255), " +
 				"temporal_constraint " + setting.typeVarchar + "(255), " +
-				"temporal_constraint_justification " + setting.typeVarchar + "(1024), " +
+				"temporal_constraint_reasoning " + setting.typeVarchar + "(1024), " +
 				"candidate_temporal_list " + setting.typeVarchar + "(2024), " +
 				"candidate_temporal_count " + setting.typeInteger + ", " +
 				"row_count_optimistic " + setting.typeInteger + ", " +
@@ -1063,7 +1098,7 @@ public final class SQL {
 
 	public static boolean getJournalPattern(Setting setting) {
 		String sql = "CREATE TABLE @outputTable (" +
-				"name varchar(255) NOT NULL, " +
+				"name varchar(255) NOT NULL PRIMARY KEY, " +
 				"author varchar(255), " +
 				"is_aggregate integer, " +
 				"is_multivariate integer, " +
@@ -1072,8 +1107,7 @@ public final class SQL {
 				"is_temporal integer, " +
 				"uses_base_target integer, " +
 				"uses_base_date integer, " +
-				"description text, " +
-				"PRIMARY KEY (name))";
+				"description varchar(4000))";  // Text data type would be preferred, but text is not supported on SAS. 4000 is a limit of Oracle.
 
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, setting.journalPattern);
@@ -1095,12 +1129,12 @@ public final class SQL {
 		String regexPattern = "@\\w+Column\\w*";
 		java.util.regex.Pattern compiledPattern = java.util.regex.Pattern.compile(regexPattern);
 
-		// Batch insert
 		try (Connection connection = setting.dataSource.getConnection();
 			 PreparedStatement ps = connection.prepareStatement(sql)) {
 
+			// Batch insert is not supported by SAS -> can't use addBatch().
+			// Commit/Rollback is not supported by SAS -> can't use setAutoCommit().
 			for (Predictor predictor : predictorCollection) {
-
 				Set<String> columnSet = new HashSet<>();
 				Matcher m = compiledPattern.matcher(predictor.getPatternCode());
 				while (m.find()) {
@@ -1117,10 +1151,8 @@ public final class SQL {
 				ps.setInt(8, contains(predictor, "@baseTarget"));
 				ps.setInt(9, contains(predictor, "@baseDate"));
 				ps.setString(10, predictor.getPatternDescription().replaceAll(" +", " ").replaceAll("\\t", "").trim());
-				ps.addBatch();
+				ps.executeUpdate();
 			}
-
-			ps.executeBatch();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return false;
@@ -1258,8 +1290,9 @@ public final class SQL {
 			}
 		}
 		
-		// Assembly the query
-		sql = addCreateViewAs(setting, sql);
+		// Assembly the query.
+		// Originally we were creating a view. But SAS does not support sampling of views. Hence, create a table.
+		sql = addCreateTableAs(setting, sql);
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, setting.baseTable);
 		
@@ -1274,7 +1307,7 @@ public final class SQL {
 	}
 	
 
-	// Subsample base table based on target class.
+	// Sample base table based on target class.
 	// Note: The selection is not guaranteed to be random.
 	public static void getSubSampleClassification(Setting setting, SortedMap<String, Table> metaInput) {
 		

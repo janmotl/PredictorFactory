@@ -175,6 +175,45 @@ public final class Network {
 	    return result;
     }
 
+	// Get a single bool. This a useful convenience function because some databases
+	// return t/f, other true/false and another 1/0. And SAS returns 1.0/0.0.
+	// The only reliable way how to deal with this variety to use rs.getBoolean().
+	public static Boolean isTrue(DataSource dataSource, String sql){
+		// Parameter checking
+		if (StringUtils.isBlank(sql)) {
+			throw new IllegalArgumentException("SQL statement is required");
+		}
+
+		// Initialization
+		Boolean result = null;
+
+		// Query with AutoCloseable interface introduced in Java 7.
+		// Hence statements and result sets are closed with the end of try block.
+		// See: https://blogs.oracle.com/WebLogicServer/entry/using_try_with_resources_with
+		try (Connection connection = dataSource.getConnection();
+			 Statement stmt = connection.createStatement();
+			 ResultSet rs = stmt.executeQuery(sql)) {
+
+			// Even if the query would return several rows, only the first row is transmitted
+			stmt.setMaxRows(1);
+
+			// If there is the first row, the result set is not empty.
+			if(rs.next()) {
+				result = rs.getBoolean(1);
+			}
+
+			// Log it
+			// Remove line breaks and collapse all "whitespace substrings" longer than one character.
+			sql = sql.replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ");
+			logger.debug(sql);
+		} catch (SQLException e) {
+			sql = sql.replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ");
+			logger.info(e.getMessage() + " | " + sql);
+		}
+
+		return result;
+	}
+
     // Return true, if the result set is empty.
 	public static boolean isResultSetEmpty(DataSource dataSource, String sql){
     	// Parameter checking
