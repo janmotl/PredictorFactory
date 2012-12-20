@@ -140,7 +140,8 @@ public class MetaInput {
         // info. Maybe we could move this out. But the only good current place is Launcher...
         // Maybe this information should be encoded in @baseFold?
         if (setting.targetDate != null) {
-            setting.pivotDate = setting.dialect.getPivotDate(setting);
+            int dateDataType = tableMap.get(setting.targetTable).getColumn(setting.targetDate).dataType;
+            setting.pivotDate = setting.dialect.getPivotDate(setting, dateDataType);
         }
 
 
