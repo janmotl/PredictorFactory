@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<drivers>
+    <driver 
+    	name="MySQL"
+     	driverClass="com.mysql.jdbc.Driver" 
+     	url="jdbc:mysql://db.motl.savana-hosting.cz:10001/financial" 
+     	username="financial" 
+     	password="predictor" 
+     	quoteMarks="``" 
+     	createTableAsCompatible="yes" 
+     	schemaCompatible="no"
+    />
+
+    <driver 
+    	name="MySQL-CCS"
+     	driverClass="com.mysql.jdbc.Driver" 
+     	url="jdbc:mysql://db.motl.savana-hosting.cz:10007/ccs" 
+     	username="ccs" 
+     	password="predictor" 
+     	quoteMarks="``" 
+     	createTableAsCompatible="yes" 
+     	schemaCompatible="no"
+    />
+    
+	<driver 
+    	name="MySQL-employee"
+     	driverClass="com.mysql.jdbc.Driver" 
+     	url="jdbc:mysql://db.motl.savana-hosting.cz:10017/employee" 
+     	username="employee" 
+     	password="predictor" 
+     	quoteMarks="``" 
+     	createTableAsCompatible="yes" 
+     	schemaCompatible="no"
+    />
+     	
+ 	<driver 
+    	name="Oracle"
+     	driverClass="oracle.jdbc.driver.OracleDriver" 
+     	url="jdbc:oracle:thin:@localhost:1521:orcl" 
+     	username="jan" 
+     	password="" 
+     	quoteMarks="&quot;&quot;" 
+     	createTableAsCompatible="yes" 
+     	schemaCompatible="yes"
+     />
+     	
+   <driver 
+    	name="Microsoft SQL Server"
+     	driverClass="com.microsoft.sqlserver.jdbc.SQLServerDriver" 
+     	url="jdbc:sqlserver://localhost:1433;integratedSecurity=true;database=Input" 
+     	username="yzan@volny.cz" 
+     	password="" 
+     	quoteMarks="[]" 
+     	createTableAsCompatible="no" 
+     	schemaCompatible="yes"
+   />
+     
+   <driver 
+    	name="PostgreSQL"
+     	driverClass="org.postgresql.Driver" 
+     	url="jdbc:postgresql://localhost:5432/jan" 
+     	username="jan" 
+     	password="" 
+     	quoteMarks="&quot;&quot;" 
+     	createTableAsCompatible="yes" 
+     	schemaCompatible="yes"
+   />
+</drivers>
+
+

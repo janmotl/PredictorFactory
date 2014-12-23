@@ -1,0 +1,62 @@
+File,Total Time,Coding %,Debugging %,Testing %,FC% Flow Complexity,OV% Object Vocabulary,OC% Object Conjuration,AI% Arithmetic Intricacy,DT% Data Transfer,ID% Inline Data,CS% Code Structure,CM% Comments,CCR Code to Comment Ratio,ECF Essential Comment Factor,CSM Code Structure Modularity,LD Logic Density,SDE Source Divergence Entropy,IDF Information Diversity Factor,OCF Object Convolution Factor,LLOC Logical Lines of Code,Multi Line Comments,Single Line Comments,High Quality Comments,Strings,Numeric Constants,Code Nature,Quality Notes Count,Quality Notes Detail,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\evaluation\correlation.java,1,79,15,6,5,53,19,8,3,3,10,0,0,0,166,44,27,233,23,8,0,0,0,7,0,Algorithmic Oriented,1,* Code structure may be too fragmented. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\examples\Bike.java,3,78,15,7,4,50,23,5,5,1,12,0,0,0,205,40,31,310,23,24,0,0,0,5,0,Normal,2,* Needs more comments. * Code structure may be too fragmented. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\examples\ClassificationCrossValidationExample.java,3,81,13,6,0,60,11,11,6,2,6,4,68,275,85,93,41,133,22,15,2,9,11,10,5,Algorithmic Oriented,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\examples\Connect.java,9,76,17,7,22,39,18,3,7,1,9,1,12,35,150,55,35,333,25,55,1,6,7,24,1,Normal,1,* Needs more comments. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\examples\Customer.java,2,77,16,7,12,57,17,0,5,0,10,0,0,0,195,30,30,200,23,12,0,0,0,1,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\examples\Employee.java,3,78,15,6,4,61,18,0,5,0,11,0,4,9,200,21,26,208,20,22,0,1,1,1,0,Normal,2,* Needs more comments. * Code structure may be too fragmented. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\examples\EmployeeMap.java,1,78,16,6,12,64,13,0,4,0,8,0,0,0,192,37,40,140,26,7,0,0,0,1,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\examples\HashMapTest2.java,8,78,15,7,11,61,14,0,7,0,6,0,0,0,132,50,39,162,30,29,0,0,0,7,0,Normal,1,* Needs more comments. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\examples\JAXBTest.java,3,79,14,6,7,69,11,0,6,0,7,0,0,0,142,43,37,107,18,15,0,0,0,2,2,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\examples\LoadingDataSetExample.java,5,77,16,7,23,40,15,7,7,1,6,0,7,25,80,80,42,269,26,25,2,0,2,12,3,Algorithmic Oriented,1,* Needs more comments. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\examples\Logging.java,1,79,14,6,0,67,15,0,7,1,11,0,0,0,155,14,23,140,20,6,0,0,0,2,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\examples\MarshalDemo.java,3,80,14,6,0,77,11,0,6,0,6,0,0,0,97,38,34,96,21,12,0,0,0,1,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\examples\MyPropAllKeys.java,4,77,16,7,19,50,15,1,7,0,9,0,0,0,191,48,36,207,22,24,0,0,0,2,0,Normal,1,* Needs more comments. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\examples\MyValidationEventHandler.java,2,80,14,6,1,55,22,0,9,1,11,0,0,0,97,0,34,273,32,15,0,0,0,11,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\examples\PhoneNumber.java,0,81,13,6,0,51,18,0,3,0,26,2,25,33,250,0,12,166,12,3,0,1,1,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\examples\SQLNew.java,1,81,13,6,0,71,13,0,3,0,12,0,14,16,357,0,17,123,22,6,0,1,1,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\examples\UnmarshalDemo.java,2,81,13,6,0,76,10,0,7,0,6,0,18,66,108,45,32,92,21,10,0,2,2,2,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\examples\XMLValidation.java,3,79,15,6,8,65,11,1,6,1,7,0,12,28,173,25,37,117,21,15,0,2,2,7,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\run\Journal.java,8,77,16,7,18,48,15,2,6,0,9,1,56,110,206,35,40,226,26,38,0,22,22,1,1,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\run\JournalSave.java,3,79,15,6,7,65,14,0,6,0,8,0,6,14,166,37,34,148,23,15,0,1,1,1,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\run\Pattern.java,14,76,16,7,20,46,16,2,8,1,8,1,29,56,199,56,42,252,26,70,0,22,21,20,2,Normal,1,* Needs more comments. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\run\PatternTest.java,4,81,13,6,0,67,15,0,8,1,8,0,8,33,87,20,43,158,22,23,0,4,2,12,2,Normal,1,* Needs more comments. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\run\Predictor.java,19,77,16,7,16,43,22,3,6,0,9,1,41,102,153,42,39,362,32,106,0,45,44,16,4,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\run\Propagation.java,10,78,15,7,16,50,18,0,7,1,7,1,27,88,93,62,40,260,26,57,0,17,16,30,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\run\QuickAndDirt.java,12,78,15,7,14,50,19,0,8,1,7,1,22,84,80,60,41,273,26,69,0,19,16,44,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\run\Sandbox.java,11,78,15,7,13,52,16,2,7,1,6,1,33,135,75,80,42,221,27,55,0,19,19,22,7,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\run\Sandbox2.java,17,77,16,7,18,47,19,0,7,1,7,1,41,134,95,63,42,290,31,84,0,35,35,30,2,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\run\Sandbox3.java,15,77,16,7,20,45,17,1,8,1,7,1,38,121,97,69,42,278,30,71,0,28,28,31,1,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\run\Setting.java,3,81,13,6,0,75,16,0,1,0,5,3,64,320,40,4,2,153,17,24,0,16,16,0,1,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\utility\LocalDateAdapter.java,1,79,15,6,5,67,13,0,3,0,11,1,14,25,220,0,28,127,20,6,0,1,1,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\utility\MapAdapter.java,5,75,17,7,21,46,16,2,8,0,6,0,20,36,181,50,45,253,35,19,0,4,4,1,1,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\utility\Network.java,9,78,16,7,18,56,12,0,6,0,8,1,40,105,169,43,37,153,20,43,0,18,18,7,1,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\utility\NetworkProperty.java,1,81,13,6,0,74,16,0,2,0,8,0,8,33,83,8,8,142,16,11,0,1,1,1,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\utility\NetworkPropertyList.java,4,77,16,7,20,57,10,0,5,0,8,0,15,27,213,45,35,123,18,19,0,3,3,3,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\utility\NetworkPropertyListTest.java,1,82,13,6,0,76,8,0,4,1,11,0,0,0,188,16,28,72,13,5,0,0,0,2,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\utility\NetworkTest.java,2,81,13,6,0,74,12,0,5,1,8,0,0,0,157,35,30,108,17,13,0,0,0,3,1,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\utility\Property.java,1,78,15,6,14,58,11,0,5,0,10,1,27,60,195,27,32,130,15,10,0,3,3,1,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\utility\PropertyTest.java,2,81,13,6,0,72,12,0,6,1,9,0,0,0,128,20,33,117,20,9,0,0,0,4,1,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\utility\SQL.java,53,75,17,8,26,23,24,10,7,2,7,1,30,84,130,94,49,755,36,273,2,82,84,203,28,Algorithmic Oriented,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\utility\SQLTest.java,3,81,13,6,0,72,12,0,6,2,7,0,8,40,68,60,37,120,15,22,0,3,2,17,0,Normal,1,* Needs more comments. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\utility\XML.java,6,78,15,7,12,62,12,1,5,0,7,0,13,33,181,36,36,136,22,29,0,4,4,1,0,Normal,1,* Needs more comments. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\src\utility\XMLTest.java,4,80,13,6,0,63,19,0,8,2,8,0,8,33,100,25,43,213,26,23,0,3,2,17,1,Normal,1,* Needs more comments. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\test-output\Default suite\Default test.html,6,72,20,8,42,33,8,2,7,1,8,0,3,7,231,88,62,173,15,25,0,2,1,6,5,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\test-output\emailable-report.html,0,100,0,0,0,0,0,0,0,0,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\test-output\index.html,3,80,14,6,1,61,14,0,12,5,8,0,0,0,99,73,51,154,17,18,0,0,0,26,11,Data I/O Oriented,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\test-output\jquery-1.7.1.min.js,700,69,22,9,57,9,16,4,8,1,5,0,0,0,196,174,72,1332,52,1756,1,0,1,761,615,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\test-output\old\Default suite\classes.html,0,100,0,0,0,0,0,0,0,0,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\test-output\old\Default suite\groups.html,0,100,0,0,0,0,0,0,0,0,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\test-output\old\Default suite\index.html,0,100,0,0,0,0,0,0,0,0,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\test-output\old\Default suite\main.html,0,100,0,0,0,0,0,0,0,0,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\test-output\old\Default suite\methods-alphabetical.html,0,100,0,0,0,0,0,0,0,0,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\test-output\old\Default suite\methods-not-run.html,0,100,0,0,0,0,0,0,0,0,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\test-output\old\Default suite\methods.html,0,100,0,0,0,0,0,0,0,0,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\test-output\old\Default suite\reporter-output.html,0,100,0,0,0,0,0,0,0,0,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\test-output\old\Default suite\testng.xml.html,0,100,0,0,0,0,0,0,0,0,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\test-output\old\Default suite\toc.html,0,100,0,0,0,0,0,0,0,0,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\test-output\old\index.html,0,100,0,0,0,0,0,0,0,0,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Normal,0,
+C:\Users\Jan\Dropbox\Settings\Eclipse\QuickAndDirt\test-output\testng-reports.js,12,77,16,7,13,40,15,8,12,1,9,0,8,22,152,50,59,271,18,83,0,7,7,36,3,Algorithmic Oriented,1,* Needs more comments. 
+
+Entire Project Totals,1006,71,20,9,44,21,17,4,8,1,6,0,11,26,170,120,61,588,40,3279,8,381,378,1391,698,Data Manipulation Oriented,23,
+

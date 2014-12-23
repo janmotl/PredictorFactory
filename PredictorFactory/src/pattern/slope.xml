@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Slope</name>
+	<description>Calculate Pearson correlation of an attribute with time.
+	</description>
+	<author>Jan Motl</author>
+	<date>2014-12-22</date>
+	<code>SELECT @baseId
+	           , @baseDate
+	           , (Avg(@numericalColumn * @dateColumn) - Avg(@numericalColumn) * Avg(@dateColumn)) / (StD(@numericalColumn) * StD(@dateColumn)) "@columnName"
+	      FROM @inputTable
+	      GROUP BY @baseID, @baseDate</code>
+	<cardinality>n</cardinality>
+</pattern>

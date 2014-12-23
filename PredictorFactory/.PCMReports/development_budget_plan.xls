@@ -1,0 +1,383 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:x="urn:schemas-microsoft-com:office:excel"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1255">
+<meta name=ProgId content=Excel.Sheet>
+<meta name=Generator content="Microsoft Excel 11">
+<link rel=File-List href="development_budget_plan_files/filelist.xml">
+<link rel=Edit-Time-Data href="development_budget_plan_files/editdata.mso">
+<link rel=OLE-Object-Data href="development_budget_plan_files/oledata.mso">
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:LastAuthor>Unregistered Trial</o:LastAuthor>
+  <o:Created>2014-11-28T12:48:07Z</o:Created>
+  <o:LastSaved>2014-11-28T12:48:07Z</o:LastSaved>
+  <o:Version>11.5606</o:Version>
+ </o:DocumentProperties>
+</xml><![endif]-->
+<style>
+<!--table
+	{mso-displayed-decimal-separator:"\.";
+	mso-displayed-thousand-separator:"\,";}
+@page
+	{margin:1.0in .75in 1.0in .75in;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;}
+tr
+	{mso-height-source:auto;}
+col
+	{mso-width-source:auto;}
+br
+	{mso-data-placement:same-cell;}
+.style0
+	{mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	white-space:nowrap;
+	mso-rotate:0;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	color:windowtext;
+	font-size:10.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Arial;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	border:none;
+	mso-protection:locked visible;
+	mso-style-name:Normal;
+	mso-style-id:0;}
+td
+	{mso-style-parent:style0;
+	padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:windowtext;
+	font-size:10.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Arial;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border:none;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	mso-protection:locked visible;
+	white-space:nowrap;
+	mso-rotate:0;}
+.xl24
+	{mso-style-parent:style0;
+	border-top:.5pt solid windowtext;
+	border-right:none;
+	border-bottom:.5pt solid windowtext;
+	border-left:.5pt solid windowtext;
+	background:#00CCFF;
+	mso-pattern:auto none;}
+.xl25
+	{mso-style-parent:style0;
+	border-top:.5pt solid windowtext;
+	border-right:none;
+	border-bottom:.5pt solid windowtext;
+	border-left:none;
+	background:#00CCFF;
+	mso-pattern:auto none;}
+.xl26
+	{mso-style-parent:style0;
+	border-top:.5pt solid windowtext;
+	border-right:.5pt solid windowtext;
+	border-bottom:.5pt solid windowtext;
+	border-left:none;
+	background:#00CCFF;
+	mso-pattern:auto none;}
+.xl27
+	{mso-style-parent:style0;
+	border-top:.5pt solid windowtext;
+	border-right:none;
+	border-bottom:.5pt solid windowtext;
+	border-left:.5pt solid windowtext;
+	background:#CCFFFF;
+	mso-pattern:auto none;}
+.xl28
+	{mso-style-parent:style0;
+	text-align:center;
+	border-top:.5pt solid windowtext;
+	border-right:.5pt solid windowtext;
+	border-bottom:.5pt solid windowtext;
+	border-left:none;
+	background:#CCFFFF;
+	mso-pattern:auto none;}
+.xl29
+	{mso-style-parent:style0;
+	mso-number-format:Fixed;}
+.xl30
+	{mso-style-parent:style0;
+	text-align:center;
+	border-top:.5pt solid windowtext;
+	border-right:none;
+	border-bottom:.5pt solid windowtext;
+	border-left:none;
+	background:#CCFFFF;
+	mso-pattern:auto none;}
+.xl31
+	{mso-style-parent:style0;
+	border:.5pt solid windowtext;
+	background:#CCFFFF;
+	mso-pattern:auto none;}
+.xl32
+	{mso-style-parent:style0;
+	mso-number-format:"Short Date";
+	text-align:right;}
+-->
+</style>
+<!--[if gte mso 9]><xml>
+ <x:ExcelWorkbook>
+  <x:ExcelWorksheets>
+   <x:ExcelWorksheet>
+    <x:Name>development_budget_plan_</x:Name>
+    <x:WorksheetOptions>
+     <x:Print>
+      <x:ValidPrinterInfo/>
+      <x:PaperSizeIndex>9</x:PaperSizeIndex>
+      <x:HorizontalResolution>300</x:HorizontalResolution>
+      <x:VerticalResolution>0</x:VerticalResolution>
+      <x:NumberofCopies>0</x:NumberofCopies>
+     </x:Print>
+     <x:Selected/>
+     <x:Panes>
+      <x:Pane>
+       <x:Number>3</x:Number>
+       <x:ActiveRow>23</x:ActiveRow>
+       <x:ActiveCol>1</x:ActiveCol>
+      </x:Pane>
+     </x:Panes>
+     <x:ProtectContents>False</x:ProtectContents>
+     <x:ProtectObjects>False</x:ProtectObjects>
+     <x:ProtectScenarios>False</x:ProtectScenarios>
+    </x:WorksheetOptions>
+   </x:ExcelWorksheet>
+  </x:ExcelWorksheets>
+  <x:WindowHeight>8700</x:WindowHeight>
+  <x:WindowWidth>15195</x:WindowWidth>
+  <x:WindowTopX>0</x:WindowTopX>
+  <x:WindowTopY>120</x:WindowTopY>
+  <x:ProtectStructure>False</x:ProtectStructure>
+  <x:ProtectWindows>False</x:ProtectWindows>
+ </x:ExcelWorkbook>
+</xml><![endif]-->
+</head>
+
+<body link=blue vlink=purple>
+
+<table x:str border=0 cellpadding=0 cellspacing=0 width=618 style='border-collapse:
+ collapse;table-layout:fixed;width:464pt'>
+ <col width=215 style='mso-width-source:userset;mso-width-alt:7862;width:161pt'>
+ <col width=166 style='mso-width-source:userset;mso-width-alt:6070;width:125pt'>
+ <col width=173 style='mso-width-source:userset;mso-width-alt:6326;width:130pt'>
+ <col width=64 style='width:48pt'>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 class=xl24 colspan=2 align=left width=381 style='height:12.75pt;
+  mso-ignore:colspan;width:286pt'>ProjectCodeMeter Development Budget Plan</td>
+  <td class=xl26 width=173 style='width:130pt'>&nbsp;</td>
+  <td width=64 style='width:48pt'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'>Report Creation Time</td>
+  <td align=left>11/28/2014</span></td>
+  <td colspan=2 align=left style='mso-ignore:colspan'>12:48:07</td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'>Created by</td>
+  <td colspan=3 align=left style='mso-ignore:colspan'>ProjectCodeMeter Pro v1.27
+  Licensed to Unregistered Trial</td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 class=xl27 align=left style='height:12.75pt'>Settings:</td>
+  <td class=xl28>Internal constraints</td>
+  <td colspan=2 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'>Programmer Price per Hour</td>
+  <td class=xl29 align=left>6</td>
+  <td colspan=2 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'>Quality Guarantee</td>
+  <td colspan=2 align=left style='mso-ignore:colspan'>Beta (v0.5) 2-Sigma</td>
+  <td></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'>Platform Maturity</td>
+  <td colspan=2 align=left style='mso-ignore:colspan'>Popular Stable and Documented</td>
+  <td></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'>Debugging Tools</td>
+  <td align=left>Complete system Step Emulator / VM / ICE</td>
+  <td colspan=2 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'>Development Team Productivity
+  (%)</td>
+  <td align=right x:num>100</td>
+  <td colspan=2 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 colspan=4 style='height:12.75pt;mso-ignore:colspan'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 class=xl27 align=left style='height:12.75pt'>Cost Components:</td>
+  <td class=xl30>Time (in hours)</td>
+  <td class=xl28>Cost (in $)</td>
+  <td></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'
+  x:str="Work Environment Setup ">Work Environment Setup<span
+  style='mso-spacerun:yes'> </span></td>
+  <td colspan=3 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt' x:str="Development (Coding) ">Development
+  (Coding)<span style='mso-spacerun:yes'> </span></td>
+  <td align=center x:err="#NAME?"
+  x:fmla="=ROUND(((43085/60)/B$11)*100,1)">=ROUND(((43085/60)/B$11)*100,1)</td>
+  <td align=center x:err="#NAME?" x:fmla="=B15*B$7">=B15*B$7</td>
+  <td></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'
+  x:str="Development (Debugging) ">Development (Debugging)<span
+  style='mso-spacerun:yes'> </span></td>
+  <td align=center x:err="#NAME?"
+  x:fmla="=ROUND(((12142/60)/B$11)*100,1)">=ROUND(((12142/60)/B$11)*100,1)</td>
+  <td align=center x:err="#NAME?" x:fmla="=B16*B$7">=B16*B$7</td>
+  <td></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt' x:str="Development (Testing) ">Development
+  (Testing)<span style='mso-spacerun:yes'> </span></td>
+  <td align=center x:err="#NAME?"
+  x:fmla="=ROUND(((5144/60)/B$11)*100,1)">=ROUND(((5144/60)/B$11)*100,1)</td>
+  <td align=center x:err="#NAME?" x:fmla="=B17*B$7">=B17*B$7</td>
+  <td></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt' x:str="Graphic Art ">Graphic
+  Art<span style='mso-spacerun:yes'> </span></td>
+  <td colspan=3 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt' x:str="Database ">Database<span
+  style='mso-spacerun:yes'> </span></td>
+  <td colspan=3 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt' x:str="Packaging ">Packaging<span
+  style='mso-spacerun:yes'> </span></td>
+  <td colspan=3 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt' x:str="Documentation ">Documentation<span
+  style='mso-spacerun:yes'> </span></td>
+  <td colspan=3 style='mso-ignore:colspan'></td>
+ </tr>
+
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'></td>
+ </tr>
+
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'>Totals</td>
+  <td align=center x:err="#NAME?" x:fmla="=SUM(B14:B30)">=SUM(B14:B30)</td>
+  <td align=center x:err="#NAME?" x:fmla="=SUM(C14:C30)">=SUM(C14:C30)</td>
+  <td></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'>Assigned personnel</td>
+  <td align=right x:num>1</td>
+  <td colspan=2 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'>Workhours per month</td>
+  <td align=right x:num>152</td>
+  <td colspan=2 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 colspan=4 style='height:12.75pt;mso-ignore:colspan'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 class=xl31 align=left style='height:12.75pt'>Schedule:</td>
+  <td colspan=3 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'>Man months</td>
+  <td align=center x:err="#NAME?" x:fmla="=B31/B33">=B31/B33</td>
+  <td colspan=2 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'>Schedule Workdays</td>
+  <td align=center x:err="#NAME?" x:fmla="=CEILING((30*B36)/(B32^0.97),1)">=CEILING((30*B36)/(B32^0.97),1)</td>
+  <td colspan=2 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'>Schedule Starting Date</td>
+  <td class=xl32>11/28/2014</td>
+  <td colspan=2 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=17 style='height:12.75pt'>
+  <td height=17 align=left style='height:12.75pt'>Schedule Completion Date</td>
+  <td class=xl32 x:err="#VALUE!" x:fmla="=B38+B37">=B38+B37</td>
+  <td colspan=2 style='mso-ignore:colspan'></td>
+ </tr>
+ <![if supportMisalignedColumns]>
+ <tr height=0 style='display:none'>
+  <td width=215 style='width:161pt'></td>
+  <td width=166 style='width:125pt'></td>
+  <td width=173 style='width:130pt'></td>
+  <td width=64 style='width:48pt'></td>
+ </tr>
+ <![endif]>
+</table>
+
+</body>
+
+</html>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Direct field</name>
+	<description>Returns ALL columns from the table. The advantage of "Direct field" in comparison to "Aggregate max" is 
+that it also returns non-numerical columns. 
+	</description>
+	<author>Jan Motl</author>
+	<date>2014-10-14</date>
+	<code>SELECT @baseId, @baseDate, @anyColumn "@columnName" FROM @inputTable</code>
+	<cardinality>1</cardinality>
+</pattern>

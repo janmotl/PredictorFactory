@@ -1,0 +1,1038 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<journal>
+    <journal>
+        <outputTable>predictor1024</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A4</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1059</outputTable>
+        <inputTable1>trans</inputTable1>
+        <column1>account</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1004</outputTable>
+        <inputTable1>client</inputTable1>
+        <column1>birth_number</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1052</outputTable>
+        <inputTable1>order</inputTable1>
+        <column1>account_to</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1054</outputTable>
+        <inputTable1>order</inputTable1>
+        <column1>account_to</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1013</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A13</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1017</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A14</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1003</outputTable>
+        <inputTable1>account</inputTable1>
+        <column1>date</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1063</outputTable>
+        <inputTable1>trans</inputTable1>
+        <column1>amount</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1036</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A8</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1031</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A7</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1025</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A5</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1038</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A9</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1015</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A13</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1034</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A8</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1005</outputTable>
+        <inputTable1>client</inputTable1>
+        <column1>birth_number</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1033</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A7</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1058</outputTable>
+        <inputTable1>trans</inputTable1>
+        <column1>account</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1037</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A9</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1069</outputTable>
+        <inputTable1>trans</inputTable1>
+        <column1>date</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1006</outputTable>
+        <inputTable1>client</inputTable1>
+        <column1>birth_number</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1028</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A6</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1068</outputTable>
+        <inputTable1>trans</inputTable1>
+        <column1>date</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1007</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A10</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1048</outputTable>
+        <inputTable1>loan</inputTable1>
+        <column1>duration</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1021</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A16</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1016</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A14</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1011</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A11</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1027</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A5</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1049</outputTable>
+        <inputTable1>loan</inputTable1>
+        <column1>payments</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1018</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A14</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1060</outputTable>
+        <inputTable1>trans</inputTable1>
+        <column1>account</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1022</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A4</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1008</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A10</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1064</outputTable>
+        <inputTable1>trans</inputTable1>
+        <column1>balance</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1065</outputTable>
+        <inputTable1>trans</inputTable1>
+        <column1>balance</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1020</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A16</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1019</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A16</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1002</outputTable>
+        <inputTable1>account</inputTable1>
+        <column1>date</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1039</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A9</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1047</outputTable>
+        <inputTable1>loan</inputTable1>
+        <column1>duration</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1057</outputTable>
+        <inputTable1>order</inputTable1>
+        <column1>amount</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1050</outputTable>
+        <inputTable1>loan</inputTable1>
+        <column1>payments</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1032</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A7</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1044</outputTable>
+        <inputTable1>loan</inputTable1>
+        <column1>date</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1001</outputTable>
+        <inputTable1>account</inputTable1>
+        <column1>date</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1055</outputTable>
+        <inputTable1>order</inputTable1>
+        <column1>amount</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1066</outputTable>
+        <inputTable1>trans</inputTable1>
+        <column1>balance</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1014</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A13</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1041</outputTable>
+        <inputTable1>loan</inputTable1>
+        <column1>amount</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1053</outputTable>
+        <inputTable1>order</inputTable1>
+        <column1>account_to</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1009</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A10</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1045</outputTable>
+        <inputTable1>loan</inputTable1>
+        <column1>date</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1030</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A6</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1042</outputTable>
+        <inputTable1>loan</inputTable1>
+        <column1>amount</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1051</outputTable>
+        <inputTable1>loan</inputTable1>
+        <column1>payments</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1012</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A11</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> max</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1026</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A5</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1043</outputTable>
+        <inputTable1>loan</inputTable1>
+        <column1>date</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1046</outputTable>
+        <inputTable1>loan</inputTable1>
+        <column1>duration</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1067</outputTable>
+        <inputTable1>trans</inputTable1>
+        <column1>date</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1061</outputTable>
+        <inputTable1>trans</inputTable1>
+        <column1>amount</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1010</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A11</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1023</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A4</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1040</outputTable>
+        <inputTable1>loan</inputTable1>
+        <column1>amount</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value>avg</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1056</outputTable>
+        <inputTable1>order</inputTable1>
+        <column1>amount</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1035</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A8</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1062</outputTable>
+        <inputTable1>trans</inputTable1>
+        <column1>amount</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+    <journal>
+        <outputTable>predictor1029</outputTable>
+        <inputTable1>district</inputTable1>
+        <column1>A6</column1>
+        <parameterList>
+            <entry>
+                <key>@aggregateFunction</key>
+                <value> min</value>
+            </entry>
+        </parameterList>
+        <pattern_code>SELECT @idColumn, @aggregateFunction(@column1) "@columnName1"
+	      FROM @inputTable1 
+	      GROUP BY @idColumn
+	</pattern_code>
+    </journal>
+</journal>
