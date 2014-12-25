@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Number of child types</name>
+	<description>
+		Number of distinct values of the child nominal field with the child filter F			
+	</description>
+	<author>Filip Trojan</author>
+	<date>2014-12-25</date>
+	<code>SELECT @baseId, @baseDate, count(distinct @nominalColumn) "@columnName"
+	      FROM @inputTable
+	      GROUP BY @baseId
+	</code>
+	<cardinality>n</cardinality>
+</pattern>
