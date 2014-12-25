@@ -8,7 +8,7 @@ How to get it work
 2.	Install Eclipse for Java Developers.
 3.	Start Eclipse.
 4.	Import “Existing Projects into Workspace” (File>Import>General>Existing Projects into Workspace).
-5.	Install TestNG plugin (Help>Install New Software…>Work with: “http://beust.com/eclipse” and follow the wizard).
+5.	Install TestNG plugin (Help>Install New Software…>Work with: http://beust.com/eclipse and follow the wizard).
 6.	Report to me your public IP (http://www.whatismyip.com) if you want to access the demo database.
 
 
