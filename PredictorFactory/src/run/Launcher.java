@@ -2,7 +2,6 @@ package run;
 
 import java.util.ArrayList;
 import java.util.Locale;
-import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -44,7 +43,22 @@ public class Launcher{
 		setting.targetColumn = "status";
 		setting.targetTable = "loan";
 		
-		setting.blackList = "('result')";
+		setting.blackList = "('result')"; // In SQL syntax for: " AND TABLE_NAME not in " + setting.blackList
+		
+		// START Mutagenesis specific
+//		setting.dbType = "MySQL-mutagenesis";
+//		setting.inputSchema = "mutagenesis";
+//		setting.outputSchema = "mutagenesis";
+//		
+//		setting.idTable = "molecule";
+//		setting.idColumn = "molecule_id";
+//		
+//		setting.targetTable = "molecule";
+//		setting.targetColumn = "mutagenic";
+//		setting.targetDate = "molecule_id";	// This is a dataset without any date. Id is used as a placeholder.
+//		
+//		setting.blackList = "('mutagenesis-atoms', 'mutagenesis-bonds', 'mutagenesis-chains')";
+		// END
 
 		// ...Predictor Factory setting
 		setting.baseId = "propagated_id";
@@ -77,43 +91,94 @@ public class Launcher{
 		Network.executeUpdate(setting.connection, SQL.getIndex(setting, setting.baseTable));
 	
 		// Propagate base table
-		Map<String, String> tableList = Propagation.propagateBase(setting);
+		SortedMap<String, Table> tableMetadata = Propagation.propagateBase(setting);
 		System.out.println("#### Finished base propagation in " + journal.getRunTime() + " miliseconds ####");
 		
 		// Get columns in the propagated tables
-		// SHOULD PASS tableList 
-		Map<String, Table> metadata = Metadata.getMetadata(setting);
+		tableMetadata = Metadata.getMetadata(setting, tableMetadata);
 		System.out.println("#### Finished metadata collection in " + journal.getRunTime() + " miliseconds ####");
 		
+
+		
+		
+		/////////////////////////// COPY & PASTE UGLINES /////////////////////////
 		// Read a pattern
-		Pattern pattern = XML.xml2pattern("src/pattern/aggregate.xml");	// SHOULD ITERATE OVER ALL PATTERNS IN THE DIRECTORY
-		String[] parameterList = pattern.getParameterMap().get("@aggregateFunction").split(",");  // CHEATING
+		Pattern pattern = XML.xml2pattern("src/pattern/last.xml");	// SHOULD ITERATE OVER ALL PATTERNS IN THE DIRECTORY
 		boolean patternCardinality = pattern.getCardinality().equals("n");	// Pattern cardinality is treated as binary
+
+		// For each propagated table
+		for (Table workingTable : tableMetadata.values()) {
+			// Skip tables with wrong cardinality
+			boolean tableCardinality = workingTable.cardinality > 1;
+			if (patternCardinality != tableCardinality) {
+				continue;
+			}
+
+			// For each date column
+			for (String dateName : workingTable.dateColumn) { // CHEATING
+
+				if (dateName == null) {
+					continue;
+				}
+				
+				System.out.println(workingTable.dateColumn.size());
+				System.out.println(workingTable);
+				System.out.println(dateName);
+
+				// For each data/any column 
+				for (String columnName : workingTable.anyColumn) { // CHEATING
+
+					// Assembly the predictor
+					Predictor predictor = new Predictor(pattern);
+					predictor.inputTable = workingTable.propagatedName;
+					predictor.inputTableOriginal = workingTable.originalName;
+					SortedMap<String, String> columnMap = new TreeMap<String, String>();
+					columnMap.put("@anyColumn", columnName); // CHEATING
+					columnMap.put("@dateColumn", dateName); // CHEATING
+					predictor.columnMap = columnMap;
+					predictor.setId(journal.getNextId(setting));
+					predictor.outputTable = "predictor" + (predictor.getId());
+					predictor.propagationDate = workingTable.propagationDate;
+					predictor.propagationPath = workingTable.propagationPath;
+
+					// Calculate the predictor
+					journal = getPredictor(setting, journal, predictor);
+				}
+			}
+		}
+		
+		/////////////////////////// COPY & PASTE UGLINES /////////////////////////	
+		// Read a pattern
+		pattern = XML.xml2pattern("src/pattern/aggregate.xml");	// SHOULD ITERATE OVER ALL PATTERNS IN THE DIRECTORY
+		String[] parameterList = pattern.getParameterMap().get("@aggregateFunction").split(",");  // CHEATING
+		patternCardinality = pattern.getCardinality().equals("n");	// Pattern cardinality is treated as binary
 		
 		// For each propagated table		
-		for (String workingTable : metadata.keySet()) {
+		for (Table workingTable : tableMetadata.values()) {
 			// Skip tables with wrong cardinality
-			boolean tableCardinality = metadata.get(workingTable).cardinality>1;
+			boolean tableCardinality = workingTable.cardinality>1;
 			if (patternCardinality != tableCardinality) {
 				continue;
 			}
 			
 			// For each numerical column
-			for (String columnName : metadata.get(workingTable).numericalColumn) {		// CHEATING - should read from XML
+			for (String columnName : workingTable.numericalColumn) {		// CHEATING - should read from XML
 
 				// For each parameter													// CHEATING
 				for (String parameter : parameterList) {
 					
 					// Assembly the predictor
 					Predictor predictor = new Predictor(pattern);
-					predictor.inputTable = workingTable;
-					predictor.inputTableOriginal = tableList.get(workingTable);
+					predictor.inputTable = workingTable.propagatedName;
+					predictor.inputTableOriginal = workingTable.originalName;
 					SortedMap<String,	String> columnMap = new TreeMap<String, String>();		
 					columnMap.put("@numericalColumn", columnName);						// CHEATING - should read from XML
 					predictor.columnMap = columnMap;
 					predictor.parameterList.put("@aggregateFunction", parameter);		// CHEATING
 					predictor.setId(journal.getNextId(setting)); 	
 					predictor.outputTable = "predictor" + (predictor.getId());
+					predictor.propagationDate = workingTable.propagationDate;
+					predictor.propagationPath = workingTable.propagationPath;
 					
 					// Calculate the predictor
 					journal = getPredictor(setting, journal, predictor);	
@@ -128,25 +193,27 @@ public class Launcher{
 		patternCardinality = pattern.getCardinality().equals("n");	// Pattern cardinality is treated as binary
 		
 		// For each propagated table		
-		for (String workingTable : metadata.keySet()) {
+		for (Table workingTable : tableMetadata.values()) {
 			// Skip tables with wrong cardinality
-			boolean tableCardinality = metadata.get(workingTable).cardinality>1;
+			boolean tableCardinality = workingTable.cardinality>1;
 			if (patternCardinality != tableCardinality) {
 				continue;
 			}
 			
 			// For each data column
-			for (String columnName : metadata.get(workingTable).dataColumn) {		// CHEATING
+			for (String columnName : workingTable.dataColumn) {		// CHEATING
 				
 					// Assembly the predictor
 					Predictor predictor = new Predictor(pattern);
-					predictor.inputTable = workingTable;
-					predictor.inputTableOriginal = tableList.get(workingTable);
+					predictor.inputTable = workingTable.propagatedName;
+					predictor.inputTableOriginal = workingTable.originalName;
 					SortedMap<String,	String> columnMap = new TreeMap<String, String>();		
 					columnMap.put("@anyColumn", columnName);						// CHEATING
 					predictor.columnMap = columnMap;
 					predictor.setId(journal.getNextId(setting)); 	
 					predictor.outputTable = "predictor" + (predictor.getId());
+					predictor.propagationDate = workingTable.propagationDate;
+					predictor.propagationPath = workingTable.propagationPath;
 					
 					// Calculate the predictor
 					journal = getPredictor(setting, journal, predictor);					
@@ -159,33 +226,35 @@ public class Launcher{
 		patternCardinality = pattern.getCardinality().equals("n");	// Pattern cardinality is treated as binary
 		
 		// For each propagated table
-		for (String workingTable : metadata.keySet()) {
+		for (Table workingTable : tableMetadata.values()) {
 			// Skip tables with wrong cardinality
-			boolean tableCardinality = metadata.get(workingTable).cardinality > 1;
+			boolean tableCardinality = workingTable.cardinality > 1;
 			if (patternCardinality != tableCardinality) {
 				continue;
 			}
 
 			// For each date column
-			for (String dateName : metadata.get(workingTable).dateColumn) { // CHEATING
+			for (String dateName : workingTable.dateColumn) { // CHEATING
 				
 				if (dateName == null) {
 					continue;
 				}
 				
 				// For each data column
-				for (String columnName : metadata.get(workingTable).numericalColumn) { // CHEATING
+				for (String columnName : workingTable.numericalColumn) { // CHEATING
 	
 					// Assembly the predictor
 					Predictor predictor = new Predictor(pattern);
-					predictor.inputTable = workingTable;
-					predictor.inputTableOriginal = tableList.get(workingTable);
+					predictor.inputTable = workingTable.propagatedName;
+					predictor.inputTableOriginal = workingTable.originalName;
 					SortedMap<String, String> columnMap = new TreeMap<String, String>();
 					columnMap.put("@numericalColumn", columnName); // CHEATING
 					columnMap.put("@dateColumn", dateName); // CHEATING
 					predictor.columnMap = columnMap;
 					predictor.setId(journal.getNextId(setting));
 					predictor.outputTable = "predictor" + (predictor.getId());
+					predictor.propagationDate = workingTable.propagationDate;
+					predictor.propagationPath = workingTable.propagationPath;
 	
 					// Calculate the predictor
 					journal = getPredictor(setting, journal, predictor);

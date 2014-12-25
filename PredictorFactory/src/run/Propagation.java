@@ -7,7 +7,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
+import run.Metadata.Table;
 import utility.Network;
 import utility.SQL;
 
@@ -16,24 +19,31 @@ public class Propagation{
 	// Propagate tuples from the base table into all other tables
 	// BLIND APPROACH IS IMPLEMENTED - get list of PK-FK pairs
 	// THE SEARCH DEBTH SHOULD BE LIMITED
-	// SHOULD CREATE SEVERAL tables if a cycle is present 
+	// SHOULD CREATE SEVERAL tables if a cycle is present. So far only the farthest table is duplicated. 
 	// PROPAGATED TABLES SHOULD HAVE BEEN INDEXED
-	public static Map<String, String> propagateBase(Setting setting) {
+	public static SortedMap<String, Metadata.Table> propagateBase(Setting setting) {
 		// Initialize
 		ArrayList<String> tableList = Network.executeQuery(setting.connection, SQL.getTableList(setting, false));
 		Set<String> notPropagated = new HashSet<String>(tableList); 		// List of tables to propagate
 		Set<String> propagated = new HashSet<String>(); 					// List of propagated tables
 		propagated.add(setting.baseTable);
-		Map<String, String> conversionMap = new HashMap<String, String>();	// The output table in order <New, Old>
+		SortedMap<String, Metadata.Table> tableMetadata = new TreeMap<String, Metadata.Table>(); // The output list (based on the propagated name)
+		Table base = new Table();	// Temporarily add base table (used in propagationPath building)...
+		base.propagationPath = new ArrayList<String>();
+		base.originalName = "base";
+		tableMetadata.put(setting.baseTable, base);	//... into tableMetadata.
 		
 		// Call BFS
-		bfs(setting, 1, propagated, notPropagated, conversionMap);
+		tableMetadata = bfs(setting, 1, propagated, notPropagated, tableMetadata);
 		
-		return conversionMap;
+		// Remove base table (as we want a map of propagated tables)
+		tableMetadata.remove(setting.baseTable);
+		
+		return tableMetadata;
 	}
 
 	// Breadth First Search (BFS)
-	private static Map<String, String> bfs(Setting setting, int depth, Set<String> propagated, Set<String> notPropagated, Map<String, String> conversionMap) {
+	private static SortedMap<String, Metadata.Table> bfs(Setting setting, int depth, Set<String> propagated, Set<String> notPropagated, SortedMap<String, Metadata.Table> tableMetadata) {
 
 		// Initialization
 		Set<String> newlyPropagated = new HashSet<String>();		// Set of tables propagated at the current depth
@@ -66,7 +76,7 @@ public class Propagation{
 						outputTable = setting.propagatedPrefix + table2;	// Output table name 
 					} else {
 						hashMap.put("@idColumn1", id);
-						hashMap.put("@idColumn2", id); // Use id "as is"	
+						hashMap.put("@idColumn2", id); 	
 						outputTable = table1 + "_" + table2;	// Output table name with propagation path
 					}
 					hashMap.put("@inputTable1", table1);
@@ -76,7 +86,6 @@ public class Propagation{
 					// If idColumn2 is distinct in table2, it is unnecessary to set time condition.
 					// For example, in Customer table, which contains only static information, like Birth_date,
 					// it is not necessary to set the time constrain.
-					// THIS INFORMATION SHOUD BE CASHED
 					int maxCardinality = SQL.getCardinality(setting, hashMap);
 					
 					// Use time constrain
@@ -119,7 +128,7 @@ public class Propagation{
 							}
 							
 							hashMap.put("@outputTable", outputTable);
-							hashMap.remove("@dateColumn");		// remove time constrain
+							hashMap.remove("@dateColumn");	
 							isPropagated =  SQL.propagateID(setting, hashMap, true);
 						}
 					}
@@ -135,7 +144,17 @@ public class Propagation{
 					if (isPropagated) {
 						stillNotPropagated.remove(table2);
 						newlyPropagated.add(outputTable);
-						conversionMap.put(outputTable, table2);	// The output table
+						
+						// Add the table into tableMetadata list
+						Metadata.Table table = new Metadata.Table();
+						table.originalName = table2;
+						table.propagatedName = outputTable;
+						table.cardinality = maxCardinality;
+						table.propagationDate = hashMap.get("@dateColumn");
+						List<String> path = new ArrayList<String>(tableMetadata.get(table1).propagationPath); // Add copy propagation path from table1...
+						path.add(tableMetadata.get(table1).originalName); 	//... and add table1 name...
+						table.propagationPath = path; 						// ...to the table.
+						tableMetadata.put(outputTable, table);	
 					}
 				}
 			}
@@ -144,12 +163,12 @@ public class Propagation{
 		// If we didn't propagated ANY new table (i.e. tables are truly independent of each other) or we have 
 		// propagated all the tables, return the conversionMap.
 		if (newlyPropagated.isEmpty() || stillNotPropagated.isEmpty()) {
-			return conversionMap;
+			return tableMetadata;
 		}
 		
 		// Otherwise go a level deeper.
 		System.out.println("#### Finished propagation at depth: " + depth + " ####");
-		return bfs(setting, ++depth, newlyPropagated, stillNotPropagated, conversionMap);		
+		return bfs(setting, ++depth, newlyPropagated, stillNotPropagated, tableMetadata);		
 	}
 	
 }

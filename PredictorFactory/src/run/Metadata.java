@@ -1,26 +1,31 @@
 package run;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.TreeSet;
 
-import utility.Network;
 import utility.SQL;
 
+// Table metadata
 public class Metadata {
 	
 	// Define struct
 	public static class Table {
-		Set<String> numericalColumn;
-		Set<String> nominalColumn;
-		Set<String> dateColumn;
-		Set<String> dataColumn;
-		Set<String> anyColumn;
-		Set<String> idColumn;
-		int cardinality;
+		Set<String> numericalColumn;	// Aggregable columns
+		Set<String> nominalColumn;		// Categorical columns
+		Set<String> dateColumn;			// Time, date, datetime, timestamp...
+		Set<String> dataColumn;			// All but ids
+		Set<String> anyColumn;			// All columns
+		Set<String> idColumn;			// Just ids
+		int cardinality;				// Does combination {baseId, baseDate} repeat?
+		String originalName;			// The table name before propagation
+		String propagatedName;			// The table name after propagation
+		String pathName;				// Like propagated name, but without the prefix. Useful for predictor naming.
+		String propagationDate;			// Column used for time constrain during table propagation (in the last table).
+		List<String> propagationPath;	// In the case of loops this makes the difference.
 		boolean propagated;
 	}
 	
@@ -29,37 +34,26 @@ public class Metadata {
 	
 	// Get a list of tables with metainformation
 	// WE ARE CONSIDERING PROPAGATED TABLES - in baseId...
-	public static Map<String, Table> getMetadata(Setting setting){
-		// Make a list of tables
-		ArrayList<String> tableList = Network.executeQuery(setting.connection, SQL.getTableList(setting, true));
-		outputList = new HashMap<String, Table>(tableList.size()); 
-		for (String table : tableList) {
-			Table newTable = new Table();
-			newTable.numericalColumn = new TreeSet<String>(SQL.getColumnList(setting, table, "number"));
-			newTable.numericalColumn.removeAll(getIDColumnList(newTable.numericalColumn));
+	public static SortedMap<String, Table> getMetadata(Setting setting, SortedMap<String, Table> tableMetadata){
+
+		for (Table table : tableMetadata.values()) {
+			table.numericalColumn = new TreeSet<String>(SQL.getColumnList(setting, table.propagatedName, "number"));
+			table.numericalColumn.removeAll(getIDColumnList(table.numericalColumn));
 			
 			// THIS IS NOT EXACT. SOME NUMERICAL ATTRIBUTES ARE ALSO NOMINAL.
-			newTable.nominalColumn = new TreeSet<String>(SQL.getColumnList(setting, table, "string"));
-			newTable.nominalColumn.removeAll(getIDColumnList(newTable.nominalColumn));
+			table.nominalColumn = new TreeSet<String>(SQL.getColumnList(setting, table.propagatedName, "string"));
+			table.nominalColumn.removeAll(getIDColumnList(table.nominalColumn));
 			
-			newTable.dateColumn = new TreeSet<String>(SQL.getColumnList(setting, table, "date"));
-			newTable.dateColumn.removeAll(getIDColumnList(newTable.dateColumn));
+			table.dateColumn = new TreeSet<String>(SQL.getColumnList(setting, table.propagatedName, "date"));
+			table.dateColumn.removeAll(getIDColumnList(table.dateColumn));
 			
-			newTable.anyColumn = new TreeSet<String>(SQL.getColumnList(setting, table, "any"));
-			newTable.idColumn = getIDColumnList(newTable.anyColumn);
-			newTable.dataColumn = new TreeSet<String>(newTable.anyColumn);
-			newTable.dataColumn.removeAll(newTable.idColumn);
-			
-			// Get cardinality
-			Map<String, String> map = new HashMap<String, String>();
-			map.put("@inputTable2", table);
-			map.put("@idColumn2", setting.baseId);
-			newTable.cardinality = SQL.getCardinality(setting, map);
-			
-			outputList.put(table, newTable);
+			table.anyColumn = new TreeSet<String>(SQL.getColumnList(setting, table.propagatedName, "any"));
+			table.idColumn = getIDColumnList(table.anyColumn);
+			table.dataColumn = new TreeSet<String>(table.anyColumn);
+			table.dataColumn.removeAll(table.idColumn);
 		}
 		
-		return outputList;
+		return tableMetadata;
 	}
 	
 	// Subroutine: Return only ID columns

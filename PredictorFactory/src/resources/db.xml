@@ -33,6 +33,17 @@
      	createTableAsCompatible="yes" 
      	schemaCompatible="no"
     />
+    
+    <driver 
+    	name="MySQL-mutagenesis"
+     	driverClass="com.mysql.jdbc.Driver" 
+     	url="jdbc:mysql://db.motl.savana-hosting.cz:10019/mutagenesis" 
+     	username="mutagenesis" 
+     	password="predictor" 
+     	quoteMarks="``" 
+     	createTableAsCompatible="yes" 
+     	schemaCompatible="no"
+    />
      	
  	<driver 
     	name="Oracle"

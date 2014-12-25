@@ -3,6 +3,7 @@ package run;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 
@@ -16,7 +17,8 @@ public class Predictor implements Comparable<Predictor> {
 	public String inputTable;
 	public String inputTableOriginal;	// The table name before propagation. Useful for predictor naming. And origin tracking.
 	public SortedMap<String, String> columnMap;	// Contains columns like {@numericalColumn1, @nominalColumn3,...}
-	public String dateColumn;
+	public String propagationDate;			// The single column name that was used during base propagation as time constrain.
+	public List<String> propagationPath;	// In the case of loops path makes difference   
 	
 	//public String parameter1;
 	protected Map<String, String> parameterList = new HashMap<String, String>();
@@ -50,10 +52,12 @@ public class Predictor implements Comparable<Predictor> {
 	// For example PostgreSQL limits column labels to 63 characters.
 	// Firebird limits the length to 31 characters.
 	// Consider switching to StringBuffer
+	// The time consuming code should be performed just once and stored
 	public String getName() {
 		
 		// The expected result is something like: Table_Columns_Pattern_Parameters...
-		String name = inputTableOriginal;
+		String name = inputTableOriginal;	// Use propagated name without "propagated" prefix
+		name = name.replaceFirst("propagated_", "");
 		
 		for (String columnName : columnMap.values()) {
 			name = name + "_" + columnName;

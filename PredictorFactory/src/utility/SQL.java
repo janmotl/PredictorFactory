@@ -587,7 +587,8 @@ public final class SQL {
 	      "name varchar(255), " +
 	      "table_list varchar(1024), " +
 	      "column_list varchar(1024), " +
-	      "date_column varchar(255), " +
+	      "propagation_path varchar(1024), " +	      
+	      "date_constrain varchar(255), " +
 	      "parameter_list varchar(1024), " +
 	      "pattern_name varchar(254), " + 
 	      "pattern_code varchar(1024), " +
@@ -613,17 +614,16 @@ public final class SQL {
 	        "'" + predictor.getTimestampDesigned().format(formatter) + "', " +
 	        "'" + predictor.getTimestampDelivered().format(formatter) + "', " +
 	        "'" + predictor.getName() + "', " +
-	        "'" + predictor.inputTableOriginal + "', " + 		// Should be a list...
+	        "'" + predictor.inputTableOriginal + "', " + 			
 	        "'" + predictor.columnMap.toString() + "', " + 		// Should be a list...
-	        "'" + predictor.dateColumn + "', " + 
+	        "'" + predictor.propagationPath.toString() + "', " + 		   
+	        "'" + predictor.propagationDate + "', " + 
 	        "'" + predictor.getParameterList().toString() + "', " +  // Violates the 1st norm...
 	        "'" + predictor.getPatternName() + "', " + 
 	        "'" + predictor.getPatternCode() + "', " +
 	        "'" + predictor.getSql() + "', " +
-//	        "'" + predictor.getRelevanceList().keySet().iterator().next() + "', " + 	// Should be a list...
-//	        "'" + predictor.getRelevanceList().entrySet().iterator().next() + "', " + 	// Should be a list...
-			"'" + 0 + "', " + // Place holder
-			"'" + 0 + "', " + // Place holder
+			"'" + 0 + "', " + // Place holder for target
+			"'" + 0 + "', " + // Place holder for Chi2
 	        "'" + predictor.getRowCount() + "', " + 	// Should be a list...
 	        predictor.isOk() + ")";
 	    
