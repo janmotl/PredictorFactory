@@ -4,7 +4,7 @@ PredictorFactory
 Automatic preprocessing of relational data for data mining.
 
 How to get it work
-==================
+===
 1.	Install JDK 1.8 or newer.
 2.	Install Eclipse for Java Developers.
 3.	Start Eclipse.
