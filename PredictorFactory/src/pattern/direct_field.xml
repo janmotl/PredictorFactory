@@ -7,6 +7,9 @@ that it also returns non-numerical columns.
 	</description>
 	<author>Jan Motl</author>
 	<date>2014-10-14</date>
-	<code>SELECT @baseId, @baseDate, @anyColumn "@columnName" FROM @inputTable</code>
+	<code>SELECT @baseId
+			   , @baseDate
+			   , @anyColumn "@columnName"
+		  FROM @inputTable</code>
 	<cardinality>1</cardinality>
 </pattern>

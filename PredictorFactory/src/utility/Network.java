@@ -20,6 +20,7 @@ public final class Network {
 
 	
 	// Return the connection and database configuration
+	// WOULDN'T DataSource BE ENOUGH?
 	public static Setting getConnection(Setting setting) {
         
         // Load the configuration file from XML
@@ -69,12 +70,11 @@ public final class Network {
 			isOk = true; 
 			logToConsole("OK", "", sql);
 		} catch (SQLException e) {
-			//e.printStackTrace();
-			//System.out.println("SQL state: " + e.getSQLState()); // ANSI code
- 			//System.out.println(e.getMessage()); // String
  			logToConsole("ERROR", e.getMessage(), sql);
  			//log(connection, SQL.addToStatementJournal(setting, sql, e.getSQLState(), e.getMessage()));
-		} 
+		}
+	    
+	    // Technical: Do not close the connection here. The connection is closed at the end of the Launcher. 
 	    
 	    return isOk;
     }
@@ -100,11 +100,10 @@ public final class Network {
 			}
 			logToConsole("OK", "", sql);
 		} catch (SQLException e) {
-			//e.printStackTrace();
-			//System.out.println("SQL state: " + e.getSQLState()); // ANSI code
- 			//System.out.println(e.getMessage()); // String
 			logToConsole("ERROR", e.getMessage(), sql);
-		}
+		} 
+	    
+	    // Technical: Do not close the connection here. The connection is closed at the end of the Launcher.
 	    
 	    return result;
     }

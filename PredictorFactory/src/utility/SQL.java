@@ -591,6 +591,7 @@ public final class SQL {
 	      "date_constrain varchar(255), " +
 	      "parameter_list varchar(1024), " +
 	      "pattern_name varchar(254), " + 
+	      "pattern_author varchar(254), " + 
 	      "pattern_code varchar(1024), " +
 	      "sql_code varchar(1024), " +
 	      "target varchar(255), " +
@@ -620,6 +621,7 @@ public final class SQL {
 	        "'" + predictor.propagationDate + "', " + 
 	        "'" + predictor.getParameterList().toString() + "', " +  // Violates the 1st norm...
 	        "'" + predictor.getPatternName() + "', " + 
+	        "'" + predictor.patternAuthor + "', " + 
 	        "'" + predictor.getPatternCode() + "', " +
 	        "'" + predictor.getSql() + "', " +
 			"'" + 0 + "', " + // Place holder for target

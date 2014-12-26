@@ -120,10 +120,6 @@ public class Launcher{
 				if (dateName == null) {
 					continue;
 				}
-				
-				System.out.println(workingTable.dateColumn.size());
-				System.out.println(workingTable);
-				System.out.println(dateName);
 
 				// For each data/any column 
 				for (String columnName : workingTable.anyColumn) { // CHEATING
@@ -140,6 +136,7 @@ public class Launcher{
 					predictor.outputTable = "predictor" + (predictor.getId());
 					predictor.propagationDate = workingTable.propagationDate;
 					predictor.propagationPath = workingTable.propagationPath;
+					predictor.patternAuthor = pattern.getAuthor();
 
 					// Calculate the predictor
 					journal = getPredictor(setting, journal, predictor);
@@ -179,6 +176,7 @@ public class Launcher{
 					predictor.outputTable = "predictor" + (predictor.getId());
 					predictor.propagationDate = workingTable.propagationDate;
 					predictor.propagationPath = workingTable.propagationPath;
+					predictor.patternAuthor = pattern.getAuthor();
 					
 					// Calculate the predictor
 					journal = getPredictor(setting, journal, predictor);	
@@ -214,6 +212,7 @@ public class Launcher{
 					predictor.outputTable = "predictor" + (predictor.getId());
 					predictor.propagationDate = workingTable.propagationDate;
 					predictor.propagationPath = workingTable.propagationPath;
+					predictor.patternAuthor = pattern.getAuthor();
 					
 					// Calculate the predictor
 					journal = getPredictor(setting, journal, predictor);					
@@ -255,6 +254,7 @@ public class Launcher{
 					predictor.outputTable = "predictor" + (predictor.getId());
 					predictor.propagationDate = workingTable.propagationDate;
 					predictor.propagationPath = workingTable.propagationPath;
+					predictor.patternAuthor = pattern.getAuthor();
 	
 					// Calculate the predictor
 					journal = getPredictor(setting, journal, predictor);
@@ -268,10 +268,13 @@ public class Launcher{
 		// Make MainSample
 		SQL.getMainSample(setting, journal.getAllTables(), journal.getAllColumns());
 
+		// Be nice toward the server and close the connection
+		try {setting.connection.close();} catch (Exception e) {}
 		
 		// Tell the user we are finished
 		System.out.println("#### Finished in " + journal.getRunTime() + " miliseconds ####");
 			
+		
 	}
 	
 	// Subroutine: create predictor with index and QC

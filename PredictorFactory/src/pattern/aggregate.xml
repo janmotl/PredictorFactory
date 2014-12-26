@@ -13,7 +13,9 @@
 	</description>
 	<author>Jan Motl</author>
 	<date>2014-10-14</date>
-	<code>SELECT @baseId, @baseDate, @aggregateFunction(@numericalColumn) "@columnName"
+	<code>SELECT @baseId
+			   , @baseDate
+			   , @aggregateFunction(@numericalColumn) "@columnName"
 	      FROM @inputTable
 	      GROUP BY @baseId, @baseDate
 	</code>

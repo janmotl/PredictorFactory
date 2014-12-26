@@ -18,7 +18,8 @@ public class Predictor implements Comparable<Predictor> {
 	public String inputTableOriginal;	// The table name before propagation. Useful for predictor naming. And origin tracking.
 	public SortedMap<String, String> columnMap;	// Contains columns like {@numericalColumn1, @nominalColumn3,...}
 	public String propagationDate;			// The single column name that was used during base propagation as time constrain.
-	public List<String> propagationPath;	// In the case of loops path makes difference   
+	public List<String> propagationPath;	// In the case of loops path makes difference  
+	public String patternAuthor;			// Adds an element of gamification
 	
 	//public String parameter1;
 	protected Map<String, String> parameterList = new HashMap<String, String>();
