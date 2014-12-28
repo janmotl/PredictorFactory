@@ -2,24 +2,26 @@ package run;
 
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.apache.commons.lang3.text.WordUtils;
 
 
 public class Predictor implements Comparable<Predictor> {
 
-	// Struct for predictor's metadata
+	// Struct for predictor's metadata. Make sure that each object is initialized to something and doesn't return null!
 	public String outputTable;
 	public String inputTable;
 	public String inputTableOriginal;	// The table name before propagation. Useful for predictor naming. And origin tracking.
-	public SortedMap<String, String> columnMap;	// Contains columns like {@numericalColumn1, @nominalColumn3,...}
-	public String propagationDate;			// The single column name that was used during base propagation as time constrain.
-	public List<String> propagationPath;	// In the case of loops path makes difference  
-	public String patternAuthor;			// Adds an element of gamification
+	public SortedMap<String, String> columnMap = new TreeMap<String, String>();	// Contains {@anyColumn=gender,...}
+	public String propagationDate;		// The single column name that was used during base propagation as time constrain.
+	public List<String> propagationPath = new ArrayList<String>();	// In the case of loops path makes difference  
+	public String patternAuthor;		// Adds an element of gamification
 	
 	//public String parameter1;
 	protected Map<String, String> parameterList = new HashMap<String, String>();
@@ -34,6 +36,7 @@ public class Predictor implements Comparable<Predictor> {
 	private String sql;								// SQL code
 	private boolean isOk;							// Flag 
 	private int rowCount;							// Count of rows in the predictor's table
+	private int nullCount;							// Count of null rows in the predictor's table
 	private final String patternName;				// Inherited from the pattern during the class construction
 	private final String patternCode;				// Inherited from the pattern during the class construction
 	private final LocalDateTime timestampDesigned; 	// When the predictor was defined
@@ -45,6 +48,7 @@ public class Predictor implements Comparable<Predictor> {
 		timestampDesigned = LocalDateTime.now();
 		patternName = pattern.getName();
 		patternCode = pattern.getCode();
+		patternAuthor = pattern.getAuthor();	
 	}
 
 	
@@ -60,6 +64,7 @@ public class Predictor implements Comparable<Predictor> {
 		String name = inputTableOriginal;	// Use propagated name without "propagated" prefix
 		name = name.replaceFirst("propagated_", "");
 		
+		// Add column names
 		for (String columnName : columnMap.values()) {
 			name = name + "_" + columnName;
 		}
@@ -161,6 +166,14 @@ public class Predictor implements Comparable<Predictor> {
 		this.rowCount = rowCount;
 	}
 	
+	public int getNullCount() {
+		return nullCount;
+	}
+
+	public void setNullCount(int nullCount) {
+		this.nullCount = nullCount;
+	}
+
 	public Map<String, Double> getRelevanceList() {
 		return relevanceList;
 	}

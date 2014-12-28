@@ -150,9 +150,9 @@ public final class SQL {
 	    if (StringUtils.isBlank(pattern_code)) {
 	      throw new IllegalArgumentException("Code is required");
 	    }
-	    if (predictor.columnMap.isEmpty()) {
-	      throw new IllegalArgumentException("Some column is required");
-	    }
+	    if (predictor.columnMap==null) {
+		  throw new IllegalArgumentException("ColumnMap can not be null, but it can be empty");
+		}
 	    if (StringUtils.isBlank(predictor.inputTable)) {
 	      throw new IllegalArgumentException("InputTable is required");
 	    }
@@ -162,7 +162,6 @@ public final class SQL {
 	    String sql;
 
 	    sql = pattern_code.replace("@inputTable", QL + predictor.inputTable + QR);
-	    //sql = sql.replace("@dateColumn", QL + predictor.dateColumn + QR);  // This should be in columnMap
 	    sql = sql.replace("@columnName",  predictor.getName());
 	    
 	    for (String columnName : predictor.columnMap.keySet()) {
@@ -394,11 +393,28 @@ public final class SQL {
 		sql = expandName(setting, sql);
 		sql = escapeEntity(setting, sql, inputTable);
 		
-		// Dirt cheap approach how to get row count is database/driver specific. Hence universal count(*) 
+		// Dirt cheap approach how to get row count is unfortunately database/driver specific. Hence universal count(*) 
 		// is implemented. Some databases, like MySQL, returns the answer to count(*) query immediately. In other 
 		// databases, like PostgreSQL, you may have to wait ~200ms.
 		
 		return sql; 
+	}
+	
+	// Get count of nulls
+	// Useful for QC of the predictors
+	public static int getNullCount(Setting setting, String table, String column) {
+		String sql = "SELECT sum(@column is null) FROM @outputTable";
+		
+		sql = expandName(setting, sql);
+		sql = escapeEntity(setting, sql, table);
+		
+		Map<String, String> fieldMap = new HashMap<String, String>(); 
+		fieldMap.put("@column", column);
+		sql = escapeEntityMap(setting, sql, fieldMap);
+		
+		ArrayList<String> resultList = Network.executeQuery(setting.connection, sql);
+		
+		return Integer.valueOf(resultList.get(0)).intValue(); // Can return NullPointerException
 	}
 	
 	// Get maximal cardinality of the table in respect to baseId. If the cardinality is 1:1, 
@@ -597,6 +613,7 @@ public final class SQL {
 	      "target varchar(255), " +
 	      "relevance decimal(18,10), " +
 	      "qc_rowCount bigint DEFAULT '0', " +
+	      "qc_nullCount bigint DEFAULT '0', " +
 	      "is_ok smallint DEFAULT '0', " +
 	      "PRIMARY KEY (predictor_id))";
 		
@@ -626,7 +643,8 @@ public final class SQL {
 	        "'" + predictor.getSql() + "', " +
 			"'" + 0 + "', " + // Place holder for target
 			"'" + 0 + "', " + // Place holder for Chi2
-	        "'" + predictor.getRowCount() + "', " + 	// Should be a list...
+	        "'" + predictor.getRowCount() + "', " + 
+	        "'" + predictor.getNullCount() + "', " + 
 	        predictor.isOk() + ")";
 	    
 		sql = expandName(setting, sql);

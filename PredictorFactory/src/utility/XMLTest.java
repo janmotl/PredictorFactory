@@ -1,8 +1,8 @@
 package utility;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.testng.annotations.Test;
 import org.testng.Assert;
@@ -17,7 +17,7 @@ public class XMLTest {
 		Pattern pred = new Pattern();
 		
 		// Parameter: test setter & getter
-		Map<String, String> map = new HashMap<String, String>(2);
+		SortedMap<String, String> map = new TreeMap<String, String>();
 		map.put("1", "a");
 		map.put("2", "b");
 		pred.setParameterMap(map);

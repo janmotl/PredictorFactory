@@ -2,10 +2,12 @@ package run;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 
 import javax.xml.bind.annotation.XmlAttribute;
@@ -21,8 +23,6 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 @XmlType(propOrder = { "name", "description", "author", "date", "code" ,"parameter", "cardinality"})
 
 public final class Pattern {
-	// Settings
-	private static final String[] KEYWORDLIST = { "column", "inputTable", "time" };
 
 	// Parameters
 	private String name;
@@ -31,7 +31,7 @@ public final class Pattern {
 	private LocalDate date;
 	private String code;
 	private String cardinality;
-	private Map<String, String> parameter = new HashMap<String, String>();
+	private SortedMap<String, String> parameter = new TreeMap<String, String>();
 
     public static class MapEntry {  
         @XmlAttribute  
@@ -42,74 +42,26 @@ public final class Pattern {
 	
 
 	// Constructor
-	public Pattern() {		
+	public Pattern() {
 
 	};
 
-	// Get meta information about the pattern
-	// Should be named getTableList and getColumnList
-	public int[] getParameterCount() {
+	// Return set of columns to bind. The set is obtained by parsing the code.
+	public SortedSet<String> getColumnSet() {
 		// Initialization
-		int[] keywordOccurence = new int[KEYWORDLIST.length];
+		SortedSet<String> columnSet = new TreeSet<String>();
 
-		// Count occurrence of each keyword in the code
-		for (int i = 0; i < keywordOccurence.length; i++) {
-			String regexPattern = "(.)(@" + KEYWORDLIST[i] + ")(.)";
-			keywordOccurence[i] = 0;
-			Matcher m = java.util.regex.Pattern.compile(regexPattern).matcher(
-					code);
-			while (m.find()) {
-				keywordOccurence[i]++;
-			}
-		}
-
-		// Return
-		return keywordOccurence;
-	}
-
-	// Get all parameters of the pattern
-	// NOT USED
-	public ArrayList<String> getParameters() {
-		// Initialization
-		ArrayList<String> parameterList = new ArrayList<String>();
-
-		// Count occurrence of each keyword in the code
-		for (String keyword : KEYWORDLIST) {
-			String regexPattern = "@" + keyword + "\\d*";
-			Matcher m = java.util.regex.Pattern.compile(regexPattern).matcher(
-					code);
-			while (m.find()) {
-				parameterList.add(m.group());
-			}
-		}
-
-		// Return
-		return parameterList;
-	}
-	
-	// Return list of columns
-	public ArrayList<String> getColumnList() {
-		// Initialization
-		ArrayList<String> columnList = new ArrayList<String>();
-
-		// Return each occurrence of "@*column*" in the code. The search is case insensitive.
-		String regexPattern = "@.*COLUMN.*";
-		Matcher m = java.util.regex.Pattern.compile(regexPattern).matcher(code.toUpperCase());
+		// Return each occurrence of "@?*column*" in the code. The search is (for simplicity) case sensitive.
+		String regexPattern = "@\\w+Column\\w*";
+		Matcher m = java.util.regex.Pattern.compile(regexPattern).matcher(code);
 		while (m.find()) {
-			columnList.add(m.group());
+			columnSet.add(m.group());
 		}
 		
 		// Return
-		return columnList;
+		return columnSet;
 	}
 
-	// Get parameterList
-//	public String[] popParameterList() {
-//		String[] parameterList = parameter.get("@aggregateFunction").split(",");
-//	}
-	
-	
-	
 
 	//////////// Setters and getters //////////
 	public String getName() {
@@ -183,14 +135,14 @@ public final class Pattern {
         }  
     }  
 	
-    // HashMap version for use in Predictor Factory (but not for JAXB)
+    // Map version for use in Predictor Factory (but not for JAXB)
     @XmlTransient
-	public Map<String, String> getParameterMap() {
+	public SortedMap<String, String> getParameterMap() {
 		return parameter;
 	}
 
-	public void setParameterMap(Map<String, String> parameter) {
-		this.parameter = parameter;
+	public void setParameterMap(SortedMap<String, String> map) {
+		this.parameter = map;
 	}
 
 

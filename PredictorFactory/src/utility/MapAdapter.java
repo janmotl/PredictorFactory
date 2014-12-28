@@ -25,12 +25,9 @@ class MapElements {
     }
 }
 
-
+// Should have been used 
 public class MapAdapter extends XmlAdapter<MapElements[], Map<String, String>> {
-	// Constructor
-	
-	public MapAdapter() {
-	}
+
 
 	// Marshal (java -> XML)
 	public MapElements[] marshal(Map<String, String> arg0) throws Exception {

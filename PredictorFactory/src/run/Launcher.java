@@ -1,9 +1,14 @@
 package run;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
+
+import com.rits.cloning.Cloner;
 
 import run.Metadata.Table;
 import utility.Network;
@@ -98,173 +103,9 @@ public class Launcher{
 		tableMetadata = Metadata.getMetadata(setting, tableMetadata);
 		System.out.println("#### Finished metadata collection in " + journal.getRunTime() + " miliseconds ####");
 		
-
-		
-		
-		/////////////////////////// COPY & PASTE UGLINES /////////////////////////
-		// Read a pattern
-		Pattern pattern = XML.xml2pattern("src/pattern/last.xml");	// SHOULD ITERATE OVER ALL PATTERNS IN THE DIRECTORY
-		boolean patternCardinality = pattern.getCardinality().equals("n");	// Pattern cardinality is treated as binary
-
-		// For each propagated table
-		for (Table workingTable : tableMetadata.values()) {
-			// Skip tables with wrong cardinality
-			boolean tableCardinality = workingTable.cardinality > 1;
-			if (patternCardinality != tableCardinality) {
-				continue;
-			}
-
-			// For each date column
-			for (String dateName : workingTable.dateColumn) { // CHEATING
-
-				if (dateName == null) {
-					continue;
-				}
-
-				// For each data/any column 
-				for (String columnName : workingTable.anyColumn) { // CHEATING
-
-					// Assembly the predictor
-					Predictor predictor = new Predictor(pattern);
-					predictor.inputTable = workingTable.propagatedName;
-					predictor.inputTableOriginal = workingTable.originalName;
-					SortedMap<String, String> columnMap = new TreeMap<String, String>();
-					columnMap.put("@anyColumn", columnName); // CHEATING
-					columnMap.put("@dateColumn", dateName); // CHEATING
-					predictor.columnMap = columnMap;
-					predictor.setId(journal.getNextId(setting));
-					predictor.outputTable = "predictor" + (predictor.getId());
-					predictor.propagationDate = workingTable.propagationDate;
-					predictor.propagationPath = workingTable.propagationPath;
-					predictor.patternAuthor = pattern.getAuthor();
-
-					// Calculate the predictor
-					journal = getPredictor(setting, journal, predictor);
-				}
-			}
-		}
-		
-		/////////////////////////// COPY & PASTE UGLINES /////////////////////////	
-		// Read a pattern
-		pattern = XML.xml2pattern("src/pattern/aggregate.xml");	// SHOULD ITERATE OVER ALL PATTERNS IN THE DIRECTORY
-		String[] parameterList = pattern.getParameterMap().get("@aggregateFunction").split(",");  // CHEATING
-		patternCardinality = pattern.getCardinality().equals("n");	// Pattern cardinality is treated as binary
-		
-		// For each propagated table		
-		for (Table workingTable : tableMetadata.values()) {
-			// Skip tables with wrong cardinality
-			boolean tableCardinality = workingTable.cardinality>1;
-			if (patternCardinality != tableCardinality) {
-				continue;
-			}
-			
-			// For each numerical column
-			for (String columnName : workingTable.numericalColumn) {		// CHEATING - should read from XML
-
-				// For each parameter													// CHEATING
-				for (String parameter : parameterList) {
-					
-					// Assembly the predictor
-					Predictor predictor = new Predictor(pattern);
-					predictor.inputTable = workingTable.propagatedName;
-					predictor.inputTableOriginal = workingTable.originalName;
-					SortedMap<String,	String> columnMap = new TreeMap<String, String>();		
-					columnMap.put("@numericalColumn", columnName);						// CHEATING - should read from XML
-					predictor.columnMap = columnMap;
-					predictor.parameterList.put("@aggregateFunction", parameter);		// CHEATING
-					predictor.setId(journal.getNextId(setting)); 	
-					predictor.outputTable = "predictor" + (predictor.getId());
-					predictor.propagationDate = workingTable.propagationDate;
-					predictor.propagationPath = workingTable.propagationPath;
-					predictor.patternAuthor = pattern.getAuthor();
-					
-					// Calculate the predictor
-					journal = getPredictor(setting, journal, predictor);	
-				}		
-			}
-		}
-		
-		
-		/////////////////////////// COPY & PASTE UGLINES /////////////////////////
-		// Read a pattern
-		pattern = XML.xml2pattern("src/pattern/direct_field.xml");
-		patternCardinality = pattern.getCardinality().equals("n");	// Pattern cardinality is treated as binary
-		
-		// For each propagated table		
-		for (Table workingTable : tableMetadata.values()) {
-			// Skip tables with wrong cardinality
-			boolean tableCardinality = workingTable.cardinality>1;
-			if (patternCardinality != tableCardinality) {
-				continue;
-			}
-			
-			// For each data column
-			for (String columnName : workingTable.dataColumn) {		// CHEATING
+		// Loop over all patterns in pattern directory
+		loopPatterns(setting, journal, tableMetadata);
 				
-					// Assembly the predictor
-					Predictor predictor = new Predictor(pattern);
-					predictor.inputTable = workingTable.propagatedName;
-					predictor.inputTableOriginal = workingTable.originalName;
-					SortedMap<String,	String> columnMap = new TreeMap<String, String>();		
-					columnMap.put("@anyColumn", columnName);						// CHEATING
-					predictor.columnMap = columnMap;
-					predictor.setId(journal.getNextId(setting)); 	
-					predictor.outputTable = "predictor" + (predictor.getId());
-					predictor.propagationDate = workingTable.propagationDate;
-					predictor.propagationPath = workingTable.propagationPath;
-					predictor.patternAuthor = pattern.getAuthor();
-					
-					// Calculate the predictor
-					journal = getPredictor(setting, journal, predictor);					
-			}
-		}
-		
-		/////////////////////////// COPY & PASTE UGLINES /////////////////////////
-		// Read a pattern
-		pattern = XML.xml2pattern("src/pattern/slope.xml");
-		patternCardinality = pattern.getCardinality().equals("n");	// Pattern cardinality is treated as binary
-		
-		// For each propagated table
-		for (Table workingTable : tableMetadata.values()) {
-			// Skip tables with wrong cardinality
-			boolean tableCardinality = workingTable.cardinality > 1;
-			if (patternCardinality != tableCardinality) {
-				continue;
-			}
-
-			// For each date column
-			for (String dateName : workingTable.dateColumn) { // CHEATING
-				
-				if (dateName == null) {
-					continue;
-				}
-				
-				// For each data column
-				for (String columnName : workingTable.numericalColumn) { // CHEATING
-	
-					// Assembly the predictor
-					Predictor predictor = new Predictor(pattern);
-					predictor.inputTable = workingTable.propagatedName;
-					predictor.inputTableOriginal = workingTable.originalName;
-					SortedMap<String, String> columnMap = new TreeMap<String, String>();
-					columnMap.put("@numericalColumn", columnName); // CHEATING
-					columnMap.put("@dateColumn", dateName); // CHEATING
-					predictor.columnMap = columnMap;
-					predictor.setId(journal.getNextId(setting));
-					predictor.outputTable = "predictor" + (predictor.getId());
-					predictor.propagationDate = workingTable.propagationDate;
-					predictor.propagationPath = workingTable.propagationPath;
-					predictor.patternAuthor = pattern.getAuthor();
-	
-					// Calculate the predictor
-					journal = getPredictor(setting, journal, predictor);
-				}
-			}
-		}
-		
-		
-		
-		
 		// Make MainSample
 		SQL.getMainSample(setting, journal.getAllTables(), journal.getAllColumns());
 
@@ -277,7 +118,7 @@ public class Launcher{
 		
 	}
 	
-	// Subroutine: create predictor with index and QC
+	// Subroutine 5: Create predictor with index and QC.
 	private static Journal getPredictor(Setting setting, Journal journal, Predictor predictor) {
 		// Convert pattern to SQL
 		predictor.setSql(SQL.getPredictor(setting, predictor));
@@ -294,6 +135,9 @@ public class Launcher{
 		sql = SQL.getRowCount(setting, predictor.outputTable);
 		predictor.setRowCount(Integer.valueOf(Network.executeQuery(setting.connection, sql).get(0)));
 		
+		// Add null count
+		predictor.setNullCount(SQL.getNullCount(setting, predictor.outputTable, predictor.getName()));
+		
 		// Add univariate relevance estimate
 		// Should be conditional on QC
 //		Map<String, Double> relevanceList = new HashMap<String, Double>(1);
@@ -306,45 +150,116 @@ public class Launcher{
 		return journal;
 	}
 
-	// Subroutine: recursively generate each possible combination of the parameters.
-	// SOME OF THE PARAMETERS SHOULD BE SET BEFORE
+	// Subroutine 4: Recursively generate each possible combination of the parameters.
 	// MAKE SETTING & JOURNAL GLOBAL AS THERE IS JUST ONE INSTANCE OF THEM -> THE LAUNCHER SHOULD MAKE A OBJECT
-	// IN PROCESS OF DEVELOPMENT
-	private static void loopParameters(Setting setting, Journal journal, Predictor predictor, Pattern pattern, SortedMap<String, String> parameterMap) {
+	private static void loopParameters(Setting setting, Journal journal, Predictor predictor, SortedMap<String, String> parameterMap) {
 		
-		// Termination condition a: empty map
+		// Termination condition: empty parameterMap - do not set any parameter, just get the predictor
 		if (parameterMap.isEmpty()) {
-			journal = getPredictor(setting, journal, predictor);	// Do not set any parameter, just get the predictor.
+			// Assembly the predictor
+			predictor.setId(journal.getNextId(setting)); 	
+			predictor.outputTable = "predictor" + (predictor.getId());
+			
+			// Get an immutable copy of the predictor and store it into the journal.
+			Cloner cloner=new Cloner(); // SHOULD HAVE BEEN INITIALIZED ONCE
+			final Predictor predictorFinal=cloner.deepClone(predictor); // I like the idea that it is immutable
+			
+			// Calculate the predictor
+			journal = getPredictor(setting, journal, predictorFinal);	// I SHOULD BE RETURNING THE JOURNAL
+	
 			return;
 		}
-		
-		// Termination condition b: map with one key
-		if (parameterMap.size()==1) {
-			String parameterName = parameterMap.firstKey();	
-			
-			// Loop over each parameter value
-			for (String parameterValue : parameterMap.get(parameterName).split(",")) {
-				predictor.parameterList.put(parameterName, parameterValue);	
-				journal = getPredictor(setting, journal, predictor);	
-			}
-			
-			return;
-		}
-		
-		// Reduction step:
-		String parameterName = parameterMap.firstKey();
-		
-		// Loop over each parameter value and add it to the predictor
+				
+		// Reduction step: get rid of one parameter
+		String parameterName = parameterMap.firstKey();	// Pick a parameter
+		TreeMap<String, String> parameterMapReduced = new TreeMap<String, String>(parameterMap); // Make a copy...
+		parameterMapReduced.remove(parameterName);		// ...without the parameter
+				
 		for (String parameterValue : parameterMap.get(parameterName).split(",")) {
-			predictor.parameterList.put(parameterName, parameterValue);	
+			predictor.parameterList.put(parameterName, parameterValue);			// Bind the parameter to the value
+			
+			loopParameters(setting, journal, predictor, parameterMapReduced); 	// Tail recursion
 		}
 		
-		parameterMap.remove(parameterName);	// Decrement the parameterMap length by 1
-		loopParameters(setting, journal, predictor, pattern, parameterMap); // Tail recursion
+		return;
+	}
+	
+	// Subroutine 3: Recursively generate each possible combination of the columns.
+	private static void loopColumns(Setting setting, Journal journal, Predictor predictor, Pattern pattern, SortedSet<String> columnSet, Table table) {
+		
+		// Termination condition: Empty columnList
+		if (columnSet.isEmpty()) {
+			loopParameters(setting, journal, predictor, pattern.getParameterMap());	;	// Just get the predictor.
+			return;
+		}
+				
+		// Reduction step: 
+		String columnName = columnSet.first();	// Pick a column 
+		SortedSet<String> reducedSet = new TreeSet<String>(columnSet);	// Make a copy of the columnList...
+		reducedSet.remove(columnName);	//...without the column
+		
+		// Pick the right set of columns to iterate over
+		SortedSet<String> columnValueSet = table.anyColumn;	// By default all columns are considered
+		if ("@NUMERICALCOLUMN".equals(columnName.toUpperCase())) columnValueSet = table.numericalColumn;	// Case insensitive
+		if ("@NOMINALCOLUMN".equals(columnName.toUpperCase())) columnValueSet = table.nominalColumn;	// Could use switch-case
+		if ("@DATECOLUMN".equals(columnName.toUpperCase())) columnValueSet = table.dateColumn;
+		if ("@DATACOLUMN".equals(columnName.toUpperCase())) columnValueSet = table.dataColumn;
+		if ("@IDCOLUMN".equals(columnName.toUpperCase())) columnValueSet = table.idColumn;
+		
+		// Bind a column variable to the actual column name.  
+		for (String columnValue : columnValueSet) {
+			predictor.columnMap.put(columnName, columnValue);
+			
+			loopColumns(setting, journal, predictor, pattern, reducedSet, table); // Continue with the reduced list.
+		}
 		
 		return;
 	}
 
+	// Subroutine 2: Loop over the propagated tables
+	private static void loopTables(Setting setting, Journal journal, Predictor predictor, Pattern pattern, SortedMap<String, Table> tableMetadata) {
+		
+		boolean patternCardinality = pattern.getCardinality().equals("n");	// Pattern cardinality is treated as binary
+		
+		// For each propagated table. There can be only one input table, hence it is not necessary to perform recursion.
+		for (Table workingTable : tableMetadata.values()) {
+			// Skip tables with wrong cardinality
+			boolean tableCardinality = workingTable.cardinality > 1;
+			if (patternCardinality != tableCardinality) {
+				continue;
+			}
+
+			predictor.inputTable = workingTable.propagatedName;
+			predictor.inputTableOriginal = workingTable.originalName;
+			predictor.propagationDate = workingTable.propagationDate;
+			predictor.propagationPath = workingTable.propagationPath;
+
+			loopColumns(setting, journal, predictor, pattern, pattern.getColumnSet(), workingTable); 
+
+		}
+		
+		return;
+	}
+	
+	// Subroutine 1: Loop over patterns
+	private static void loopPatterns(Setting setting, Journal journal, SortedMap<String, Table> tableMetadata) {
+
+		File dir = new File("src/pattern");
+		File[] directoryListing = dir.listFiles();
+		if (directoryListing != null) {
+			for (File path : directoryListing) {			
+				Pattern pattern = XML.xml2pattern(path.toString());		// Read a pattern
+				Predictor predictor = new Predictor(pattern);			// Build a predictor from the pattern
+				loopTables(setting, journal, predictor, pattern, tableMetadata);	// Set other parameters
+			}
+		} else {
+			// Handle the case where dir is not really a directory.
+			// Checking dir.isDirectory() would not be sufficient
+			// to avoid race conditions with another process that deletes
+			// directories.
+		}			 
+	}
+	
 }
 
 

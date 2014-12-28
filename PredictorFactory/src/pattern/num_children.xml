@@ -9,7 +9,7 @@
 	<date>2014-12-25</date>
 	<code>SELECT @baseId, @baseDate, coalesce(count(*),0) "@columnName"
 	      FROM @inputTable
-	      GROUP BY @baseId
+	      GROUP BY @baseId, @baseDate
 	</code>
 	<cardinality>n</cardinality>
 </pattern>

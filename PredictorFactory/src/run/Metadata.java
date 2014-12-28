@@ -2,9 +2,8 @@ package run;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import utility.SQL;
@@ -14,12 +13,12 @@ public class Metadata {
 	
 	// Define struct
 	public static class Table {
-		Set<String> numericalColumn;	// Aggregable columns
-		Set<String> nominalColumn;		// Categorical columns
-		Set<String> dateColumn;			// Time, date, datetime, timestamp...
-		Set<String> dataColumn;			// All but ids
-		Set<String> anyColumn;			// All columns
-		Set<String> idColumn;			// Just ids
+		SortedSet<String> numericalColumn;	// Aggregable columns (sorted to make selection of a single element concise)
+		SortedSet<String> nominalColumn;	// Categorical columns
+		SortedSet<String> dateColumn;		// Time, date, datetime, timestamp...
+		SortedSet<String> dataColumn;		// All but ids
+		SortedSet<String> anyColumn;		// All columns
+		SortedSet<String> idColumn;			// Just ids
 		int cardinality;				// Does combination {baseId, baseDate} repeat?
 		String originalName;			// The table name before propagation
 		String propagatedName;			// The table name after propagation
@@ -29,7 +28,7 @@ public class Metadata {
 		boolean propagated;
 	}
 	
-	public static Map<String, Table> outputList;
+	public static SortedMap<String, Table> outputList;
 	
 	
 	// Get a list of tables with metainformation
@@ -48,7 +47,7 @@ public class Metadata {
 			table.dateColumn.removeAll(getIDColumnList(table.dateColumn));
 			
 			table.anyColumn = new TreeSet<String>(SQL.getColumnList(setting, table.propagatedName, "any"));
-			table.idColumn = getIDColumnList(table.anyColumn);
+			table.idColumn = new TreeSet<String>(getIDColumnList(table.anyColumn));
 			table.dataColumn = new TreeSet<String>(table.anyColumn);
 			table.dataColumn.removeAll(table.idColumn);
 		}
@@ -57,8 +56,8 @@ public class Metadata {
 	}
 	
 	// Subroutine: Return only ID columns
-	private static Set<String> getIDColumnList(Set<String> columnList){
-		Set<String> result = new TreeSet<String>(); 
+	private static SortedSet<String> getIDColumnList(SortedSet<String> columnList){
+		SortedSet<String> result = new TreeSet<String>(); 
 		for (String columnName : columnList) {
 			String columnNameCI = columnName.toUpperCase(Locale.ROOT);	// Case insensitive search.
 			if (columnNameCI.startsWith("ID") || columnNameCI.endsWith("ID") || columnNameCI.endsWith("_NO") ) result.add(columnName);

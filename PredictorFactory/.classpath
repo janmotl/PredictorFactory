@@ -24,5 +24,7 @@
 			<attribute name="javadoc_location" value="http://docs.guava-libraries.googlecode.com/git-history/release/javadoc/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="lib/cloning-1.9.1/cloning-1.9.1.jar"/>
+	<classpathentry kind="lib" path="lib/cloning-1.9.1/lib/objenesis-2.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
