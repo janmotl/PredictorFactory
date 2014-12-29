@@ -460,6 +460,7 @@ public final class SQL {
 	// Check whether the columns {baseId, baseDate} are unique in the table.
 	// If the columns are unique, we may avoid of aggregation and copy the values immediately. 
 	// Note that in comparison to getIdCardinality we can modify the tables as we are working with outputSchema. 
+	// SHOULD USE GRACEFUL ERROR CHECKING
 	public static boolean isUnique(Setting setting, String table) {
 		String sql = "ALTER TABLE @outputTable " + 
 					 "ADD UNIQUE (@baseId, @baseDate)";
