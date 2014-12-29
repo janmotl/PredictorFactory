@@ -20,7 +20,7 @@ import utility.SQL;
 // Example usages: recovery from connection loss, state space search optimization,...
 public class Journal {
 
-	
+
 	//private Setting setting;
 	private SortedSet<Predictor> journal;	// Wouldn't ArrayList be enough?
 	
@@ -47,7 +47,7 @@ public class Journal {
 	
 	// Get next predictor's id
 	public int getNextId(Setting setting) {
-		return setting.predictor_start + journal.size() + 1;
+		return setting.predictorStart + journal.size() + 1;
 	}
 	
 	

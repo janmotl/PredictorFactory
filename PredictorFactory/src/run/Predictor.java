@@ -16,8 +16,8 @@ public class Predictor implements Comparable<Predictor> {
 
 	// Struct for predictor's metadata. Make sure that each object is initialized to something and doesn't return null!
 	public String outputTable;
-	public String inputTable;
-	public String inputTableOriginal;	// The table name before propagation. Useful for predictor naming. And origin tracking.
+	public String inputTable;			// The input table name after propagation.
+	public String inputTableOriginal;	// The table name before propagation. Useful for origin tracking.
 	public SortedMap<String, String> columnMap = new TreeMap<String, String>();	// Contains {@anyColumn=gender,...}
 	public String propagationDate;		// The single column name that was used during base propagation as time constrain.
 	public List<String> propagationPath = new ArrayList<String>();	// In the case of loops path makes difference  
@@ -56,13 +56,18 @@ public class Predictor implements Comparable<Predictor> {
 	// Note that the returned String can be longer than the allowed length in the database.
 	// For example PostgreSQL limits column labels to 63 characters.
 	// Firebird limits the length to 31 characters.
+	// The expected result is something like: Path_Table_Columns_Pattern_Parameters...
 	// Consider switching to StringBuffer
 	// The time consuming code should be performed just once and stored
 	public String getName() {
+		// Path
+		String name = "";
+		for (int i = 1; i < propagationPath.size(); i++) {	// Ignore the first table, base table, as it is fixed.
+			name = name + propagationPath.get(i) + "_";
+		}
 		
-		// The expected result is something like: Table_Columns_Pattern_Parameters...
-		String name = inputTableOriginal;	// Use propagated name without "propagated" prefix
-		name = name.replaceFirst("propagated_", "");
+		// Add table name
+		name = name + inputTableOriginal;
 		
 		// Add column names
 		for (String columnName : columnMap.values()) {

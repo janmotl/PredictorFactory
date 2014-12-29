@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -133,8 +135,8 @@ public final class SQL {
 		sql = sql.replaceAll("@targetTable", QL + setting.targetTable + QR);
 		sql = sql.replaceAll("@inputSchema", QL + setting.inputSchema + QR);
 		sql = sql.replaceAll("@outputSchema", QL + setting.outputSchema + QR);
-		sql = sql.replaceAll("@inputDatabase", QL + setting.inputDatabase_name + QR);
-		sql = sql.replaceAll("@outputDatabase", QL + setting.outputDatabase_name + QR);
+		sql = sql.replaceAll("@inputDatabase", QL + setting.inputDatabaseName + QR);
+		sql = sql.replaceAll("@outputDatabase", QL + setting.outputDatabaseName + QR);
 		sql = sql.replaceAll("@outputTable", QL + outputTable + QR);
 		
 		// Make sure the command is terminated with the semicolon. This is useful for example if we want 
@@ -259,9 +261,16 @@ public final class SQL {
 	// Assembly create index
 	// WILL BE PRIVATE
 	public static String getIndex(Setting setting, String outputTable) {	
-		String sql = "CREATE INDEX " + setting.idColumn + "_index ON @outputTable (@baseId)";
+		// The index name must be unique per table, but it doesn't have to be unique per schema.
+		String sql = "CREATE INDEX baseId_index ON @outputTable (@baseId)";  
+		
+		// I want to try what happens if I use a constant instead of variable index name
+		//Map<String, String> map = new HashMap<String, String>(1);
+		//map.put("@indexName", setting.baseId + "_index");
+		
 		sql = expandName(setting, sql);
 		sql = escapeEntity(setting, sql, outputTable);
+		//sql = escapeEntityMap(setting, sql, map);
 		
 		return sql;
 	}
@@ -278,14 +287,14 @@ public final class SQL {
 		
     	// Add database name?
     	if (setting.isSchemaCompatible){
-    		sql = sql.replace("information_schema", setting.inputDatabase_name + ".information_schema");
+    		sql = sql.replace("information_schema", setting.inputDatabaseName + ".information_schema");
     	}
 
     	return Network.executeQuery(setting.connection, sql);
     }
 
 	// Assembly getTableList query
-    // SHOULD RETURN THE TABLELIST
+    // SHOULD RETURN THE TABLELIST/SORTEDSET
     public static String getTableList(Setting setting, boolean propagated){
     	String sql;
     	
@@ -310,7 +319,7 @@ public final class SQL {
 
     	// Add database name?
     	if (setting.isSchemaCompatible){
-    		sql = sql.replace("information_schema", setting.inputDatabase_name + ".information_schema");
+    		sql = sql.replace("information_schema", setting.inputDatabaseName + ".information_schema");
     	}
 
 		return sql;
@@ -319,7 +328,7 @@ public final class SQL {
     
     // Return list of columns in given table
     // The allowed parameters for dataType are {number, string, date}
-	public static ArrayList<String> getColumnList(Setting setting, String inputTable, String dataType){
+	public static SortedSet<String> getColumnList(Setting setting, String inputTable, String dataType){
 		String sql; 
 		String condition = "";
 		
@@ -338,8 +347,8 @@ public final class SQL {
 
 	
 		if (setting.isSchemaCompatible){
-    		sql = "SELECT COLUMN_NAME FROM " + setting.inputDatabase_name + ".information_schema.COLUMNS" + 
-    			  " WHERE TABLE_CATALOG='" + setting.inputDatabase_name + 
+    		sql = "SELECT COLUMN_NAME FROM " + setting.inputDatabaseName + ".information_schema.COLUMNS" + 
+    			  " WHERE TABLE_CATALOG='" + setting.inputDatabaseName + 
     			  "' AND TABLE_SCHEMA='" + setting.inputSchema + 
     			  "' AND TABLE_NAME='" + inputTable +"'" + 					// Define table
     			  " AND COLUMN_NAME not like '" + setting.baseTarget + "'" +	// Ignore propagated_target
@@ -362,7 +371,10 @@ public final class SQL {
 		
 		// Do not escape COLUMNS entity. PostgreSQL refuses (any type of) quotes in information_schema.
 		
-		return Network.executeQuery(setting.connection, sql);
+		// There shall not be duplicates 
+		SortedSet<String> result = new TreeSet<String>(Network.executeQuery(setting.connection, sql));
+		
+		return result;
 	}
     
     
@@ -417,13 +429,13 @@ public final class SQL {
 		return Integer.valueOf(resultList.get(0)).intValue(); // Can return NullPointerException
 	}
 	
-	// Get maximal cardinality of the table in respect to baseId. If the cardinality is 1:1, 
-	// we may avoid of aggregation and copy the values immediately. 
-	// Or we may want to remove the bottom time constrain in base propagation.
+	// Get the maximal cardinality of the table in respect to idColumn. If the cardinality is 1:1, 
+	// we may want to remove the bottom time constrain in base propagation.
 	// The map should contain @inputTable2 and @idColumn2.
-	// The indexes start at two because it was convenient to reuse the parameters in Propagation function. 
+	// The indexes start at two because it was convenient to reuse the parameters in Propagation function.
+	// Note that we are working with the input tables -> alter commands are forbidden.
 	// WOULD BE UNOUGH TO FIND EXISTENCE OF A DUPLICATE KEY IN TABLE2 - USE LIMIT/TOP/ROWNUM
-	public static int getCardinality(Setting setting, Map<String, String> map) {
+	public static int getIdCardinality(Setting setting, Map<String, String> map) {
 		String sql = "SELECT max(count) FROM (" + 
 						"SELECT count(*) as count " +
 						"FROM @inputTable2 " +
@@ -436,6 +448,46 @@ public final class SQL {
 		
 		ArrayList<String> resultSet = Network.executeQuery(setting.connection, sql);
 		
+		// Take care of the cases when the resultSet is empty
+		int maxCardinality = 0;
+		if (!resultSet.isEmpty()) {
+			maxCardinality = Integer.valueOf(resultSet.get(0));
+		}
+		
+		return maxCardinality;
+	}
+
+	// Check whether the columns {baseId, baseDate} are unique in the table.
+	// If the columns are unique, we may avoid of aggregation and copy the values immediately. 
+	// Note that in comparison to getIdCardinality we can modify the tables as we are working with outputSchema. 
+	public static boolean isUnique(Setting setting, String table) {
+		String sql = "ALTER TABLE @outputTable " + 
+					 "ADD UNIQUE (@baseId, @baseDate)";
+		
+		sql = expandName(setting, sql);
+		sql = escapeEntity(setting, sql, table);
+					
+		return Network.executeUpdate(setting.connection, sql);	// Returns false at the first violation -> fast
+	}
+	
+	// Get maximal cardinality of the table in respect to {baseId, baseDate}. If the cardinality is 1, 
+	// we may avoid of aggregation and copy the values immediately. 
+	// The map should contain @inputTable.
+	// WOULD BE UNOUGH TO FIND EXISTENCE OF A DUPLICATE KEY IN TABLE2 - USE LIMIT/TOP/ROWNUM
+	public static int getPropagationCardinality(Setting setting, Map<String, String> map) {
+		String sql = "SELECT max(count) FROM (" + 
+						"SELECT count(*) as count " +
+						"FROM @inputTable " +
+						"GROUP BY @baseId, @dateId" + 
+					 ") as cardinality";
+		
+		sql = expandName(setting, sql);
+		sql = escapeEntity(setting, sql, "dummy");
+		sql = escapeEntityMap(setting, sql, map);
+		
+		ArrayList<String> resultSet = Network.executeQuery(setting.connection, sql);
+		
+		// Take care of the cases when the resultSet is empty
 		int maxCardinality = 0;
 		if (!resultSet.isEmpty()) {
 			maxCardinality = Integer.valueOf(resultSet.get(0));

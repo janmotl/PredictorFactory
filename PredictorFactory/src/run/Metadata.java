@@ -19,7 +19,8 @@ public class Metadata {
 		SortedSet<String> dataColumn;		// All but ids
 		SortedSet<String> anyColumn;		// All columns
 		SortedSet<String> idColumn;			// Just ids
-		int cardinality;				// Does combination {baseId, baseDate} repeat?
+		int idCardinality;				// Does the propagation id repeat in the table?
+		boolean isUnique;				// Does combination {baseId, baseDate} repeat?
 		String originalName;			// The table name before propagation
 		String propagatedName;			// The table name after propagation
 		String pathName;				// Like propagated name, but without the prefix. Useful for predictor naming.
@@ -28,7 +29,7 @@ public class Metadata {
 		boolean propagated;
 	}
 	
-	public static SortedMap<String, Table> outputList;
+	public static SortedMap<String, Table> OutputList;
 	
 	
 	// Get a list of tables with metainformation
@@ -36,20 +37,22 @@ public class Metadata {
 	public static SortedMap<String, Table> getMetadata(Setting setting, SortedMap<String, Table> tableMetadata){
 
 		for (Table table : tableMetadata.values()) {
-			table.numericalColumn = new TreeSet<String>(SQL.getColumnList(setting, table.propagatedName, "number"));
+			table.numericalColumn = SQL.getColumnList(setting, table.propagatedName, "number");
 			table.numericalColumn.removeAll(getIDColumnList(table.numericalColumn));
 			
 			// THIS IS NOT EXACT. SOME NUMERICAL ATTRIBUTES ARE ALSO NOMINAL.
-			table.nominalColumn = new TreeSet<String>(SQL.getColumnList(setting, table.propagatedName, "string"));
+			table.nominalColumn = SQL.getColumnList(setting, table.propagatedName, "string");
 			table.nominalColumn.removeAll(getIDColumnList(table.nominalColumn));
 			
-			table.dateColumn = new TreeSet<String>(SQL.getColumnList(setting, table.propagatedName, "date"));
+			table.dateColumn = SQL.getColumnList(setting, table.propagatedName, "date");
 			table.dateColumn.removeAll(getIDColumnList(table.dateColumn));
 			
-			table.anyColumn = new TreeSet<String>(SQL.getColumnList(setting, table.propagatedName, "any"));
-			table.idColumn = new TreeSet<String>(getIDColumnList(table.anyColumn));
-			table.dataColumn = new TreeSet<String>(table.anyColumn);
+			table.anyColumn = SQL.getColumnList(setting, table.propagatedName, "any");
+			table.idColumn = getIDColumnList(table.anyColumn);
+			table.dataColumn = table.anyColumn;
 			table.dataColumn.removeAll(table.idColumn);
+			
+			table.isUnique = SQL.isUnique(setting, table.propagatedName);
 		}
 		
 		return tableMetadata;

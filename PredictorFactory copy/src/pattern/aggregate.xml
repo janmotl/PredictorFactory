@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Aggregate</name>
+	<description>
+		Do not escape entities - they are escaped automatically with the escape symbol used by the database.
+		Do not add database names and schemas - they are added automatically to make the pattern transferable between databases. 
+		Do not add definition for table storing - the definition is added automatically in the format supported by the database.
+		The pattern has to consist of a single statement. Multiple statement patterns are not currently supported.
+		Pattern should avoid unnecessary joins and sorting. Benefit instead from base propagation.
+		It is not necessary to add time condition - records are already time filtered during base propagation. 
+		It is not necessary to terminate the command with a semicolon. Missing semicolon is added automatically.			
+	</description>
+	<author>Jan Motl</author>
+	<date>2014-10-14</date>
+	<code>SELECT @baseId
+			   , @baseDate
+			   , @aggregateFunction(@numericalColumn) "@columnName"
+	      FROM @inputTable
+	      GROUP BY @baseId, @baseDate
+	</code>
+    <parameter key="@aggregateFunction" value="avg, min, max, stddev, count"/>
+	<cardinality>n</cardinality>
+</pattern>

@@ -100,7 +100,7 @@ public class Launcher{
 		System.out.println("#### Finished base propagation in " + journal.getRunTime() + " miliseconds ####");
 		
 		// Get columns in the propagated tables
-		tableMetadata = Metadata.getMetadata(setting, tableMetadata);
+		tableMetadata = Metadata.getMetadata(setting, tableMetadata);		
 		System.out.println("#### Finished metadata collection in " + journal.getRunTime() + " miliseconds ####");
 		
 		// Loop over all patterns in pattern directory
@@ -189,7 +189,7 @@ public class Launcher{
 		
 		// Termination condition: Empty columnList
 		if (columnSet.isEmpty()) {
-			loopParameters(setting, journal, predictor, pattern.getParameterMap());	;	// Just get the predictor.
+			loopParameters(setting, journal, predictor, pattern.getParameterMap());	// Just get the predictor.
 			return;
 		}
 				
@@ -219,13 +219,12 @@ public class Launcher{
 	// Subroutine 2: Loop over the propagated tables
 	private static void loopTables(Setting setting, Journal journal, Predictor predictor, Pattern pattern, SortedMap<String, Table> tableMetadata) {
 		
-		boolean patternCardinality = pattern.getCardinality().equals("n");	// Pattern cardinality is treated as binary
+		boolean patternIsUnique = pattern.getCardinality().equals("1");	// Pattern cardinality is treated as binary
 		
 		// For each propagated table. There can be only one input table, hence it is not necessary to perform recursion.
 		for (Table workingTable : tableMetadata.values()) {
 			// Skip tables with wrong cardinality
-			boolean tableCardinality = workingTable.cardinality > 1;
-			if (patternCardinality != tableCardinality) {
+			if (patternIsUnique != workingTable.isUnique) {
 				continue;
 			}
 
@@ -241,7 +240,7 @@ public class Launcher{
 		return;
 	}
 	
-	// Subroutine 1: Loop over patterns
+	// Subroutine 1: Loop over the patterns
 	private static void loopPatterns(Setting setting, Journal journal, SortedMap<String, Table> tableMetadata) {
 
 		File dir = new File("src/pattern");
@@ -253,7 +252,7 @@ public class Launcher{
 				loopTables(setting, journal, predictor, pattern, tableMetadata);	// Set other parameters
 			}
 		} else {
-			// Handle the case where dir is not really a directory.
+			// Handle the case where directory is not really a directory.
 			// Checking dir.isDirectory() would not be sufficient
 			// to avoid race conditions with another process that deletes
 			// directories.

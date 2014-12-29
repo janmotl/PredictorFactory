@@ -20,7 +20,7 @@ public final class Network {
 
 	
 	// Return the connection and database configuration
-	// WOULDN'T DataSource BE ENOUGH?
+	// WOULDN'T be java DataSource BE ENOUGH?
 	public static Setting getConnection(Setting setting) {
         
         // Load the configuration file from XML

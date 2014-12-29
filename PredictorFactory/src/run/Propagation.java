@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.TreeMap;
 
 import run.Metadata.Table;
@@ -53,7 +54,7 @@ public class Propagation{
 			for (String table2 : notPropagated) {	
 				
 				// Get dateList (from table2)
-				ArrayList<String> dateList = SQL.getColumnList(setting, table2, "date");
+				SortedSet<String> dateSet = SQL.getColumnList(setting, table2, "date");
 				
 				// Get idList (from table1 intersect table2) 
 				ArrayList<String> columnList = SQL.getSharedColumns(setting, table1, table2); 
@@ -70,7 +71,7 @@ public class Propagation{
 					// And then the propagated table would have to have 2 "ID" columns if I wanted to preserve 
 					// both of them. And I want to preserve both of them as "baseId" is necessary for aggregate
 					// pattern and the table's "ID" is necessary for patterns relying on IDs.
-					if (depth==1) {
+					if (depth == 1) {
 						hashMap.put("@idColumn1", setting.baseId); 		// Use id with the prefix 
 						hashMap.put("@idColumn2", setting.idColumn); 	// Use id without the prefix 
 						outputTable = setting.propagatedPrefix + table2;	// Output table name 
@@ -86,12 +87,12 @@ public class Propagation{
 					// If idColumn2 is distinct in table2, it is unnecessary to set time condition.
 					// For example, in Customer table, which contains only static information, like Birth_date,
 					// it is not necessary to set the time constrain.
-					int maxCardinality = SQL.getCardinality(setting, hashMap);
+					int maxCardinality = SQL.getIdCardinality(setting, hashMap); // Cardinality of idColumn2
 					
 					// Use time constrain
-					if (maxCardinality>1 & !dateList.isEmpty()) {
+					if (maxCardinality > 1 & !dateSet.isEmpty()) {
 						// For each date
-						for (String date : dateList) {
+						for (String date : dateSet) {
 							// Define parameters
 							outputTable = setting.propagatedPrefix + table2 + "_" + date;	// add date suffix
 							hashMap.put("@outputTable", outputTable);
@@ -104,19 +105,19 @@ public class Propagation{
 						// If each date condition on the table results into an empty table, ignore the time bound.
 						// This exception is handy, if the table contains date_birth column and not other date column.
 						// I DISLIKE THE IDEA OF USING SQL HERE
-						List<String> TableCheckList = SQL.getTableList(setting, "TABLE_NAME like '" + setting.propagatedPrefix + table2 + "_%" + "'");
+						List<String> tableCheckList = SQL.getTableList(setting, "TABLE_NAME like '" + setting.propagatedPrefix + table2 + "_%" + "'");
 						
 						boolean isEmpty = true;
-						for (String tableCheck : TableCheckList) {
+						for (String tableCheck : tableCheckList) {
 							int rowCount = Integer.valueOf(Network.executeQuery(setting.connection, SQL.getRowCount(setting, tableCheck)).get(0));
 							if (rowCount != 0) {
 								isEmpty = false;
 								break;
-							};
+							}
 						}
 						
 						if (isEmpty) {
-							for (String tableCheck : TableCheckList) {
+							for (String tableCheck : tableCheckList) {
 								Network.executeUpdate(setting.connection, SQL.getDropTable(setting, tableCheck));
 							}
 							
@@ -136,7 +137,7 @@ public class Propagation{
 					
 			
 					// DateList can be empty. Or the cardinality is 1. In that case propagate without the date constrain.
-					if (dateList.isEmpty() || maxCardinality==1) {	
+					if (dateSet.isEmpty() || maxCardinality==1) {	
 						isPropagated =  SQL.propagateID(setting, hashMap, true);
 					} 
 			
@@ -149,9 +150,9 @@ public class Propagation{
 						Metadata.Table table = new Metadata.Table();
 						table.originalName = table2;
 						table.propagatedName = outputTable;
-						table.cardinality = maxCardinality;
+						table.idCardinality = maxCardinality;
 						table.propagationDate = hashMap.get("@dateColumn");
-						List<String> path = new ArrayList<String>(tableMetadata.get(table1).propagationPath); // Add copy propagation path from table1...
+						List<String> path = new ArrayList<String>(tableMetadata.get(table1).propagationPath); // Add copy of the propagation path from table1...
 						path.add(tableMetadata.get(table1).originalName); 	//... and add table1 name...
 						table.propagationPath = path; 						// ...to the table.
 						tableMetadata.put(outputTable, table);	

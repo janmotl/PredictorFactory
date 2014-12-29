@@ -1,0 +1,24 @@
+<schema xmlns="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <element name="pattern">
+    <complexType>
+      <sequence>
+        <element type="string" name="name"/>
+        <element type="string" name="description"/>
+        <element type="string" name="author"/>
+        <element type="date" name="date"/>
+        <element type="string" name="code"/>
+        <element name="parameter" maxOccurs="unbounded" minOccurs="0">
+          <complexType>
+            <simpleContent>
+              <extension base="string">
+                <attribute type="string" name="key" use="required"/>
+                <attribute type="string" name="value" use="required"/>
+              </extension>
+            </simpleContent>
+          </complexType>
+        </element> 
+        <element type="string" name="cardinality"/>
+      </sequence>
+    </complexType>
+  </element>
+</schema>
