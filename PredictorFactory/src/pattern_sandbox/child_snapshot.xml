@@ -29,7 +29,7 @@
 	<code>SELECT @baseId, @baseDate, @anyColumn "@columnName"
 	      FROM (
 	      	SELECT @baseId, @baseDate, count(@idColumn) as k, @anyColumn
-	      	FROM @propagatedTable INNER JOIN @propagatedTable 
+	      	FROM @outputTable INNER JOIN @outputTable 
 	      		ON @baseId = @baseId and @baseDate = @baseDate and @numericalColumn &lt;= @numericalColumn
 	      	)
 	      where k = 1
