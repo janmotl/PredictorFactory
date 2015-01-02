@@ -8,10 +8,10 @@ public final class Setting {
 	public Connection connection; 				// The connection to the readServer
 	public String dbType;						// MySQL, MS SQL, PostgreSQL...
 	public String quoteMarks;					// Characters for entity escaping
-	public boolean isCreateTableAsCompatible;	
-	public boolean isSchemaCompatible;
+	public boolean isCreateTableAsCompatible;	// Use "create table as" syntax?
+	public boolean isSchemaCompatible;			// Some databases support schemas
+	public String dateAddSyntax;						// Syntax for changing a date by a given amount
 
-	
 	// Setup related	
 	public String idColumn;		// The id column (like IdCustomer). Used only for base construction.
 	public String idTable;		// The table with the id column. Used only for base construction.

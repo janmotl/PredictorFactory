@@ -15,8 +15,8 @@ import org.apache.commons.lang3.text.WordUtils;
 public class Predictor implements Comparable<Predictor> {
 
 	// Struct for predictor's metadata. Make sure that each object is initialized to something and doesn't return null!
-	public String outputTable;
-	public String inputTable;			// The input table name after propagation.
+	public String outputTable;			// The name of the predictor table.
+	public String propagatedTable;		// The table name after propagation.
 	public String inputTableOriginal;	// The table name before propagation. Useful for origin tracking.
 	public SortedMap<String, String> columnMap = new TreeMap<String, String>();	// Contains {@anyColumn=gender,...}
 	public String propagationDate;		// The single column name that was used during base propagation as time constrain.

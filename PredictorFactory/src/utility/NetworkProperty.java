@@ -8,14 +8,15 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlType(name="driver")
 public class NetworkProperty {
-	@XmlAttribute String name;
-	@XmlAttribute String driver_class;
+	@XmlAttribute String name;			// This annotation assigns names to the elements in db.xml -> order sensitive!
+	@XmlAttribute String driverClass;
 	@XmlAttribute String url;
 	@XmlAttribute String username;
 	@XmlAttribute String password;
-	@XmlAttribute String quote_marks;
-	@XmlAttribute String create_table_as_compatible;
-	@XmlAttribute String schema_compatible;
+	@XmlAttribute String quoteMarks;
+	@XmlAttribute String createTableAsCompatible;
+	@XmlAttribute String schemaCompatible;
+	@XmlAttribute String dateAddSyntax;
 	
 	// Constructor
 	public  NetworkProperty() {}

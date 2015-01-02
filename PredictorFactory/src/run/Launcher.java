@@ -42,6 +42,12 @@ public class Launcher{
 		setting.inputSchema = "financial";
 		setting.outputSchema = "financial";
 		
+		setting.dbType = "PostgreSQL";
+		setting.inputDatabaseName = "jan";
+		setting.outputDatabaseName = "jan";
+		setting.inputSchema = "input";
+		setting.outputSchema = "output";
+		
 		setting.idColumn = "account_id";
 		setting.idTable = "account";
 		setting.targetDate = "date";
@@ -132,11 +138,10 @@ public class Launcher{
 		Network.executeUpdate(setting.connection, sql);
 		
 		// Add row count
-		sql = SQL.getRowCount(setting, predictor.outputTable);
-		predictor.setRowCount(Integer.valueOf(Network.executeQuery(setting.connection, sql).get(0)));
+		predictor.setRowCount(SQL.getRowCount(setting, predictor.outputTable));
 		
 		// Add null count
-		predictor.setNullCount(SQL.getNullCount(setting, predictor.outputTable, predictor.getName()));
+		predictor.setNullCount(predictor.getRowCount() - SQL.getNotNullCount(setting, predictor.outputTable, predictor.getName()));
 		
 		// Add univariate relevance estimate
 		// Should be conditional on QC
@@ -199,12 +204,13 @@ public class Launcher{
 		reducedSet.remove(columnName);	//...without the column
 		
 		// Pick the right set of columns to iterate over
+		// NO GUARANTIES ABOUT COLUMN1 != COLUMN2 IF THEY ARE OF THE SAME TYPE!
 		SortedSet<String> columnValueSet = table.anyColumn;	// By default all columns are considered
-		if ("@NUMERICALCOLUMN".equals(columnName.toUpperCase())) columnValueSet = table.numericalColumn;	// Case insensitive
-		if ("@NOMINALCOLUMN".equals(columnName.toUpperCase())) columnValueSet = table.nominalColumn;	// Could use switch-case
-		if ("@DATECOLUMN".equals(columnName.toUpperCase())) columnValueSet = table.dateColumn;
-		if ("@DATACOLUMN".equals(columnName.toUpperCase())) columnValueSet = table.dataColumn;
-		if ("@IDCOLUMN".equals(columnName.toUpperCase())) columnValueSet = table.idColumn;
+		if (columnName.toUpperCase().matches("@NUMERICALCOLUMN\\d*")) columnValueSet = table.numericalColumn;	// Case insensitive
+		if (columnName.toUpperCase().matches("@NOMINALCOLUMN\\d*")) columnValueSet = table.nominalColumn;	// Could use switch-case
+		if (columnName.toUpperCase().matches("@DATECOLUMN\\d*")) columnValueSet = table.dateColumn; // Suffix with any number of digits
+		if (columnName.toUpperCase().matches("@DATACOLUMN\\d*")) columnValueSet = table.dataColumn;
+		if (columnName.toUpperCase().matches("@IDCOLUMN\\d*")) columnValueSet = table.idColumn;
 		
 		// Bind a column variable to the actual column name.  
 		for (String columnValue : columnValueSet) {
@@ -228,7 +234,7 @@ public class Launcher{
 				continue;
 			}
 
-			predictor.inputTable = workingTable.propagatedName;
+			predictor.propagatedTable = workingTable.propagatedName;
 			predictor.inputTableOriginal = workingTable.originalName;
 			predictor.propagationDate = workingTable.propagationDate;
 			predictor.propagationPath = workingTable.propagationPath;

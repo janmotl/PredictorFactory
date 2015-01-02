@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 
 <pattern>
-	<name>Slope</name>
+	<name>Experiment</name>
 	<description>Calculate Pearson correlation of an attribute with time.</description>
 	<author>Jan Motl</author>
 	<date>2014-12-22</date>
 	<code>SELECT @baseId
 	           , @baseDate
-	           , (Avg(@numericalColumn * @dateColumn) - Avg(@numericalColumn) * Avg(@dateColumn)) / (StD(@numericalColumn) * StD(@dateColumn)) "@columnName"
+	           , @function(@numericalColumn1, @numericalColumn2) "@columnName"
 	      FROM @propagatedTable
 	      GROUP BY @baseId, @baseDate
 	</code>
+	<parameter key="@function" value="corr, regr_intercept, regr_slope"/>
 	<cardinality>n</cardinality>
 </pattern>

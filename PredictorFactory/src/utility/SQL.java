@@ -42,6 +42,7 @@ public final class SQL {
 			patternCode = patternCode.replace("@targetTable", "@inputDatabase.@inputSchema.@targetTable");
 			patternCode = patternCode.replace("@idTable", "@inputDatabase.@inputSchema.@idTable");
 			patternCode = patternCode.replace("@baseTable", "@outputDatabase.@outputSchema.@baseTable");
+			patternCode = patternCode.replace("@propagatedTable", "@outputDatabase.@outputSchema.@propagatedTable");
 		} else {
 			// While MySQL doesn't implement "true" schemas, it implements information_schema
 			// and places it next to the database (instead of inside the database). 
@@ -51,6 +52,7 @@ public final class SQL {
 			patternCode = patternCode.replace("@targetTable", "@inputSchema.@targetTable");
 			patternCode = patternCode.replace("@idTable", "@inputSchema.@idTable");
 			patternCode = patternCode.replace("@baseTable", "@outputSchema.@baseTable");
+			patternCode = patternCode.replace("@propagatedTable", "@outputSchema.@propagatedTable");
 		}
 		
 		return patternCode;
@@ -155,15 +157,15 @@ public final class SQL {
 	    if (predictor.columnMap==null) {
 		  throw new IllegalArgumentException("ColumnMap can not be null, but it can be empty");
 		}
-	    if (StringUtils.isBlank(predictor.inputTable)) {
-	      throw new IllegalArgumentException("InputTable is required");
+	    if (StringUtils.isBlank(predictor.propagatedTable)) {
+	      throw new IllegalArgumentException("PropagatedTable is required");
 	    }
 
 	    String QL = setting.quoteMarks.substring(0, 1);
 	    String QR = setting.quoteMarks.substring(1, 2);
 	    String sql;
 
-	    sql = pattern_code.replace("@inputTable", QL + predictor.inputTable + QR);
+	    sql = pattern_code.replace("@propagatedTable", QL + predictor.propagatedTable + QR);
 	    sql = sql.replace("@columnName",  predictor.getName());
 	    
 	    for (String columnName : predictor.columnMap.keySet()) {
@@ -230,19 +232,19 @@ public final class SQL {
 		List<String> tableList;
 		
 		// Propagated tables
-		tableList = Network.executeQuery(setting.connection, getTableList(setting, true));
+		tableList = Network.executeQuery(setting.connection, getTableList(setting, true, false));
 		for (String table : tableList) {
 			Network.executeUpdate(setting.connection, getDropTable(setting, table));
 		}
 		
 		// Predictors
-		tableList = getTableList(setting, "TABLE_NAME like '" + setting.predictorPrefix +"%'");
+		tableList = getTableList(setting, "TABLE_NAME like '" + setting.predictorPrefix +"%'", false);
 		for (String table : tableList) {
 			Network.executeUpdate(setting.connection, getDropTable(setting, table));
 		}
 		
 		// MainSample
-		tableList = getTableList(setting, "TABLE_NAME like '" + setting.sampleTable +"%'");
+		tableList = getTableList(setting, "TABLE_NAME like '" + setting.sampleTable +"%'", false);
 		for (String table : tableList) {
 			Network.executeUpdate(setting.connection, getDropTable(setting, table));
 		}
@@ -261,25 +263,33 @@ public final class SQL {
 	// Assembly create index
 	// WILL BE PRIVATE
 	public static String getIndex(Setting setting, String outputTable) {	
-		// The index name must be unique per table, but it doesn't have to be unique per schema.
-		String sql = "CREATE INDEX baseId_index ON @outputTable (@baseId)";  
-		
-		// I want to try what happens if I use a constant instead of variable index name
-		//Map<String, String> map = new HashMap<String, String>(1);
-		//map.put("@indexName", setting.baseId + "_index");
+		// The index name must be unique per schema (PostgreSQL). Do not escape outputTable in the index name.
+		String sql = "CREATE INDEX " + outputTable + "_idx ON @outputTable (@baseId)";  
 		
 		sql = expandName(setting, sql);
 		sql = escapeEntity(setting, sql, outputTable);
-		//sql = escapeEntityMap(setting, sql, map);
 		
 		return sql;
 	}
 	
 	// Get tableList based on own where condition
-    public static List<String> getTableList(Setting setting, String whereClause) {
+    public static List<String> getTableList(Setting setting, String whereClause, boolean useInput) {
 
+    	// Use input or output database.schema?
+    	String schema;
+		String database;
+		
+    	if (useInput) {
+    		schema = setting.inputSchema;
+    		database = setting.inputDatabaseName;
+    	} else {
+    		schema = setting.outputSchema;
+    		database = setting.outputDatabaseName;
+    	}
+    		
+    	// The query
 		String sql = "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA like '" + 
-					 setting.inputSchema + 
+					 schema + 
 					 "' ORDER BY TABLE_NAME";
 
 		// Add where condition/conditions
@@ -287,7 +297,7 @@ public final class SQL {
 		
     	// Add database name?
     	if (setting.isSchemaCompatible){
-    		sql = sql.replace("information_schema", setting.inputDatabaseName + ".information_schema");
+    		sql = sql.replace("information_schema", database + ".information_schema");
     	}
 
     	return Network.executeQuery(setting.connection, sql);
@@ -295,8 +305,19 @@ public final class SQL {
 
 	// Assembly getTableList query
     // SHOULD RETURN THE TABLELIST/SORTEDSET
-    public static String getTableList(Setting setting, boolean propagated){
-    	String sql;
+    public static String getTableList(Setting setting, boolean propagated, boolean useInput){
+    	
+    	// Use input or output database.schema?
+    	String schema;
+		String database;
+		
+    	if (useInput) {
+    		schema = setting.inputSchema;
+    		database = setting.inputDatabaseName;
+    	} else {
+    		schema = setting.outputSchema;
+    		database = setting.outputDatabaseName;
+    	}
     	
     	// Do we want unpropagated or propagated tables?
     	String propagatedString;
@@ -307,7 +328,7 @@ public final class SQL {
     	}
 
     	// Ignore meta tables 
-		sql = "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA like '" + setting.inputSchema + 
+		String sql = "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA like '" + schema + 
 				"' AND TABLE_NAME not like '" + setting.predictorPrefix + "%" +
 				"' AND TABLE_NAME not like '" + setting.journalTable +
 				"' AND TABLE_NAME not like '" + setting.statementTable +
@@ -319,7 +340,7 @@ public final class SQL {
 
     	// Add database name?
     	if (setting.isSchemaCompatible){
-    		sql = sql.replace("information_schema", setting.inputDatabaseName + ".information_schema");
+    		sql = sql.replace("information_schema", database + ".information_schema");
     	}
 
 		return sql;
@@ -328,9 +349,21 @@ public final class SQL {
     
     // Return list of columns in given table
     // The allowed parameters for dataType are {number, string, date}
-	public static SortedSet<String> getColumnList(Setting setting, String inputTable, String dataType){
+	public static SortedSet<String> getColumnList(Setting setting, String inputTable, String dataType, boolean useInput){
 		String sql; 
 		String condition = "";
+		
+    	// Use input or output database.schema?
+    	String schema;
+		String database;
+		
+    	if (useInput) {
+    		schema = setting.inputSchema;
+    		database = setting.inputDatabaseName;
+    	} else {
+    		schema = setting.outputSchema;
+    		database = setting.outputDatabaseName;
+    	}
 		
 		// By default there is not any condition.
 		switch (dataType.toUpperCase()) {
@@ -338,18 +371,21 @@ public final class SQL {
 			condition = " AND NUMERIC_PRECISION IS NOT NULL";
 			break;
 		case "STRING":
-			condition = " AND CHARACTER_SET_NAME IS NOT NULL";
+			// Percentage symbols are used to allow types like: VARCHAR, CHARACTER or TINYTEXT. 
+			// LOB entities are intentionally ignored as they should be mined with textmining methods. 
+			condition = " AND (DATA_TYPE like '%char%' or DATA_TYPE like '%text')";	
 			break;
 		case "DATE":
-			// I believe this condition is more generic than: " AND (DATA_TYPE='date' or DATA_TYPE='datetime')"
-			condition = " AND CHARACTER_SET_NAME IS NULL AND NUMERIC_PRECISION IS NULL";
+			// Percentage symbols are used to allow DATETIME, TIMESTAMP and other beasts like "SMALLDATETIME".
+			// Interval is ignored as it doesn't identify a point in time. 		
+			condition = " AND (DATA_TYPE='date' or DATA_TYPE='year' or DATA_TYPE like '%time%')";
 		}
 
 	
 		if (setting.isSchemaCompatible){
-    		sql = "SELECT COLUMN_NAME FROM " + setting.inputDatabaseName + ".information_schema.COLUMNS" + 
-    			  " WHERE TABLE_CATALOG='" + setting.inputDatabaseName + 
-    			  "' AND TABLE_SCHEMA='" + setting.inputSchema + 
+    		sql = "SELECT COLUMN_NAME FROM " + database + ".information_schema.COLUMNS" + 
+    			  " WHERE TABLE_CATALOG='" + database + 
+    			  "' AND TABLE_SCHEMA='" + schema + 
     			  "' AND TABLE_NAME='" + inputTable +"'" + 					// Define table
     			  " AND COLUMN_NAME not like '" + setting.baseTarget + "'" +	// Ignore propagated_target
     			  " AND COLUMN_NAME not like '" + setting.baseDate+ "' " +		// Ignore propagated_date
@@ -359,7 +395,7 @@ public final class SQL {
     			  " ORDER BY COLUMN_NAME";
     	} else {
     		sql = "SELECT COLUMN_NAME FROM information_schema.COLUMNS" +
-    			  " WHERE TABLE_SCHEMA='" + setting.inputSchema + 				// Look for ordinary tables, not information_schema
+    			  " WHERE TABLE_SCHEMA='" + schema + 				// Look for ordinary tables, not information_schema
     			  "' AND TABLE_NAME='" + inputTable + "'" + 					// Define table
     			  " AND COLUMN_NAME not like '" + setting.baseTarget + "'" +	// Ignore propagated_target
     			  " AND COLUMN_NAME not like '" + setting.baseDate+ "' " +		// Ignore propagated_date
@@ -382,11 +418,11 @@ public final class SQL {
 	// NOTE THAT THIS IS NOT A RELIABLE WAY HOW TO IDENTIFY LINKS BETWEEN TABLES.
 	public static ArrayList<String> getSharedColumns(Setting setting, String inputTable, String inputTable2) {
 		String sql = "SELECT t2.COLUMN_NAME " + 
-					 "FROM information_schema.COLUMNS t1 " +
-					 "INNER JOIN information_schema.COLUMNS t2 " +		// MySQL doesn't support intersect
-					 "WHERE t1.TABLE_SCHEMA = '" + setting.inputSchema + "' " +
+					 "FROM information_schema.COLUMNS t1 " +	// MySQL doesn't support intersect
+					 ", information_schema.COLUMNS t2 " +		// PostgreSQL doesn't support joins without "ON" clause
+					 "WHERE t1.TABLE_SCHEMA = '" + setting.outputSchema + "' " +	// This table is already propagated
 					 "AND t1.TABLE_NAME = '" + inputTable + "' " +
-					 "AND t2.TABLE_SCHEMA = '" + setting.inputSchema + "' " +
+					 "AND t2.TABLE_SCHEMA = '" + setting.inputSchema + "' " +		// This table waits for propagation
 					 "AND t2.TABLE_NAME = '" + inputTable2 + "' "  +
 					 "AND (t1.COLUMN_NAME = t2.COLUMN_NAME OR (" +
 					 	"t1.COLUMN_NAME = '" + setting.baseId + "' AND t2.COLUMN_NAME = '" + setting.idColumn +"'))"; // The baseTable exception
@@ -398,24 +434,32 @@ public final class SQL {
 	
 	
 	// Get rowCount
-	// SHOULD RETURN INT
-	public static String getRowCount(Setting setting, String inputTable) {
+	public static int getRowCount(Setting setting, String inputTable) {
 		String sql = "SELECT count(*) FROM @outputTable";
 		
 		sql = expandName(setting, sql);
 		sql = escapeEntity(setting, sql, inputTable);
 		
-		// Dirt cheap approach how to get row count is unfortunately database/driver specific. Hence universal count(*) 
+		// Dirt cheap approach how to get row count is unfortunately database specific. Hence universal count(*) 
 		// is implemented. Some databases, like MySQL, returns the answer to count(*) query immediately. In other 
 		// databases, like PostgreSQL, you may have to wait ~200ms.
+		// Note also, that JDBC 'metadata' method may indeed be slower than plain count(*) as it has to collect
+		// and return more information than just the rowCount. These seems to be the problem with Teradata. 	
 		
-		return sql; 
+		ArrayList<String> resultList = Network.executeQuery(setting.connection, sql);
+		
+		// If the table doesn't exist, the resultSet is empty. Return 0.
+		if (resultList.isEmpty()) return 0;
+		
+		// Otherwise return the actual row count
+		return Integer.valueOf(resultList.get(0)).intValue();
 	}
 	
-	// Get count of nulls
+	// Get count of non-null records
 	// Useful for QC of the predictors
-	public static int getNullCount(Setting setting, String table, String column) {
-		String sql = "SELECT sum(@column is null) FROM @outputTable";
+	public static int getNotNullCount(Setting setting, String table, String column) {
+		// By default count over a column ignores NULL values
+		String sql = "SELECT count(@column) FROM @outputTable";
 		
 		sql = expandName(setting, sql);
 		sql = escapeEntity(setting, sql, table);
@@ -426,49 +470,48 @@ public final class SQL {
 		
 		ArrayList<String> resultList = Network.executeQuery(setting.connection, sql);
 		
-		return Integer.valueOf(resultList.get(0)).intValue(); // Can return NullPointerException
+		// If the table doesn't exist, the resultSet is empty. Return 0.
+		if (resultList.isEmpty()) return 0;
+		
+		return Integer.valueOf(resultList.get(0)).intValue(); 
 	}
 	
 	// Get the maximal cardinality of the table in respect to idColumn. If the cardinality is 1:1, 
 	// we may want to remove the bottom time constrain in base propagation.
-	// The map should contain @inputTable2 and @idColumn2.
+	// The map should contain @inputTable and @idColumn2.
 	// The indexes start at two because it was convenient to reuse the parameters in Propagation function.
 	// Note that we are working with the input tables -> alter commands are forbidden.
-	// WOULD BE UNOUGH TO FIND EXISTENCE OF A DUPLICATE KEY IN TABLE2 - USE LIMIT/TOP/ROWNUM
-	public static int getIdCardinality(Setting setting, Map<String, String> map) {
-		String sql = "SELECT max(count) FROM (" + 
-						"SELECT count(*) as count " +
-						"FROM @inputTable2 " +
-						"GROUP BY @idColumn2" + 
-					 ") as cardinality";
-		
+	public static boolean isIdUnique(Setting setting, Map<String, String> map) {
+		String sql = "SELECT EXISTS ( " +
+					 "SELECT 1 " +
+					 "FROM @inputTable " +
+					 "GROUP BY @idColumn2 " +
+					 "HAVING count(*) > 1)"; 			
+				
 		sql = expandName(setting, sql);
 		sql = escapeEntity(setting, sql, "dummy");
 		sql = escapeEntityMap(setting, sql, map);
 		
-		ArrayList<String> resultSet = Network.executeQuery(setting.connection, sql);
-		
-		// Take care of the cases when the resultSet is empty
-		int maxCardinality = 0;
-		if (!resultSet.isEmpty()) {
-			maxCardinality = Integer.valueOf(resultSet.get(0));
-		}
-		
-		return maxCardinality;
+		// If a duplicate exists, return false. 
+		return !Network.getBoolean(setting.connection, sql);
 	}
 
 	// Check whether the columns {baseId, baseDate} are unique in the table.
 	// If the columns are unique, we may avoid of aggregation and copy the values immediately. 
 	// Note that in comparison to getIdCardinality we can modify the tables as we are working with outputSchema. 
-	// SHOULD USE GRACEFUL ERROR CHECKING
 	public static boolean isUnique(Setting setting, String table) {
-		String sql = "ALTER TABLE @outputTable " + 
-					 "ADD UNIQUE (@baseId, @baseDate)";
+		// We could have used possibly faster: "ALTER TABLE @outputTable ADD UNIQUE (@baseId, @baseDate)".
+		// But it would not work in Netezza as Netezza doesn't support constraint checking and referential integrity.
+		String sql = "SELECT EXISTS(SELECT 1 " +
+					 "FROM @outputTable " +
+					 "GROUP BY @baseId, @baseDate " +
+					 "HAVING COUNT(*)>1)";
 		
 		sql = expandName(setting, sql);
 		sql = escapeEntity(setting, sql, table);
-					
-		return Network.executeUpdate(setting.connection, sql);	// Returns false at the first violation -> fast
+		
+		// If a duplicate exists, return false. 
+		return !Network.getBoolean(setting.connection, sql);
 	}
 	
 	// Get maximal cardinality of the table in respect to {baseId, baseDate}. If the cardinality is 1, 
@@ -565,7 +608,7 @@ public final class SQL {
 		return sql;
 	}
 	
-	// 2) Propagate ID. The map should contain @outputTable, @inputTable[?] and @idColumn[?].
+	// 2) Propagate ID. The map should contain @outputTable, @propagatedTable, @inputTable and @idColumn[?].
 	// If the map contains @dateColumn, time condition is added.
 	// THE TIME WINDOW SHOULD BE A VARIABLE
 	// ADD SAFETY "TRANSITION BAND"  
@@ -576,8 +619,8 @@ public final class SQL {
 				"t1.@baseDate, " +
 				"t1.@baseTarget, " +
 				"t2.* " + 
-				"FROM @inputTable1 t1 " +
-				"INNER JOIN @inputTable2 t2 " +
+				"FROM @propagatedTable t1 " +
+				"INNER JOIN @inputTable t2 " +
 				"ON t1.@idColumn1 = t2.@idColumn2";
 		
 		// Add time condition if dateColumn is present
@@ -586,20 +629,22 @@ public final class SQL {
 		if (map.containsKey( "@dateColumn")) {
 			if (bottomBounded) {
 				pattern_code = pattern_code + 
-						" WHERE DATE_ADD(t1.@baseDate, INTERVAL -1 YEAR) <= t2.@dateColumn AND t2.@dateColumn <= t1.@baseDate";
+						" WHERE " + setting.dateAddSyntax + " <= t2.@dateColumn AND t2.@dateColumn <= t1.@baseDate";
 			} else {
 				pattern_code = pattern_code + 
 						" WHERE t2.@dateColumn <= t1.@baseDate";
 			}
 		}
+		
+		// Bind the parameters of dateAddSyntax {@datePart, @amount} to the values. Do not escape the values anymore.
+		pattern_code = pattern_code.replaceAll("@datePart", "year");
+		pattern_code = pattern_code.replaceAll("@amount", "-1");		// The number must be non-positive
 				
+		// Pattern_code to SQL conversion
 		sql = addCreateTableAs(setting, pattern_code);
 		sql = expandName(setting, sql);
 		sql = escapeEntity(setting, sql, map.get("@outputTable"));
 		sql = escapeEntityMap(setting, sql, map);
-		
-		// Drop old table (drop only once - do not drop freshly generated tables)
-		// Network.executeUpdate(setting.connection, SQL.getDropTable(setting, map.get("@outputTable")));
 					
 		// Make the propagated table
 		boolean result = Network.executeUpdate(setting.connection, sql);
@@ -653,14 +698,14 @@ public final class SQL {
 	      "predictor_id bigint, " +
 	      "timestamp_start timestamp DEFAULT CURRENT_TIMESTAMP, " +
 	      "timestamp_finish timestamp, " +  // Old MySQL and SQL92 do not have/require support for fractions of a second. 
-	      "name varchar(255), " +
-	      "table_list varchar(1024), " +
+	      "name varchar(255), " +	// In MySQL pure char is limited to 255 bytes -> stick to this value if possible
+	      "table_name varchar(1024), " +	// Table is a reserved keyword -> use table_name
 	      "column_list varchar(1024), " +
 	      "propagation_path varchar(1024), " +	      
 	      "date_constrain varchar(255), " +
 	      "parameter_list varchar(1024), " +
-	      "pattern_name varchar(254), " + 
-	      "pattern_author varchar(254), " + 
+	      "pattern_name varchar(255), " + 
+	      "pattern_author varchar(255), " + 
 	      "pattern_code varchar(1024), " +
 	      "sql_code varchar(1024), " +
 	      "target varchar(255), " +
@@ -680,6 +725,9 @@ public final class SQL {
 	public static String addToJournal(Setting setting, Predictor predictor) {
 		DateTimeFormatter formatter =  DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 		
+		// Convert bool to int
+		int isOk = predictor.isOk()? 1 : 0;
+		
 		String sql = "INSERT INTO @outputTable VALUES (" +
 	        predictor.getId() + ", " +
 	        "'" + predictor.getTimestampDesigned().format(formatter) + "', " +
@@ -698,7 +746,7 @@ public final class SQL {
 			"'" + 0 + "', " + // Place holder for Chi2
 	        "'" + predictor.getRowCount() + "', " + 
 	        "'" + predictor.getNullCount() + "', " + 
-	        predictor.isOk() + ")";
+	        isOk + ")";
 	    
 		sql = expandName(setting, sql);
 		sql = escapeEntity(setting, sql, setting.journalTable);

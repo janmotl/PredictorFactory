@@ -8,7 +8,7 @@
 	<author>Filip Trojan</author>
 	<date>2014-12-25</date>
 	<code>SELECT @baseId, @baseDate, coalesce(count(*),0) "@columnName"
-	      FROM @inputTable
+	      FROM @propagatedTable
 	      GROUP BY @baseId, @baseDate
 	</code>
 	<cardinality>n</cardinality>

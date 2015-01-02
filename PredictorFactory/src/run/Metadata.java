@@ -19,7 +19,7 @@ public class Metadata {
 		SortedSet<String> dataColumn;		// All but ids
 		SortedSet<String> anyColumn;		// All columns
 		SortedSet<String> idColumn;			// Just ids
-		int idCardinality;				// Does the propagation id repeat in the table?
+		boolean idIsUnique;				// Does the propagation id repeat in the table?
 		boolean isUnique;				// Does combination {baseId, baseDate} repeat?
 		String originalName;			// The table name before propagation
 		String propagatedName;			// The table name after propagation
@@ -32,22 +32,21 @@ public class Metadata {
 	public static SortedMap<String, Table> OutputList;
 	
 	
-	// Get a list of tables with metainformation
-	// WE ARE CONSIDERING PROPAGATED TABLES - in baseId...
+	// Get a list of propagated tables with metainformation
 	public static SortedMap<String, Table> getMetadata(Setting setting, SortedMap<String, Table> tableMetadata){
 
 		for (Table table : tableMetadata.values()) {
-			table.numericalColumn = SQL.getColumnList(setting, table.propagatedName, "number");
+			table.numericalColumn = SQL.getColumnList(setting, table.propagatedName, "number", false);
 			table.numericalColumn.removeAll(getIDColumnList(table.numericalColumn));
 			
 			// THIS IS NOT EXACT. SOME NUMERICAL ATTRIBUTES ARE ALSO NOMINAL.
-			table.nominalColumn = SQL.getColumnList(setting, table.propagatedName, "string");
+			table.nominalColumn = SQL.getColumnList(setting, table.propagatedName, "string", false);
 			table.nominalColumn.removeAll(getIDColumnList(table.nominalColumn));
 			
-			table.dateColumn = SQL.getColumnList(setting, table.propagatedName, "date");
+			table.dateColumn = SQL.getColumnList(setting, table.propagatedName, "date", false);
 			table.dateColumn.removeAll(getIDColumnList(table.dateColumn));
 			
-			table.anyColumn = SQL.getColumnList(setting, table.propagatedName, "any");
+			table.anyColumn = SQL.getColumnList(setting, table.propagatedName, "any", false);
 			table.idColumn = getIDColumnList(table.anyColumn);
 			table.dataColumn = table.anyColumn;
 			table.dataColumn.removeAll(table.idColumn);

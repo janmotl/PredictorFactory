@@ -29,8 +29,8 @@
 	<code>SELECT @baseId, @baseDate, @anyColumn "@columnName"
 	      FROM (
 	      	SELECT @baseId, @baseDate, count(@idColumn) as k, @anyColumn
-	      	FROM @inputTable INNER JOIN @inputTable 
-	      		ON @baseId = @baseId and @baseDate = @baseDate and @numericalColumn <= @numericalColumn
+	      	FROM @propagatedTable INNER JOIN @propagatedTable 
+	      		ON @baseId = @baseId and @baseDate = @baseDate and @numericalColumn &lt;= @numericalColumn
 	      	)
 	      where k = 1
 	</code>

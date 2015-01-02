@@ -24,7 +24,7 @@ public class Propagation{
 	// PROPAGATED TABLES SHOULD HAVE BEEN INDEXED
 	public static SortedMap<String, Metadata.Table> propagateBase(Setting setting) {
 		// Initialize
-		ArrayList<String> tableList = Network.executeQuery(setting.connection, SQL.getTableList(setting, false));
+		ArrayList<String> tableList = Network.executeQuery(setting.connection, SQL.getTableList(setting, false, true));
 		Set<String> notPropagated = new HashSet<String>(tableList); 		// List of tables to propagate
 		Set<String> propagated = new HashSet<String>(); 					// List of propagated tables
 		propagated.add(setting.baseTable);
@@ -54,7 +54,7 @@ public class Propagation{
 			for (String table2 : notPropagated) {	
 				
 				// Get dateList (from table2)
-				SortedSet<String> dateSet = SQL.getColumnList(setting, table2, "date");
+				SortedSet<String> dateSet = SQL.getColumnList(setting, table2, "date", true);
 				
 				// Get idList (from table1 intersect table2) 
 				ArrayList<String> columnList = SQL.getSharedColumns(setting, table1, table2); 
@@ -80,17 +80,17 @@ public class Propagation{
 						hashMap.put("@idColumn2", id); 	
 						outputTable = table1 + "_" + table2;	// Output table name with propagation path
 					}
-					hashMap.put("@inputTable1", table1);
-					hashMap.put("@inputTable2", table2);
+					hashMap.put("@propagatedTable", table1);
+					hashMap.put("@inputTable", table2);
 					hashMap.put("@outputTable", outputTable);
 					
 					// If idColumn2 is distinct in table2, it is unnecessary to set time condition.
 					// For example, in Customer table, which contains only static information, like Birth_date,
 					// it is not necessary to set the time constrain.
-					int maxCardinality = SQL.getIdCardinality(setting, hashMap); // Cardinality of idColumn2
+					boolean idIsUnique = SQL.isIdUnique(setting, hashMap); // Cardinality of idColumn2
 					
 					// Use time constrain
-					if (maxCardinality > 1 & !dateSet.isEmpty()) {
+					if (!idIsUnique & !dateSet.isEmpty()) {
 						// For each date
 						for (String date : dateSet) {
 							// Define parameters
@@ -105,11 +105,11 @@ public class Propagation{
 						// If each date condition on the table results into an empty table, ignore the time bound.
 						// This exception is handy, if the table contains date_birth column and not other date column.
 						// I DISLIKE THE IDEA OF USING SQL HERE
-						List<String> tableCheckList = SQL.getTableList(setting, "TABLE_NAME like '" + setting.propagatedPrefix + table2 + "_%" + "'");
+						List<String> tableCheckList = SQL.getTableList(setting, "TABLE_NAME like '" + setting.propagatedPrefix + table2 + "_%" + "'", false);
 						
 						boolean isEmpty = true;
 						for (String tableCheck : tableCheckList) {
-							int rowCount = Integer.valueOf(Network.executeQuery(setting.connection, SQL.getRowCount(setting, tableCheck)).get(0));
+							int rowCount = SQL.getRowCount(setting, tableCheck);
 							if (rowCount != 0) {
 								isEmpty = false;
 								break;
@@ -137,7 +137,7 @@ public class Propagation{
 					
 			
 					// DateList can be empty. Or the cardinality is 1. In that case propagate without the date constrain.
-					if (dateSet.isEmpty() || maxCardinality==1) {	
+					if (dateSet.isEmpty() || idIsUnique) {	
 						isPropagated =  SQL.propagateID(setting, hashMap, true);
 					} 
 			
@@ -150,7 +150,7 @@ public class Propagation{
 						Metadata.Table table = new Metadata.Table();
 						table.originalName = table2;
 						table.propagatedName = outputTable;
-						table.idCardinality = maxCardinality;
+						table.idIsUnique = idIsUnique;
 						table.propagationDate = hashMap.get("@dateColumn");
 						List<String> path = new ArrayList<String>(tableMetadata.get(table1).propagationPath); // Add copy of the propagation path from table1...
 						path.add(tableMetadata.get(table1).originalName); 	//... and add table1 name...

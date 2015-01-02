@@ -10,7 +10,7 @@
 	<code>SELECT @baseId
 	           , @baseDate
 	           , @anyColumn "@columnName"
-	      FROM @inputTable
+	      FROM @propagatedTable
 	      GROUP BY @baseId, @baseDate
 	      HAVING max(@dateColumn)
 	</code>

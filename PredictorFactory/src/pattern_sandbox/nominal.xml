@@ -10,7 +10,7 @@
 	<code>SELECT @baseId
 	           , @baseDate
 	           , sum(@nominalColumn='@value') "@columnName"
-	      FROM @inputTable
+	      FROM @propagatedTable
 	      GROUP BY @baseId, @baseDate
 	</code>
 	<cardinality>n</cardinality>

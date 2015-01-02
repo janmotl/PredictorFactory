@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Affinity</name>
+	<description>
+		Experimental.
+		
+		Note: 
+		  - Dependent on target (nominal/numerical).
+		  - The inner table should be calculated just once per table.
+		  - Multiple columns could be returned.		
+		  
+		Chi2 is minimal, run time high -> the development was postponed.
+	</description>
+	<author>Jan Motl</author>
+	<date>2014-12-30</date>
+	<code>SELECT t1.@baseId
+			   , t1.@baseDate
+			   , t2.a 
+			   , t2.b "@columnName"
+			   , t2.c
+			   , t2.d
+		  FROM @propagatedTable t1
+		  INNER JOIN (
+				SELECT @nominalColumn
+					 , avg(@baseTarget = "A") as a
+					 , avg(@baseTarget = "B") as b
+					 , avg(@baseTarget = "C") as c
+					 , avg(@baseTarget = "D") as d
+				FROM @propagatedTable
+				GROUP BY @nominalColumn
+			) as t2
+		  ON t1.@nominalColumn = t2.@nominalColumn
+		  GROUP BY @baseId, @baseDate
+	</code>
+	<cardinality>n</cardinality>
+</pattern>
