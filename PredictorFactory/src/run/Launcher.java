@@ -1,6 +1,5 @@
 package run;
 
-import java.awt.Toolkit;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -121,8 +120,6 @@ public class Launcher{
 		
 		// Tell the user we are finished
 		System.out.println("#### Finished in " + journal.getRunTime() + " miliseconds ####");
-		Toolkit.getDefaultToolkit().beep();	// Useful in the presence of long queries. SHOULD BE PERMITED BY CONFIGURATION
-		
 	}
 	
 	// Subroutine 5: Create predictor with index and QC.
