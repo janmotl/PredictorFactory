@@ -24,8 +24,8 @@
 				WHEN Y=0 THEN -9999 
 				ELSE @numericalColumn/Y 
 			  END "@columnName"
-	      FROM @inputTable a LEFT JOIN (SELECT @nominalColumn, avg(@numericalColumn) Y
-	      	FROM @inputTable GROUP BY @nominalColumn) b ON a.@nominalColumn = b.@nominalColumn
+	      FROM @propagatedTable a LEFT JOIN (SELECT @nominalColumn, avg(@numericalColumn) Y
+	      	FROM @propagatedTable GROUP BY @nominalColumn) b ON a.@nominalColumn = b.@nominalColumn
 	</code>
 	<cardinality>1</cardinality>
 </pattern>

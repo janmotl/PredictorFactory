@@ -33,11 +33,11 @@
 		  , t1.@numericalColumn
 		  , t1.@nominalColumn
 		  , count(t2.@baseId)+1 as K
-		FROM @inputTable t1
-		LEFT JOIN @inputTable t2
+		FROM @propagatedTable t1
+		LEFT JOIN @propagatedTable t2
 		  ON t1.@baseId = t2.@baseId 
 		  AND t1.@baseDate = t2.@baseDate 
-		  AND t1.@numericalColumn > t2.@numericalColumn
+		  AND t1.@numericalColumn &gt; t2.@numericalColumn
 		GROUP BY t1.@baseId
 		  , t1.@baseDate
 		  , t1.@numericalColumn

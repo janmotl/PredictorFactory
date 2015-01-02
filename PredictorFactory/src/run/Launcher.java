@@ -1,5 +1,6 @@
 package run;
 
+import java.awt.Toolkit;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -42,11 +43,11 @@ public class Launcher{
 		setting.inputSchema = "financial";
 		setting.outputSchema = "financial";
 		
-		setting.dbType = "PostgreSQL";
-		setting.inputDatabaseName = "jan";
-		setting.outputDatabaseName = "jan";
-		setting.inputSchema = "input";
-		setting.outputSchema = "output";
+//		setting.dbType = "PostgreSQL";
+//		setting.inputDatabaseName = "jan";
+//		setting.outputDatabaseName = "jan";
+//		setting.inputSchema = "input";
+//		setting.outputSchema = "output";
 		
 		setting.idColumn = "account_id";
 		setting.idTable = "account";
@@ -120,7 +121,7 @@ public class Launcher{
 		
 		// Tell the user we are finished
 		System.out.println("#### Finished in " + journal.getRunTime() + " miliseconds ####");
-			
+		Toolkit.getDefaultToolkit().beep();	// Useful in the presence of long queries. SHOULD BE PERMITED BY CONFIGURATION
 		
 	}
 	
