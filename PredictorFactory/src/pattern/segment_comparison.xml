@@ -19,6 +19,7 @@
 	<date>2014-12-31</date>
 	<code>SELECT @baseId
 			, @baseDate
+			, @baseTarget
 			, CASE 
 				WHEN Y IS NULL THEN NULL 
 				WHEN Y=0 THEN -9999 

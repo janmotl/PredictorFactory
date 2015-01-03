@@ -142,10 +142,10 @@ public class Launcher{
 		predictor.setNullCount(predictor.getRowCount() - SQL.getNotNullCount(setting, predictor.outputTable, predictor.getName()));
 		
 		// Add univariate relevance estimate
-		// Should be conditional on QC
-//		Map<String, Double> relevanceList = new HashMap<String, Double>(1);
-//		relevanceList.put("", SQL.getRelevance(setting, predictor.outputTable, predictor.getName()));
-//		predictor.setRelevanceList(relevanceList);
+		// Should be conditional on QC		
+		SortedMap<String, Double> relevanceList = new TreeMap<String, Double>();
+		relevanceList.put(setting.baseTarget, SQL.getChi2(setting, predictor.outputTable, predictor.getName()));
+		predictor.setRelevanceList(relevanceList);
 		
 		// Log the event into the journal
 		journal.addPredictor(setting, predictor);
@@ -154,7 +154,7 @@ public class Launcher{
 	}
 
 	// Subroutine 4: Recursively generate each possible combination of the parameters.
-	// MAKE SETTING & JOURNAL GLOBAL AS THERE IS JUST ONE INSTANCE OF THEM -> THE LAUNCHER SHOULD MAKE A OBJECT
+	// MAKE SETTING & JOURNAL GLOBAL AS THERE IS JUST ONE INSTANCE OF THEM -> THE LAUNCHER SHOULD MAKE AN OBJECT
 	private static void loopParameters(Setting setting, Journal journal, Predictor predictor, SortedMap<String, String> parameterMap) {
 		
 		// Termination condition: empty parameterMap - do not set any parameter, just get the predictor

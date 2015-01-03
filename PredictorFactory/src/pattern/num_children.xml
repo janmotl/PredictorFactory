@@ -7,7 +7,7 @@
 	</description>
 	<author>Filip Trojan</author>
 	<date>2014-12-25</date>
-	<code>SELECT @baseId, @baseDate, coalesce(count(*),0) "@columnName"
+	<code>SELECT @baseId, @baseDate, @baseTarget, coalesce(count(*),0) "@columnName"
 	      FROM @propagatedTable
 	      GROUP BY @baseId, @baseDate
 	</code>

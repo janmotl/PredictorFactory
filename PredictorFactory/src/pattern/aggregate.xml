@@ -16,6 +16,7 @@
 	<date>2014-10-14</date>
 	<code>SELECT @baseId
 			   , @baseDate
+			   , @baseTarget
 			   , @aggregateFunction(@numericalColumn) "@columnName"
 	      FROM @propagatedTable
 	      GROUP BY @baseId, @baseDate

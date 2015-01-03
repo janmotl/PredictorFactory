@@ -28,7 +28,7 @@ public class Predictor implements Comparable<Predictor> {
 	
 	// Relevance of the predictor for classification
 	// SHOULD CONTAIN: Target, MeasureType, Value
-	private Map<String, Double> relevanceList = new HashMap<String, Double>(); 
+	private SortedMap<String, Double> relevanceList = new TreeMap<String, Double>(); 
 	
 		
 	// Private
@@ -179,11 +179,11 @@ public class Predictor implements Comparable<Predictor> {
 		this.nullCount = nullCount;
 	}
 
-	public Map<String, Double> getRelevanceList() {
+	public SortedMap<String, Double> getRelevanceList() {
 		return relevanceList;
 	}
 	
-	public void setRelevanceList(Map<String, Double> relevanceList) {
+	public void setRelevanceList(SortedMap<String, Double> relevanceList) {
 		this.relevanceList = relevanceList;
 	}
 

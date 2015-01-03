@@ -9,6 +9,7 @@ that it also returns non-numerical columns.
 	<date>2014-10-14</date>
 	<code>SELECT @baseId
 			   , @baseDate
+			   , @baseTarget
 			   , @anyColumn "@columnName"
 		  FROM @propagatedTable</code>
 	<cardinality>1</cardinality>

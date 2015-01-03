@@ -17,6 +17,7 @@
 	<date>2014-12-30</date>
 	<code>SELECT @baseId
 			   , @baseDate
+			   , @baseTarget
 			   , count(@dataColumn) "@columnName"
 	      FROM @propagatedTable
 	      GROUP BY @baseId, @baseDate

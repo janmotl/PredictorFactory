@@ -592,7 +592,73 @@ public final class SQL {
 		return correlation;
 	}
 	
-	
+ 	public static double getChi2(Setting setting, String table, String column) {
+		String sql = ""
+				+ "select sum(chi2) "
+				+ "from ( "
+				+ "	select (t1.expected-t2.count) * (t1.expected-t2.count)/ t1.expected chi2 "
+				+ "	from ( "
+				+ "		select expected_bin.count*expected_target.prob expected "
+				+ "			 , bin "
+				+ "			 , target "
+				+ "		from ( "
+				+ "			select @baseTarget target "
+				+ "				 , count(*)/t2.nrow prob "
+				+ "			from @outputTable, ( "
+				+ "				select count(*) nrow "
+				+ "				from @outputTable "
+				+ "			) as t2 "
+				+ "			GROUP BY @baseTarget "
+				+ "		) as expected_target, ( "
+				+ "			select count(*) count "
+				+ "				 , (@column-t2.min_value) div (t2.bin_width) bin "
+				+ "			from @outputTable, ( "
+				+ "					select (max(@column)-min(@column)) / ceil(log2(count(*)+1)) - 0.0000001 bin_width "
+				+ "						 , min(@column) as min_value "
+				+ "					from @outputTable "
+				+ "				) as t2 "
+				+ "			group by (@column-t2.min_value) div (t2.bin_width) "
+				+ "		) as expected_bin "
+				+ "	) as t1 "
+				+ "	left join ( "
+				+ "		select @baseTarget target "
+				+ "			 , count(*) count "
+				+ "			 , (@column-t2.min_value) div (t2.bin_width) bin "
+				+ "		from @outputTable, ( "
+				+ "				select (max(@column)-min(@column)) / ceil(log2(count(*)+1)) - 0.0000001 bin_width "
+				+ "					 , min(@column) as min_value "
+				+ "				from @outputTable "
+				+ "			) as t2 "
+				+ "		group by (@column-t2.min_value) div (t2.bin_width), @baseTarget "
+				+ "	) as t2 "
+				+ "	on t1.bin = t2.bin "
+				+ "	and t1.target = t2.target "
+				+ ") as chi2";
+
+		sql = expandName(setting, sql);
+		sql = escapeEntity(setting, sql, table);	/* outputTable, outputSchema, output.Database */
+		
+		// Escape the entities
+		HashMap<String, String> fieldMap = new HashMap<String, String>();
+		fieldMap.put("@column", column);
+		fieldMap.put("@baseTarget", setting.baseTarget);
+		sql = escapeEntityMap(setting, sql, fieldMap);
+		
+		// Execute the SQL
+		ArrayList<String> response = Network.executeQuery(setting.connection, sql);
+		
+		// Parse the response
+		double chi2;
+
+		try {
+			chi2 = Double.valueOf(response.get(0)); 
+		} catch (Exception e){
+			chi2 = 0;
+		}
+		
+		return chi2;
+		
+	}
 	
  	
 	// 1) Get base table (a table with id, targets and horizon dates)
@@ -742,8 +808,8 @@ public final class SQL {
 	        "'" + predictor.patternAuthor + "', " + 
 	        "'" + predictor.getPatternCode() + "', " +
 	        "'" + predictor.getSql() + "', " +
-			"'" + 0 + "', " + // Place holder for target
-			"'" + 0 + "', " + // Place holder for Chi2
+			"'" + setting.targetColumn + "', " + 
+			"'" + predictor.getRelevanceList().get(setting.baseTarget) + "', " + // Chi2
 	        "'" + predictor.getRowCount() + "', " + 
 	        "'" + predictor.getNullCount() + "', " + 
 	        isOk + ")";

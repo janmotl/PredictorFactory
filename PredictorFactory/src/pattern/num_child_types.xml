@@ -7,7 +7,7 @@
 	</description>
 	<author>Filip Trojan</author>
 	<date>2014-12-25</date>
-	<code>SELECT @baseId, @baseDate, count(distinct @nominalColumn) "@columnName"
+	<code>SELECT @baseId, @baseDate, @baseTarget, count(distinct @nominalColumn) "@columnName"
 	      FROM @propagatedTable
 	      GROUP BY @baseId, @baseDate
 	</code>
