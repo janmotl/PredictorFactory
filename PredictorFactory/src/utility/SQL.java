@@ -167,6 +167,7 @@ public final class SQL {
 
 	    sql = pattern_code.replace("@propagatedTable", QL + predictor.propagatedTable + QR);
 	    sql = sql.replace("@columnName",  predictor.getName());
+	    sql = sql.replace("@dateValidColumn",  predictor.propagationDate);
 	    
 	    for (String columnName : predictor.columnMap.keySet()) {
 	    	sql = sql.replace(columnName, QL + predictor.columnMap.get(columnName) + QR);
@@ -592,8 +593,7 @@ public final class SQL {
 		return correlation;
 	}
 	
- 	// WORKS ON DISCRETE VALUES, BUT I DO NOT KNOW HOW WELL
- 	// 
+ 	// NOT TESTED ON DATE TYPE.
  	public static double getChi2(Setting setting, String table, String column) {
  		String sql;
  		
