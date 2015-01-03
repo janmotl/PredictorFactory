@@ -20,7 +20,7 @@
 			   , @baseTarget
 			   , count(@dataColumn) "@columnName"
 	      FROM @propagatedTable
-	      GROUP BY @baseId, @baseDate
+	      GROUP BY @baseId, @baseDate, @baseTarget
 	</code>
 	<cardinality>n</cardinality>
 </pattern>

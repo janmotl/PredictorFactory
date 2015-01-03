@@ -9,7 +9,7 @@
 	<date>2014-12-25</date>
 	<code>SELECT @baseId, @baseDate, @baseTarget, count(distinct @nominalColumn) "@columnName"
 	      FROM @propagatedTable
-	      GROUP BY @baseId, @baseDate
+	      GROUP BY @baseId, @baseDate, @baseTarget
 	</code>
 	<cardinality>n</cardinality>
 </pattern>

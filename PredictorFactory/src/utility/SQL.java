@@ -592,48 +592,92 @@ public final class SQL {
 		return correlation;
 	}
 	
+ 	// WORKS ON DISCRETE VALUES, BUT I DO NOT KNOW HOW WELL
+ 	// 
  	public static double getChi2(Setting setting, String table, String column) {
-		String sql = ""
+ 		String sql;
+ 		
+ 		// Is the predictor categorical or do we have to bin in?
+ 		SortedSet<String> stringList = getColumnList(setting, table, "String", false);
+ 		if (stringList.contains(column)) {
+ 			// Use categorical column directly
+ 			sql = ""
 				+ "select sum(chi2) "
 				+ "from ( "
-				+ "	select (t1.expected-t2.count) * (t1.expected-t2.count)/ t1.expected chi2 "
+				+ "	select (expected.expected-measured.count) * (expected.expected-measured.count) / expected.expected chi2 "
 				+ "	from ( "
 				+ "		select expected_bin.count*expected_target.prob expected "
 				+ "			 , bin "
 				+ "			 , target "
 				+ "		from ( "
 				+ "			select @baseTarget target "
-				+ "				 , count(*)/t2.nrow prob "
+				+ "				 , cast(count(*) as DECIMAL)/max(t2.nrow) prob "
 				+ "			from @outputTable, ( "
-				+ "				select count(*) nrow "
+				+ "				select cast(count(*) as DECIMAL) nrow "
 				+ "				from @outputTable "
 				+ "			) as t2 "
 				+ "			GROUP BY @baseTarget "
 				+ "		) as expected_target, ( "
-				+ "			select count(*) count "
-				+ "				 , (@column-t2.min_value) div (t2.bin_width) bin "
+				+ "			select cast(count(*) as DECIMAL) count "
+				+ "				 , @column bin "
+				+ "			from @outputTable "
+				+ "			group by @column "
+				+ "		) as expected_bin "
+				+ "	) as expected "
+				+ "	left join ( "
+				+ "		select @baseTarget target "
+				+ "			 , cast(count(*) as DECIMAL) count "
+				+ "			 , @column bin "
+				+ "		from @outputTable "
+				+ "		group by @column, @baseTarget "
+				+ "	) as measured "
+				+ "	on expected.bin = measured.bin "
+				+ "	and expected.target = measured.target "
+				+ ") as chi2";
+ 		} else {
+ 			// Group numerical values into 10 bins
+ 			sql = ""
+				+ "select sum(chi2) "
+				+ "from ( "
+				+ "	select (expected.expected-measured.count) * (expected.expected-measured.count) / expected.expected chi2 "
+				+ "	from ( "
+				+ "		select expected_bin.count*expected_target.prob expected "
+				+ "			 , bin "
+				+ "			 , target "
+				+ "		from ( "
+				+ "			select @baseTarget target "
+				+ "				 , cast(count(*) as DECIMAL)/max(t2.nrow) prob "
 				+ "			from @outputTable, ( "
-				+ "					select (max(@column)-min(@column)) / ceil(log2(count(*)+1)) - 0.0000001 bin_width "
+				+ "				select cast(count(*) as DECIMAL) nrow "
+				+ "				from @outputTable "
+				+ "			) as t2 "
+				+ "			GROUP BY @baseTarget "
+				+ "		) as expected_target, ( "
+				+ "			select cast(count(*) as DECIMAL) count "
+				+ "				 , floor((@column-t2.min_value) / (t2.bin_width)) bin "
+				+ "			from @outputTable, ( "
+				+ "					select (max(@column)-min(@column)) / (10 - 0.0000001) bin_width "
 				+ "						 , min(@column) as min_value "
 				+ "					from @outputTable "
 				+ "				) as t2 "
-				+ "			group by (@column-t2.min_value) div (t2.bin_width) "
+				+ "			group by floor((@column-t2.min_value) / (t2.bin_width)) "
 				+ "		) as expected_bin "
-				+ "	) as t1 "
+				+ "	) as expected "
 				+ "	left join ( "
 				+ "		select @baseTarget target "
-				+ "			 , count(*) count "
-				+ "			 , (@column-t2.min_value) div (t2.bin_width) bin "
+				+ "			 , cast(count(*) as DECIMAL) count "
+				+ "			 , floor((@column-t2.min_value) / (t2.bin_width)) bin "
 				+ "		from @outputTable, ( "
-				+ "				select (max(@column)-min(@column)) / ceil(log2(count(*)+1)) - 0.0000001 bin_width "
+				+ "				select (max(@column)-min(@column)) / (10 - 0.0000001) bin_width "
 				+ "					 , min(@column) as min_value "
 				+ "				from @outputTable "
 				+ "			) as t2 "
-				+ "		group by (@column-t2.min_value) div (t2.bin_width), @baseTarget "
-				+ "	) as t2 "
-				+ "	on t1.bin = t2.bin "
-				+ "	and t1.target = t2.target "
+				+ "		group by floor((@column-t2.min_value) / (t2.bin_width)), @baseTarget "
+				+ "	) as measured "
+				+ "	on expected.bin = measured.bin "
+				+ "	and expected.target = measured.target "
 				+ ") as chi2";
+ 		}
 
 		sql = expandName(setting, sql);
 		sql = escapeEntity(setting, sql, table);	/* outputTable, outputSchema, output.Database */
@@ -647,13 +691,13 @@ public final class SQL {
 		// Execute the SQL
 		ArrayList<String> response = Network.executeQuery(setting.connection, sql);
 		
-		// Parse the response
+		// Parse the response. 
 		double chi2;
 
 		try {
 			chi2 = Double.valueOf(response.get(0)); 
 		} catch (Exception e){
-			chi2 = 0;
+			chi2 = 0;  // If the response is null (empty table...), return 0
 		}
 		
 		return chi2;

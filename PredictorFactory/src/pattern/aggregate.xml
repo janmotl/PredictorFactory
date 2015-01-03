@@ -19,7 +19,7 @@
 			   , @baseTarget
 			   , @aggregateFunction(@numericalColumn) "@columnName"
 	      FROM @propagatedTable
-	      GROUP BY @baseId, @baseDate
+	      GROUP BY @baseId, @baseDate, @baseTarget
 	</code>
     <parameter key="@aggregateFunction" value="avg, min, max, stddev"/>
 	<cardinality>n</cardinality>

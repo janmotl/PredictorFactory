@@ -42,11 +42,11 @@ public class Launcher{
 		setting.inputSchema = "financial";
 		setting.outputSchema = "financial";
 		
-//		setting.dbType = "PostgreSQL";
-//		setting.inputDatabaseName = "jan";
-//		setting.outputDatabaseName = "jan";
-//		setting.inputSchema = "input";
-//		setting.outputSchema = "output";
+		setting.dbType = "PostgreSQL";
+		setting.inputDatabaseName = "jan";
+		setting.outputDatabaseName = "jan";
+		setting.inputSchema = "input";
+		setting.outputSchema = "output";
 		
 		setting.idColumn = "account_id";
 		setting.idTable = "account";
@@ -146,6 +146,8 @@ public class Launcher{
 		SortedMap<String, Double> relevanceList = new TreeMap<String, Double>();
 		relevanceList.put(setting.baseTarget, SQL.getChi2(setting, predictor.outputTable, predictor.getName()));
 		predictor.setRelevanceList(relevanceList);
+		
+		
 		
 		// Log the event into the journal
 		journal.addPredictor(setting, predictor);
