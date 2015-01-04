@@ -167,7 +167,7 @@ public final class SQL {
 
 	    sql = pattern_code.replace("@propagatedTable", QL + predictor.propagatedTable + QR);
 	    sql = sql.replace("@columnName",  predictor.getName());
-	    sql = sql.replace("@dateValidColumn",  predictor.propagationDate);
+	    //sql = sql.replace("@dateValidColumn",  predictor.propagationDate);
 	    
 	    for (String columnName : predictor.columnMap.keySet()) {
 	    	sql = sql.replace(columnName, QL + predictor.columnMap.get(columnName) + QR);
@@ -274,6 +274,7 @@ public final class SQL {
 	}
 	
 	// Get tableList based on own where condition
+	// SHOULD RETURN SORTEDSET
     public static List<String> getTableList(Setting setting, String whereClause, boolean useInput) {
 
     	// Use input or output database.schema?
@@ -305,7 +306,7 @@ public final class SQL {
     }
 
 	// Assembly getTableList query
-    // SHOULD RETURN THE TABLELIST/SORTEDSET
+    // SHOULD RETURN SORTEDSET
     public static String getTableList(Setting setting, boolean propagated, boolean useInput){
     	
     	// Use input or output database.schema?
@@ -418,9 +419,17 @@ public final class SQL {
 	// Return columns shared between two tables (based on name)
 	// NOTE THAT THIS IS NOT A RELIABLE WAY HOW TO IDENTIFY LINKS BETWEEN TABLES.
 	public static ArrayList<String> getSharedColumns(Setting setting, String inputTable, String inputTable2) {
+		// If the database supports schemas, include the database names in the query.
+		String input = "";
+		String output = "";
+		if (setting.isSchemaCompatible) {
+			input = setting.inputDatabaseName + ".";
+			output = setting.outputDatabaseName + ".";
+		}
+		
 		String sql = "SELECT t2.COLUMN_NAME " + 
-					 "FROM information_schema.COLUMNS t1 " +	// MySQL doesn't support intersect
-					 ", information_schema.COLUMNS t2 " +		// PostgreSQL doesn't support joins without "ON" clause
+					 "FROM " + output + "information_schema.COLUMNS t1 " +	// MySQL doesn't support intersect
+					 ", " + input + "information_schema.COLUMNS t2 " +		// PostgreSQL doesn't support joins without "ON" clause
 					 "WHERE t1.TABLE_SCHEMA = '" + setting.outputSchema + "' " +	// This table is already propagated
 					 "AND t1.TABLE_NAME = '" + inputTable + "' " +
 					 "AND t2.TABLE_SCHEMA = '" + setting.inputSchema + "' " +		// This table waits for propagation
@@ -483,7 +492,7 @@ public final class SQL {
 	// The indexes start at two because it was convenient to reuse the parameters in Propagation function.
 	// Note that we are working with the input tables -> alter commands are forbidden.
 	public static boolean isIdUnique(Setting setting, Map<String, String> map) {
-		String sql = "SELECT EXISTS ( " +
+		String sql = "SELECT 1 WHERE EXISTS ( " +	// Simple select exists(...) doesn't work in MSSQL
 					 "SELECT 1 " +
 					 "FROM @inputTable " +
 					 "GROUP BY @idColumn2 " +
@@ -493,8 +502,9 @@ public final class SQL {
 		sql = escapeEntity(setting, sql, "dummy");
 		sql = escapeEntityMap(setting, sql, map);
 		
-		// If a duplicate exists, return false. 
-		return !Network.getBoolean(setting.connection, sql);
+		Boolean result = Network.getBoolean(setting.connection, sql);
+		if (result==null) return true; 	// By definition.
+		return !result;	// If a duplicate exists, return false. 
 	}
 
 	// Check whether the columns {baseId, baseDate} are unique in the table.
@@ -503,7 +513,7 @@ public final class SQL {
 	public static boolean isUnique(Setting setting, String table) {
 		// We could have used possibly faster: "ALTER TABLE @outputTable ADD UNIQUE (@baseId, @baseDate)".
 		// But it would not work in Netezza as Netezza doesn't support constraint checking and referential integrity.
-		String sql = "SELECT EXISTS(SELECT 1 " +
+		String sql = "SELECT 1 WHERE EXISTS(SELECT 1 " +
 					 "FROM @outputTable " +
 					 "GROUP BY @baseId, @baseDate " +
 					 "HAVING COUNT(*)>1)";
@@ -511,8 +521,9 @@ public final class SQL {
 		sql = expandName(setting, sql);
 		sql = escapeEntity(setting, sql, table);
 		
-		// If a duplicate exists, return false. 
-		return !Network.getBoolean(setting.connection, sql);
+		Boolean result = Network.getBoolean(setting.connection, sql);
+		if (result==null) return true; 	// By definition.
+		return !result;	// If a duplicate exists, return false. 
 	}
 	
 	// Get maximal cardinality of the table in respect to {baseId, baseDate}. If the cardinality is 1, 
@@ -806,7 +817,7 @@ public final class SQL {
 	public static String getJournal(Setting setting) {
 		String sql = "CREATE TABLE @outputTable ("+
 	      "predictor_id bigint, " +
-	      "timestamp_start timestamp DEFAULT CURRENT_TIMESTAMP, " +
+	      "timestamp_start datetime, " +
 	      "timestamp_finish timestamp, " +  // Old MySQL and SQL92 do not have/require support for fractions of a second. 
 	      "name varchar(255), " +	// In MySQL pure char is limited to 255 bytes -> stick to this value if possible
 	      "table_name varchar(1024), " +	// Table is a reserved keyword -> use table_name

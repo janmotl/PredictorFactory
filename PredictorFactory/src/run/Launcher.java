@@ -42,11 +42,17 @@ public class Launcher{
 		setting.inputSchema = "financial";
 		setting.outputSchema = "financial";
 		
-		setting.dbType = "PostgreSQL";
-		setting.inputDatabaseName = "jan";
-		setting.outputDatabaseName = "jan";
-		setting.inputSchema = "input";
-		setting.outputSchema = "output";
+//		setting.dbType = "PostgreSQL";
+//		setting.inputDatabaseName = "jan";
+//		setting.outputDatabaseName = "jan";
+//		setting.inputSchema = "input";
+//		setting.outputSchema = "output";
+		
+//		setting.dbType = "Microsoft SQL Server";
+//		setting.inputDatabaseName = "Input";
+//		setting.outputDatabaseName = "Output";
+//		setting.inputSchema = "finance";
+//		setting.outputSchema = "finance";
 		
 		setting.idColumn = "account_id";
 		setting.idTable = "account";
@@ -108,6 +114,12 @@ public class Launcher{
 		// Get columns in the propagated tables
 		tableMetadata = Metadata.getMetadata(setting, tableMetadata);		
 		System.out.println("#### Finished metadata collection in " + journal.getRunTime() + " miliseconds ####");
+		
+		for (Table table : tableMetadata.values()) {
+			System.out.println(table.propagatedName);
+			System.out.println(table.nominalColumn);
+			System.out.println(table.numericalColumn);
+		}
 		
 		// Loop over all patterns in pattern directory
 		loopPatterns(setting, journal, tableMetadata);
