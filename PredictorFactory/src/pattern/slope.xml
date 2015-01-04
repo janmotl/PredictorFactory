@@ -8,7 +8,7 @@
 	<code>SELECT @baseId
 	           , @baseDate
 	           , @baseTarget
-	           , (Avg(@numericalColumn * @dateColumn) - Avg(@numericalColumn) * Avg(@dateColumn)) / (StD(@numericalColumn) * StD(@dateColumn)) "@columnName"
+	           , (Avg(@numericalColumn * @dateColumn) - Avg(@numericalColumn) * Avg(@dateColumn)) / (StdDev_Samp(@numericalColumn) * StdDev_Samp(@dateColumn)) "@columnName"
 	      FROM @propagatedTable
 	      GROUP BY @baseId, @baseDate
 	</code>

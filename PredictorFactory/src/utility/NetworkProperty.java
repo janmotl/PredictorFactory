@@ -17,6 +17,8 @@ public class NetworkProperty {
 	@XmlAttribute String createTableAsCompatible;
 	@XmlAttribute String schemaCompatible;
 	@XmlAttribute String dateAddSyntax;
+	@XmlAttribute String stdDevCommand;
+	@XmlAttribute String dateTimeCompatible;
 	
 	// Constructor
 	public  NetworkProperty() {}

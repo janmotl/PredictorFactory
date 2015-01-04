@@ -47,6 +47,8 @@ public final class Network {
 		setting.isCreateTableAsCompatible = "yes".equals(props.createTableAsCompatible);
 		setting.isSchemaCompatible = "yes".equals(props.schemaCompatible);
 		setting.dateAddSyntax = props.dateAddSyntax;
+		setting.stdDevCommand = props.stdDevCommand;
+		setting.dateTimeCompatible = "yes".equals(props.dateTimeCompatible);
 		
 		return setting;
 	}

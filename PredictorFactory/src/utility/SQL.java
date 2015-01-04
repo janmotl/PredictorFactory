@@ -24,7 +24,7 @@ public final class SQL {
 
 		// If not specified, the default is "Create table as"
 		if (!setting.isCreateTableAsCompatible) {
-			result = pattern_code.replace("FROM", "INTO @outputTable FROM");
+			result = pattern_code.replaceFirst("FROM", "INTO @outputTable FROM");
 		} else {
 			result = "CREATE TABLE @outputTable AS " + pattern_code;
 		}
@@ -120,26 +120,33 @@ public final class SQL {
 		if (StringUtils.isBlank(setting.baseTarget)) {
 			throw new IllegalArgumentException("Base target is required");
 		}
+		if (StringUtils.isBlank(setting.stdDevCommand)) {
+			throw new IllegalArgumentException("StdDev command is required");
+		}
 
 
 		String QL = setting.quoteMarks.substring(0, 1);
 		String QR = setting.quoteMarks.substring(1, 2);
 		String sql;
 
-		sql = pattern_code.replaceAll("@idTable", QL + setting.idTable + QR);
+		sql = pattern_code.replace("@idTable", QL + setting.idTable + QR);
 		sql = sql.replaceAll("\\@idColumn\\b", QL + setting.idColumn + QR);	// There can be several numbered id columns
-		sql = sql.replaceAll("@baseId", QL + setting.baseId + QR);
-		sql = sql.replaceAll("@baseDate", QL + setting.baseDate + QR);
-		sql = sql.replaceAll("@baseTarget", QL + setting.baseTarget + QR);
-		sql = sql.replaceAll("@baseTable", QL + setting.baseTable + QR);
-		sql = sql.replaceAll("@targetDate", QL + setting.targetDate + QR);
-		sql = sql.replaceAll("@targetColumn", QL + setting.targetColumn + QR);
-		sql = sql.replaceAll("@targetTable", QL + setting.targetTable + QR);
-		sql = sql.replaceAll("@inputSchema", QL + setting.inputSchema + QR);
-		sql = sql.replaceAll("@outputSchema", QL + setting.outputSchema + QR);
-		sql = sql.replaceAll("@inputDatabase", QL + setting.inputDatabaseName + QR);
-		sql = sql.replaceAll("@outputDatabase", QL + setting.outputDatabaseName + QR);
-		sql = sql.replaceAll("@outputTable", QL + outputTable + QR);
+		sql = sql.replace("@baseId", QL + setting.baseId + QR);
+		sql = sql.replace("@baseDate", QL + setting.baseDate + QR);
+		sql = sql.replace("@baseTarget", QL + setting.baseTarget + QR);
+		sql = sql.replace("@baseTable", QL + setting.baseTable + QR);
+		sql = sql.replace("@targetDate", QL + setting.targetDate + QR);
+		sql = sql.replace("@targetColumn", QL + setting.targetColumn + QR);
+		sql = sql.replace("@targetTable", QL + setting.targetTable + QR);
+		sql = sql.replace("@inputSchema", QL + setting.inputSchema + QR);
+		sql = sql.replace("@outputSchema", QL + setting.outputSchema + QR);
+		sql = sql.replace("@inputDatabase", QL + setting.inputDatabaseName + QR);
+		sql = sql.replace("@outputDatabase", QL + setting.outputDatabaseName + QR);
+		sql = sql.replace("@outputTable", QL + outputTable + QR);
+		
+		// Do not enforce case sensitivity when we can't force the script designers to follow it.
+		sql = sql.replaceAll("(?i)stdDev_samp[(]", setting.stdDevCommand + "(");	// Replace it only when it is used as a function
+		if (setting.dateTimeCompatible) sql = sql.replaceAll("(?i)timestamp", "dateTime");	
 		
 		// Make sure the command is terminated with the semicolon. This is useful for example if we want 
 	    // to move SQL commands from the journal to the production. 
@@ -491,12 +498,14 @@ public final class SQL {
 	// The map should contain @inputTable and @idColumn2.
 	// The indexes start at two because it was convenient to reuse the parameters in Propagation function.
 	// Note that we are working with the input tables -> alter commands are forbidden.
+	// It was difficult to write a version that would be more effective than sum(... having count(*)>1).
+	// If you decide to replace this query, test it with several database engines!
 	public static boolean isIdUnique(Setting setting, Map<String, String> map) {
-		String sql = "SELECT 1 WHERE EXISTS ( " +	// Simple select exists(...) doesn't work in MSSQL
+		String sql = "SELECT (CASE WHEN EXISTS ( " +	
 					 "SELECT 1 " +
 					 "FROM @inputTable " +
 					 "GROUP BY @idColumn2 " +
-					 "HAVING count(*) > 1)"; 			
+					 "HAVING COUNT(*)>1) THEN 1 ELSE 0 END) returnValue"; 			
 				
 		sql = expandName(setting, sql);
 		sql = escapeEntity(setting, sql, "dummy");
@@ -513,10 +522,11 @@ public final class SQL {
 	public static boolean isUnique(Setting setting, String table) {
 		// We could have used possibly faster: "ALTER TABLE @outputTable ADD UNIQUE (@baseId, @baseDate)".
 		// But it would not work in Netezza as Netezza doesn't support constraint checking and referential integrity.
-		String sql = "SELECT 1 WHERE EXISTS(SELECT 1 " +
+		String sql = "SELECT (CASE WHEN EXISTS( " +
+					 "SELECT 1 " +
 					 "FROM @outputTable " +
 					 "GROUP BY @baseId, @baseDate " +
-					 "HAVING COUNT(*)>1)";
+					 "HAVING COUNT(*)>1) THEN 1 ELSE 0 END) returnValue";
 		
 		sql = expandName(setting, sql);
 		sql = escapeEntity(setting, sql, table);
@@ -526,31 +536,6 @@ public final class SQL {
 		return !result;	// If a duplicate exists, return false. 
 	}
 	
-	// Get maximal cardinality of the table in respect to {baseId, baseDate}. If the cardinality is 1, 
-	// we may avoid of aggregation and copy the values immediately. 
-	// The map should contain @inputTable.
-	// WOULD BE UNOUGH TO FIND EXISTENCE OF A DUPLICATE KEY IN TABLE2 - USE LIMIT/TOP/ROWNUM
-	public static int getPropagationCardinality(Setting setting, Map<String, String> map) {
-		String sql = "SELECT max(count) FROM (" + 
-						"SELECT count(*) as count " +
-						"FROM @inputTable " +
-						"GROUP BY @baseId, @dateId" + 
-					 ") as cardinality";
-		
-		sql = expandName(setting, sql);
-		sql = escapeEntity(setting, sql, "dummy");
-		sql = escapeEntityMap(setting, sql, map);
-		
-		ArrayList<String> resultSet = Network.executeQuery(setting.connection, sql);
-		
-		// Take care of the cases when the resultSet is empty
-		int maxCardinality = 0;
-		if (!resultSet.isEmpty()) {
-			maxCardinality = Integer.valueOf(resultSet.get(0));
-		}
-		
-		return maxCardinality;
-	}
 	
 	// Return list of unique records in the column sorted descendingly based on record count.
 	// This function is useful for example for dummy coding of nominal attributes.
@@ -575,7 +560,7 @@ public final class SQL {
 	// JOINS ARE TOO SLOW. Calculate the worthness after making "All table's predictors". 
 	// or add target into predictors' tables.
  	public static double getRelevance(Setting setting, String table, String column) {
-		String sql = "SELECT (Avg(@column * @baseTarget) - Avg(@column) * Avg(@baseTarget)) / (StD(@column) * StD(@baseTarget)) AS Correlation " +
+		String sql = "SELECT (Avg(@column * @baseTarget) - Avg(@column) * Avg(@baseTarget)) / (stddev_samp(@column) * stddev_samp(@baseTarget)) AS Correlation " +
 					 "FROM @outputTable t1 " + /* We are working with the outptutTable, hence schema & database are output. */
 					 "JOIN @baseTable t2 ON t1.@column = t2.@baseTarget";
 		
@@ -817,7 +802,7 @@ public final class SQL {
 	public static String getJournal(Setting setting) {
 		String sql = "CREATE TABLE @outputTable ("+
 	      "predictor_id bigint, " +
-	      "timestamp_start datetime, " +
+	      "timestamp_start timestamp, " +	// If the database doesn't support multiple timestamps, datetime is automatically used.
 	      "timestamp_finish timestamp, " +  // Old MySQL and SQL92 do not have/require support for fractions of a second. 
 	      "name varchar(255), " +	// In MySQL pure char is limited to 255 bytes -> stick to this value if possible
 	      "table_name varchar(1024), " +	// Table is a reserved keyword -> use table_name
