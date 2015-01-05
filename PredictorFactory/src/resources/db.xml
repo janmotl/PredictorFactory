@@ -11,6 +11,8 @@
      	createTableAsCompatible="yes" 
      	schemaCompatible="no"
      	dateAddSyntax="DATE_ADD(@baseDate, INTERVAL @amount @datePart)"
+     	stdDevCommand="STDDEV_SAMP"
+     	dateTimeCompatible="no"
     />
 
 	<driver 
@@ -23,6 +25,8 @@
      	createTableAsCompatible="yes" 
      	schemaCompatible="no"
      	dateAddSyntax="DATE_ADD(@baseDate, INTERVAL @amount @datePart)"
+     	stdDevCommand="STDDEV_SAMP"
+     	dateTimeCompatible="no"
     />
     
 	<driver 
@@ -35,6 +39,8 @@
      	createTableAsCompatible="yes" 
      	schemaCompatible="no"
      	dateAddSyntax="DATE_ADD(@baseDate, INTERVAL @amount @datePart)"
+     	stdDevCommand="STDDEV_SAMP"
+     	dateTimeCompatible="no"
     />
     
     <driver 
@@ -47,6 +53,8 @@
      	createTableAsCompatible="yes" 
      	schemaCompatible="no"
      	dateAddSyntax="DATE_ADD(@baseDate, INTERVAL @amount @datePart)"
+     	stdDevCommand="STDDEV_SAMP"
+     	dateTimeCompatible="no"
     />
      	
  	<driver 
@@ -59,6 +67,8 @@
      	createTableAsCompatible="yes" 
      	schemaCompatible="yes"
      	dateAddSyntax="@baseDate + INTERVAL '@amount' @datePart"
+     	stdDevCommand="STDDEV_SAMP"
+     	dateTimeCompatible="no"
     />
      
     <driver 
@@ -71,6 +81,8 @@
      	createTableAsCompatible="yes" 
      	schemaCompatible="no"
      	dateAddSyntax="@baseDate + (INTERVAL '@amount' @datePart)"
+     	stdDevCommand="STDDEV_SAMP"
+     	dateTimeCompatible="no"
     />
     
     <!-- By default Netezza support for schemas is turned off. The only supported datePart is a month. --> 
@@ -84,6 +96,8 @@
      	createTableAsCompatible="yes" 
      	schemaCompatible="no"	
      	addDate="add_months(@baseDate, @amount)"
+     	stdDevCommand="STDDEV_SAMP"
+     	dateTimeCompatible="no"
     />
     	     	
    	<driver 
@@ -96,6 +110,8 @@
      	createTableAsCompatible="no" 
      	schemaCompatible="yes"
      	dateAddSyntax="DATEADD(@datePart, @amount, @baseDate)"
+     	stdDevCommand="STDEV"
+     	dateTimeCompatible="yes"
     />
      
     <driver 
@@ -108,6 +124,8 @@
      	createTableAsCompatible="yes" 
      	schemaCompatible="yes"
      	dateAddSyntax="@baseDate + INTERVAL '@amount @datePart'"
+     	stdDevCommand="STDDEV_SAMP"
+     	dateTimeCompatible="no"
     />
 </drivers>
 

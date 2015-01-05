@@ -4,7 +4,12 @@
 	<name>Aggregate</name>
 	<description>
 		Apply aggregation function on numerical attributes. Following aggregate functions were selected for being 
-		supported in many databases: avg, min, max and stddev. 
+		supported in many databases: avg, min, max and stddev_samp.
+		
+		Note that "stddev_samp" is automatically translate to the database specific command for sample standard
+		deviation (for example, MS SQL is using "stddev" while Oracle is using "stddev_samp"). Hence if you want
+		sample standard deviation, use "stddev_samp" keyword, even if you are using MS SQL, to make the script 
+		transferable.
 		
 		Note that "count" attribute is not in the set as it is enough to calculate the count only once per table 
 		(see num_children). But aggregate functions are calculated per each numerical column. 
@@ -21,6 +26,6 @@
 	      FROM @propagatedTable
 	      GROUP BY @baseId, @baseDate, @baseTarget
 	</code>
-    <parameter key="@aggregateFunction" value="avg, min, max, stddev"/>
+    <parameter key="@aggregateFunction" value="avg, min, max, stddev_samp"/>
 	<cardinality>n</cardinality>
 </pattern>

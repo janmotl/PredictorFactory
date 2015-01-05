@@ -10,7 +10,9 @@ public final class Setting {
 	public String quoteMarks;					// Characters for entity escaping
 	public boolean isCreateTableAsCompatible;	// Use "create table as" syntax?
 	public boolean isSchemaCompatible;			// Some databases support schemas
-	public String dateAddSyntax;						// Syntax for changing a date by a given amount
+	public String dateAddSyntax;				// Syntax for changing a date by a given amount
+	public String stdDevCommand;				// MS SQL is using STDEV in place of STDDEV_SAMP
+	public boolean dateTimeCompatible;			// In MS SQL we have to use dateTime instead of timeStamp
 
 	// Setup related	
 	public String idColumn;		// The id column (like IdCustomer). Used only for base construction.

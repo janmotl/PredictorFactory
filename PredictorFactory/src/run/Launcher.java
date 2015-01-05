@@ -119,6 +119,8 @@ public class Launcher{
 			System.out.println(table.propagatedName);
 			System.out.println(table.nominalColumn);
 			System.out.println(table.numericalColumn);
+			System.out.println(table.idIsUnique);
+			System.out.println(table.isUnique);
 		}
 		
 		// Loop over all patterns in pattern directory
