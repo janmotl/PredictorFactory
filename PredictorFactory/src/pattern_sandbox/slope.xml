@@ -10,7 +10,7 @@
 	           , @baseTarget
 	           , (Avg(@numericalColumn * @dateColumn) - Avg(@numericalColumn) * Avg(@dateColumn)) / (StdDev_Samp(@numericalColumn) * StdDev_Samp(@dateColumn)) "@columnName"
 	      FROM @propagatedTable
-	      GROUP BY @baseId, @baseDate
+	      GROUP BY @baseId, @baseDate, @baseTarget
 	</code>
 	<cardinality>n</cardinality>
 </pattern>

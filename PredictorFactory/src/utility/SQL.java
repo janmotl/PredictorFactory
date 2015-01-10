@@ -24,7 +24,7 @@ public final class SQL {
 
 		// If not specified, the default is "Create table as"
 		if (!setting.isCreateTableAsCompatible) {
-			result = pattern_code.replaceFirst("FROM", "INTO @outputTable FROM");
+			result = pattern_code.replaceFirst("(?i)FROM", "INTO @outputTable FROM"); // Case insensitive
 		} else {
 			result = "CREATE TABLE @outputTable AS " + pattern_code;
 		}
@@ -120,10 +120,6 @@ public final class SQL {
 		if (StringUtils.isBlank(setting.baseTarget)) {
 			throw new IllegalArgumentException("Base target is required");
 		}
-		if (StringUtils.isBlank(setting.stdDevCommand)) {
-			throw new IllegalArgumentException("StdDev command is required");
-		}
-
 
 		String QL = setting.quoteMarks.substring(0, 1);
 		String QR = setting.quoteMarks.substring(1, 2);
@@ -143,11 +139,7 @@ public final class SQL {
 		sql = sql.replace("@inputDatabase", QL + setting.inputDatabaseName + QR);
 		sql = sql.replace("@outputDatabase", QL + setting.outputDatabaseName + QR);
 		sql = sql.replace("@outputTable", QL + outputTable + QR);
-		
-		// Do not enforce case sensitivity when we can't force the script designers to follow it.
-		sql = sql.replaceAll("(?i)stdDev_samp[(]", setting.stdDevCommand + "(");	// Replace it only when it is used as a function
-		if (setting.dateTimeCompatible) sql = sql.replaceAll("(?i)timestamp", "dateTime");	
-		
+				
 		// Make sure the command is terminated with the semicolon. This is useful for example if we want 
 	    // to move SQL commands from the journal to the production. 
 	    if (!sql.endsWith(";")) sql = sql +";";
@@ -212,6 +204,17 @@ public final class SQL {
 		return sql;
 	}
 	
+	// Subroutine 4: Replace database specific terms
+	// I DISLIKE THIS. What if some column in inputDatabase is named "stddev_samp" or "timestamp"?
+	// Proposal: Use just one timestamp in journal (start_time) and add run_time (Decimal seconds).
+	private static String databaseSpecific(Setting setting, String sql) {
+		
+		// Do not enforce case sensitivity when we can't force the script designers to follow it.
+		sql = sql.replaceAll("(?i)stdDev_samp", setting.stdDevCommand);
+		if (setting.dateTimeCompatible) sql = sql.replaceAll("(?i)timestamp", "dateTime");
+				
+		return sql;
+	}
 	
 	
 	
@@ -456,6 +459,7 @@ public final class SQL {
 		
 		sql = expandName(setting, sql);
 		sql = escapeEntity(setting, sql, inputTable);
+		sql = databaseSpecific(setting, sql);	// Take care of stdDev in the predictor's name
 		
 		// Dirt cheap approach how to get row count is unfortunately database specific. Hence universal count(*) 
 		// is implemented. Some databases, like MySQL, returns the answer to count(*) query immediately. In other 
@@ -484,6 +488,8 @@ public final class SQL {
 		Map<String, String> fieldMap = new HashMap<String, String>(); 
 		fieldMap.put("@column", column);
 		sql = escapeEntityMap(setting, sql, fieldMap);
+		
+		sql = databaseSpecific(setting, sql);	// Take care of stdDev in the predictor's name
 		
 		ArrayList<String> resultList = Network.executeQuery(setting.connection, sql);
 		
@@ -566,6 +572,7 @@ public final class SQL {
 		
 		sql = expandName(setting, sql);
 		sql = escapeEntity(setting, sql, table);	/* outputTable, outputSchema, output.Database */
+		sql = databaseSpecific(setting, sql);	// Take care of stdDev
 		
 		// Escape the entities
 		HashMap<String, String> fieldMap = new HashMap<String, String>();
@@ -631,7 +638,9 @@ public final class SQL {
 				+ "	and expected.target = measured.target "
 				+ ") as chi2";
  		} else {
- 			// Group numerical values into 10 bins
+ 			// Group numerical values into 10 bins.
+ 			// If desirable you can optimize the optimal amount of bins with Sturge's rule 
+ 			// but syntax for log is different in each database. 
  			sql = ""
 				+ "select sum(chi2) "
 				+ "from ( "
@@ -650,25 +659,25 @@ public final class SQL {
 				+ "			GROUP BY @baseTarget "
 				+ "		) as expected_target, ( "
 				+ "			select cast(count(*) as DECIMAL) count "
-				+ "				 , floor((@column-t2.min_value) / (t2.bin_width)) bin "
+				+ "				 , floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) bin " // Bin really into 10 bins.
 				+ "			from @outputTable, ( "
-				+ "					select (max(@column)-min(@column)) / (10 - 0.0000001) bin_width "
+				+ "					select (max(@column)-min(@column)) / 10 bin_width "
 				+ "						 , min(@column) as min_value "
 				+ "					from @outputTable "
 				+ "				) as t2 "
-				+ "			group by floor((@column-t2.min_value) / (t2.bin_width)) "
+				+ "			group by floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) "	// And avoid division by zero.
 				+ "		) as expected_bin "
 				+ "	) as expected "
 				+ "	left join ( "
 				+ "		select @baseTarget target "
 				+ "			 , cast(count(*) as DECIMAL) count "
-				+ "			 , floor((@column-t2.min_value) / (t2.bin_width)) bin "
+				+ "			 , floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) bin "
 				+ "		from @outputTable, ( "
-				+ "				select (max(@column)-min(@column)) / (10 - 0.0000001) bin_width "
+				+ "				select (max(@column)-min(@column)) / 10 bin_width "
 				+ "					 , min(@column) as min_value "
 				+ "				from @outputTable "
 				+ "			) as t2 "
-				+ "		group by floor((@column-t2.min_value) / (t2.bin_width)), @baseTarget "
+				+ "		group by floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)), @baseTarget "
 				+ "	) as measured "
 				+ "	on expected.bin = measured.bin "
 				+ "	and expected.target = measured.target "
@@ -683,6 +692,8 @@ public final class SQL {
 		fieldMap.put("@column", column);
 		fieldMap.put("@baseTarget", setting.baseTarget);
 		sql = escapeEntityMap(setting, sql, fieldMap);
+
+		sql = databaseSpecific(setting, sql);	// Take care of stdDev in the predictor's name
 		
 		// Execute the SQL
 		ArrayList<String> response = Network.executeQuery(setting.connection, sql);
@@ -802,9 +813,9 @@ public final class SQL {
 	public static String getJournal(Setting setting) {
 		String sql = "CREATE TABLE @outputTable ("+
 	      "predictor_id bigint, " +
-	      "timestamp_start timestamp, " +	// If the database doesn't support multiple timestamps, datetime is automatically used.
-	      "timestamp_finish timestamp, " +  // Old MySQL and SQL92 do not have/require support for fractions of a second. 
-	      "name varchar(255), " +	// In MySQL pure char is limited to 255 bytes -> stick to this value if possible
+	      "times_start timestamp, " +	// If the database doesn't support multiple timestamps, datetime is automatically used.
+	      "times_finish timestamp, " +  // Old MySQL and SQL92 do not have/require support for fractions of a second. 
+	      "predictor_name varchar(255), " +	// In MySQL pure char is limited to 255 bytes -> stick to this value if possible
 	      "table_name varchar(1024), " +	// Table is a reserved keyword -> use table_name
 	      "column_list varchar(1024), " +
 	      "propagation_path varchar(1024), " +	      
@@ -823,6 +834,7 @@ public final class SQL {
 		
 		sql = expandName(setting, sql);
 		sql = escapeEntity(setting, sql, setting.journalTable);
+		sql = databaseSpecific(setting, sql);	// Take care of timestamp
 
 		return sql;
 	}
@@ -864,10 +876,11 @@ public final class SQL {
 	public static String getPredictor(Setting setting, Predictor predictor){
 		String sql;
 		
-		String pattern_code = addCreateTableAs(setting, predictor.getPatternCode());
-		pattern_code = expandName(setting, pattern_code);
-		pattern_code = escapeEntity(setting, pattern_code, predictor.outputTable);
-		sql = escapeEntityPredictor(setting, pattern_code, predictor);
+		sql = addCreateTableAs(setting, predictor.getPatternCode());
+		sql = expandName(setting, sql);
+		sql = escapeEntity(setting, sql, predictor.outputTable);	
+		sql = escapeEntityPredictor(setting, sql, predictor);		
+		sql = databaseSpecific(setting, sql);	// Take care of stdDev
 		
 		return sql;
 	}
@@ -923,6 +936,8 @@ public final class SQL {
 			for (String column : columnList) map.put("@" + column, column);
 			String sql = escapeEntityMap(setting, pattern_code, map);
 			
+			sql = databaseSpecific(setting, sql);
+			
 			// Execute the query
 			Network.executeUpdate(setting.connection, sql);
 			
@@ -965,6 +980,8 @@ public final class SQL {
 		for (String table : tempTableList) map.put(table, table);
 		for (String column : columnListAll) map.put("@" + column, column);
 		String sql = escapeEntityMap(setting, pattern_code, map);
+		
+		sql = databaseSpecific(setting, sql);
 		
 		// Execute the query
 		Network.executeUpdate(setting.connection, sql);

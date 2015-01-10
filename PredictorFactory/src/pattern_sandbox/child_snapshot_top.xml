@@ -27,10 +27,11 @@
 	</description>
 	<author>Filip Trojan</author>
 	<date>2015-01-02</date>
-	<code>select @baseId, @baseDate, @numericalColumn, @nominalColumn "@columnName"
+	<code>select @baseId, @baseDate, @baseTarget, @numericalColumn, @nominalColumn "@columnName"
 		from (SELECT t1.@idColumn
 		  , t1.@baseId
 		  , t1.@baseDate
+		  , t1.@baseTarget
 		  , t1.@numericalColumn
 		  , t1.@nominalColumn
 		  , count(t2.@idColumn) as K

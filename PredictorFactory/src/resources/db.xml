@@ -11,7 +11,7 @@
      	createTableAsCompatible="yes" 
      	schemaCompatible="no"
      	dateAddSyntax="DATE_ADD(@baseDate, INTERVAL @amount @datePart)"
-     	stdDevCommand="STDDEV_SAMP"
+     	stdDevCommand="stddev_samp"
      	dateTimeCompatible="no"
     />
 
@@ -25,7 +25,7 @@
      	createTableAsCompatible="yes" 
      	schemaCompatible="no"
      	dateAddSyntax="DATE_ADD(@baseDate, INTERVAL @amount @datePart)"
-     	stdDevCommand="STDDEV_SAMP"
+     	stdDevCommand="stddev_samp"
      	dateTimeCompatible="no"
     />
     
@@ -39,7 +39,7 @@
      	createTableAsCompatible="yes" 
      	schemaCompatible="no"
      	dateAddSyntax="DATE_ADD(@baseDate, INTERVAL @amount @datePart)"
-     	stdDevCommand="STDDEV_SAMP"
+     	stdDevCommand="stddev_samp"
      	dateTimeCompatible="no"
     />
     
@@ -53,7 +53,7 @@
      	createTableAsCompatible="yes" 
      	schemaCompatible="no"
      	dateAddSyntax="DATE_ADD(@baseDate, INTERVAL @amount @datePart)"
-     	stdDevCommand="STDDEV_SAMP"
+     	stdDevCommand="stddev_samp"
      	dateTimeCompatible="no"
     />
      	
@@ -67,7 +67,7 @@
      	createTableAsCompatible="yes" 
      	schemaCompatible="yes"
      	dateAddSyntax="@baseDate + INTERVAL '@amount' @datePart"
-     	stdDevCommand="STDDEV_SAMP"
+     	stdDevCommand="stddev_samp"
      	dateTimeCompatible="no"
     />
      
@@ -81,7 +81,7 @@
      	createTableAsCompatible="yes" 
      	schemaCompatible="no"
      	dateAddSyntax="@baseDate + (INTERVAL '@amount' @datePart)"
-     	stdDevCommand="STDDEV_SAMP"
+     	stdDevCommand="stddev_samp"
      	dateTimeCompatible="no"
     />
     
@@ -96,7 +96,7 @@
      	createTableAsCompatible="yes" 
      	schemaCompatible="no"	
      	addDate="add_months(@baseDate, @amount)"
-     	stdDevCommand="STDDEV_SAMP"
+     	stdDevCommand="stddev_samp"
      	dateTimeCompatible="no"
     />
     	     	
@@ -110,7 +110,7 @@
      	createTableAsCompatible="no" 
      	schemaCompatible="yes"
      	dateAddSyntax="DATEADD(@datePart, @amount, @baseDate)"
-     	stdDevCommand="STDEV"
+     	stdDevCommand="stdev"
      	dateTimeCompatible="yes"
     />
      
@@ -124,7 +124,7 @@
      	createTableAsCompatible="yes" 
      	schemaCompatible="yes"
      	dateAddSyntax="@baseDate + INTERVAL '@amount @datePart'"
-     	stdDevCommand="STDDEV_SAMP"
+     	stdDevCommand="stddev_samp"
      	dateTimeCompatible="no"
     />
 </drivers>
