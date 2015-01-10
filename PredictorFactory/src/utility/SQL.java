@@ -2,6 +2,7 @@ package utility;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -813,8 +814,8 @@ public final class SQL {
 	public static String getJournal(Setting setting) {
 		String sql = "CREATE TABLE @outputTable ("+
 	      "predictor_id bigint, " +
-	      "times_start timestamp, " +	// If the database doesn't support multiple timestamps, datetime is automatically used.
-	      "times_finish timestamp, " +  // Old MySQL and SQL92 do not have/require support for fractions of a second. 
+	      "start_time timestamp, " +	// If the database doesn't support multiple timestamps, datetime is automatically used.
+	      "run_time decimal(18,3), " +  // Old MySQL and SQL92 do not have/require support for fractions of a second. 
 	      "predictor_name varchar(255), " +	// In MySQL pure char is limited to 255 bytes -> stick to this value if possible
 	      "table_name varchar(1024), " +	// Table is a reserved keyword -> use table_name
 	      "column_list varchar(1024), " +
@@ -826,7 +827,7 @@ public final class SQL {
 	      "pattern_code varchar(1024), " +
 	      "sql_code varchar(1024), " +
 	      "target varchar(255), " +
-	      "relevance decimal(18,10), " +
+	      "relevance decimal(18,3), " +
 	      "qc_rowCount bigint DEFAULT '0', " +
 	      "qc_nullCount bigint DEFAULT '0', " +
 	      "is_ok smallint DEFAULT '0', " +
@@ -848,8 +849,8 @@ public final class SQL {
 		
 		String sql = "INSERT INTO @outputTable VALUES (" +
 	        predictor.getId() + ", " +
-	        "'" + predictor.getTimestampDesigned().format(formatter) + "', " +
-	        "'" + predictor.getTimestampDelivered().format(formatter) + "', " +
+	        "'" + predictor.getTimestampBuilt().format(formatter) + "', " +
+	        "'" + predictor.getTimestampBuilt().until(predictor.getTimestampDelivered(), ChronoUnit.MILLIS)/1000.0 + "', " +
 	        "'" + predictor.getName() + "', " +
 	        "'" + predictor.inputTableOriginal + "', " + 			
 	        "'" + predictor.columnMap.toString() + "', " + 		// Should be a list...

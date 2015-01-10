@@ -1,6 +1,7 @@
 package run;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.SortedMap;
@@ -140,6 +141,9 @@ public class Launcher{
 	private static Journal getPredictor(Setting setting, Journal journal, Predictor predictor) {
 		// Convert pattern to SQL
 		predictor.setSql(SQL.getPredictor(setting, predictor));
+		
+		// Set timestamp_build
+		predictor.setTimestampBuilt(LocalDateTime.now());
 		
 		// Execute the SQL
 		predictor.setOk(Network.executeUpdate(setting.connection, predictor.getSql()));

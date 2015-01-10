@@ -74,11 +74,11 @@ public class Predictor implements Comparable<Predictor> {
 			name = name + "_" + columnName;
 		}
 
-		// Remove spaces from pattern name and convert the string to camelCase
-		String pattern = WordUtils.capitalizeFully(patternName, new char[]{' '}).replaceAll(" ", "");
-		
-		// Keep only alphanumeric characters and underscore
-		pattern = pattern.replaceAll("[^a-zA-Z0-9_]", "");
+		// Replace special characters with spaces
+		String pattern = patternName.replaceAll("[^a-zA-Z0-9_\\s]", " ");
+				
+		// Convert the string to camelCase and remove the spaces 
+		pattern = WordUtils.capitalizeFully(pattern, new char[]{' '}).replaceAll(" ", "");
 		
 		// We would like to have camelCase, not CamelCase
 		pattern = Character.toLowerCase(pattern.charAt(0)) + pattern.substring(1);
