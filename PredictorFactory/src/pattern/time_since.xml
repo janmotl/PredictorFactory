@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Time since</name>
+	<description>Time since some date in the past till the time when the prediction is required (defined with @baseDate). 
+	The selection of the date is driven with aggregate functions like min, max and avg.
+	</description>
+	<author>Jan Motl</author>
+	<date>2015-01-10</date>
+	<code>SELECT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , @aggregateFunction(DATEDIFF(@baseDate, @dateColumn)) "@columnName"
+	      FROM @propagatedTable
+	      GROUP BY @baseId, @baseDate
+	</code>
+	<cardinality>n</cardinality>
+	<parameter key="@aggregateFunction" value="min, max, avg"/>
+</pattern>

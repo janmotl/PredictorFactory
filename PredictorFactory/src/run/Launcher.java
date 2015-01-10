@@ -239,15 +239,14 @@ public class Launcher{
 	// Subroutine 2: Loop over the propagated tables
 	private static void loopTables(Setting setting, Journal journal, Predictor predictor, Pattern pattern, SortedMap<String, Table> tableMetadata) {
 		
-		boolean patternIsUnique = pattern.getCardinality().equals("1");	// Pattern cardinality is treated as binary
-		
-		// For each propagated table. There can be only one input table, hence it is not necessary to perform recursion.
+		// For each propagated table. There is always just one input table, hence it is not necessary to perform recursion.
 		for (Table workingTable : tableMetadata.values()) {
-			// Skip tables with wrong cardinality
-			if (patternIsUnique != workingTable.isUnique) {
-				continue;
-			}
 
+			// Skip tables with wrong cardinality
+			if ((pattern.getCardinality().equals("1") & !workingTable.isUnique) || (pattern.getCardinality().equals("n") & workingTable.isUnique)) {
+				continue;	
+			}
+		
 			predictor.propagatedTable = workingTable.propagatedName;
 			predictor.inputTableOriginal = workingTable.originalName;
 			predictor.propagationDate = workingTable.propagationDate;
