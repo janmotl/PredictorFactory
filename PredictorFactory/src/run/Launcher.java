@@ -55,6 +55,12 @@ public class Launcher{
 //		setting.inputSchema = "finance";
 //		setting.outputSchema = "finance";
 		
+		setting.dbType = "MSSQL";
+		setting.inputDatabaseName = "financial";
+		setting.outputDatabaseName = "pf";
+		setting.inputSchema = "dbo";
+		setting.outputSchema = "dbo";
+
 		setting.idColumn = "account_id";
 		setting.idTable = "account";
 		setting.targetDate = "date";

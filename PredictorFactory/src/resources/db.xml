@@ -114,6 +114,18 @@
      	dateTimeCompatible="yes"
     />
      
+    <driver
+    	name="MSSQL"
+    	driverClass="com.microsoft.sqlserver.jdbc.SQLServerDriver"
+    	url="jdbc:sqlserver://CZFTROJAN03\SQLEXPRESS;integratedSecurity=true;database=financial"
+     	username="" 
+     	password="" 
+     	quoteMarks="[]" 
+     	createTableAsCompatible="no" 
+     	schemaCompatible="yes"
+     	dateAddSyntax="DATEADD(@datePart, @amount, @baseDate)"
+   	/>
+     
     <driver 
     	name="PostgreSQL"
      	driverClass="org.postgresql.Driver" 

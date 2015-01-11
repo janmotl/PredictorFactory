@@ -15,7 +15,11 @@
 	<classpathentry kind="lib" path="lib/jdbc/jtds-1.2.8.jar"/>
 	<classpathentry kind="lib" path="lib/jdbc/mysql-connector-java-5.1.33-bin.jar"/>
 	<classpathentry kind="lib" path="lib/jdbc/ojdbc6.jar"/>
-	<classpathentry kind="lib" path="lib/jdbc/sqljdbc4.jar"/>
+	<classpathentry kind="lib" path="lib/jdbc/sqljdbc4.jar">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Users/ftrojan/workspace/PopulateFinancialDB/lib"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="lib" path="lib/jdbc/vertica-jdk5-6.0.1-0.jar"/>
 	<classpathentry kind="con" path="org.testng.TESTNG_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/jdbc/postgresql-9.3-1102.jdbc41.jar"/>
