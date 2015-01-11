@@ -49,17 +49,17 @@ public class Launcher{
 //		setting.inputSchema = "input";
 //		setting.outputSchema = "output";
 		
-//		setting.dbType = "Microsoft SQL Server";
-//		setting.inputDatabaseName = "Input";
-//		setting.outputDatabaseName = "Output";
-//		setting.inputSchema = "finance";
-//		setting.outputSchema = "finance";
+		setting.dbType = "Microsoft SQL Server";
+		setting.inputDatabaseName = "Input";
+		setting.outputDatabaseName = "Output";
+		setting.inputSchema = "finance";
+		setting.outputSchema = "finance";
 		
-		setting.dbType = "MSSQL";
-		setting.inputDatabaseName = "financial";
-		setting.outputDatabaseName = "pf";
-		setting.inputSchema = "dbo";
-		setting.outputSchema = "dbo";
+//		setting.dbType = "MSSQL";
+//		setting.inputDatabaseName = "financial";
+//		setting.outputDatabaseName = "pf";
+//		setting.inputSchema = "dbo";
+//		setting.outputSchema = "dbo";
 
 		setting.idColumn = "account_id";
 		setting.idTable = "account";

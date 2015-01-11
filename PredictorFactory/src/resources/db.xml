@@ -124,6 +124,8 @@
      	createTableAsCompatible="no" 
      	schemaCompatible="yes"
      	dateAddSyntax="DATEADD(@datePart, @amount, @baseDate)"
+     	stdDevCommand="stdev"
+     	dateTimeCompatible="yes"
    	/>
      
     <driver 
