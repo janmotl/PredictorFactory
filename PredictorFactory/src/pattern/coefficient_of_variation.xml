@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Coefficient of variation</name>
+	<description>
+		This is a special scenario of ratio of aggregates. 
+	</description>
+	<example>
+		Transaction amount
+	</example>
+	<author>Jan Motl</author>
+	<date>2014-10-14</date>
+	<code>SELECT @baseId
+			   , @baseDate
+			   , @baseTarget
+			   , stddev_samp(@numericalColumn)/nullif(avg(@numericalColumn), 0) AS "@columnName"
+	      FROM @propagatedTable
+	      GROUP BY @baseId, @baseDate, @baseTarget
+	</code>
+	<cardinality>n</cardinality>
+</pattern>

@@ -13,7 +13,11 @@
 		      from Table
 		      where Filter
 		      group by Segmentor) s 
-		    on t.Segmentor=s.Segmentor		
+		    on t.Segmentor=s.Segmentor	
+		    
+		Warning: Data leakage happens as all @baseId are used to calculate the average while only training
+		samples should be used. If you have a lot of samples, balanced classes and no outliers the practical 
+		effect of data leakage should be minimal. But beware of extreme scenarios! 
 	</description>
 	<author>Filip Trojan</author>
 	<date>2014-12-31</date>
@@ -24,9 +28,13 @@
 				WHEN Y IS NULL THEN NULL 
 				WHEN Y=0 THEN -9999 
 				ELSE @numericalColumn/Y 
-			  END "@columnName"
-	      FROM @propagatedTable a LEFT JOIN (SELECT @nominalColumn, avg(@numericalColumn) Y
-	      	FROM @propagatedTable GROUP BY @nominalColumn) b ON a.@nominalColumn = b.@nominalColumn
+			  END AS "@columnName"
+	      FROM @propagatedTable a 
+	      LEFT JOIN (
+	      	SELECT @nominalColumn, avg(@numericalColumn) AS Y 
+	      	FROM @propagatedTable 
+	      	GROUP BY @nominalColumn) b 
+	      ON a.@nominalColumn = b.@nominalColumn
 	</code>
 	<cardinality>1</cardinality>
 </pattern>

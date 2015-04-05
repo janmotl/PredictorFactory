@@ -4,9 +4,18 @@
       <sequence>
         <element type="string" name="name"/>
         <element type="string" name="description"/>
+        <element type="string" name="example" minOccurs="0"/>
         <element type="string" name="author"/>
         <element type="date" name="date"/>
-        <element type="string" name="code"/>
+        <element name="code" maxOccurs="unbounded" minOccurs="1">
+          <complexType>
+            <simpleContent>
+              <extension base="string">
+                <attribute type="string" name="compatibility" use="optional"/>
+              </extension>
+            </simpleContent>
+          </complexType>
+        </element>
         <element name="parameter" maxOccurs="unbounded" minOccurs="0">
           <complexType>
             <simpleContent>

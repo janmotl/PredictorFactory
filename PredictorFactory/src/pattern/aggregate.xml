@@ -14,18 +14,32 @@
 		Note that "count" attribute is not in the set as it is enough to calculate the count only once per table 
 		(see num_children). But aggregate functions are calculated per each numerical column. 
 		
-		The count of missing values is calculated in a separate pattern as it can be calculated on any data column, not
-		only on numerical columns. 		
+		The ratio of missing values is calculated in a separate pattern (null_ratio) as it can be calculated on 
+		any data column, not only on numerical columns.
+		
+		Distinct values are aggregate in a different pattern (aggregate_distinct) because min(distinct X) == min(X)
+		but count(distinct X) != count(X).
+		
+		Time values are aggregated in an a separate pattern (time_since) since it requires casting of time attribute
+		into number. 
+		
+		NOTE: ADDED SUM
 	</description>
+	<example>
+		Year of first gift,
+		Number of events attended,
+		Year person’s personal information in the database was last updated,
+		Total giving in last five years.
+	</example>
 	<author>Jan Motl</author>
 	<date>2014-10-14</date>
 	<code>SELECT @baseId
 			   , @baseDate
 			   , @baseTarget
-			   , @aggregateFunction(@numericalColumn) "@columnName"
+			   , @aggregateFunction(@numericalColumn) AS "@columnName"
 	      FROM @propagatedTable
 	      GROUP BY @baseId, @baseDate, @baseTarget
 	</code>
-    <parameter key="@aggregateFunction" value="stddev_samp, avg, min, max"/>
+    <parameter key="@aggregateFunction" value="stddev_samp, avg, min, max, sum"/>
 	<cardinality>n</cardinality>
 </pattern>

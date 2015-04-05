@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Concentration</name>
+	<description>Any statistic (e.g. percentage of the most frequent value) calculated from the distribution 
+	of the nominal child field with child filter F.
+	
+	NOTE: IT COULD WORK ON IDS.
+
+	</description>
+	<example>
+	Concentration ratio of the credit bureau enquiries. 
+	In this case the child entity is enquiry and segmentor is credit grantor making the enquiry. 
+	Low values of concentration ratio indicate many credit grantors making enquiries and high credit risk.
+	</example>
+	<author>Jan Motl</author>
+	<date>2014-12-22</date>
+	<code compatibility="PostgreSQL">SELECT a.@baseId
+	           	, a.@baseDate
+	           	, a.@baseTarget
+  			   	, 100.0 * count(CASE WHEN m.mode=@column THEN 1 ELSE null END) / nullif(count(@column), 0) AS "@columnName"
+			FROM @propagatedTable a
+  			JOIN (select "propagated_id" , "propagated_date"
+        		, mode() within group (order by @column) "mode"
+      			FROM @propagatedTable
+        		GROUP BY @baseId, @baseDate
+        	) m
+        	ON a.@baseId = m.@baseId AND a.@baseDate = m.@baseDate
+        	GROUP BY a.@baseId, a.@baseDate, a.@baseTarget
+	</code>
+	<parameter key="@column" value="@nominalColumn, @numericalColumn, @timeColumn"/>
+	<cardinality>n</cardinality>
+</pattern>

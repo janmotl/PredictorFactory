@@ -1,0 +1,30 @@
+<schema xmlns="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <element name="drivers">
+    <complexType>
+      <sequence>
+        <element name="driver" minOccurs="0" maxOccurs="unbounded" >
+          <complexType>
+            <simpleContent>
+              <extension base="string">
+                <attribute type="string" name="name" use="required"/>
+                <attribute type="string" name="driverClass" use="optional"/>
+                <attribute type="short" name="defaultPort" use="optional"/>
+                <attribute type="string" name="urlPrefix" use="optional"/>
+                <attribute type="string" name="dbNameSeparator" use="optional"/>
+                <attribute type="string" name="quoteMarks" use="required"/>
+                <attribute type="string" name="createTableAsCompatible" use="required"/>
+                <attribute type="string" name="schemaCompatible" use="required"/>
+                <attribute type="string" name="dateAddSyntax" use="required"/>
+                <attribute type="string" name="dateAddMonth" use="required"/>
+                <attribute type="string" name="dateDiffSyntax" use="required"/>
+                <attribute type="string" name="stdDevCommand" use="required"/>
+                <attribute type="string" name="charLengthCommand" use="required"/>
+                <attribute type="string" name="dateTimeCompatible" use="required"/>
+              </extension>
+            </simpleContent>
+          </complexType>
+        </element>
+      </sequence>
+    </complexType>
+  </element>
+</schema>

@@ -1,0 +1,509 @@
+<?xml version= "1.0" encoding= "UTF-8"?>
+
+<!-- This file is separate from connection.xml as the properties can be set after the connection to the database.
+     And it is nice to have the configuration files final.
+     The tags are case sensitive!
+     If the database doesn't support schemas (like MySQL), do not use {inputDatabase, outputDatabase}
+     but use {inputSchema, outputSchema}. It's schizophrenic. But that's how MySQL implemented information_schema:
+     database names are in "TABLE_SCHEMA". And "TABLE_CATALOG" is filled with a constant: "def". Similarly jdbc
+     supports getSchema for all databases but getCatalog only for some. 
+     IT WOULD BE NICE TO HAVE A HIERARCHICAL STRUCTURE (ALL>CONNECTION>DATABASE). 
+ -->
+
+<databases>
+	<database 
+   		name = "AdventureWorks"
+		inputSchema = "AdventureWorks2014"
+		outputSchema = "predictor_factory"		
+		targetTable = "SalesOrderHeader"
+		targetId = "CustomerID"	
+		targetColumn = "TotalDue"	
+		targetDate = "OrderDate"
+		task = "regression"
+	/>
+
+	<database 
+   		name = "ccs_1"
+		inputSchema = "ccs"
+		outputSchema = "predictor_factory"		
+		targetTable = "transactions_1k"
+		targetId = "TransactionID"	
+		targetColumn = "Price"	
+		targetDate = "Date"  
+		blackListTable = "transactions" 
+		task = "regression"
+	/>
+	
+	<database 
+   		name = "ccs_2"
+		inputSchema = "ccs"
+		outputSchema = "predictor_factory"		
+		targetTable = "transactions"
+		targetId = "id"	
+		targetColumn = "Price"	
+		targetDate = "Date" 
+		task = "regression"
+	/>
+	
+	<database
+		name = "classicmodels"
+		inputSchema = "classicmodels"
+		outputSchema = "predictor_factory"
+		targetTable = "payments"
+		targetId = "checkNumber"
+		targetColumn = "amount"
+		targetDate = "paymentDate"
+		task = "regression"
+	/>
+	
+	<database 
+   		name = "Credit"
+		inputSchema = "Credit"
+		outputSchema = "predictor_factory"		
+		targetTable = "member"
+		targetId = "member_no"	
+		targetColumn = "region_no"	
+		targetDate = "issue_dt" 
+		task = "classification"
+	/>
+	
+
+	
+	
+	<database 
+   		name = "cs"
+		inputSchema = "cs"
+		outputSchema = "predictor_factory"		
+		targetTable = "target_churn"
+		targetId = "ACC_KEY"	
+		targetColumn = "target_churn"	
+		targetDate = "date_horizon" 
+		task = "classification"
+	/>
+	
+	<database 
+   		name = "cs_large"
+		inputSchema = "cs_large"
+		outputSchema = "predictor_factory"		
+		targetTable = "target_churn"
+		targetId = "ACC_KEY"	
+		targetColumn = "target_churn"	
+		targetDate = "date_horizon" 
+		task = "classification"
+	/>
+
+	<database 
+   		name = "classicmodels"
+		inputSchema = "classicmodels"
+		outputSchema = "predictor_factory"		
+		targetTable = "payments"
+		targetId = "checkNumber"	
+		targetColumn = "amount"	
+		targetDate = "paymentDate"  
+		task = "regression"
+	/>
+	
+	<database 
+   		name = "employee"
+		inputSchema = "employee"
+		outputSchema = "predictor_factory"		
+		targetTable = "salaries"
+		targetId = "emp_no"	
+		targetColumn = "salary"	
+		targetDate = "from_date"  
+		task = "regression"
+	/>
+	
+	<database 
+ 		name = "financial"
+		inputSchema = "financial"
+		outputSchema = "predictor_factory"
+		targetTable = "loan"
+		targetId = "account_id"
+		targetDate = "date"
+		targetColumn = "status"
+		blackListTable = "result" 	
+		task = "classification"
+	/>
+	
+	<database 
+ 		name = "financial_bin"
+		inputSchema = "financial_bin"
+		outputSchema = "predictor_factory"
+		targetTable = "loan"
+		targetId = "account_id"
+		targetDate = "date"
+		targetColumn = "target"
+		blackListTable = "result" 	
+		blackListColumn = 'loan.status'
+		task = "classification"
+	/>
+	
+	   	<!-- A copy for Oracle Express Edition, which allows just one database, XE.  -->
+	<database 
+ 		name = "financial xe"
+		inputSchema = "FINANCIAL"
+		outputSchema = "PREDICTOR_FACTORY"
+		targetTable = "loan"
+		targetId = "account_id"
+		targetDate = "date"
+		targetColumn = "status"
+		blackListTable = "result" 	
+		task = "classification"
+	/>
+
+	<database 
+ 		name = "Financial_std"
+		inputSchema = "Financial_std"
+		outputSchema = "predictor_factory"
+		targetTable = "loan"
+		targetId = "loan_id"
+		targetDate = "loan_id"
+		targetColumn = "status"
+		blackListTable = "result" 
+		task = "classification"	
+	/>
+
+	<!-- Just use some random column instead of targetDate  -->
+   	<database 
+   		name = "genes"
+		inputSchema = "genes"
+		outputSchema = "predictor_factory"		
+		targetTable = "Classification"
+		targetId = "GeneID"	
+		targetColumn = "Localization"	
+		targetDate = "GeneID"  
+		blackListColumn = "Genes.Localization" 
+		task = "classification"
+	/>
+	
+	
+	<!-- Just use some random column instead of targetDate  -->
+   	<database 
+   		name = "Hepatitis_std"
+		inputSchema = "Hepatitis_std"
+		outputSchema = "predictor_factory"		
+		targetTable = "dispat"
+		targetId = "m_id"	
+		targetColumn = "Type"	
+		targetDate = "m_id"  
+		task = "classification"
+	/>
+	
+	<database 
+   		name = "imdb_ijs"
+		inputSchema = "imdb_ijs"
+		outputSchema = "predictor_factory"		
+		targetTable = "actors"
+		targetId = "id"	
+		targetColumn = "gender"	
+		targetDate = "id"  
+		task = "classification"
+	/>
+   	
+   	<database 
+   		name = "imdb_MovieLens"
+		inputSchema = "imdb_MovieLens"
+		outputSchema = "predictor_factory"		
+		targetTable = "users"
+		targetId = "userid"	
+		targetColumn = "u_gender"	
+		targetDate = "userid"  
+		task = "classification"
+	/>
+	
+	<database
+		name = "lahman_2014"
+		inputSchema = "lahman_2014"
+		outputSchema = "predictor_factory"
+		targetTable = "salaries"
+		targetId = "playerID"
+		targetColumn = "salary"
+		targetDate = "yearID"
+		task = "regression"
+	/>
+	
+	<database 
+   		name = "legalActs"
+		inputSchema = "legalActs"
+		outputSchema = "predictor_factory"		
+		targetTable = "legalacts"
+		targetId = "id"	
+		targetColumn = "ActKind"	
+		targetDate = "update"  
+		task = "classification"
+	/>
+	
+	
+	<database 
+   		name = "medical"
+		inputSchema = "medical"
+		outputSchema = "predictor_factory"		
+		targetTable = "TSUM_B"
+		targetId = "ID"	
+		targetColumn = "Thrombosis"	
+		targetDate = "Examination Date"  
+		task = "classification"
+	/>
+	
+	<database 
+   		name = "Mondial"
+		inputSchema = "Mondial"
+		outputSchema = "predictor_factory"		
+		targetTable = "religion"
+		targetId = "Country"	
+		targetColumn = "Name"	
+		targetDate = "Country"  
+		task = "classification"
+	/>
+	
+	<database 
+   		name = "Mondial_geo"
+		inputSchema = "Mondial_geo"
+		outputSchema = "predictor_factory"		
+		targetTable = "Country"
+		targetId = "Code"	
+		targetColumn = "Population"	
+		targetDate = "Code"  
+		task = "classification"
+	/>
+	
+	<!-- Just use some random column instead of targetDate  -->
+   	<database 
+   		name = "mutagenesis"
+		inputSchema = "mutagenesis"
+		outputSchema = "predictor_factory"		
+		targetTable = "molecule"		
+		targetId = "molecule_id"
+		targetColumn = "mutagenic"	
+		targetDate = "molecule_id"  
+		task = "classification"
+	/>
+	
+	<!-- Just use some random column instead of targetDate  -->
+   	<database 
+   		name = "mutagenesis_42"
+		inputSchema = "mutagenesis_42"
+		outputSchema = "predictor_factory"		
+		targetTable = "drugs"		
+		targetId = "id"
+		targetColumn = "active"	
+		targetDate = "id"  
+		blackListColumn = "drugs.act"
+		task = "classification"
+	/>
+	
+	<!-- Just use some random column instead of targetDate  -->
+	<database 
+   		name = "mutagenesis_188"
+		inputSchema = "mutagenesis_188"
+		outputSchema = "predictor_factory"		
+		targetTable = "drugs"		
+		targetId = "id"
+		targetColumn = "active"	
+		targetDate = "id"  
+		blackListColumn = "drugs.act"
+		task = "classification"
+	/>
+   	
+   	<!-- A copy for Oracle Express Edition, which allows just one database, XE.  -->
+   	<!-- Note that Oracle likes schemas and capital letters.  -->
+   	<database 
+   		name = "mutagenesis xe"
+		inputSchema = "MUTAGENESIS"
+		outputSchema = "PREDICTOR_FACTORY"		
+		targetTable = "molecule"		
+		targetId = "molecule_id"
+		targetColumn = "mutagenic"	
+		targetDate = "molecule_id"
+		task = "classification"
+	/>
+	
+	<database 
+   		name = "nations"
+		inputSchema = "nations"
+		outputSchema = "predictor_factory"		
+		targetTable = "stat"
+		targetId = "country_id"	
+		targetColumn = "femaleworkers"	
+		targetDate = "country_id"
+		task = "classification"
+	/>
+	
+	<database 
+   		name = "NBA"
+		inputSchema = "NBA"
+		outputSchema = "predictor_factory"		
+		targetTable = "Game"
+		targetId = "GameId"	
+		targetColumn = "ResultOfTeam1"	
+		targetDate = "Date"
+		task = "classification"
+	/>
+	
+	<!-- tourney_slots is ignored because it adds a lot of runtime -->
+	<database 
+   		name = "NCAA"
+		inputSchema = "NCAA"
+		outputSchema = "predictor_factory"		
+		targetTable = "target"
+		targetId = "id"	
+		targetColumn = "team_id1_wins"	
+		targetDate = "season"
+		blackListTable = "tourney_slots"
+		blackListColumn = "target.team_id2_wins"
+		task = "classification"
+	/>
+	
+	<!-- tourney_slots is ignored because it adds a lot of runtime -->
+	<database 
+   		name = "NCAA_2015"
+		inputSchema = "NCAA_2015"
+		outputSchema = "predictor_factory"		
+		targetTable = "target"
+		targetId = "id"	
+		targetColumn = "team_id1_wins"	
+		targetDate = "season"
+		blackListTable = "tourney_slots"
+		task = "classification"
+	/>
+	
+	<database 
+   		name = "northwind"
+		inputSchema = "northwind"
+		outputSchema = "predictor_factory"		
+		targetTable = "Orders"
+		targetId = "OrderID"	
+		targetColumn = "Freight"	
+		targetDate = "OrderDate"  
+		task = "regression"
+	/>
+	
+	<database 
+   		name = "PremierLeague"
+		inputSchema = "PremierLeague"
+		outputSchema = "predictor_factory"		
+		targetTable = "Matches"
+		targetId = "MatchID"	
+		targetColumn = "ResultOfTeamHome"	
+		targetDate = "Date"
+		task = "classification"
+	/>
+	
+	<database 
+   		name = "pubs"
+		inputSchema = "pubs"
+		outputSchema = "predictor_factory"		
+		targetTable = "titles"
+		targetId = "title_id"	
+		targetColumn = "ytd_sales"	
+		targetDate = "pubdate"
+		task = "regression"
+	/>
+	
+	<database 
+   		name = "sakila"
+		inputSchema = "sakila"
+		outputSchema = "predictor_factory"		
+		targetTable = "payment"
+		targetId = "payment_id"	
+		targetColumn = "amount"	
+		targetDate = "payment_date"  
+		task = "regression"
+	/>
+	
+	<!-- It would have been better if I predicted tags on post -->
+   	<database 
+   		name = "stats"
+		inputSchema = "stats"
+		outputSchema = "predictor_factory"		
+		targetTable = "users"
+		targetId = "Id"	
+		targetColumn = "Reputation"	
+		targetDate = "LastAccessDate"  
+		task = "regression"
+	/>
+	
+	<database
+		name = "trains"
+		inputSchema = "trains"
+		outputSchema = "predictor_factory"
+		targetTable = "trains"
+		targetId = "id"
+		targetColumn = "direction"
+		targetDate = "id"
+		task = "classification"
+	/>
+	
+	<!-- It would have been better if I predicted tags on post -->
+   	<database 
+   		name = "unielwin"
+		inputSchema = "unielwin"
+		outputSchema = "predictor_factory"		
+		targetTable = "student"
+		targetId = "student_id"	
+		targetColumn = "intelligence"	
+		targetDate = "student_id"  
+		task = "classification"
+	/>
+	
+	<!-- It would have been better if I predicted tags on post -->
+   	<database 
+   		name = "UW_std"
+		inputSchema = "UW_std"
+		outputSchema = "predictor_factory"		
+		targetTable = "person"
+		targetId = "p_id"	
+		targetColumn = "inPhase"	
+		targetDate = "p_id"  
+		task = "classification"
+	/>
+	
+	<database 
+   		name = "voc"
+		inputSchema = "voc"
+		outputSchema = "predictor_factory"		
+		targetTable = "voyages"
+		targetId = "number, number_sup"	
+		targetColumn = "arrival_harbour"	
+		targetDate = "arrival_date"  
+		task = "classification"
+	/>
+	
+	<!-- Just use some random column instead of targetDate  -->
+	<database 
+   		name = "world"
+		inputSchema = "world"
+		outputSchema = "predictor_factory"		
+		targetTable = "Country"
+		targetId = "Code"	
+		targetColumn = "Continent"	
+		targetDate = "Code"  
+		task = "classification"
+	/>
+	
+	<database 
+   		name = "Yelp"
+		inputSchema = "Yelp"
+		outputSchema = "predictor_factory"		
+		targetTable = "Reviews"
+		targetId = "review_id"	
+		targetColumn = "stars"	
+		targetDate = "review_date"  
+		task = "regression"
+	/>
+	
+	
+	
+	<database 
+ 		name = "financial Savana"
+		inputSchema = "financial"
+		outputSchema = "financial"
+		targetTable = "loan"
+		targetId = "account_id"
+		targetDate = "date"
+		targetColumn = "status"
+		blackListTable = "result" 	
+		task = "classification"
+	/>
+</databases>

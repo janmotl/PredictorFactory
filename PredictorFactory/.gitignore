@@ -16,5 +16,6 @@ Desktop.ini
 # Other #
 #########
 bin/
+log/
 *.bkp
 local.properties

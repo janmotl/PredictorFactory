@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Correlation</name>
+	<description>
+		Calculate Pearson correlation of an attribute with time.
+	
+		Note: correlation of an attribute with another attrbiute will be implemented in a separate pattern because
+		time columns must be casted in some of the databases to a numerical columns. Hence the syntax differs. 
+
+	</description>
+	<author>Jan Motl</author>
+	<date>2014-12-22</date>
+	<code compatibility="MySQL">SELECT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , (Avg(@numericalColumn * @timeColumn) - Avg(@numericalColumn) * Avg(@timeColumn)) / (StdDev_Samp(@numericalColumn) * StdDev_Samp(@timeColumn)) AS "@timeColumnName"
+	      FROM @propagatedTable
+	      GROUP BY @baseId, @baseDate, @baseTarget
+	</code>
+	<code compatibility="PostgreSQL">SELECT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , corr(@numericalColumn, extract(epoch from @timeColumn)) "@columnName"
+	      FROM @propagatedTable
+	      GROUP BY @baseId, @baseDate, @baseTarget
+	</code>
+	<cardinality>n</cardinality>
+</pattern>

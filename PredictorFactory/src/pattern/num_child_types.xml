@@ -5,9 +5,12 @@
 	<description>
 		Number of distinct values of the child nominal field with the child filter F			
 	</description>
+	<example>
+		Average distinct number of cache sets accessed during a given time unit.
+	</example>
 	<author>Filip Trojan</author>
 	<date>2014-12-25</date>
-	<code>SELECT @baseId, @baseDate, @baseTarget, count(distinct @nominalColumn) "@columnName"
+	<code>SELECT @baseId, @baseDate, @baseTarget, count(distinct @nominalColumn) AS "@columnName"
 	      FROM @propagatedTable
 	      GROUP BY @baseId, @baseDate, @baseTarget
 	</code>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Slope</name>
+	<description>Slope
+		NOTE: Could calculate slope of two numerical attributes.
+		NOTE: Whenever correlation is calculated manually, arithmetic overflow can happen. 
+	</description>
+	<author>Jan Motl</author>
+	<date>2014-12-22</date>
+	<code compatibility="MySQL">SELECT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , (count(@numericalColumn)*sum(@numericalColumn*@timeColumn) - sum(@numericalColumn)* sum(@timeColumn))/(count(@numericalColumn)*sum(@numericalColumn*@numericalColumn) - sum(@numericalColumn)* sum(@numericalColumn)) AS "@columnName"
+	      FROM @propagatedTable
+	      GROUP BY @baseId, @baseDate, @baseTarget
+	</code>
+	<code compatibility="PostgreSQL">SELECT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , regr_slope(@numericalColumn, extract(epoch from @timeColumn)) AS "@columnName"
+	      FROM @propagatedTable
+	      GROUP BY @baseId, @baseDate, @baseTarget
+	</code>
+	<cardinality>n</cardinality>
+</pattern>

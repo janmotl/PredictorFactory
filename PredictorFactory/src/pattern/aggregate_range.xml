@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Aggregate range</name>
+	<description>
+		As many databases do not support range aggregate, calculate it with min and max. 		
+	</description>
+	<author>Jan Motl</author>
+	<date>2014-10-25</date>
+	<code>SELECT @baseId
+			   , @baseDate
+			   , @baseTarget
+			   , max(@numericalColumn) - min(@numericalColumn) AS "@columnName"
+	      FROM @propagatedTable
+	      GROUP BY @baseId, @baseDate, @baseTarget
+	</code>
+	<cardinality>n</cardinality>
+</pattern>
