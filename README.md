@@ -4,7 +4,7 @@ Automatic preprocessing of relational data for data mining.
 
 How to Get it Work
 ==================
-1.	Install JDK 1.7 or newer.
+1.	Install JDK 1.8 or newer.
 2.	Install Eclipse for Java Developers.
 3.	Start Eclipse.
 4.	Import the project from Git (File>Import>Git>Projects from Git): ```https://github.com/janmotl/PredictorFactory.git ```
