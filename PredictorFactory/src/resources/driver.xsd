@@ -7,19 +7,25 @@
             <simpleContent>
               <extension base="string">
                 <attribute type="string" name="name" use="required"/>
-                <attribute type="string" name="driverClass" use="optional"/>
-                <attribute type="short" name="defaultPort" use="optional"/>
-                <attribute type="string" name="urlPrefix" use="optional"/>
-                <attribute type="string" name="dbNameSeparator" use="optional"/>
+                <attribute type="string" name="driverClass" use="required"/>
+                <attribute type="short" name="defaultPort" use="required"/>
+                <attribute type="string" name="urlPrefix" use="required"/>
+                <attribute type="string" name="dbNameSeparator" use="required"/>
                 <attribute type="string" name="quoteMarks" use="required"/>
                 <attribute type="string" name="createTableAsCompatible" use="required"/>
                 <attribute type="string" name="schemaCompatible" use="required"/>
-                <attribute type="string" name="dateAddSyntax" use="required"/>
+                <attribute type="string" name="dateAddSyntax" use="optional"/>
                 <attribute type="string" name="dateAddMonth" use="required"/>
                 <attribute type="string" name="dateDiffSyntax" use="required"/>
+                <attribute type="string" name="dateToNumber" use="optional"/>
+                <attribute type="string" name="insertTimestampSyntax" use="required"/>
                 <attribute type="string" name="stdDevCommand" use="required"/>
                 <attribute type="string" name="charLengthCommand" use="required"/>
-                <attribute type="string" name="dateTimeCompatible" use="required"/>
+                <attribute type="string" name="typeVarchar" use="optional"/>
+                <attribute type="string" name="typeInteger" use="optional"/>
+                <attribute type="string" name="typeDecimal" use="optional"/>
+                <attribute type="string" name="typeTimestamp" use="optional"/>
+                <attribute type="string" name="withData" use="required"/>
               </extension>
             </simpleContent>
           </complexType>

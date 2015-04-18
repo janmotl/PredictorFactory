@@ -2,6 +2,7 @@ package featureExtraction;
 
 import java.io.File;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -21,6 +22,11 @@ public class Aggregation {
 
 	// Subroutine 5: Create predictor with index and QC.
 	private static void getPredictor(Setting setting, Journal journal, Predictor predictor) {
+		
+		// Set predictor's id & name
+		predictor.setId(journal.getNextId(setting)); 	
+		predictor.outputTable = "predictor" + (predictor.getId());
+		
 		// Set predictor's names
 		predictor.setName(predictor.getNameOnce(setting));
 		predictor.setLongName(predictor.getLongNameOnce());
@@ -63,20 +69,39 @@ public class Aggregation {
 	}
 
 	
+
+	
 	
 	// Subroutine 4: Recursively generate each possible combination of the columns.
 	private static void loopColumns(Setting setting, Journal journal, Predictor predictor,  OutputTable table, SortedSet<String> columnSet) {
 		
 		// Termination condition: Empty columnList
 		if (columnSet.isEmpty()) {
-			// Assembly the predictor
-			predictor.setId(journal.getNextId(setting)); 	
-			predictor.outputTable = "predictor" + (predictor.getId());
 			
-			// Get an immutable copy of the predictor and store it into the journal.
-			Cloner cloner=new Cloner(); // SHOULD HAVE BEEN INITIALIZED ONCE
-			final Predictor predictorFinal=cloner.deepClone(predictor); // I like the idea that it is immutable
+			// Get an immutable copy of the predictor as we don't want to modify the template.
+			// And we want to have a copy of the predictor in the journal.
+			Cloner cloner=new Cloner(); // SHOULD HAVE BEEN INITIALIZED ONCE PER PF INSTANCE
 			
+			// Populate @value parameter if necessary.
+			// Unfortunately, the order in which things have to be evaluated is: set column -> set value.
+			// And currently the column is defined in the pattern (but this could be done reversely!).
+			// NOTE: The value is populated only for one column ().
+			if (predictor.getSql().contains("@value")) {
+				List<String> valueList = SQL.getUniqueRecords(setting, predictor.propagatedTable, predictor.columnMap.get(predictor.columnMap.firstKey()));
+				valueList = valueList.subList(0, Math.min(5, valueList.size())); 	// Limit the count to 5
+				
+				for (String value : valueList) {
+					Predictor predictorVersion=cloner.deepClone(predictor);
+					String sql = predictorVersion.getSql().replace("@value", value);
+					predictorVersion.setSql(sql);
+					predictorVersion.parameterList.put("@value", value);
+					getPredictor(setting, journal, predictorVersion);
+				}
+				
+				return;
+			}
+			
+			Predictor predictorFinal=cloner.deepClone(predictor);
 			getPredictor(setting, journal, predictorFinal);
 			return;
 		}

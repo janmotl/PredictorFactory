@@ -27,7 +27,7 @@ public class ConnectionPropertyList {
 			}
 		}
 		
-		System.out.println("There isn't a setting for: " + name);
+		System.out.println("There isn't a connection setting for: " + name);
 		return null;
 	}
 	

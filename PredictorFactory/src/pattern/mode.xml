@@ -10,6 +10,7 @@
 	</description>
 	<example>
 		The typical payment amount.
+		Example when mode fails: mode of ISBN is not meaningful because people commonly the same book just once. Hence "the most common" value doesn't exist.
 	</example>
 	<author>Jan Motl</author>
 	<date>2014-12-22</date>

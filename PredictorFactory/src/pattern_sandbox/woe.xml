@@ -9,11 +9,13 @@
 	Division by zero is handled by substituting denominator's 0 with 1 -> the estimates are biased in the edge scenarios.  
 	SHOULD USE LAPLACE CORRECTION!
 	
-	NOTE: WORKS ONLY ON BINARY TARGETS!
+	NOTE: WORKS ONLY ON BINARY TARGETS! -> produce a column for each target class
 	
 	NOTE: ALSO WORKS ON CARDINALITY 1!
 	
-	Could theoretically update woe estimates based on already estimated samples from testing set.  
+	Could theoretically update woe estimates based on already estimated samples from testing set (iterative learning).  
+	
+	Some other predictors are mentioned in ACORA (Provost).
 
 	</description>
 	<author>Jan Motl</author>

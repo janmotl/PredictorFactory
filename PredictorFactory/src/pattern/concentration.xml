@@ -12,6 +12,9 @@
 	Concentration ratio of the credit bureau enquiries. 
 	In this case the child entity is enquiry and segmentor is credit grantor making the enquiry. 
 	Low values of concentration ratio indicate many credit grantors making enquiries and high credit risk.
+	
+	A customer with high variety of transactions (withdrawal, transfer order, credit card...) is more
+	likely to pay the loan in time.
 	</example>
 	<author>Jan Motl</author>
 	<date>2014-12-22</date>

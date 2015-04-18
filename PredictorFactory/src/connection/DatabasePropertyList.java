@@ -27,7 +27,7 @@ public class DatabasePropertyList {
 			}
 		}
 		
-		System.out.println("There isn't a setting for: " + name);
+		System.out.println("There isn't a database setting for: " + name);
 		return null;
 	}
 	

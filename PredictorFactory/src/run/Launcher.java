@@ -22,8 +22,8 @@ public class Launcher{
 		
 		// Database setting
 		Setting setting = new Setting();
-		String connectionProperty = "Azure";	// Host identification as specified in resources/connection.xml
-		String databaseProperty = "financial";		// Dataset identification as specified in resources/database.xml 
+		String connectionProperty = "PostgreSQL";	// Host identification as specified in resources/connection.xml
+		String databaseProperty = "ftp";		// Dataset identification as specified in resources/database.xml 
 		
 		// Read command line parameters if they are present (and overwrite defaults).
 		if (arg.length>0) {
@@ -49,6 +49,7 @@ public class Launcher{
 		
 		// Make base table
 		SQL.getBase(setting);
+		SQL.getRandomSample(setting);
 		
 		// Propagate base table
 		SortedMap<String, OutputTable> outputMeta = Propagation.propagateBase(setting, inputMeta);

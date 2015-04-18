@@ -10,7 +10,8 @@
 		An alternative is to use "case then" but that is slower.
 		
 		Do not confuse this pattern with aggregation or num_children. Aggregation is only for numerical attributes. 
-		And num_children works on table level. 
+		And num_children works on table level. Also note that direct_field takes care of the scenario where 
+		cardinality==1. 
 	</description>
 	<example>
 		In Titanic dataset passengers with missing age are more likely to die. This is because information about 

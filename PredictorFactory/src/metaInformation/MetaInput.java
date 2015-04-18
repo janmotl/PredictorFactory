@@ -121,7 +121,7 @@ public class MetaInput {
 	
 	
 	// 1) Get all relationships in the table. The returned list contains all {FTable, Column, FColumn} for the selected Table.
-	private static List<List<String>> collectRelationships(Setting setting, String database, String schema, String table) {
+	public static List<List<String>> collectRelationships(Setting setting, String database, String schema, String table) {
 		// If the database doesn't support schemas, use schema name as database name (java treats
 		// schema-less databases differently than SQL databases do)
 		if (!setting.isSchemaCompatible) {
@@ -132,7 +132,7 @@ public class MetaInput {
 		// Initialization
 		List<List<String>> relationshipSet = new ArrayList<List<String>>();
 		
-		// Get all relations from this table
+		// Get all relations coming from this table
 		try {
 			DatabaseMetaData meta = setting.connection.getMetaData();
 			ResultSet rs = meta.getImportedKeys(database, schema, table);
@@ -168,6 +168,26 @@ public class MetaInput {
 		return relationshipSet;
 	}
 
+	
+//	public static boolean isSymmetrical(){
+//		for (String table : tableSet) {
+//			// Get relationships 
+//			List<List<String>> relationshipList = MetaInput.collectRelationships(setting, setting.database, setting.inputSchema, table);
+//			System.out.println(relationshipList);
+//			
+//			// Detection
+//			String lagFTable = "";
+//			String lagColumn = "";
+//			for (List<String> relationship : relationshipList) {
+//				if (relationship.get(0).equals(lagFTable) && relationship.get(1).equals(lagColumn)) {
+//					System.out.println("bingo " + lagFTable);
+//				}
+//				lagFTable = relationship.get(0);
+//				lagColumn = relationship.get(1);
+//			}
+//		}
+//	}
+	
 	// 1.5) Get the single primary key (It would be the best if only artificial keys were returned. At least 
 	// we are excluding the composite keys).
 	private static String getPrimaryKey(Setting setting, String database, String schema, String table) {

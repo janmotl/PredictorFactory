@@ -1,12 +1,14 @@
 package connection;
 
 
+import java.io.Console;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.SortedSet;
 
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -31,26 +33,44 @@ public final class Network {
         
         // Load the connection configuration from a XML
 		ConnectionPropertyList connectionPropertyList = ConnectionPropertyList.unmarshall();
-		JDBCPropertyList jdbcPropertyList = JDBCPropertyList.unmarshall(); 
+		DriverPropertyList driverPropertyList = DriverPropertyList.unmarshall(); 
 		DatabasePropertyList databasePropertyList = DatabasePropertyList.unmarshall();
         
         // Get the configuration for the specified database vendor		
         ConnectionProperty connectionProperty = connectionPropertyList.getConnectionProperties(connectionPropertyName);
-        JDBCProperty jdbcProperty = jdbcPropertyList.getJDBCProperties(connectionProperty.driver);
+        DriverProperty driverProperty = driverPropertyList.getDriverProperties(connectionProperty.driver);
         DatabaseProperty databaseProperty = databasePropertyList.getDatabaseProperties(databasePropertyName);
         
 		// Build a DataSource
 		// Database is required because MySQL refuses to return DatabaseMetaData 
 		// within a connection, which was made without database.
         BasicDataSource ds = new BasicDataSource(); 
-		ds.setDriverClassName(jdbcProperty.driverClass);
+		ds.setDriverClassName(driverProperty.driverClass);
 		ds.setUsername(connectionProperty.username);
 		ds.setPassword(connectionProperty.password);
-		String url = jdbcProperty.urlPrefix + connectionProperty.host + ":" + connectionProperty.port 
-				   + jdbcProperty.dbNameSeparator + connectionProperty.database;
+		String url = driverProperty.urlPrefix + connectionProperty.host + ":" + connectionProperty.port 
+				   + driverProperty.dbNameSeparator + connectionProperty.database;
 		ds.setUrl(url);
-
-
+		
+		// If the connectionProperty doesn't contain username and/or password, prompt the user.
+		// Note: The only way how to mask the password (that I am aware of) is to ask for the password 
+		// during the runtime. And when we are asking for the password, we may also ask for the username, if necessary.
+		try (Scanner input = new Scanner(System.in)) {	// The issue with scanner is that once it's closed it can't be reopened.
+			if (connectionProperty.username == null) {
+				System.out.print("Enter your username for the database: ");
+				ds.setUsername(input.nextLine());
+			}
+			if (connectionProperty.password == null) {
+				System.out.print("Enter your password for the database: ");
+				Console console = System.console();
+				if (console == null) {	// In Eclipse IDE "console" doesn't work. Use regular System.in instead.
+					ds.setPassword(input.nextLine());
+				} else { 				// Outside Eclipse IDE passwords are masked as expected. 
+					ds.setPassword(new String(console.readPassword()));
+				}
+			}
+		}
+		 
 		// Connect to the server
 		int indentifierLengthMax = 0;
 		int columnMax = 0;
@@ -86,20 +106,21 @@ public final class Network {
 			
 		setting.database = connectionProperty.database;
 		setting.databaseVendor = connectionProperty.driver;
-		setting.quoteMarks = jdbcProperty.quoteMarks;
-		setting.isCreateTableAsCompatible = "yes".equals(jdbcProperty.createTableAsCompatible);
-		setting.isSchemaCompatible = "yes".equals(jdbcProperty.schemaCompatible);
-		setting.dateAddSyntax = jdbcProperty.dateAddSyntax;
-		setting.dateAddMonth = jdbcProperty.dateAddMonth;
-		setting.dateDiffSyntax = jdbcProperty.dateDiffSyntax;
-		setting.insertTimestampSyntax = jdbcProperty.insertTimestampSyntax;
-		setting.stdDevCommand = jdbcProperty.stdDevCommand;
-		setting.charLengthCommand = jdbcProperty.charLengthCommand;
-		setting.typeDecimal = jdbcProperty.typeDecimal;
-		setting.typeInteger = jdbcProperty.typeInteger;
-		setting.typeTimestamp = jdbcProperty.typeTimestamp;
-		setting.typeVarchar = jdbcProperty.typeVarchar;
-		setting.withData = "yes".equals(jdbcProperty.withData);
+		setting.quoteMarks = driverProperty.quoteMarks;
+		setting.isCreateTableAsCompatible = "yes".equals(driverProperty.createTableAsCompatible);
+		setting.isSchemaCompatible = "yes".equals(driverProperty.schemaCompatible);
+		setting.dateAddSyntax = driverProperty.dateAddSyntax;
+		setting.dateAddMonth = driverProperty.dateAddMonth;
+		setting.dateDiffSyntax = driverProperty.dateDiffSyntax;
+		setting.dateToNumber = driverProperty.dateToNumber;
+		setting.insertTimestampSyntax = driverProperty.insertTimestampSyntax;
+		setting.stdDevCommand = driverProperty.stdDevCommand;
+		setting.charLengthCommand = driverProperty.charLengthCommand;
+		setting.typeDecimal = driverProperty.typeDecimal;
+		setting.typeInteger = driverProperty.typeInteger;
+		setting.typeTimestamp = driverProperty.typeTimestamp;
+		setting.typeVarchar = driverProperty.typeVarchar;
+		setting.withData = "yes".equals(driverProperty.withData);
 		
 		setting.inputSchema = databaseProperty.inputSchema;
 		setting.outputSchema = databaseProperty.outputSchema;

@@ -12,6 +12,8 @@
 	of name Prefix + Suffix" are more likely to donate. 
 	See: https://cooldata.wordpress.com/2015/01/07/new-finds-in-old-models/  
 	
+	Note: Text_length_std bear similarity with concentration pattern. 
+	
 	Note, that this pattern will fail on non-string nominal columns. Such behavior is normal. 
 	</description>
 	<author>Jan Motl</author>

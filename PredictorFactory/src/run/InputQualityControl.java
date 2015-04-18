@@ -20,6 +20,7 @@ public class InputQualityControl {
 		qcPatterns();
 		qcConnection();
 		qcDatabase();
+		qcDriver();
 		
 		// Parameters
 		if (setting.lag < 0) {
@@ -60,4 +61,12 @@ public class InputQualityControl {
 			logger.warn("Invalid /config/database.xml");
 		}
 	}
+	
+	// Subroutine: Validate driver XML - useful when adding support for a new database vendor 
+		private static void qcDriver() {
+			boolean isValid = XML.isXMLValid("src/resources/driver.xsd", "src/config/driver.xml");
+			if (!isValid) {
+				logger.warn("Invalid /config/driver.xml");
+			}
+		}
 }

@@ -19,6 +19,10 @@
 		samples should be used. If you have a lot of samples, balanced classes and no outliers the practical 
 		effect of data leakage should be minimal. But beware of extreme scenarios! 
 	</description>
+	<example>
+		Industry average
+		Regional average
+	</example>
 	<author>Filip Trojan</author>
 	<date>2014-12-31</date>
 	<code>SELECT @baseId

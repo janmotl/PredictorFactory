@@ -156,6 +156,7 @@ public final class SQL {
 	  }
 	
 	// Subroutine 3.3: Replace & escape the entities from map
+	// IT COULD CALL escapeEntity to avoid the necessity to call 2 different escapeEntity* 
 	private static String escapeEntityMap(Setting setting, String sql, Map<String, String> fieldMap) {
 		// Test parameters
 		if (StringUtils.isBlank(sql)) {
@@ -229,6 +230,7 @@ public final class SQL {
 			if (table.startsWith(setting.propagatedPrefix)) dropSet.add(table);	// Propagated tables
 			if (table.startsWith(setting.sampleTable)) dropSet.add(table);		// Mainsample and it's temporary tables
 			if (table.equals(setting.baseTable)) dropSet.add(table);			// Base table
+			if (table.equals("base_sampled")) dropSet.add(table);			// Base table
 			if (table.equals(setting.journalTable)) dropSet.add(table);			// Journal table
 		}
 
@@ -348,24 +350,76 @@ public final class SQL {
 	
 	// Return list of unique records in the column sorted descendingly based on record count.
 	// This function is useful for example for dummy coding of nominal attributes.
-	public static List<String> getTopRecords(Setting setting, String tableName, String columnName) {
-		String sql = "SELECT @columnName" +
-					 "FROM @outputTable" + 
+	// NOTE: IT WOULD BE NICE IF THE COUNT OF RETURNED SAMPLES WAS LIMITED -> MODIFY Network.executeQuery
+	public static List<String> getUniqueRecords(Setting setting, String tableName, String columnName) {
+		String sql = "SELECT @columnName " +
+					 "FROM @outputTable " + 
+					 "WHERE @columnName is not null " +
 					 "GROUP BY 1 " +
 					 "ORDER BY count(*) DESC";
 		
 		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, tableName);
 		HashMap<String, String> map = new HashMap<String, String>();
-		map.put("@outputTable", tableName);
 		map.put("@columnName", columnName);
 		sql = escapeEntityMap(setting, sql, map);
 		
 		return Network.executeQuery(setting.connection, sql);
 	}
 	
+	// Subsample base table based on target class.
+	// Works only for classification! For sampling of regression problem neglect the target OR discretize the target. 
+	// NOTE: WRITTEN FOR POSTGRESQL
+	public static void getRandomSample(Setting setting) {
+		String sql = "SELECT *"
+				   + "FROM ("
+				   + "SELECT * "
+				   + "	   , rank() OVER (PARTITION BY @baseTarget ORDER BY rand) ranking "
+				   + "FROM ( "
+				   + "		SELECT * "
+				   + "			, random() rand "
+				   + "		FROM @outputSchema.base "
+				   + ") t1 "
+				   + ") t2 "
+				   + "WHERE ranking <= " + setting.sampleSize;
+		
+		sql = addCreateTableAs(setting, sql);
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, "base_sampled");
+		
+		Network.executeUpdate(setting.connection, sql);
+		
+		setting.baseTable = "base_sampled";
+	}
+
+	// Could the two columns in the table describe a symmetric relation (like in borderLength(c1, c2))?
+	// DEVELOPMENTAL AND LIKELY USELESS...
+	public static boolean isSymmetric(Setting setting, HashMap<String, String> map) {
+		String sql = "SELECT CASE "
+					+ "         WHEN EXISTS (SELECT @lagColumn, "
+					+ "                             @column "
+					+ "                      FROM @inputTable"
+					+ "                      EXCEPT "
+					+ "                      SELECT @column, "
+					+ "                             @lagColumn "
+					+ "                      FROM @inputTable) THEN 'no' "
+					+ "         ELSE 'yes' "
+					+ "         END AS symmetric";
+		
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, "dummy");
+		sql = escapeEntityMap(setting, sql, map);
+		
+		System.out.println(sql);
+		List<String> result = Network.executeQuery(setting.connection, sql);
+		
+		return result.get(0).equals("yes");
+	}
+	
+	
 	// Get R2. For discrete variables, use the method as described at:
 	// http://stats.stackexchange.com/questions/119835/correlation-between-a-nominal-iv-and-a-continuous-dv-variable 
-	// IMPLEMENTED FOR POSTGRESQL
+	// IMPLEMENTED FOR POSTGRESQL. TEST ON OTHER DATABASES.
  	public static double getR2(Setting setting, String table, String column) {
  		// Initialization
  		String sql;
@@ -420,15 +474,17 @@ public final class SQL {
 	}
 	
  	// Get Chi2.
- 	// NOT TESTED ON TIME TYPE.
+ 	// NOT TESTED ON TIME TYPE. (ERROR: operator does not exist: interval + numeric)
  	public static double getChi2(Setting setting, String table, String column) {
  		String sql;
+ 		String predictorType = getPredictorType(setting, table, column);
+ 		
  		
  		// Technical: MySQL or PostgreSQL require correlation name (also known as alias) for derived tables. 
  		// But Oracle does not accept "as" keyword in front of the table alias. See:
  		// http://www.techonthenet.com/oracle/alias.php
  		// Hence use following syntax: (select col1 from table t1) t2. 
- 		if (getPredictorType(setting, table, column).equals("nominal")) {
+ 		if (predictorType.equals("nominal")) {
  			// Use categorical column directly
  			sql = ""
 				+ "select sum(chi2) "
@@ -463,7 +519,7 @@ public final class SQL {
 				+ "	on expected.bin = measured.bin "
 				+ "	and expected.target = measured.target "
 				+ ") chi2";
- 		} else {
+ 		} else if (predictorType.equals("numerical")) {
  			// Group numerical values into 10 bins.
  			// If desirable you can optimize the optimal amount of bins with Sturge's rule 
  			// but syntax for log is different in each database. 
@@ -508,6 +564,50 @@ public final class SQL {
 				+ "	on expected.bin = measured.bin "
 				+ "	and expected.target = measured.target "
 				+ ") chi2";
+ 		} else {
+ 			// The syntax is the same as for numerical Chi2. We just cast time to number.
+ 			// DEVELOPED FOR POSTGRESQL
+ 			sql = ""
+ 					+ "select sum(chi2) "
+ 					+ "from ( "
+ 					+ "	select (expected.expected-measured.count) * (expected.expected-measured.count) / expected.expected chi2 "
+ 					+ "	from ( "
+ 					+ "		select expected_bin.count*expected_target.prob expected "
+ 					+ "			 , bin "
+ 					+ "			 , target "
+ 					+ "		from ( "
+ 					+ "			select @baseTarget target "
+ 					+ "				 , cast(count(*) as DECIMAL)/max(t2.nrow) prob "
+ 					+ "			from @outputTable, ( "
+ 					+ "				select cast(count(*) as DECIMAL) nrow "
+ 					+ "				from @outputTable "
+ 					+ "			) t2 "
+ 					+ "			GROUP BY @baseTarget "
+ 					+ "		) expected_target, ( "
+ 					+ "			select cast(count(*) as DECIMAL) count "
+ 					+ "				 , floor((extract(epoch from @column)-t2.min_value) / (t2.bin_width + 0.0000001)) bin " // Bin really into 10 bins.
+ 					+ "			from @outputTable, ( "
+ 					+ "					select (max(extract(epoch from @column))-min(extract(epoch from @column))) / 10 bin_width "
+ 					+ "						 , min(extract(epoch from @column)) min_value "
+ 					+ "					from @outputTable "
+ 					+ "				) t2 "
+ 					+ "			group by floor((extract(epoch from @column)-t2.min_value) / (t2.bin_width + 0.0000001)) "	// And avoid division by zero.
+ 					+ "		) expected_bin "
+ 					+ "	) expected "
+ 					+ "	left join ( "
+ 					+ "		select @baseTarget target "
+ 					+ "			 , cast(count(*) as DECIMAL) count "
+ 					+ "			 , floor((extract(epoch from @column)-t2.min_value) / (t2.bin_width + 0.0000001)) bin "
+ 					+ "		from @outputTable, ( "
+ 					+ "				select (max(extract(epoch from @column))-min(extract(epoch from @column))) / 10 bin_width "
+ 					+ "					 , min(extract(epoch from @column)) min_value "
+ 					+ "				from @outputTable "
+ 					+ "			) t2 "
+ 					+ "		group by floor((extract(epoch from @column)-t2.min_value) / (t2.bin_width + 0.0000001)), @baseTarget "
+ 					+ "	) measured "
+ 					+ "	on expected.bin = measured.bin "
+ 					+ "	and expected.target = measured.target "
+ 					+ ") chi2";
  		}
 
 		sql = expandName(sql);
@@ -597,7 +697,6 @@ public final class SQL {
 	
 	// 2) Propagate ID. The map should contain @outputTable, @propagatedTable, @inputTable and @idColumn[?].
 	// If the map contains @dateColumn, time condition is added.
-	// THE TIME WINDOW SHOULD BE A VARIABLE
 	// ADD SAFETY "TRANSITION BAND"  
 	public static boolean propagateID(Setting setting, Map<String, String> map, boolean bottomBounded){
 				

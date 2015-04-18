@@ -1,5 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!--
+Description of the fields:
+	Name: Unique (but arbitrary) name identifying the database.
+	DriverClass: A reference to the JDBC driver as provided by the documentation for the driver.
+	DefaultPort: The default port of the database.
+	UrlPrefix: The beginning of the connection string.  
+	DbNameSeparator: The separator between urlPrefix and database name.
+	QuoteMarks: GET RID OF IT! (BUT TEST IT THEN ON MSSQL)
+	CreateTableAsCompatible: Because of MS SQL specific syntax...
+	SchemaCompatible: GET RID OF IT THRU "getSchemaTerm".
+	DateAddSyntax: Because we want to be able to express time ranges. This syntax doesn't deal with leap years.  
+	DateAddMonth: Because we want to be able to express time ranges. This syntax correctly deals with leap years.  
+	DateDiffSyntax: Not all databases support conversion of time to number. Hence just use a diff against a constant. 
+	DateToNumber: EXPERIMENTAL
+	InsertTimestampSyntax: Syntax for timestamp (it's used for creation of journal table). ISN'T IT A DUPLICATE TO typeTimestamp?
+	StdDevCommand: The command for calculation of sample standard deviation.
+	CharLengthCommand: The command for calculation of string length.
+	WithData: Because of MonetDB specific syntax...
+-->
+
+
 <drivers>     	
    	<driver 
     	name="Microsoft SQL Server"
@@ -36,7 +57,7 @@
      	dateAddMonth="DATEADD(month, @amount, @baseDate)"
      	dateDiffSyntax="DATEDIFF(day, @dateTo, @dateFrom)"
      	insertTimestampSyntax="@timestamp"
-     	stdDevCommand="STDDEV_SAMP "
+     	stdDevCommand="SYS.STDDEV_SAMP "
      	charLengthCommand="LENGTH"
      	typeVarchar="VARCHAR"
 		typeInteger="INTEGER"
@@ -78,6 +99,8 @@
      	createTableAsCompatible="yes" 
      	schemaCompatible="no"	
      	dateAddMonth="add_months(@baseDate, @amount)"
+     	dateDiffSyntax="(@dateTo - @dateFrom)"
+     	dateToNumber="extract(epoch from @date)"
      	insertTimestampSyntax="@timestamp"
      	stdDevCommand="stddev_samp"
      	charLengthCommand="char_length"
@@ -88,7 +111,7 @@
         withData="no"
     />
           
-    <!-- Interval arythmetic can result into an invalid date -> use add_months for months and years
+    <!-- Interval arithmetic can result into an invalid date -> use add_months for months and years
     as it can correctly deal with different length of months and leap years. -->
     <driver 
     	name="Oracle"
@@ -124,6 +147,7 @@
      	dateAddSyntax="(@baseDate + INTERVAL '@amount @datePart')"
      	dateAddMonth="(@baseDate + INTERVAL '@amount month')" 
      	dateDiffSyntax="(@dateTo - @dateFrom)"
+     	dateToNumber="extract(epoch from @date)"
      	insertTimestampSyntax="@timestamp"
      	stdDevCommand="stddev_samp"
      	charLengthCommand="char_length"

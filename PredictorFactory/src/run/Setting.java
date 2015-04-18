@@ -16,6 +16,7 @@ public final class Setting {
 	public String dateAddSyntax;				// Syntax for changing a date by a given amount
 	public String dateAddMonth;					// Leap year acknowledging syntax
 	public String dateDiffSyntax;				// Syntax for difference of two dates
+	public String dateToNumber;					// Whenever we need to perform statistical operations on the time 
 	public String insertTimestampSyntax;		// Syntax for inserting a timestamp into journal
 	public String stdDevCommand;				// MS SQL is using STDEV in place of STDDEV_SAMP
 	public String charLengthCommand;			// MS SQL is using LEN in place of CHAR_LENGTH
@@ -47,15 +48,16 @@ public final class Setting {
 	public String sampleTable = "mainSample";		// The name of the result table with predictors.
 	public String journalTable = "journal"; 		// The name of predictors' journal table.
 	
-	int predictorStart = 100000;  					// Convenience for "natural sorting" 
+	int predictorStart = 100000;  					// Convenience for "natural sorting".
 	
-	public String propagatedPrefix = "propagated_";	// For single schema databases
-	public String predictorPrefix = "predictor";  	// Tables with predictors have uniform prefix
+	public String propagatedPrefix = "propagated_";	// For single schema databases.
+	public String predictorPrefix = "predictor";  	// Tables with predictors have uniform prefix.
 	
 	// Parameters
 	public int propagationDepthMax = 10; 			// The maximal depth of base table propagation. Smaller value will result into faster propagation.
-	public Integer lag = 12; 							// The amount of data history (in months) we allow the model to use when making the prediction.
-	public Integer lead = 1;							// The period of time (in months) between the last data point the model can use to predict and the first data point the model actually predicts.
+	public Integer lag = 24; 						// The amount of data history (in months) we allow the model to use when making the prediction.
+	public Integer lead = 0;						// The period of time (in months) between the last data point the model can use to predict and the first data point the model actually predicts.
+	public int sampleSize = 100000;					// Downsample the base table to the given sample size per class.
 	// missingValues (had to be implemented)
 	
 	// Constructor

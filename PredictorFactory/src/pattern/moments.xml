@@ -6,6 +6,7 @@
 	
 	NOTE: kurtosis will be added once support for multiple columns in the result will be implemented.
 	NOTE: Arithmetic overflow can happen.
+	NOTE: Divison by zero can happen.
 	
 	The implementation is from: http://www.experts-exchange.com/Database/MS_Access/A_2529-Median-Mode-Skewness-and-Kurtosis-in-MS-Access.html
 	</description>

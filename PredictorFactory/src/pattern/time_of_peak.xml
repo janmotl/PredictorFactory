@@ -6,7 +6,7 @@
 		Time of maximal peak.
 		
 		Note: NumericalColumn can be null and that can cause ties -> avoid nulls. However, ties can still happen ->
-		pick the minimal time value (notice that it can also deal with ties at timeColumn level).
+		pick the most recent (the maximum) time value (notice that it can also deal with ties at timeColumn level).
 	</description>
 	<author>Jan Motl</author>
 	<date>2015-03-14</date>
@@ -14,7 +14,7 @@
 			SELECT @baseId
 			     , @baseDate
 			     , @baseTarget
-			     , min(@timeColumn) AS "@columnName"
+			     , max(@timeColumn) AS "@columnName"
 			FROM (SELECT @baseId
 			           , @baseDate
 			           , @baseTarget

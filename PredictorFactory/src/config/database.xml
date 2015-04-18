@@ -164,10 +164,34 @@
 		task = "classification"	
 	/>
 
+	<database 
+ 		name = "ftp"
+		inputSchema = "ftp"
+		outputSchema = "predictor_factory"
+		targetTable = "session"
+		targetId = "session_id"
+		targetDate = "session_id"
+		targetColumn = "gender"
+		task = "classification"	
+	/>
+
 	<!-- Just use some random column instead of targetDate  -->
    	<database 
    		name = "genes"
 		inputSchema = "genes"
+		outputSchema = "predictor_factory"		
+		targetTable = "Classification"
+		targetId = "GeneID"	
+		targetColumn = "Localization"	
+		targetDate = "GeneID"  
+		blackListColumn = "Genes.Localization" 
+		task = "classification"
+	/>
+	
+	<!-- Just use some random column instead of targetDate  -->
+   	<database 
+   		name = "genes_sym"
+		inputSchema = "genes_sym"
 		outputSchema = "predictor_factory"		
 		targetTable = "Classification"
 		targetId = "GeneID"	
@@ -282,6 +306,30 @@
 	
 	<!-- Just use some random column instead of targetDate  -->
    	<database 
+   		name = "mutagenesis_disc_sym"
+		inputSchema = "mutagenesis_disc_sym"
+		outputSchema = "predictor_factory"		
+		targetTable = "molecule"		
+		targetId = "molecule_id"
+		targetColumn = "mutagenic"	
+		targetDate = "molecule_id"  
+		task = "classification"
+	/>
+	
+	<!-- Just use some random column instead of targetDate  -->
+   	<database 
+   		name = "mutagenesis_disc"
+		inputSchema = "mutagenesis_disc"
+		outputSchema = "predictor_factory"		
+		targetTable = "molecule"		
+		targetId = "molecule_id"
+		targetColumn = "mutagenic"	
+		targetDate = "molecule_id"  
+		task = "classification"
+	/>
+	
+	<!-- Just use some random column instead of targetDate  -->
+   	<database 
    		name = "mutagenesis_42"
 		inputSchema = "mutagenesis_42"
 		outputSchema = "predictor_factory"		
@@ -333,6 +381,17 @@
 	<database 
    		name = "NBA"
 		inputSchema = "NBA"
+		outputSchema = "predictor_factory"		
+		targetTable = "Game"
+		targetId = "GameId"	
+		targetColumn = "ResultOfTeam1"	
+		targetDate = "Date"
+		task = "classification"
+	/>
+	
+	<database 
+   		name = "NBA_sym"
+		inputSchema = "NBA_sym"
 		outputSchema = "predictor_factory"		
 		targetTable = "Game"
 		targetId = "GameId"	

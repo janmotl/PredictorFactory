@@ -13,32 +13,32 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement (name="drivers")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class JDBCPropertyList {
-	private ArrayList<JDBCProperty> driver = new ArrayList<JDBCProperty>();
+public class DriverPropertyList {
+	private ArrayList<DriverProperty> driver = new ArrayList<DriverProperty>();
 	
 	// Constructor
-	public JDBCPropertyList(){}
+	public DriverPropertyList(){}
 	
 	// Get property by name
-	public JDBCProperty getJDBCProperties(String name) {
-		for (JDBCProperty properties : driver) {
+	public DriverProperty getDriverProperties(String name) {
+		for (DriverProperty properties : driver) {
 			if (properties.name.equals(name)) {
 				return properties;
 			}
 		}
 		
-		System.out.println("There isn't a setting for: " + name);
+		System.out.println("There isn't a driver setting for: " + name);
 		return null;
 	}
 	
 	// Load property list from XML
-	public static JDBCPropertyList unmarshall(){
-		JDBCPropertyList list = null;
+	public static DriverPropertyList unmarshall(){
+		DriverPropertyList list = null;
 	    
 		try {
-			JAXBContext jaxbContext = JAXBContext.newInstance(JDBCPropertyList.class);
+			JAXBContext jaxbContext = JAXBContext.newInstance(DriverPropertyList.class);
 		    Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-		    list = (JDBCPropertyList) jaxbUnmarshaller.unmarshal( new File("src/connection/jdbc.xml") );
+		    list = (DriverPropertyList) jaxbUnmarshaller.unmarshal( new File("src/config/driver.xml") );
 		} catch (JAXBException e) {
 			e.printStackTrace();
 		}

@@ -18,9 +18,4 @@ public class DatabaseProperty {
 	@XmlAttribute String blackListTable;
 	@XmlAttribute String blackListColumn;
 	@XmlAttribute String task;
-	
-
-	// Constructor
-	public  DatabaseProperty() {}
-	
 }

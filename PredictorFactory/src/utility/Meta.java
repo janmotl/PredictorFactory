@@ -170,7 +170,7 @@ public class Meta {
 			} else {
 				columnCounter++;
 				logger.debug("Ignoring column: " + tableName + "." + columnName 
-						+ " because it is of an unsuported data type (" + dataType + ")");
+						+ " because it is of an unsupported data type (" + dataType + ")");
 			}
 		}
 		

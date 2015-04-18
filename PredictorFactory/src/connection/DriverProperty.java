@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlType;
 
 
 @XmlType(name="driver")
-public class JDBCProperty {
+public class DriverProperty {
 	@XmlAttribute String name;			// This annotation assigns names to the elements in jdbc.xml -> order sensitive!
 	@XmlAttribute String driverClass;
 	@XmlAttribute String defaultPort;
@@ -20,6 +20,7 @@ public class JDBCProperty {
 	@XmlAttribute String dateAddSyntax;
 	@XmlAttribute String dateAddMonth;
 	@XmlAttribute String dateDiffSyntax;
+	@XmlAttribute String dateToNumber;
 	@XmlAttribute String insertTimestampSyntax;
 	@XmlAttribute String stdDevCommand;
 	@XmlAttribute String charLengthCommand;
@@ -28,8 +29,4 @@ public class JDBCProperty {
 	@XmlAttribute String typeDecimal;
 	@XmlAttribute String typeTimestamp;
 	@XmlAttribute String withData;
-	
-	// Constructor
-	public  JDBCProperty() {}
-	
 }
