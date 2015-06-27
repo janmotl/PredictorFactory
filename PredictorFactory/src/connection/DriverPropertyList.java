@@ -10,14 +10,17 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.log4j.Logger;
+
 
 @XmlRootElement (name="drivers")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class DriverPropertyList {
-	private ArrayList<DriverProperty> driver = new ArrayList<DriverProperty>();
+	// Logging
+	public static final Logger logger = Logger.getLogger(DriverPropertyList.class.getName());
 	
-	// Constructor
-	public DriverPropertyList(){}
+	// Private Fields
+	private ArrayList<DriverProperty> driver = new ArrayList<DriverProperty>();
 	
 	// Get property by name
 	public DriverProperty getDriverProperties(String name) {
@@ -27,7 +30,7 @@ public class DriverPropertyList {
 			}
 		}
 		
-		System.out.println("There isn't a driver setting for: " + name);
+		logger.warn("There isn't a driver setting for: " + name);
 		return null;
 	}
 	
@@ -38,9 +41,9 @@ public class DriverPropertyList {
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(DriverPropertyList.class);
 		    Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-		    list = (DriverPropertyList) jaxbUnmarshaller.unmarshal( new File("src/config/driver.xml") );
+		    list = (DriverPropertyList) jaxbUnmarshaller.unmarshal( new File("config/driver.xml") );
 		} catch (JAXBException e) {
-			e.printStackTrace();
+			logger.warn("Attempt to parse 'config/driver.xml' failed. Does the file exist?");
 		}
 
 	    return list;

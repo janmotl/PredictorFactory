@@ -1,3 +1,7 @@
+/** 
+ * A log of transactions between the database and Predictor Factory.
+ * Example usages: recovery from connection loss, state space search optimization,...
+ */
 package run;
 
 import java.time.LocalDateTime;
@@ -7,7 +11,6 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import connection.Network;
 import connection.SQL;
 import featureExtraction.Predictor;
 
@@ -15,9 +18,6 @@ import featureExtraction.Predictor;
 @XmlRootElement
 //Defines order in which elements are created in XML file
 @XmlType(propOrder = { "journal" })
-
-// A log of transactions between the database and Predictor Factory.
-// Example usages: recovery from connection loss, state space search optimization,...
 public class Journal {
 
 	private List<Predictor> journal;
@@ -30,10 +30,10 @@ public class Journal {
 		
 		// Create journal table in the database
 		// I SHOULD REUSE THE OLD JOURNAL AND NOT JUST PLAINLY DELETE IT 
-		Network.executeUpdate(setting.connection, SQL.getJournal(setting));
+		SQL.getJournal(setting);
 	}
-	
-	// Get journal size
+	 
+	// Get journal size.
 	public int size(){
 		return journal.size();
 	}
@@ -53,8 +53,7 @@ public class Journal {
 		journal.add(predictor);
 		
 		// Synchronize journal table in the database
-		String sql = SQL.addToJournal(setting, predictor);
-		Network.executeUpdate(setting.connection, sql);
+		SQL.addToJournal(setting, predictor);
 	}
 
 	

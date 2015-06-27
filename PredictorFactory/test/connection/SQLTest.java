@@ -3,8 +3,8 @@ package connection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.Test;
 
 import run.Setting;
 
@@ -39,6 +39,7 @@ public class SQLTest {
 		//Assert.assertEquals(sql, "SELECT t1.[account_id], t1.date, t1.[status], t2.* FROM [base] t1 INNER JOIN [trans] t2 ON t1.[account_id] = t2.[account_id]");
   }
   
+  
   @Test
   public void addCreateTableAs1() {
 	  	// Setting
@@ -47,7 +48,7 @@ public class SQLTest {
 		
 		// Test user variable compliance (tolerance to at-sign). Important as I am using at-signs in patterns.
 		String result = SQL.addCreateTableAs(setting, "SELECT @column FROM table");
-		Assert.assertEquals(result, "SELECT @column INTO @outputTable FROM table");
+		Assert.assertEquals("SELECT @column INTO @outputTable FROM table", result);
   }
   
   @Test
@@ -58,7 +59,7 @@ public class SQLTest {
 		
 		// Test ignorance of a table called "from". This is important in the maintable assembly.
 		String result = SQL.addCreateTableAs(setting, "SELECT [from] FROM table");
-		Assert.assertEquals(result, "SELECT [from] INTO @outputTable FROM table");
+		Assert.assertEquals("SELECT [from] INTO @outputTable FROM table", result);
   } 
   
   @Test
@@ -70,7 +71,7 @@ public class SQLTest {
 		// Test for case insensitivity. As the SQL Keywords are case-insensitive in SQL 92.
 		String result = SQL.addCreateTableAs(setting, "SELECT col FrOm table");
 		String expected = "SELECT col INTO @outputTable FrOm table";
-		Assert.assertEquals(result.toLowerCase(), expected.toLowerCase());
+		Assert.assertEquals(expected.toLowerCase(), result.toLowerCase());
   }
   
   @Test
@@ -81,7 +82,7 @@ public class SQLTest {
 		
 		// Test with subquery in the select part. 
 		String result = SQL.addCreateTableAs(setting, "select col1 `col1`, (SELECT max(col2) from t2) `col2` from t1;");
-		Assert.assertEquals(result, "select col1 `col1`, (SELECT max(col2) from t2) `col2` INTO @outputTable from t1;");
+		Assert.assertEquals("select col1 `col1`, (SELECT max(col2) from t2) `col2` INTO @outputTable from t1;", result);
   }
   
   @Test
@@ -94,8 +95,8 @@ public class SQLTest {
 		String result = SQL.addCreateTableAs(setting, "select col1 \nfrom\nt1");
 		String expected = "select col1 INTO @outputTable \nfrom\nt1";
 		Assert.assertEquals(
-				result.replaceAll("\\s", " ").replaceAll("\\s+", " "),
-				expected.replaceAll("\\s", " ").replaceAll("\\s+", " ")
+				expected.replaceAll("\\s", " ").replaceAll("\\s+", " "),
+				result.replaceAll("\\s", " ").replaceAll("\\s+", " ")
 		);
   }
   
@@ -108,12 +109,31 @@ public class SQLTest {
 		// Test user variables without escaping. This is important in mainsample creation.
 		String result = SQL.addCreateTableAs(setting, "SELECT t1.@CLIENT_FROM_DATE FROM t1");
 		String expected = "SELECT t1.@CLIENT_FROM_DATE INTO @outputTable FROM t1";
-		Assert.assertEquals(result, expected);
+		Assert.assertEquals(expected, result);
   }
   
+  @Test
+  public void addCreateTableAs7() {
+	  	// Setting
+		Setting setting = new Setting();
+		setting.isCreateTableAsCompatible = false; 
+		
+		// Test that it can deal with union all. This is important in sampling of base table.
+		String result = SQL.addCreateTableAs(setting, "SELECT c1 FROM t1 UNION ALL SELECT c1 FROM t2");
+		String expected = "SELECT c1 INTO @outputTable FROM t1 UNION ALL SELECT c1 FROM t2";
+		Assert.assertEquals(expected, result);
+  }
+  
+  @Test
+  public void addCreateTableAs8() {
+	  	// Setting
+		Setting setting = new Setting();
+		setting.isCreateTableAsCompatible = false; 
+		
+		// Test that it can deal with union all in brackets
+		String result = SQL.addCreateTableAs(setting, "(SELECT c1 FROM t1) UNION ALL (SELECT c1 FROM t2)");
+		String expected = "(SELECT c1 INTO @outputTable FROM t1) UNION ALL (SELECT c1 FROM t2)";
+		Assert.assertEquals(expected, result);
+  }
+   
 }
-  
-
-  
-  
-  

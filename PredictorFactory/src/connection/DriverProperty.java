@@ -29,4 +29,6 @@ public class DriverProperty {
 	@XmlAttribute String typeDecimal;
 	@XmlAttribute String typeTimestamp;
 	@XmlAttribute String withData;
+	@XmlAttribute String limitSyntax;
+	@XmlAttribute String randomCommand;
 }

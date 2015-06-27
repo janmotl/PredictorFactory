@@ -14,7 +14,7 @@
 	<code compatibility="MySQL">SELECT @baseId
 	           , @baseDate
 	           , @baseTarget
-	           , (Avg(@numericalColumn * @timeColumn) - Avg(@numericalColumn) * Avg(@timeColumn)) / (StdDev_Samp(@numericalColumn) * StdDev_Samp(@timeColumn)) AS "@timeColumnName"
+	           , (Avg(@numericalColumn * @timeColumn) - Avg(@numericalColumn) * Avg(@timeColumn)) / (StdDev_Samp(@numericalColumn) * StdDev_Samp(@timeColumn)) AS "@columnName"
 	      FROM @propagatedTable
 	      GROUP BY @baseId, @baseDate, @baseTarget
 	</code>

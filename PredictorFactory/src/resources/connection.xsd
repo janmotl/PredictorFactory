@@ -7,6 +7,7 @@
             <simpleContent>
               <extension base="string">
                 <attribute type="string" name="name" use="required"/>
+                <attribute type="string" name="description" use="optional"/>
                 <attribute type="string" name="driver" use="required"/>
                 <attribute type="string" name="host" use="required"/>
                 <attribute type="int" name="port" use="required"/>

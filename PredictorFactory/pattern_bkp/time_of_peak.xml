@@ -3,15 +3,14 @@
 <pattern>
 	<name>Time of peak</name>
 	<description>
-		Time of maximal peak.
+		Time when the signal peaks.
 		
 		Note: NumericalColumn can be null and that can cause ties -> avoid nulls. However, ties can still happen ->
-		pick the most recent (the maximum) time value (notice that it can also deal with ties at timeColumn level).
+		pick the most recent (the maximum) time value (note that it also deals with ties at timeColumn level).
 	</description>
 	<author>Jan Motl</author>
 	<date>2015-03-14</date>
-	<code compatibility="PostgreSQL">
-			SELECT @baseId
+	<code compatibility="PostgreSQL">SELECT @baseId
 			     , @baseDate
 			     , @baseTarget
 			     , max(@timeColumn) AS "@columnName"

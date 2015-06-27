@@ -5,6 +5,9 @@
 	<description>
 		As many databases do not support range aggregate, calculate it with min and max. 		
 	</description>
+	<example>
+		Swing on the account (the difference between the highest and lowest balance during the period).
+	</example>
 	<author>Jan Motl</author>
 	<date>2014-10-25</date>
 	<code>SELECT @baseId

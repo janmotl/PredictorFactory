@@ -23,6 +23,13 @@
 		Time values are aggregated in an a separate pattern (time_since) since it requires casting of time attribute
 		into number. 
 		
+		Note: Are you getting int overflows on avg()? Cast the ints first into biginst! See:
+			http://stackoverflow.com/questions/1197720/sql-server-giving-arithmetic-overflow-when-calculating-avg  
+		Of course, the same remedy applies to sum() and stddev_samp().
+		
+		Note: Sum aggregate is particularly prone on overflows. Furthermore, the sum can be represented by {avg, count}.
+		Hence, consider not using sum at all. 
+		
 		NOTE: ADDED SUM
 	</description>
 	<example>

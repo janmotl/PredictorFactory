@@ -21,7 +21,7 @@
 	</example>
 	<author>Jan Motl</author>
 	<date>2015-04-04</date>
-	<code>SELECT t2.@baseId
+	<code compatibility="PostgreSQL">SELECT t2.@baseId
 			   , t2.@baseDate
 			   , t2.@baseTarget
 			   , t2."@columnName"
@@ -36,7 +36,8 @@
 					   		 , @baseTarget
 		                     , @numericalColumn AS "@columnName"
 		                     , ROW_NUMBER() OVER (PARTITION BY @baseId, @baseDate ORDER BY @numericalColumn @sortOrder) AS n
-		                FROM @propagatedTable) t1
+		                FROM @propagatedTable
+		                WHERE @numericalColumn IS NOT NULL) t1
 		        WHERE  t1.n &lt;= @nth) t2
 		   WHERE t2.max_n = t2.n
 	</code>

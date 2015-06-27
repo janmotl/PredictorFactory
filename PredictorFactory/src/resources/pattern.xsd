@@ -26,8 +26,22 @@
             </simpleContent>
           </complexType>
         </element> 
+         <element name="optimize" maxOccurs="unbounded" minOccurs="0">
+          <complexType>
+            <simpleContent>
+              <extension base="string">
+                <attribute type="string" name="key" use="required"/>
+                <attribute type="string" name="min"/>
+                <attribute type="string" name="max"/>
+                <attribute type="boolean" name="integerValue"/>
+                <attribute type="positiveInteger" name="iterationLimit"/>
+              </extension>
+            </simpleContent>
+          </complexType>
+        </element>
         <element type="string" name="cardinality"/>
       </sequence>
+       <attribute type="positiveInteger" name="topN"/>
     </complexType>
   </element>
 </schema>

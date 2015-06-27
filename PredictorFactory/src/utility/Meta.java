@@ -23,17 +23,35 @@ public class Meta {
 	// Always create collections to avoid null pointer exception and need to create collections at many places.
 	// SortedSet is used to make selection of a single element easy to write.
 	public static class Table {
-		public SortedSet<String> numericalColumn = new TreeSet<String>();			// Additive columns 
-		public SortedSet<String> nominalColumn = new TreeSet<String>();				// Categorical columns
-		public SortedSet<String> timeColumn = new TreeSet<String>();				// Time, date, datetime, timestamp...
 		public SortedSet<String> idColumn = new TreeSet<String>();					// Foreign and primary keys
+		public SortedSet<String> nominalColumn = new TreeSet<String>();				// Categorical columns
+		public SortedSet<String> numericalColumn = new TreeSet<String>();			// Additive columns 
+		public SortedSet<String> timeColumn = new TreeSet<String>();				// Time, date, datetime, timestamp...
 		public List<List<String>> relationship = new ArrayList<List<String>>();		// List of {thatTable, thisColumn, thatColumn} 
 		public boolean isUnique;													// Does combination {baseId, baseDate} repeat?
+		public Map<String, List<String>> uniqueList = new TreeMap<String, List<String>>(); // Map of {columnName, unique value list}
+		
+		@Override 
+		public String toString() {
+		    StringBuilder result = new StringBuilder();
+		    String NEW_LINE = System.getProperty("line.separator");
+
+		    result.append("Table {" + NEW_LINE);
+		    result.append(" idColumn: " + idColumn + NEW_LINE);
+		    result.append(" nominalColumn: " + nominalColumn + NEW_LINE);
+		    result.append(" numericalColumn: " + numericalColumn + NEW_LINE );
+		    result.append(" timeColumn: " + timeColumn + NEW_LINE);
+		    result.append("}");
+
+		    return result.toString();
+		 }
 	}
 
 	
 	
 	// 0) Get list of all schemas.
+	// POSSIBLY I COULD ASSUME THAT: database = setting.database
+	// HENCE ELIMINATE ONE OF THE PARAMETERS
 	public static SortedSet<String> collectSchemas(Setting setting, String database) {
 
 		// Initialization
@@ -59,7 +77,7 @@ public class Meta {
 		}
 
 		// QC schema count
-		if (schemaSet.size() == 0) {
+		if (schemaSet.isEmpty()) {
 			logger.warn("The count of available schemas in " + database + " is 0.");
 		}
 		
@@ -89,7 +107,7 @@ public class Meta {
 		} catch (SQLException ignored) {}
 		
 		// QC table count
-		if (tableSet.size() == 0) {
+		if (tableSet.isEmpty()) {
 			logger.warn("The count of available tables in " + database + "." + schema + " is 0.");
 		}
 		

@@ -1,31 +1,339 @@
 package featureExtraction;
 
-import java.io.File;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
 
-import propagation.MetaOutput.OutputTable;
+import metaInformation.MetaOutput.OutputTable;
 import run.Journal;
 import run.Setting;
+import utility.PatternMap;
+
+import org.apache.log4j.Logger;
 
 import com.rits.cloning.Cloner;
 
 import connection.Network;
 import connection.SQL;
+import featureExtraction.Pattern.OptimizeParameters;
 
 public class Aggregation {
+	// Logging
+	public static final Logger logger = Logger.getLogger(Aggregation.class.getName());
 
-	// Subroutine 5: Create predictor with index and QC.
-	private static void getPredictor(Setting setting, Journal journal, Predictor predictor) {
+	// Global variables - deep cloning
+	private static Cloner cloner = new Cloner(); 
+	
+	
+	
+	// Do it
+	public static void aggregate(Setting setting, Journal journal, SortedMap<String, OutputTable> tableMetadata ) {
 		
-		// Set predictor's id & name
+		// Initialization
+		int groupId = 1;
+		
+		// 1) Get predictors
+		List<Predictor> predictorList = loopPatterns(setting);
+		
+		// 2) Set @targetValue
+			// First, get list of unique values in the target column
+			List<String> uniqueList = new ArrayList<String>();
+			for (OutputTable table : tableMetadata.values()) {
+				if (setting.targetTable.equals(table.originalName)) { 
+					uniqueList = table.uniqueList.get(setting.targetColumn);
+					break; // No need to continue
+				}
+			}
+			
+			// Second, Loop over all the predictors
+			List<Predictor> predictorList2 = new ArrayList<Predictor>(); 
+			for (Predictor predictor : predictorList) {
+				predictorList2.add(addTargetValue(predictor, uniqueList));
+			}
+		
+		// 3) Loop over parameters
+		List<Predictor> predictorList3 = new ArrayList<Predictor>(); 
+		for (Predictor predictor : predictorList2) {
+			predictorList3.addAll(loopParameters(predictor));
+		}
+		
+		// 4) Loop over tables
+		List<Predictor> predictorList4 = new ArrayList<Predictor>(); 
+		for (Predictor predictor : predictorList3) {
+			predictorList4.addAll(loopTables(predictor, tableMetadata));
+		}
+		
+		// 5) Loop over columns
+		List<Predictor> predictorList5 = new ArrayList<Predictor>(); 
+		for (Predictor predictor : predictorList4) {
+			predictorList5.addAll(loopColumns(predictor, tableMetadata));
+		}
+		
+		// 6) Loop over @value
+		List<Predictor> predictorList6 = new ArrayList<Predictor>(); 
+		for (Predictor predictor : predictorList5) {
+			predictorList6.addAll(addValue(setting, predictor, tableMetadata));
+		}
+		
+		// 7) Optimize parameters
+		List<Predictor> predictorList7 = new ArrayList<Predictor>(); 
+		for (Predictor predictor : predictorList6) {
+			predictorList7.addAll(optimizeAll(predictor, groupId));
+			groupId++; // GroupId is unique per optimization group
+		}
+		
+
+		// 8) Execute the SQL
+		for (Predictor predictor : predictorList7) {
+			getPredictor(setting, journal, predictor); 
+		}
+		
+	}
+	
+	
+	// Subroutine 1: Get list of all the patterns in the pattern directory. Return list of predictors.
+	protected static List<Predictor> loopPatterns(Setting setting) {
+
+		List<Predictor> outputList = new ArrayList<Predictor>();
+		
+		for (Pattern pattern : PatternMap.getPatternMap().values()) {
+			pattern.agnostic2dialectCode(setting);					// Initialize dialectCode. Once.
+			outputList.add(new Predictor(pattern));					// Build a predictor from the pattern
+		}
+		
+		return outputList;
+	}
+	
+	
+	// Subroutine 2: Populate @targetValue (based on unique values in the target column in the target window) and set SQL.
+	// CURRENTLY IMPLEMENTED ONLY FOR THE FIRST VALUE -> IT RETURNS JUST A SINGLE PREDICTOR
+	protected static Predictor addTargetValue(Predictor predictor, List<String> uniqueList){
+		
+		if (predictor.getPatternCode().contains("@targetValue")) {
+			predictor.addParameter("@targetValue", uniqueList.get(0));
+		}
+
+		return predictor;
+	}
+	
+	
+	// Subroutine 3: Recursively generate each possible combination of the parameters.
+	protected static List<Predictor> loopParameters(Predictor predictor) {
+		
+		// Initialize the output
+		List<Predictor> predictorList = new ArrayList<Predictor>();
+		predictorList.add(predictor);
+		
+		// Loop over each parameter
+		for (Entry<String, String> parameter : predictor.getPatternParameterList().entrySet()) {
+			predictorList = expandParameter(predictorList, parameter.getKey(), parameter.getValue().split(","));
+		}
+		
+		// Apply the parameters to SQL
+		// This is necessary because some parameters can define columns.
+		for (Predictor pred : predictorList) {
+			 pred = addSQL(pred, pred.getPatternCode());
+		}
+		
+		return predictorList;
+	}
+	
+	private static List<Predictor> expandParameter(List<Predictor> predictorList, String parameterName, String[] parameterValueList) {
+		
+		List<Predictor> outputList = new ArrayList<Predictor>();
+		
+		for (Predictor predictor : predictorList) {
+			for (String parameterValue : parameterValueList) {
+				
+				Predictor cloned = cloner.deepClone(predictor);
+				cloned.addParameter(parameterName, parameterValue);
+				outputList.add(cloned);
+				
+			}
+		}
+		
+		return outputList;
+	}
+	
+	
+	// Subroutine 4: Loop over the propagated tables
+	protected static List<Predictor> loopTables(Predictor predictor, SortedMap<String, OutputTable> tableMetadata) {
+		
+		// Initialize the output
+		List<Predictor> outputList = new ArrayList<Predictor>();
+		
+		// For each propagated table.
+		for (OutputTable workingTable : tableMetadata.values()) {
+
+			// Skip tables with wrong cardinality
+			String cardinality = predictor.getPatternCardinality();
+			if (("1".equals(cardinality) && !workingTable.isUnique) || ("n".equals(cardinality) && workingTable.isUnique)) {
+				continue;	
+			}
+			
+			// Clone
+			Predictor cloned = cloner.deepClone(predictor);
+		
+			// Store the necessary data into the clone
+			cloned.propagatedTable = workingTable.propagatedName;
+			cloned.originalTable = workingTable.originalName;
+			cloned.propagationDate = workingTable.propagationDate;
+			cloned.propagationPath = workingTable.propagationPath;
+			
+			// Store the clone
+			outputList.add(cloned);
+		}
+		
+		return outputList;
+	}
+	
+	
+	// Subroutine 5: Recursively generate each possible combination of the columns.
+	// NO GUARANTIES ABOUT COLUMN1 != COLUMN2 IF THEY ARE OF THE SAME TYPE!
+	// NEITHER THAT {COLUMN1, COLUMN2} WILL BE REPEATED AS {COLUMN2, COLUMN1}!
+	protected static List<Predictor> loopColumns(Predictor predictor, SortedMap<String, OutputTable> tableMetadata) {
+		
+		// Initialize the output
+		List<Predictor> predictorList = new ArrayList<Predictor>();
+		predictorList.add(predictor);
+		
+	    // Find each occurrence of "@?*column*" in SQL. The search is case sensitive (to force nicely formated patterns).
+		String regexPattern = "@\\w+Column\\w*";
+		Matcher m = java.util.regex.Pattern.compile(regexPattern).matcher(predictor.getSql());
+		while (m.find()) {
+			predictor.columnMap.put(m.group(), null);
+		}
+		
+		// Loop over each column in the predictor
+		for (Entry<String, String> parameter : predictor.columnMap.entrySet()) {
+			predictorList = expandColumn(predictorList, parameter.getKey(), tableMetadata.get(predictor.propagatedTable));
+		}
+		
+		return predictorList;		
+	}
+	
+	private static List<Predictor> expandColumn(List<Predictor> predictorList, String columnKey, OutputTable table) {
+		
+		List<Predictor> outputList = new ArrayList<Predictor>();
+		
+		for (Predictor predictor : predictorList) {
+			// Select columns from the table with the correct data type. 	
+			SortedSet<String> columnValueSet = new TreeSet<String>();
+			
+			// Matches: Case insensitive plus suffix with any number of digits
+			if (columnKey.matches("(?i)@NUMERICALCOLUMN\\d*")) columnValueSet = table.numericalColumn;	
+			else if (columnKey.matches("(?i)@NOMINALCOLUMN\\d*")) columnValueSet = table.nominalColumn;	
+			else if (columnKey.matches("(?i)@TIMECOLUMN\\d*")) columnValueSet = table.timeColumn; 
+			else if (columnKey.matches("(?i)@IDCOLUMN\\d*")) columnValueSet = table.idColumn;
+			else logger.warn("The term: " + columnKey +  " in pattern: " + predictor.getPatternName() + " is not recognized as a valid column identifier. Expected terms are: {numericalColumn, nominalColumn, timeColumn, idColumn}.");
+			
+			// Bind the columnKey to the actual columnValue.  		
+			for (String columnValue : columnValueSet) {
+				Predictor cloned = cloner.deepClone(predictor);
+				cloned.columnMap.put(columnKey, columnValue);
+				outputList.add(cloned);
+			}
+		}
+		
+		return outputList;
+	}
+	
+	
+	// Subroutine 6: Populate @value parameter.
+	// NOTE: The value is populated only for the first column in the columnMap. 
+	protected static List<Predictor> addValue(Setting setting, Predictor predictor, SortedMap<String, OutputTable> tableMetadata) {
+		
+		// Initialize the output
+		List<Predictor> predictorList = new ArrayList<Predictor>();
+
+		// If the pattern code contains @value
+		if (predictor.getPatternCode().contains("@value")) {
+			for (Entry<String, String> column : predictor.columnMap.entrySet()) {
+				// Pick a nominal column 
+				if (column.getKey().toUpperCase().matches("@NOMINALCOLUMN\\d*")) {
+					
+					// Get list of unique values
+					List<String> valueList = tableMetadata.get(predictor.propagatedTable).uniqueList.get(column.getValue());
+					
+					// Limit the count to a manageable value
+					valueList = valueList.subList(0, Math.min(setting.valueCount, valueList.size())); 
+
+					for (String value : valueList) {
+						Predictor cloned = cloner.deepClone(predictor);
+						cloned.addParameter("@value", value);
+						predictorList.add(cloned);
+					}
+					
+					break; // Just the first nominalColumn. Remember?
+				}
+			}
+			
+			// Apply the new parameters to SQL
+			for (Predictor pred : predictorList) {
+				 pred = addSQL(pred, pred.getSql());
+			}
+		} else {
+			predictorList.add(predictor);
+		}
+
+		return predictorList;
+	}
+
+	
+	// Subroutine 7: Optimize the parameter.
+	private static List<Predictor> optimizeAll(Predictor predictor, int groupId) {
+		// Initialization
+		List<Predictor> outputList = new ArrayList<Predictor>();
+		outputList.add(predictor);
+		
+		// Loop over all parameters to optimize
+		for (OptimizeParameters parameter : predictor.getPatternOptimizeList()) {
+			outputList = optimize(outputList, parameter);
+		}
+		
+		// Apply the parameters to SQL (Just like in Parameter section)
+		for (Predictor pred : outputList) {
+			 pred = addSQL(pred, pred.getPatternCode());
+		}
+		
+		// Set predictor's group id
+		for (Predictor pred : outputList) {
+			 pred.setGroupId(groupId);
+		}
+		
+		return outputList;
+	}
+	
+	private static List<Predictor> optimize(List<Predictor> predictorList, OptimizeParameters parameter) {
+		// Initialization
+		List<Predictor> outputList = new ArrayList<Predictor>();
+		
+		for (Predictor predictor : predictorList) {
+			// CURRENTLY JUST SWEEP OVER THE VALUES. USE A REAL OPTIMALISATION TOOLBOX.
+			for (int i = 0; i < parameter.iterationLimit; i++) {
+				double value = parameter.min + i * (parameter.max-parameter.min)/(parameter.iterationLimit-1);
+				Predictor clonedPredictor = cloner.deepClone(predictor);
+				clonedPredictor.addParameter(parameter.key, String.valueOf(value));
+				outputList.add(clonedPredictor);
+			}
+		}
+			
+		return outputList;
+	}
+	
+
+	// Subroutine 8: Create predictor with index and QC.
+	private static void getPredictor(Setting setting, Journal journal, Predictor predictor) {
+				
+		// Set predictor's id & table name
 		predictor.setId(journal.getNextId(setting)); 	
-		predictor.outputTable = "predictor" + (predictor.getId());
+		predictor.outputTable = setting.predictorPrefix + (predictor.getId());
 		
 		// Set predictor's names
 		predictor.setName(predictor.getNameOnce(setting));
@@ -55,7 +363,7 @@ public class Aggregation {
 			// Add univariate relevance estimate
 			// Should be conditional on QC		
 			SortedMap<String, Double> relevanceList = new TreeMap<String, Double>();
-			if (setting.task.equalsIgnoreCase("classification")) {
+			if ("classification".equalsIgnoreCase(setting.task)) {
 				relevanceList.put(setting.baseTarget, SQL.getChi2(setting, predictor.outputTable, predictor.getName()));
 			} else {
 				relevanceList.put(setting.baseTarget, SQL.getR2(setting, predictor.outputTable, predictor.getName()));
@@ -69,150 +377,18 @@ public class Aggregation {
 	}
 
 	
-
-	
-	
-	// Subroutine 4: Recursively generate each possible combination of the columns.
-	private static void loopColumns(Setting setting, Journal journal, Predictor predictor,  OutputTable table, SortedSet<String> columnSet) {
+	// Sub-Subroutine: Reflect settings in columnMap & parameterMap into SQL
+	protected static Predictor addSQL(Predictor predictor, String sql) {
 		
-		// Termination condition: Empty columnList
-		if (columnSet.isEmpty()) {
-			
-			// Get an immutable copy of the predictor as we don't want to modify the template.
-			// And we want to have a copy of the predictor in the journal.
-			Cloner cloner=new Cloner(); // SHOULD HAVE BEEN INITIALIZED ONCE PER PF INSTANCE
-			
-			// Populate @value parameter if necessary.
-			// Unfortunately, the order in which things have to be evaluated is: set column -> set value.
-			// And currently the column is defined in the pattern (but this could be done reversely!).
-			// NOTE: The value is populated only for one column ().
-			if (predictor.getSql().contains("@value")) {
-				List<String> valueList = SQL.getUniqueRecords(setting, predictor.propagatedTable, predictor.columnMap.get(predictor.columnMap.firstKey()));
-				valueList = valueList.subList(0, Math.min(5, valueList.size())); 	// Limit the count to 5
-				
-				for (String value : valueList) {
-					Predictor predictorVersion=cloner.deepClone(predictor);
-					String sql = predictorVersion.getSql().replace("@value", value);
-					predictorVersion.setSql(sql);
-					predictorVersion.parameterList.put("@value", value);
-					getPredictor(setting, journal, predictorVersion);
-				}
-				
-				return;
-			}
-			
-			Predictor predictorFinal=cloner.deepClone(predictor);
-			getPredictor(setting, journal, predictorFinal);
-			return;
+	    for (String parameterName : predictor.getParameterMap().keySet()) {
+	    	// Only whole words! Otherwise "@column" would also match "@columnName".
+	    	String oldString = parameterName.substring(1); // remove the at-sign as it is not considered as a part of word in regex
+	    	String newString = predictor.getParameterMap().get(parameterName);			    	
+	    	sql = sql.replaceAll("@\\b" + oldString + "\\b", newString);
 		}
-				
-		// Reduction step: 
-		String columnName = columnSet.first();	// Pick a column 
-		SortedSet<String> reducedSet = new TreeSet<String>(columnSet);	// Make a copy of the columnList...
-		reducedSet.remove(columnName);	//...without the column
-		
-		// Pick the right set of columns to iterate over
-		// NO GUARANTIES ABOUT COLUMN1 != COLUMN2 IF THEY ARE OF THE SAME TYPE!
-		// NEITHER THAT {COLUMN1, COLUMN2} WILL BE REPEATED AS {COLUMN2, COLUMN1}!
-		SortedSet<String> columnValueSet = null;	// By default all columns should be considered. BUT I WANT TO MAKE SURE PATTERNS ARE OK.
-		if (columnName.toUpperCase().matches("@NUMERICALCOLUMN\\d*")) columnValueSet = table.numericalColumn;	// Case insensitive
-		if (columnName.toUpperCase().matches("@NOMINALCOLUMN\\d*")) columnValueSet = table.nominalColumn;	// Could use switch-case
-		if (columnName.toUpperCase().matches("@TIMECOLUMN\\d*")) columnValueSet = table.timeColumn; // Suffix with any number of digits
-		if (columnName.toUpperCase().matches("@IDCOLUMN\\d*")) columnValueSet = table.idColumn;
-		
-		// Bind a column variable to the actual column name.  
-		for (String columnValue : columnValueSet) {
-			predictor.columnMap.put(columnName, columnValue);
-			
-			loopColumns(setting, journal, predictor, table, reducedSet); // Continue with the reduced list.
-		}
-		
+	    predictor.setSql(sql); 
+	    
+	    return predictor;
 	}
-	
-	// Subroutine 3: Recursively generate each possible combination of the parameters.
-	// MAKE SETTING & JOURNAL GLOBAL AS THERE IS JUST ONE INSTANCE OF THEM -> THE LAUNCHER SHOULD MAKE AN OBJECT
-	private static void loopParameters(Setting setting, Journal journal, Predictor predictor, Pattern pattern, OutputTable workingTable, SortedMap<String, String> parameterMap) {
-		
-		// Termination condition: empty parameterMap - do not set any parameter, just get the predictor
-		if (parameterMap.isEmpty()) {
-			
-			// Apply all the changes to the SQL (better to do it once than many time).
-			String sql = predictor.getPatternCode();
-		    for (String parameterName : predictor.getParameterList().keySet()) {
-		    	// Only whole words! Otherwise "@column" would also match "@columnName".
-		    	String oldString = parameterName.substring(1); // remove the at-sign as it is not considered as a part of word in regex
-		    	String newString = predictor.getParameterList().get(parameterName);			    	
-		    	sql = sql.replaceAll("@\\b" + oldString + "\\b", newString);
-			}
-		    predictor.setSql(sql); 
-		    
-		    // Get columnSet.
-		    // Return each occurrence of "@?*column*" in SQL. The search is case sensitive (to force nicely formated patterns).
-			String regexPattern = "@\\w+Column\\w*";
-			SortedSet<String> columnSet = new TreeSet<String>();
-			Matcher m = java.util.regex.Pattern.compile(regexPattern).matcher(sql);
-			while (m.find()) {
-				columnSet.add(m.group());
-			}
-						
-			// Clean column map (necessary because of deep cloning)
-			predictor.columnMap = new TreeMap<String, String>();
-		    				
-			// Loop over columns
-			loopColumns(setting, journal, predictor, workingTable, columnSet); 	
-			return;
-		}
-				
-		// Reduction step: get rid of one parameter
-		String parameterName = parameterMap.firstKey();	// Pick a parameter
-		TreeMap<String, String> parameterMapReduced = new TreeMap<String, String>(parameterMap); // Make a copy...
-		parameterMapReduced.remove(parameterName);		// ...without the parameter
-				
-		for (String parameterValue : parameterMap.get(parameterName).split(",")) {
-			predictor.parameterList.put(parameterName, parameterValue);			// Bind the parameter to the value
-			
-			loopParameters(setting, journal, predictor, pattern, workingTable, parameterMapReduced); 	// Tail recursion
-		}
-		
-	}
-
-	// Subroutine 2: Loop over the propagated tables
-	private static void loopTables(Setting setting, Journal journal, Predictor predictor, Pattern pattern, SortedMap<String, OutputTable> tableMetadata) {
-		
-		// For each propagated table. There is always just one input table, hence it is not necessary to perform recursion.
-		for (OutputTable workingTable : tableMetadata.values()) {
-
-			// Skip tables with wrong cardinality
-			if ((pattern.cardinality.equals("1") && !workingTable.isUnique) || (pattern.cardinality.equals("n") && workingTable.isUnique)) {
-				continue;	
-			}
-		
-			predictor.propagatedTable = workingTable.propagatedName;
-			predictor.originalTable = workingTable.originalName;
-			predictor.propagationDate = workingTable.propagationDate;
-			predictor.propagationPath = workingTable.propagationPath;
-
-			// Loop over a list of parameters, which was already modified to be compatible with the destination database.
-			// Note: Loop first over parameters, then over columns, as assignment of columns can happen in parameters
-			// like in directField pattern.
-			loopParameters(setting, journal, predictor, pattern, workingTable, pattern.dialectParameter);
-		}
-		
-	}
-	
-	// Subroutine 1: Loop over the patterns
-	public static void loopPatterns(Setting setting, Journal journal, SortedMap<String, OutputTable> tableMetadata) {
-
-		File dir = new File("src/pattern");
-		File[] directoryListing = dir.listFiles();
-		if (directoryListing != null) {
-			for (File path : directoryListing) {			
-				Pattern pattern = Pattern.unmarshall(path.toString());		// Read a pattern
-				pattern.agnostic2dialectCode(setting);					// Initialize dialectCode. Once.
-				Predictor predictor = new Predictor(pattern);			// Build a predictor from the pattern
-				loopTables(setting, journal, predictor, pattern, tableMetadata);	// Set other parameters
-			}
-		}
-	}
-	
 }
+	

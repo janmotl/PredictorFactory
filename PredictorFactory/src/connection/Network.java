@@ -94,8 +94,11 @@ public final class Network {
 			indentifierLengthMax = Math.min(metaData.getMaxColumnNameLength(), metaData.getMaxTableNameLength());
 			columnMax = metaData.getMaxColumnsInTable();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
+			System.exit(1); // Likely wrong credentials -> gracefully close the application
 		}
+		
+		logger.info("#### Successfully connected to the database ####");
 		
 		// Set other settings
 		setting.indentifierLengthMax = indentifierLengthMax;
@@ -121,6 +124,8 @@ public final class Network {
 		setting.typeTimestamp = driverProperty.typeTimestamp;
 		setting.typeVarchar = driverProperty.typeVarchar;
 		setting.withData = "yes".equals(driverProperty.withData);
+		setting.limitSyntax = driverProperty.limitSyntax;
+		setting.randomCommand = driverProperty.randomCommand;
 		
 		setting.inputSchema = databaseProperty.inputSchema;
 		setting.outputSchema = databaseProperty.outputSchema;
@@ -134,11 +139,12 @@ public final class Network {
 		
 		
 		// QC input and output schemas
+		// THIS IS A BAD PLACE FOR DOING IT AS SCHEMAS MAY NOT BE AVAILABLE
 		SortedSet<String> schemaSet = Meta.collectSchemas(setting, setting.database);
-		if (!schemaSet.contains(setting.inputSchema)) {
+		if (setting.inputSchema != null && !schemaSet.contains(setting.inputSchema)) {
 			logger.warn("The input schema \"" + setting.inputSchema + "\" doesn't exist in \"" + setting.database + "\" database.");
 		}
-		if (!schemaSet.contains(setting.outputSchema)) {
+		if (setting.inputSchema != null && !schemaSet.contains(setting.outputSchema)) {
 			logger.warn("The output schema \"" + setting.outputSchema + "\" doesn't exist in \"" + setting.database + "\" database.");
 		}
 		

@@ -2,19 +2,18 @@ package connection;
 
 import java.util.List;
 
-import org.testng.Assert;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import run.Setting;
 
 public class NetworkTest {
-	private Setting setting;
+	private Setting setting = new Setting();
 	
-	@BeforeTest
+	@Before
 	public void connectToDatabase(){
-		setting = new Setting();
-		setting = Network.getConnection(setting, "MySQL FIT", "financial");
+		setting = Network.getConnection(setting, "MariaDB", "financial");
 	}
 
 	// Would fail on Oracle and other databases when "from dual" syntax is required

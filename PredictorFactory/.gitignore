@@ -4,18 +4,25 @@
    
 # OS generated files #
 ######################
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db 
-Desktop.ini
+.DS_Store		# OS X - folder personalisation #
+._*			# OS X - data fork #
+.Spotlight-V100		# OS X - Spotlight index #
+ehthumbs.db		# Windows - thumbnail cache of Media Center #
+Thumbs.db 		# Windows - thumbnail cache #
+Desktop.ini		# Windows - folder personalisation #
 
-# Other #
+# Eclipse plugins #
+###################
+.codepro/		# Code Pro #
+
+# Project related #
 #########
-bin/
-log/
-*.bkp
+bin/			# Not necessary to create the directory with the bitecode #
+doc/			# Not necessary #
+log/			# May contain sensitive information #
+src/benchmark		# This is a directory for evaluation of Predictor Factory #
+pattern_bkp		# Used only during the development #
+pattern_sandbox		# Contains unfinished patterns #
+*.bkp			# Ad hoc backup files #
 local.properties
+CopyOf*			# Ad hoc development files #

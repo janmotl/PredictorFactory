@@ -11,9 +11,10 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 
+import metaInformation.MetaOutput.OutputTable;
+
 import org.apache.log4j.Logger;
 
-import propagation.MetaOutput.OutputTable;
 import run.Setting;
 import utility.Meta.Table;
 import connection.Network;
@@ -28,9 +29,9 @@ public class Propagation{
 	// THE SEARCH DEBTH SHOULD BE LIMITED
 	// SHOULD CREATE SEVERAL tables if a cycle is present. So far only the farthest table is duplicated. 
 	// PROPAGATED TABLES SHOULD HAVE BEEN INDEXED
-	public static SortedMap<String, OutputTable> propagateBase(Setting setting, SortedMap<String, Table> metaInput) {
+	public static SortedMap<String, OutputTable> propagateBase(Setting setting, SortedMap<String, Table> inputMeta) {
 		// Initialize
-		Set<String> notPropagated = metaInput.keySet();		// Set of tables to propagate
+		Set<String> notPropagated = inputMeta.keySet();		// Set of tables to propagate
 		Set<String> propagated = new HashSet<String>(); 	// Set of propagated tables
 		propagated.add(setting.baseTable);
 		
@@ -50,7 +51,7 @@ public class Propagation{
 		metaOutput.put(setting.baseTable, base);	//... into tableMetadata.
 		
 		// Call BFS
-		metaOutput = bfs(setting, 1, propagated, notPropagated, metaInput, metaOutput);
+		metaOutput = bfs(setting, 1, propagated, notPropagated, inputMeta, metaOutput);
 		
 		// Remove base table (as we want a map of propagated tables)
 		metaOutput.remove(setting.baseTable);
@@ -66,9 +67,10 @@ public class Propagation{
 	// Breadth First Search (BFS)
 	// Loop over the current level twice. 
 	// The first loop processes all the nodes, the second loop recurses into all the non-leaf nodes. 
-	private static SortedMap<String, OutputTable> bfs(Setting setting, int depth, Set<String> propagated, Set<String> notPropagated, SortedMap<String, Table> metaInput, SortedMap<String, OutputTable> metaOutput) {
+	private static SortedMap<String, OutputTable> bfs(Setting setting, int depth, Set<String> propagated, Set<String> notPropagated, SortedMap<String, Table> inputMeta, SortedMap<String, OutputTable> metaOutput) {
 
 		// Initialization
+		String sql = "";
 		Set<String> newlyPropagated = new HashSet<String>();		// Set of tables propagated at the current depth
 		Set<String> stillNotPropagated = new HashSet<String>(notPropagated);	// Set of tables to propagate
 
@@ -76,7 +78,7 @@ public class Propagation{
 			for (String table2 : notPropagated) {	
 				
 				// Get time columns (from table2)
-				SortedSet<String> timeSet = metaInput.get(table2).timeColumn;
+				SortedSet<String> timeSet = inputMeta.get(table2).timeColumn;
 				
 				// Get map of relationships between table1 and table2
 				SortedMap<String, String> idMap = new TreeMap<String, String>(); 
@@ -130,7 +132,8 @@ public class Propagation{
 							hashMap.put("@dateColumn", date);
 							
 							// Make new table
-							isPropagated =  SQL.propagateID(setting, hashMap, true); // bottom bounded
+							sql = SQL.propagateID(setting, hashMap, true); // bottom bounded
+							isPropagated = Network.executeUpdate(setting.connection, sql);
 							
 							// Log the result
 							if (isPropagated) {
@@ -151,13 +154,14 @@ public class Propagation{
 						
 						if (isEmpty) {
 							for (String tableCheck : tableCheckList) {
-								Network.executeUpdate(setting.connection, SQL.getDropTable(setting, tableCheck));
+								SQL.getDropTable(setting, tableCheck);
 							}
 							
 							outputTable = trim(setting, table2, metaOutput.size());
 							hashMap.put("@outputTable", outputTable);
 							hashMap.remove("@dateColumn");	
-							isPropagated =  SQL.propagateID(setting, hashMap, true);
+							sql =  SQL.propagateID(setting, hashMap, true);
+							isPropagated = Network.executeUpdate(setting.connection, sql);
 						}
 					}
 					
@@ -165,7 +169,8 @@ public class Propagation{
 			
 					// DateList is empty. Or the cardinality is 1. In that case propagate without the date constrain.
 					if (timeSet.isEmpty() || isIdUnique) {	
-						isPropagated =  SQL.propagateID(setting, hashMap, true);
+						sql =  SQL.propagateID(setting, hashMap, true);
+						isPropagated = Network.executeUpdate(setting.connection, sql);
 					} 
 			
 					// Evaluate
@@ -179,12 +184,15 @@ public class Propagation{
 						table.propagatedName = outputTable;
 						table.isUnique = SQL.isUnique(setting, outputTable, false);
 						table.propagationDate = hashMap.get("@dateColumn");
+						table.propagationOrder = metaOutput.size();
+						table.sql = sql;
 						
-						table.timeColumn = metaInput.get(table2).timeColumn;
-						table.nominalColumn = metaInput.get(table2).nominalColumn;
-						table.numericalColumn = metaInput.get(table2).numericalColumn;
-						table.idColumn = metaInput.get(table2).idColumn;
-						table.relationship = metaInput.get(table2).relationship;
+						table.timeColumn = inputMeta.get(table2).timeColumn;
+						table.nominalColumn = inputMeta.get(table2).nominalColumn;
+						table.numericalColumn = inputMeta.get(table2).numericalColumn;
+						table.idColumn = inputMeta.get(table2).idColumn;
+						table.relationship = inputMeta.get(table2).relationship;
+						table.uniqueList = inputMeta.get(table2).uniqueList;
 						
 						List<String> path = new ArrayList<String>(metaOutput.get(table1).propagationPath); // Add copy of the propagation path from table1...
 						path.add(metaOutput.get(table1).originalName); 	//... and add table1 name...
@@ -209,10 +217,10 @@ public class Propagation{
 		
 		// Otherwise go a level deeper.
 		logger.info("#### Finished propagation at depth: " + depth + " ####");
-		return bfs(setting, ++depth, newlyPropagated, stillNotPropagated, metaInput, metaOutput);		
+		return bfs(setting, ++depth, newlyPropagated, stillNotPropagated, inputMeta, metaOutput);		
 	}
 	
-	// Trim the length of the table to the length permitted by the database
+	// Trim the length of a table name to the length permitted by the database
 	// but make sure the name is unique.
 	private static String trim(Setting setting, String outputTable, int counter) {
 		outputTable = setting.propagatedPrefix + outputTable;

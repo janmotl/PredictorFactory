@@ -14,6 +14,7 @@ import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 
+import connection.SQL;
 import run.Setting;
 import utility.Meta;
 import utility.Meta.Table;
@@ -25,15 +26,12 @@ public class MetaInput {
 	// Logging
 	public static final Logger logger = Logger.getLogger(MetaInput.class.getName());
 
-	
-	// Map of {tableName, tableData}
-	public static SortedMap<String, Table> tableMap = new TreeMap<String, Table>();
-	
 
 	// Return map of tables in the input schema
 	public static SortedMap<String, Table> getMetaInput(Setting setting) {
 		
 		// Initialization
+		SortedMap<String, Table> tableMap = new TreeMap<String, Table>(); // Map of {tableName, tableData}
 		String database = setting.database;
 		String schema = setting.inputSchema;
 		
@@ -41,10 +39,17 @@ public class MetaInput {
 		getDataTypes(setting);
 		
 		// What catalogs are available (useful for typo detection and access right debugging).
+		// Logs a warning if "setting.database" is not present in the database.
 		getCatalogList(setting);
 				
 		// Get tables
 		SortedSet<String> tableSet = utility.Meta.collectTables(setting, database, schema);
+		
+		// Validate that targetTable is in tableSet
+		// SHOULD GRACEFULY TERMINATE IF ERROR HAPPENS. Throw invalid argument exception?
+		if (!tableSet.contains(setting.targetTable)) {
+			logger.error("'" + setting.targetTable + "' table is not present in '" + setting.database + "' database.");
+		}
 		
 		// Respect table blacklist
 		if (setting.blackListTable != null) {
@@ -66,7 +71,8 @@ public class MetaInput {
 		}
 					
 		// Collect columns and relationships
-		// I could have collected all the metadata at schema level. The runtime would be faster.
+		// I could have collected all the metadata at schema level. The runtime would be faster,
+		// because just one query would be performed (instead of making a unique query for each table).
 		// But implementation would be slightly more complex.
 		for (String tableName : tableMap.keySet()) {
 			
@@ -80,8 +86,7 @@ public class MetaInput {
 					columnMap.remove(blackTableColumn.get(1));
 				}
 			}
-			
-			
+						
 			// Store relationships
 			Table tableData = tableMap.get(tableName);
 			tableData.relationship = collectRelationships(setting, database, schema, tableName);
@@ -98,13 +103,32 @@ public class MetaInput {
 			
 			// Store numericalColumn, nominalColumn and timeColumn
 			tableData = Meta.categorizeColumns(tableData, columnMap, tableName);
+			
+			// If we are performing classification, set target column to nominal.
+			// This is useful, since integer column can be used to signal the class.
+			// The minimal purpose: we want to get unique values in the target column.
+			if ("classification".equals(setting.task) && setting.targetTable.equals(tableName)) {
+				tableData.nominalColumn.add(setting.targetColumn);
+				tableData.numericalColumn.remove(setting.targetColumn);
+			}
+
+			// Get distinct values for each nominal column. 
+			// The unique values will be used in patterns like "WoE" or "Existential count".
+			for (String columnName : tableData.nominalColumn) {
+				tableData.uniqueList.put(columnName, SQL.getUniqueRecords(setting, tableName, columnName, true));
+			}
+		
 		}
 		
 		// Do not use targetColumn as a predictor. 
 		// HOWEVER, TARGET COLUMN SHOULD BE CONSIDERED IF DATE COLUMN IS USED!
-		tableMap.get(setting.targetTable).nominalColumn.remove(setting.targetColumn);	// CAN RETURN NULL POINTER EXCEPTION
-		tableMap.get(setting.targetTable).numericalColumn.remove(setting.targetColumn);
-		tableMap.get(setting.targetTable).timeColumn.remove(setting.targetColumn);
+		if (tableMap.containsKey(setting.targetTable)) {
+			tableMap.get(setting.targetTable).nominalColumn.remove(setting.targetColumn);	
+			tableMap.get(setting.targetTable).numericalColumn.remove(setting.targetColumn);
+			tableMap.get(setting.targetTable).timeColumn.remove(setting.targetColumn);
+		} else {
+			logger.warn("The target table was not found among the traversed tables. Check your blacklist/whitelist.");
+		}
 		
 		// Output quality control
 		int relationshipCount = 0;
@@ -157,7 +181,7 @@ public class MetaInput {
 			}
 			
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 		
 		// Output Quality Control
@@ -210,7 +234,7 @@ public class MetaInput {
 				primaryKeyList.add(rs.getString("COLUMN_NAME"));
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 		
 		// If the table contains a PK composed of exactly one column, return the name of the column 
@@ -242,7 +266,7 @@ public class MetaInput {
 	}
 	
 	// 3) Get list of supported data types
-	public static void getDataTypes(Setting setting) {
+	private static void getDataTypes(Setting setting) {
 		
 		// Initialization
 		List<List<String>> dataTypeList = new ArrayList<List<String>>();
@@ -259,7 +283,7 @@ public class MetaInput {
 				dataTypeList.add(dataType);
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 			
 		// Log the result
@@ -267,7 +291,7 @@ public class MetaInput {
 	}
 	
 	// 4) Get catalog list
-	public static void getCatalogList(Setting setting) {
+	private static void getCatalogList(Setting setting) {
 		
 		// Initialization
 		List<String> catalogList = new ArrayList<String>();
@@ -281,7 +305,7 @@ public class MetaInput {
 				catalogList.add(rs.getString("TABLE_CAT"));
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 					
 		// And check that the database defined in the configuration actually exists

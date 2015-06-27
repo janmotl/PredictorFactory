@@ -4,22 +4,40 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
+
+import run.Setting;
 
 public class Parser {
-
+	// Logging
+	public static final Logger logger = Logger.getLogger(Parser.class.getName());
+	
+	// Transform SELECT...FROM... into SELECT...INTO...FROM...
+	// This transformation is convenient only for MS SQL SERVER/ACCESS
 	public static String addIntoClause(String sql) {
 		// Initialization
 	    Pattern pattern = Pattern.compile("(?i)[^@\\S*]from"); // case insensitive, not with @ at the beginning
 	    Matcher matcher = pattern.matcher(sql);
 	    int pos = 0;
+	    boolean flagFound = false;
+	    int firstPos = -1;
 	    
 	    // Check candidates one by one until you find an acceptable candidate
 	    while (matcher.find()) {
 	    	pos = matcher.start();
-	    	if (isFromClause(sql.substring(0, pos))) break; // We found the FROM term starting at position "pos".
-	        System.out.print("Start index: " + matcher.start());
-	        System.out.print(" End index: " + matcher.end());
-	        System.out.println(" Found: " + matcher.group());
+	    	if (firstPos == -1) {
+	    		firstPos = pos;
+	    	}
+	    	if (isFromClause(sql.substring(0, pos))) {
+	    		flagFound = true;
+	    		break; // We found the FROM term starting at position "pos".
+	    	}
+	    }
+	    
+	    // If undecided, pick the first found select
+	    // UGLY HACK FOR DEALING WITH CONFUSING: (...) UNION ALL (...)
+	    if (!flagFound) {
+	    	pos = firstPos;
 	    }
 		
 	    // Return the result
@@ -36,6 +54,7 @@ public class Parser {
 	// Simply test that the count of quotes is even.
 	// 3) Ignore when it 
 	// Note: beware of comments in the statement. If there is a comment, the detection doesn't work
+	// Note: beware of unnecessary brackets (like wrapping whole SQL in brackets)
 	private static boolean isFromClause(String sql) {
 		int count;
 
@@ -58,5 +77,27 @@ public class Parser {
 		if (count == 1) return false;
 
 		return true;
+	}
+
+	// Limit the count of returned rows
+	public static String limitResultSet(Setting setting, String sql, int rowCount) {
+			
+		// Set top
+		if ("top".equals(setting.limitSyntax)) {
+			sql = sql.replaceFirst("(?i)SELECT", "SELECT TOP " + rowCount); // Case insensitive
+		}
+		
+		// Set limit
+		if ("limit".equals(setting.limitSyntax)) {
+			sql = sql + " LIMIT " + rowCount + " ";	// We have to add the space at the end because of "union all"
+		}
+		
+		// Set rownum
+		// WORKS ONLY IF WHERE CONDITION IS ALREADY PRESENT
+		if ("rownum".equals(setting.limitSyntax)) {
+			sql = sql.replaceAll("(?i)WHERE$", "WHERE ROWNUM <" + rowCount); // Case insensitive + the last occurrence
+		}
+	
+		return sql;
 	}
 }

@@ -1,11 +1,16 @@
+/**
+ * The main class of Predictor Factory.
+ */
 package run;
 
 import java.util.SortedMap;
 
+import metaInformation.MetaOutput;
+import metaInformation.MetaOutput.OutputTable;
+
 import org.apache.log4j.Logger;
 
 import propagation.Propagation;
-import propagation.MetaOutput.OutputTable;
 import utility.Meta.Table;
 import connection.Network;
 import connection.SQL;
@@ -15,6 +20,8 @@ public class Launcher{
 	// Logging
 	public static final Logger logger = Logger.getLogger(Launcher.class.getName());
 
+	
+	// Where everything starts and ends...
 	public static void main(String[] arg){
 		
 		logger.info("#### Predictor Factory was initialized ####");
@@ -22,16 +29,19 @@ public class Launcher{
 		
 		// Database setting
 		Setting setting = new Setting();
-		String connectionProperty = "PostgreSQL";	// Host identification as specified in resources/connection.xml
-		String databaseProperty = "ftp";		// Dataset identification as specified in resources/database.xml 
+		String connectionProperty = "MariaDB";	// Host identification as specified in resources/connection.xml
+		String databaseProperty = "financial";		// Dataset identification as specified in resources/database.xml 
 		
 		// Read command line parameters if they are present (and overwrite defaults).
+		if (arg.length>2) { 
+			throw new IllegalArgumentException("The valid arguments are: connectionName databaseName.");
+		}
 		if (arg.length>0) {
-		 connectionProperty = arg[0];
-		 databaseProperty = arg[1];
+			connectionProperty = arg[0];
+			databaseProperty = arg[1];
 		}
 
-		// Perform the initial control 
+		// Validate configuration 
 		InputQualityControl.validateConfiguration(setting);
 		
 		// Connect to the server
@@ -39,38 +49,35 @@ public class Launcher{
 		
 		// Collect information about tables, columns and relations in the database
 		SortedMap<String, Table> inputMeta = metaInformation.MetaInput.getMetaInput(setting);
-						
+		logger.info("#### Finished collecting metadata ####");
+		
 		// Remove all the tables from the previous run
 		SQL.tidyUp(setting);
 		logger.info("#### Finished cleaning ####");
 		
-		// Setup predictor journal
+		// Setup journal - log of all predictors
 		Journal journal = new Journal(setting);
 		
 		// Make base table
 		SQL.getBase(setting);
-		SQL.getRandomSample(setting);
+		SQL.getSubSample(setting);
 		
 		// Propagate base table
 		SortedMap<String, OutputTable> outputMeta = Propagation.propagateBase(setting, inputMeta);
+		MetaOutput.exportPropagationSQL(outputMeta);
 		logger.info("#### Finished base propagation into " + outputMeta.size() +  " tables ####");
 						
 		// Loop over all patterns in pattern directory
-		featureExtraction.Aggregation.loopPatterns(setting, journal, outputMeta);
+		featureExtraction.Aggregation.aggregate(setting, journal, outputMeta);
 				
 		// Make MainSample
 		SQL.getMainSample(setting, journal.getJournal());
+		logger.info("#### Finished making the table of predictors ####");
 		
-		/////////////// Benchmark stuff /////////////
-		logger.info("#### Starting the benchmark ####");
+		// Write the status into "log" table
 		long stopTime = System.currentTimeMillis();
 	    long elapsedTime = stopTime - startTime;
-	    connection.Network.executeUpdate(setting.connection, "drop table if exists " + setting.outputSchema + ".\"ms_" + setting.inputSchema + "\"");
-	    connection.Network.executeUpdate(setting.connection, "create table " + setting.outputSchema + ".\"ms_" + setting.inputSchema +"\" as select * from " + setting.outputSchema + ".\"mainSample\"");
-	    connection.Network.executeUpdate(setting.connection, "drop table if exists " + setting.outputSchema + ".\"j_" + setting.inputSchema + "\"");
-	    connection.Network.executeUpdate(setting.connection, "create table " + setting.outputSchema + ".\"j_" + setting.inputSchema +"\" as select * from " + setting.outputSchema + ".\"journal\"");
-	    connection.Network.executeUpdate(setting.connection, "insert into " + setting.outputSchema + ".log (schema_name, runtime) values ('" + setting.inputSchema + "', " + elapsedTime + ")");
-		///// END Benchmark stuff //////////
+	    SQL.logRunTime(setting, elapsedTime);
 		
 		// Be nice toward the server and close the connection
 		Network.closeConnection(setting);
