@@ -21,8 +21,8 @@ bin/			# Not necessary to create the directory with the bitecode #
 doc/			# Not necessary #
 log/			# May contain sensitive information #
 src/benchmark		# This is a directory for evaluation of Predictor Factory #
-pattern_bkp		# Used only during the development #
-pattern_sandbox		# Contains unfinished patterns #
+pattern_bkp/		# Used only during the development #
+pattern_sandbox/	# Contains unfinished patterns #
 *.bkp			# Ad hoc backup files #
 local.properties
 CopyOf*			# Ad hoc development files #
