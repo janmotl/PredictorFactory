@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Time frequency</name>
+	<description>
+		Count of records divided by duration.
+	</description>
+	<example>
+		Count of visited pages divided by session duration (regularized to avoid division by zero).
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-06-01</date>
+	<code compatibility="PostgreSQL">SELECT @baseId
+			     , @baseDate
+			     , @baseTarget
+			     , (1.0 * count(*)) / (max(@timeColumn) - min(@timeColumn) + 1) AS "@columnName"
+			FROM @propagatedTable
+			GROUP BY @baseId, @baseDate, @baseTarget
+	</code>
+	<cardinality>n</cardinality>
+</pattern>
