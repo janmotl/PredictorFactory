@@ -29,7 +29,7 @@ public class Launcher{
 		
 		// Database setting
 		Setting setting = new Setting();
-		String connectionProperty = "MariaDB";	// Host identification as specified in resources/connection.xml
+		String connectionProperty = "Azure";	// Host identification as specified in resources/connection.xml
 		String databaseProperty = "financial";		// Dataset identification as specified in resources/database.xml 
 		
 		// Read command line parameters if they are present (and overwrite defaults).
