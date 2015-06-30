@@ -1,0 +1,4 @@
+# Ignore all content of this directory #
+########################################
+
+[^.]*
