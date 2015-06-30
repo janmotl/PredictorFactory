@@ -4,7 +4,7 @@ package featureExtraction;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import junit.framework.Assert;
+import org.junit.Assert; 
 
 import org.junit.Test;
 

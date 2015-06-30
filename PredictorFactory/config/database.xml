@@ -11,6 +11,7 @@
     <database name="cs_large" inputSchema="cs_large" outputSchema="predictor_factory" targetTable="target_churn" targetId="ACC_KEY" targetDate="date_horizon" targetColumn="target_churn" task="classification"/>
     <database name="classicmodels" inputSchema="classicmodels" outputSchema="predictor_factory" targetTable="payments" targetId="checkNumber" targetDate="paymentDate" targetColumn="amount" task="regression"/>
     <database name="employee" inputSchema="employee" outputSchema="predictor_factory" targetTable="salaries" targetId="emp_no" targetDate="from_date" targetColumn="salary" task="regression"/>
+    <database name="SAS" inputSchema="INPUT" outputSchema="OUTPUT" targetTable="LOAN" targetId="account_id" targetDate="date" targetColumn="status" task="classification"/>
     <database name="financial" inputSchema="financial" outputSchema="predictor_factory" targetTable="loan" targetId="account_id" targetDate="date" targetColumn="status" blackListTable="result" task="classification"/>
     <database name="financial_bin" inputSchema="financial_bin" outputSchema="predictor_factory" targetTable="loan" targetId="account_id" targetDate="date" targetColumn="target" blackListTable="result" blackListColumn="loan.status" task="classification"/>
     <database name="financial_missing_target" inputSchema="financial_missing_target" outputSchema="predictor_factory" targetTable="loan_missing" targetId="account_id" targetDate="date" targetColumn="status" blackListTable="result" task="classification"/>

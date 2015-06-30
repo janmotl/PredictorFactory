@@ -13,23 +13,31 @@ public final class Setting {
 	public int columnMax;						// The maximal count of columns in a table
 	public String database;						// The default database on the server
 	public String databaseVendor;				// MySQL, MS SQL, PostgreSQL...
-	public String quoteMarks;					// Characters for entity escaping
-	public boolean isCreateTableAsCompatible;	// Use "create table as" syntax?
-	public boolean isSchemaCompatible;			// Use "database.schema.table" or "schema.table"?
+	public String quoteAliasOpen;				// column as "COLUMN"
+	public String quoteAliasClose;				// column as "COLUMN"
+	public String quoteEntityOpen;				// Characters for entity escaping
+	public String quoteEntityClose;				// Characters for entity escaping
+	public boolean supportsCreateTableAs;		// Use "create table as" syntax?
+	public boolean supportsWithData;			// MonetDB syntax: "create table t2 as select * from t1 WITH DATA"
+	public boolean supportsCatalogs;			// Use "database.schema.table" or "schema.table"?
+	public boolean supportsSchemas;				// Use "database.schema.table" or "database.table"?
 	public String dateAddSyntax;				// Syntax for changing a date by a given amount
 	public String dateAddMonth;					// Leap year acknowledging syntax
 	public String dateDiffSyntax;				// Syntax for difference of two dates
 	public String dateToNumber;					// Whenever we need to perform statistical operations on the time 
 	public String insertTimestampSyntax;		// Syntax for inserting a timestamp into journal
+	public String limitSyntax;					// Limit the count of returned row to a manageable limit
+	public String indexNameSyntax;				// Use "idx_table_column" or "column"?
 	public String stdDevCommand;				// MS SQL is using STDEV in place of STDDEV_SAMP
 	public String charLengthCommand;			// MS SQL is using LEN in place of CHAR_LENGTH
+	public String randomCommand;				// Command to use for generating a decimal number in range 0..1
 	public String typeVarchar;					// Data types are used for journal table definition
 	public String typeDecimal;					// Data types are used for journal table definition
 	public String typeInteger;					// Data types are used for journal table definition
 	public String typeTimestamp;				// Data types are used for journal table definition
-	public boolean withData;					// MonetDB syntax: "create table t2 as select * from t1 WITH DATA"
-	public String limitSyntax;					// Limit the count of returned row to a manageable limit
-	public String randomCommand;				// Command to use for generating a decimal number in range 0..1
+
+
+
 	
 	// Setup related	
 	public String targetId;			// The id column (like IdCustomer). Used only for base construction.

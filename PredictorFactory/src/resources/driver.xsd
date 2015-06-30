@@ -8,12 +8,15 @@
               <extension base="string">
                 <attribute type="string" name="name" use="required"/>
                 <attribute type="string" name="driverClass" use="required"/>
-                <attribute type="short" name="defaultPort" use="required"/>
+                <attribute type="unsignedShort" name="defaultPort" use="required"/>
                 <attribute type="string" name="urlPrefix" use="required"/>
                 <attribute type="string" name="dbNameSeparator" use="required"/>
-                <attribute type="string" name="quoteMarks" use="required"/>
-                <attribute type="string" name="createTableAsCompatible" use="required"/>
-                <attribute type="string" name="schemaCompatible" use="required"/>
+                <attribute type="string" name="quoteAliasOpen" use="optional"/>
+                <attribute type="string" name="quoteAliasClose" use="optional"/>
+                <attribute type="string" name="quoteEntityOpen" use="optional"/>
+                <attribute type="string" name="quoteEntityClose" use="optional"/>
+                <attribute type="boolean" name="supportsCreateTableAs" use="required"/>
+                <attribute type="boolean" name="supportsWithData" use="required"/>
                 <attribute type="string" name="dateAddSyntax" use="optional"/>
                 <attribute type="string" name="dateAddMonth" use="required"/>
                 <attribute type="string" name="dateDiffSyntax" use="required"/>
@@ -25,9 +28,10 @@
                 <attribute type="string" name="typeInteger" use="optional"/>
                 <attribute type="string" name="typeDecimal" use="optional"/>
                 <attribute type="string" name="typeTimestamp" use="optional"/>
-                <attribute type="string" name="withData" use="required"/>
                 <attribute type="string" name="limitSyntax" use="required"/>
+                <attribute type="string" name="indexNameSyntax" use="optional"/>
                 <attribute type="string" name="randomCommand" use="required"/>
+                <attribute type="string" name="testQuery" use="optional"/>
               </extension>
             </simpleContent>
           </complexType>

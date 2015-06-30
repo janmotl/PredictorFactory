@@ -23,8 +23,9 @@ public class SQLTest {
 		setting.targetTable = "loan";
 		setting.sampleTable = "mainSample";
 		setting.baseTable = "base";
-		setting.isCreateTableAsCompatible = true; 
-		setting.quoteMarks ="``";
+		setting.supportsCreateTableAs = true; 
+		setting.quoteEntityOpen ="`";
+		setting.quoteEntityClose ="`";
 	  
 		// Parameters
 		Map<String, String> hashMap = new HashMap<String, String>();
@@ -44,7 +45,7 @@ public class SQLTest {
   public void addCreateTableAs1() {
 	  	// Setting
 		Setting setting = new Setting();
-		setting.isCreateTableAsCompatible = false; 
+		setting.supportsCreateTableAs = false; 
 		
 		// Test user variable compliance (tolerance to at-sign). Important as I am using at-signs in patterns.
 		String result = SQL.addCreateTableAs(setting, "SELECT @column FROM table");
@@ -55,7 +56,7 @@ public class SQLTest {
   public void addCreateTableAs2() {
 	  	// Setting
 		Setting setting = new Setting();
-		setting.isCreateTableAsCompatible = false; 
+		setting.supportsCreateTableAs = false; 
 		
 		// Test ignorance of a table called "from". This is important in the maintable assembly.
 		String result = SQL.addCreateTableAs(setting, "SELECT [from] FROM table");
@@ -66,7 +67,7 @@ public class SQLTest {
   public void addCreateTableAs3() {
 	  	// Setting
 		Setting setting = new Setting();
-		setting.isCreateTableAsCompatible = false; 
+		setting.supportsCreateTableAs = false; 
 		
 		// Test for case insensitivity. As the SQL Keywords are case-insensitive in SQL 92.
 		String result = SQL.addCreateTableAs(setting, "SELECT col FrOm table");
@@ -78,7 +79,7 @@ public class SQLTest {
   public void addCreateTableAs4() {
 	  	// Setting
 		Setting setting = new Setting();
-		setting.isCreateTableAsCompatible = false; 
+		setting.supportsCreateTableAs = false; 
 		
 		// Test with subquery in the select part. 
 		String result = SQL.addCreateTableAs(setting, "select col1 `col1`, (SELECT max(col2) from t2) `col2` from t1;");
@@ -89,7 +90,7 @@ public class SQLTest {
   public void addCreateTableAs5() {
 	  	// Setting
 		Setting setting = new Setting();
-		setting.isCreateTableAsCompatible = false; 
+		setting.supportsCreateTableAs = false; 
 		
 		// Test that it accepts line breaks instead of spaces
 		String result = SQL.addCreateTableAs(setting, "select col1 \nfrom\nt1");
@@ -104,7 +105,7 @@ public class SQLTest {
   public void addCreateTableAs6() {
 	  	// Setting
 		Setting setting = new Setting();
-		setting.isCreateTableAsCompatible = false; 
+		setting.supportsCreateTableAs = false; 
 		
 		// Test user variables without escaping. This is important in mainsample creation.
 		String result = SQL.addCreateTableAs(setting, "SELECT t1.@CLIENT_FROM_DATE FROM t1");
@@ -116,7 +117,7 @@ public class SQLTest {
   public void addCreateTableAs7() {
 	  	// Setting
 		Setting setting = new Setting();
-		setting.isCreateTableAsCompatible = false; 
+		setting.supportsCreateTableAs = false; 
 		
 		// Test that it can deal with union all. This is important in sampling of base table.
 		String result = SQL.addCreateTableAs(setting, "SELECT c1 FROM t1 UNION ALL SELECT c1 FROM t2");
@@ -128,7 +129,7 @@ public class SQLTest {
   public void addCreateTableAs8() {
 	  	// Setting
 		Setting setting = new Setting();
-		setting.isCreateTableAsCompatible = false; 
+		setting.supportsCreateTableAs = false; 
 		
 		// Test that it can deal with union all in brackets
 		String result = SQL.addCreateTableAs(setting, "(SELECT c1 FROM t1) UNION ALL (SELECT c1 FROM t2)");

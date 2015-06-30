@@ -29,8 +29,8 @@ public class Launcher{
 		
 		// Database setting
 		Setting setting = new Setting();
-		String connectionProperty = "MariaDB";	// Host identification as specified in resources/connection.xml
-		String databaseProperty = "financial";		// Dataset identification as specified in resources/database.xml 
+		String connectionProperty = "SAS";	// Host identification as specified in resources/connection.xml
+		String databaseProperty = "SAS";		// Dataset identification as specified in resources/database.xml 
 		
 		// Read command line parameters if they are present (and overwrite defaults).
 		if (arg.length>2) { 
@@ -45,7 +45,7 @@ public class Launcher{
 		InputQualityControl.validateConfiguration(setting);
 		
 		// Connect to the server
-		setting = Network.getConnection(setting, connectionProperty, databaseProperty);
+		setting = Network.openConnection(setting, connectionProperty, databaseProperty);
 		
 		// Collect information about tables, columns and relations in the database
 		SortedMap<String, Table> inputMeta = metaInformation.MetaInput.getMetaInput(setting);

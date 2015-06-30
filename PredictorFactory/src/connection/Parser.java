@@ -82,17 +82,29 @@ public class Parser {
 	// Limit the count of returned rows
 	public static String limitResultSet(Setting setting, String sql, int rowCount) {
 			
-		// Set top
+		// Set top (MSSQL)
 		if ("top".equals(setting.limitSyntax)) {
 			sql = sql.replaceFirst("(?i)SELECT", "SELECT TOP " + rowCount); // Case insensitive
 		}
 		
-		// Set limit
+		// Set limit (PostgreSQL)
 		if ("limit".equals(setting.limitSyntax)) {
 			sql = sql + " LIMIT " + rowCount + " ";	// We have to add the space at the end because of "union all"
 		}
 		
-		// Set rownum
+		// Set obs (SAS)
+		// Applies the condition on the first word immediately after "FROM"
+		// Warning: it's a limit on the input, not on the output
+		if ("obs".equals(setting.limitSyntax)) {
+			Pattern pattern = Pattern.compile("(?i)\\b(.*FROM\\s+\\S+)(.*)");
+			Matcher matcher = pattern.matcher(sql);
+			
+			if (matcher.find()) {
+			    sql =  matcher.group(1) + "(obs=" + rowCount + ")" + matcher.group(2);
+			}
+		}
+		
+		// Set rownum (Oracle)
 		// WORKS ONLY IF WHERE CONDITION IS ALREADY PRESENT
 		if ("rownum".equals(setting.limitSyntax)) {
 			sql = sql.replaceAll("(?i)WHERE$", "WHERE ROWNUM <" + rowCount); // Case insensitive + the last occurrence

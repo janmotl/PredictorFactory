@@ -57,17 +57,33 @@ public class Meta {
 		// Initialization
 		SortedSet<String> schemaSet = new TreeSet<String>();
 		
-		// Query
-		if (!setting.isSchemaCompatible) {
-			// Schema-less databases
+		// If supports only catalogs (MySQL) -> get all catalogs
+		if (setting.supportsCatalogs && !setting.supportsSchemas) {
 			try (ResultSet rs = setting.connection.getMetaData().getCatalogs()) {
 				while (rs.next()) {
 					String schemaName = rs.getString("TABLE_CAT");
 					schemaSet.add(schemaName);
 				}
 			} catch (SQLException ignored) {}
-		} else {
-			// Get all schemas in the database
+		} 
+		
+		// If supports only schemas (SAS) -> get all schemas
+		if (!setting.supportsCatalogs && setting.supportsSchemas) {
+			try (ResultSet rs = setting.connection.getMetaData().getSchemas()) {
+				while (rs.next()) {
+					String schemaName = rs.getString("TABLE_SCHEM");
+					
+					if ("SAS".equals(setting.databaseVendor)) {
+						schemaName = schemaName.replace(" ", "");	// Remove space padding
+					}
+					
+					schemaSet.add(schemaName);
+				}
+			} catch (SQLException ignored) {}
+		} 
+		
+		// If supports catalogs and schemas -> get all schemas in the specified catalog
+		if (setting.supportsCatalogs && setting.supportsSchemas) {
 			try (ResultSet rs = setting.connection.getMetaData().getSchemas(database, "%")) {
 				while (rs.next()) {
 					String schemaName = rs.getString("TABLE_SCHEM");
@@ -78,7 +94,7 @@ public class Meta {
 
 		// QC schema count
 		if (schemaSet.isEmpty()) {
-			logger.warn("The count of available schemas in " + database + " is 0.");
+			logger.warn("The count of available schemas is 0.");
 		}
 		
 		return schemaSet;
@@ -86,11 +102,16 @@ public class Meta {
 	
 	// 1) Get all tables in the schema.
 	public static SortedSet<String> collectTables(Setting setting, String database, String schema) {
-		// If the database doesn't support schemas, use schema name as database name (java treats
-		// schema-less databases differently than SQL databases do)
-		if (!setting.isSchemaCompatible) {
+		// Deal with different combinations of catalog/schema support
+		// MySQL type
+		if (setting.supportsCatalogs && !setting.supportsSchemas) {
 			database = schema;
 			schema = null;
+		}
+		
+		// SAS type
+		if (!setting.supportsCatalogs && setting.supportsSchemas) {
+			database = null;
 		}
 				
 		// Initialization
@@ -102,6 +123,11 @@ public class Meta {
 
 			while (rs.next()) {
 				String tableName = rs.getString("TABLE_NAME");
+				
+				if ("SAS".equals(setting.databaseVendor)) {
+					tableName = tableName.replace(" ", "");	// Remove space padding
+				}
+				
 				tableSet.add(tableName);
 			}
 		} catch (SQLException ignored) {}
@@ -118,7 +144,7 @@ public class Meta {
 	public static SortedMap<String, Integer> collectColumns(Setting setting, String database, String schema, String table) {
 		// If the database doesn't support schemas, use schema name as database name (java treats
 		// schema-less databases differently than SQL databases do)
-		if (!setting.isSchemaCompatible) {
+		if (!setting.supportsCatalogs) {
 			database = schema;
 			schema = null;
 		}

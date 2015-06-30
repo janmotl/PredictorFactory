@@ -17,7 +17,7 @@ public class PropagationTest {
 	public void propagateBase() {
 		Setting setting = new Setting();
 
-		setting = Network.getConnection(setting, "MySQL", "financial");
+		setting = Network.openConnection(setting, "MySQL", "financial");
 		SortedMap<String, Table> metaInput = metaInformation.MetaInput.getMetaInput(setting);
 
 		// Run!

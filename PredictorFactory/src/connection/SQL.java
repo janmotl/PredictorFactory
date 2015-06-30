@@ -31,14 +31,14 @@ public final class SQL {
 	protected static String addCreateTableAs(Setting setting, String sql) {
 
 		// MSSQL syntax?
-		if (!setting.isCreateTableAsCompatible) {
+		if (!setting.supportsCreateTableAs) {
 			sql = Parser.addIntoClause(sql);
 		} else {
 			sql = "CREATE TABLE @outputTable AS " + sql;
 		}
 		
 		// MonetDB syntax?
-		if (setting.withData) {
+		if (setting.supportsWithData) {
 			sql = sql + " WITH DATA";
 		}
 
@@ -109,10 +109,12 @@ public final class SQL {
 		if (StringUtils.isBlank(setting.baseTarget)) {
 			throw new IllegalArgumentException("Base target is required");
 		}
-
-		String QL = setting.quoteMarks.substring(0, 1);
-		String QR = setting.quoteMarks.substring(1, 2);
 		
+		// Get escape characters
+	    String QL = setting.quoteEntityOpen;
+		String QR = setting.quoteEntityClose;
+		
+		// Escape the entities
 		sql = sql.replaceAll("\\@idColumn\\b", QL + setting.targetId + QR);	// There can be several numbered id columns
 		sql = sql.replace("@baseId", QL + setting.baseId + QR);
 		sql = sql.replace("@baseDate", QL + setting.baseDate + QR);
@@ -142,8 +144,9 @@ public final class SQL {
 	      throw new IllegalArgumentException("PropagatedTable is required");
 	    }
 
-	    String QL = setting.quoteMarks.substring(0, 1);
-	    String QR = setting.quoteMarks.substring(1, 2);
+	    // Get escape characters
+	    String QL = setting.quoteEntityOpen;
+		String QR = setting.quoteEntityClose;
 
 	    // Escape the entities
 	    sql = sql.replace("@propagatedTable", QL + predictor.propagatedTable + QR);
@@ -164,16 +167,17 @@ public final class SQL {
 			throw new IllegalArgumentException("Code is required");
 		}
 		
-		String QL = setting.quoteMarks.substring(0, 1);
-		String QR = setting.quoteMarks.substring(1, 2);
-	
+		// Get escape characters
+	    String QL = setting.quoteEntityOpen;
+		String QR = setting.quoteEntityClose;
+		
+		// Escape the entities
 		for (Map.Entry<String, String> field : fieldMap.entrySet()) {
 			sql = sql.replace(field.getKey(), QL + field.getValue() + QR);
 		}
 
 		return sql;
 	}
-	
 	
 	// Subroutine: Is the predictor categorical? Just ask the database.
 	// Note: The data type could be predicted from the pattern and pattern parameters. But the implemented 
@@ -199,7 +203,7 @@ public final class SQL {
 	
 	
 	// Drop command
-	public static boolean getDropTable(Setting setting, String outputTable) {
+	public static boolean dropTable(Setting setting, String outputTable) {
 		// Test parameters
 		if (StringUtils.isBlank(outputTable)) {
 			throw new IllegalArgumentException("Output table is required");
@@ -238,15 +242,23 @@ public final class SQL {
 
 		// Drop the tables
 		for (String table : dropSet) {
-			getDropTable(setting, table);
+			dropTable(setting, table);
 		}
 	}
 	
 	// Assembly create index
 	// WILL BE PRIVATE
 	public static String getIndex(Setting setting, String outputTable) {	
-		// The index name must be unique per schema (PostgreSQL). Do not escape outputTable in the index name.
-		String sql = "CREATE INDEX " + outputTable + "_idx ON @outputTable (@baseId)";  
+		
+		String sql;
+		
+		if ("column".equals(setting.indexNameSyntax)) {
+			// In SAS, the simple index must have a name of the column 
+			sql = "CREATE INDEX " + setting.baseId + " ON @outputTable (@baseId)";
+		} else {
+			// The index name must be unique per schema (PostgreSQL). Do not escape outputTable in the index name.
+			sql = "CREATE INDEX " + outputTable + "_idx ON @outputTable (@baseId)";
+		}
 		
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, outputTable);
@@ -274,7 +286,7 @@ public final class SQL {
 		if (resultList.isEmpty()) return 0;
 		
 		// Otherwise return the actual row count
-		return Integer.parseInt(resultList.get(0));
+		return (int)Double.parseDouble(resultList.get(0)); // SAS can return 682.0. SHOULD IMPLEMENT LIST<INTEGERS>.
 	}
 	
 	// Get count of non-null records
@@ -295,7 +307,7 @@ public final class SQL {
 		// If the table doesn't exist, the resultSet is empty. Return 0.
 		if (resultList.isEmpty()) return 0;
 		
-		return Integer.parseInt(resultList.get(0));
+		return (int)Double.parseDouble(resultList.get(0)); // SAS can return 682.0
 	}
 	
 	// Get the maximal cardinality of the table in respect to idColumn. If the cardinality is 1:1, 
@@ -317,8 +329,8 @@ public final class SQL {
 		
 		boolean result = Network.isResultSetEmpty(setting.connection, sql);
 		
-		if (result) logger.debug("# Column " + map.get("idColumn2") + " in " + map.get("inputTable") + " doesn't contain duplicates #");
-		else logger.debug("# Column " + map.get("idColumn2") + " in " + map.get("inputTable") + " CONTAINS duplicates #");
+		if (result) logger.trace("# Column " + map.get("idColumn2") + " in " + map.get("inputTable") + " doesn't contain duplicates #");
+		else logger.trace("# Column " + map.get("idColumn2") + " in " + map.get("inputTable") + " CONTAINS duplicates #");
 		
 		return result;
 	}
@@ -354,9 +366,9 @@ public final class SQL {
 	}
 
 	
-	// Return list of unique records in the column sorted descendingly based on record count.
+	// Return (unsorted) list of unique records.
 	// This function is useful for example for dummy coding of nominal attributes.
-	// NOTE: IT WOULD BE NICE IF THE COUNT OF RETURNED SAMPLES WAS LIMITED -> MODIFY Network.executeQuery
+	// NOTE: IT WOULD BE NICE IF THE COUNT OF RETURNED SAMPLES WAS SORTED AND LIMITED -> a subquery?
 	// NOTE: It would be nice, if a vector of occurrences was also returned (to skip rare configurations). 
 	public static List<String> getUniqueRecords(Setting setting, String tableName, String columnName, boolean useInputSchema) {
 		String table = "@outputTable";
@@ -364,11 +376,9 @@ public final class SQL {
 			table = "@inputTable";
 		}
 		
-		String sql = "SELECT @columnName " +
+		String sql = "SELECT DISTINCT @columnName " +
 					 "FROM " + table + " " + 
-					 "WHERE @columnName is not null " +
-					 "GROUP BY @columnName " +
-					 "ORDER BY count(*) DESC";
+					 "WHERE @columnName is not null";
 		
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, tableName);
@@ -393,7 +403,7 @@ public final class SQL {
 		// Create union 
 		for (int i = 0; i < targetValueList.size(); i++) {
 			sql = sql + "(" + Parser.limitResultSet(setting, "SELECT * FROM @outputSchema.base WHERE @baseTarget = '" + targetValueList.get(i) + "'\n", setting.sampleSize) + ")"; 
-			sql = sql + "UNION ALL \n";	// Add "union all" between all the selects.
+			sql = sql + " UNION ALL \n";	// Add "union all" between all the selects.
 		}
 		
 		// Finally, add unclassified records.
@@ -445,7 +455,7 @@ public final class SQL {
 					"from @outputTable t1 " +
 					"join ( " +
 						"select @column " + 
-							", avg(@baseTarget) average " +
+							", avg(@baseTarget) as average " +
 						"from @outputTable " +
 						"group by @column " +
 					") t2 " +
@@ -539,25 +549,25 @@ public final class SQL {
  			sql = ""
 				+ "select sum(chi2) "
 				+ "from ( "
-				+ "	select (expected.expected-measured.count) * (expected.expected-measured.count) / expected.expected chi2 "
+				+ "	select (expected.expected-measured.count) * (expected.expected-measured.count) / expected.expected AS chi2 "
 				+ "	from ( "
-				+ "		select expected_bin.count*expected_target.prob expected "
+				+ "		select expected_bin.count*expected_target.prob AS expected "
 				+ "			 , bin "
 				+ "			 , target "
 				+ "		from ( "
-				+ "			select @baseTarget target "
-				+ "				 , cast(count(*) as DECIMAL)/max(t2.nrow) prob "
+				+ "			select @baseTarget AS target "
+				+ "				 , cast(count(*) as DECIMAL)/max(t2.nrow) AS prob "
 				+ "			from @outputTable, ( "
-				+ "				select cast(count(*) as DECIMAL) nrow "
+				+ "				select cast(count(*) as DECIMAL) AS nrow "
 				+ "				from @outputTable "
 				+ "			) t2 "
 				+ "			GROUP BY @baseTarget "
 				+ "		) expected_target, ( "
-				+ "			select cast(count(*) as DECIMAL) count "
-				+ "				 , floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) bin " // Bin really into 10 bins.
+				+ "			select cast(count(*) as DECIMAL) AS count "
+				+ "				 , floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) AS bin " // Bin really into 10 bins.
 				+ "			from @outputTable, ( "
-				+ "					select (max(@column)-min(@column)) / 10 bin_width "
-				+ "						 , min(@column) min_value "
+				+ "					select (max(@column)-min(@column)) / 10 AS bin_width "
+				+ "						 , min(@column) AS min_value "
 				+ "					from @outputTable "
 				+ "				) t2 "
 				+ "			group by floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) "	// And avoid division by zero.
@@ -565,11 +575,11 @@ public final class SQL {
 				+ "	) expected "
 				+ "	left join ( "
 				+ "		select @baseTarget target "
-				+ "			 , cast(count(*) as DECIMAL) count "
-				+ "			 , floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) bin "
+				+ "			 , cast(count(*) as DECIMAL) AS count "
+				+ "			 , floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) AS bin "
 				+ "		from @outputTable, ( "
-				+ "				select (max(@column)-min(@column)) / 10 bin_width "
-				+ "					 , min(@column) min_value "
+				+ "				select (max(@column)-min(@column)) / 10 AS bin_width "
+				+ "					 , min(@column) AS min_value "
 				+ "				from @outputTable "
 				+ "			) t2 "
 				+ "		group by floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)), @baseTarget "
@@ -629,7 +639,7 @@ public final class SQL {
  	// NOTE: COPYING OF TABLES IS UGLY. GIVE IT DIRECTLY THE SPECIFIC NAMES AND MAKE GENERIC TABLES JUST AS A VIEW?
  	public static void logRunTime(Setting setting, long elapsedTime){
  		// Drop the previous version
- 		getDropTable(setting, "ms_" + setting.inputSchema);
+ 		dropTable(setting, "ms_" + setting.inputSchema);
  		
  		// Copy the current mainSample
  		String sql = "create table @outputSchema.@ms as select * from @outputTable";
@@ -641,7 +651,7 @@ public final class SQL {
 		Network.executeUpdate(setting.connection, sql);
  		
 		// Drop the previous version
- 		getDropTable(setting, "j_" + setting.inputSchema);
+ 		dropTable(setting, "j_" + setting.inputSchema);
  		
  		// Copy the current journal
  		sql = "create table @outputSchema.@j as select * from @outputTable";
@@ -680,14 +690,14 @@ public final class SQL {
 					"The results will be uncomplete and possibly biased. " +
 					"To get correct results create an artificial key / use time column with higher precission...");
 		
-			sql = "SELECT t1.@idColumn AS @baseId, t1.@targetDate AS @baseDate, t1.@targetColumn AS @baseTarget, FLOOR(" + setting.randomCommand + " * 10) AS @baseFold " +
+			sql = "SELECT @idColumn AS " + setting.baseId + ", @targetDate AS " + setting.baseDate + ", @targetColumn AS " + setting.baseTarget + ", FLOOR(" + setting.randomCommand + " * 10) AS " + setting.baseFold + " " +
 					"FROM @targetTable t1 LEFT JOIN (" +
 					"SELECT @idColumn FROM @targetTable GROUP BY @idColumn, @targetDate HAVING count(*)>1 " +
 					") t2 " +
 					"ON t1.@idColumn = t2.@idColumn " +
 					"WHERE t2.@idColumn is null";
 		} else {
-			sql = "SELECT @idColumn AS @baseId, @targetDate AS @baseDate, @targetColumn AS @baseTarget, FLOOR(" + setting.randomCommand + " * 10) AS @baseFold FROM @targetTable";
+			sql = "SELECT @idColumn AS " + setting.baseId + ", @targetDate AS " + setting.baseDate + ", @targetColumn AS " + setting.baseTarget + ", FLOOR(" + setting.randomCommand + " * 10) AS " + setting.baseFold + " FROM @targetTable";
 		}
 		
 		// Assembly the query
@@ -751,6 +761,7 @@ public final class SQL {
 	
 	// 3a) Return create journal_predictor table command
 	// Return true if the journal table was successfully created.
+	// Note: Default values are not supported on SAS data sets -> avoid them.
 	public static boolean getJournal(Setting setting) {
 		logger.debug("# Setting up journal table #");
 		
@@ -772,10 +783,10 @@ public final class SQL {
 	      "sql_code " + setting.typeVarchar + "(2024), " + // For example code for WoE is close to 1024 chars
 	      "target " + setting.typeVarchar + "(255), " +
 	      "relevance " + setting.typeDecimal + "(18,3), " +
-	      "qc_rowCount " + setting.typeInteger + " DEFAULT '0', " +
-	      "qc_nullCount " + setting.typeInteger + " DEFAULT '0', " +
-	      "is_ok " + setting.typeInteger + " DEFAULT '0', " +
-	      "PRIMARY KEY (predictor_id))";
+	      "qc_rowCount " + setting.typeInteger + ", " +
+	      "qc_nullCount " + setting.typeInteger + ", " +
+	      "is_ok " + setting.typeInteger + ", " +
+	      "CONSTRAINT pk_journal PRIMARY KEY (predictor_id))";
 		
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, setting.journalTable);
@@ -833,6 +844,10 @@ public final class SQL {
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, predictor.outputTable);	
 		sql = escapeEntityPredictor(setting, sql, predictor);		
+		
+		if ("SAS".equals(setting.databaseVendor)) {
+			sql = sql.replace("\"", "");				// VERY UGLY wORKAROUND. SHOULD IMPLEMENT quoteAlias
+		}
 		
 		return sql;
 	}

@@ -3,6 +3,7 @@ package metaInformation;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 
+import connection.Network;
 import connection.SQL;
 import run.Setting;
 import utility.Meta;
@@ -34,21 +36,32 @@ public class MetaInput {
 		SortedMap<String, Table> tableMap = new TreeMap<String, Table>(); // Map of {tableName, tableData}
 		String database = setting.database;
 		String schema = setting.inputSchema;
+
 		
 		// What data types are used by the database? In journal file we use {3, 4, 12 and 93}.
 		getDataTypes(setting);
 		
-		// What catalogs are available (useful for typo detection and access right debugging).
-		// Logs a warning if "setting.database" is not present in the database.
-		getCatalogList(setting);
+		
+		// QC input and output schemas
+		SortedSet<String> schemaSet = Meta.collectSchemas(setting, setting.database);
+		
+		if (setting.inputSchema != null && !schemaSet.contains(setting.inputSchema)) {
+			logger.warn("The input schema '" + setting.inputSchema + "' doesn't exist in the database.");
+			logger.warn("Available schemas in the database are: " + schemaSet);
+		}
+		if (setting.outputSchema != null && !schemaSet.contains(setting.outputSchema)) {
+			logger.warn("The output schema '" + setting.outputSchema + "' doesn't exist in the database.");
+			logger.warn("Available schemas in the database are: " + schemaSet);
+		}
+		
 				
 		// Get tables
 		SortedSet<String> tableSet = utility.Meta.collectTables(setting, database, schema);
 		
-		// Validate that targetTable is in tableSet
-		// SHOULD GRACEFULY TERMINATE IF ERROR HAPPENS. Throw invalid argument exception?
+		// Validate that targetTable is in the tableSet
 		if (!tableSet.contains(setting.targetTable)) {
-			logger.error("'" + setting.targetTable + "' table is not present in '" + setting.database + "' database.");
+			logger.warn("The target table '" + setting.targetTable + "' doesn't exist in the database.");
+			logger.warn("Available tables are: " + tableSet);
 		}
 		
 		// Respect table blacklist
@@ -145,13 +158,19 @@ public class MetaInput {
 	
 	
 	// 1) Get all relationships in the table. The returned list contains all {FTable, Column, FColumn} for the selected Table.
-	public static List<List<String>> collectRelationships(Setting setting, String database, String schema, String table) {
-		// If the database doesn't support schemas, use schema name as database name (java treats
-		// schema-less databases differently than SQL databases do)
-		if (!setting.isSchemaCompatible) {
+	private static List<List<String>> collectRelationships(Setting setting, String database, String schema, String table) {
+		// Deal with catalog/schema less databases		
+		// MySQL
+		if (setting.supportsCatalogs && !setting.supportsSchemas) {
 			database = schema;
 			schema = null;
 		}
+		
+		// SAS driver doesn't return keys. Use own query.
+		if ("SAS".equals(setting.databaseVendor)) {
+			return collectRelationshipsSAS(setting, schema, table);
+		}
+		
 		
 		// Initialization
 		List<List<String>> relationshipSet = new ArrayList<List<String>>();
@@ -193,6 +212,59 @@ public class MetaInput {
 	}
 
 	
+	// SAS JDBC driver doesn't return keys. Use dictionary tables instead.
+	// See: www2.sas.com/proceedings/sugi30/070-30.pdf
+	private static List<List<String>> collectRelationshipsSAS(Setting setting, String schema, String table) {
+		// Initialization
+		List<List<String>> relationshipSet = new ArrayList<List<String>>();
+		String sql = "select t1.memname as FKTABLE_NAME " +
+							", t1.unique_memname as PKTABLE_NAME " +
+							", t2.column_name as FKCOLUMN_NAME " +
+							", t3.column_name as PKCOLUMN_NAME " +
+						"from dictionary.REFERENTIAL_CONSTRAINTS t1 " +
+						"join dictionary.CONSTRAINT_COLUMN_USAGE t2 " +
+						"on t1.libname = t2.table_catalog " +
+						"and t1.memname = t2.table_name " +
+						"and t1.constraint_name = t2.constraint_name " +
+						"join dictionary.CONSTRAINT_COLUMN_USAGE t3 " +
+						"on t1.unique_libname = t3.table_catalog " +
+						"and t1.unique_memname = t3.table_name " +
+						"and t1.unique_constraint_name = t3.constraint_name ";
+						
+		
+		// Get all relations coming from this table
+		try (Statement stmt = setting.connection.createStatement()) {
+
+			String condition = "where t1.libname = '" + schema + "' and t1.memname = '" + table + "'";
+			ResultSet rs = stmt.executeQuery(sql + condition);
+
+			while (rs.next()) {
+				ArrayList<String> relationship = new ArrayList<String>();
+				relationship.add(rs.getString("PKTABLE_NAME").replace(" ", ""));
+				relationship.add(rs.getString("FKCOLUMN_NAME").replace(" ", ""));
+				relationship.add(rs.getString("PKCOLUMN_NAME").replace(" ", ""));
+				relationshipSet.add(relationship);
+			}
+
+			// And now Exported keys
+			condition = "where t1.unique_libname = '" + schema + "' and t1.unique_memname = '" + table + "'";
+			rs = stmt.executeQuery(sql + condition);
+
+			while (rs.next()) {
+				ArrayList<String> relationship = new ArrayList<String>();
+				relationship.add(rs.getString("FKTABLE_NAME").replace(" ", ""));
+				relationship.add(rs.getString("PKCOLUMN_NAME").replace(" ", ""));
+				relationship.add(rs.getString("FKCOLUMN_NAME").replace(" ", ""));
+				relationshipSet.add(relationship);
+			}
+
+		} catch (SQLException e) {
+			logger.error(e.getMessage());
+		}
+
+		return relationshipSet;
+	}
+	
 //	public static boolean isSymmetrical(){
 //		for (String table : tableSet) {
 //			// Get relationships 
@@ -217,7 +289,7 @@ public class MetaInput {
 	private static String getPrimaryKey(Setting setting, String database, String schema, String table) {
 		// If the database doesn't support schemas, use schema name as database name (java treats
 		// schema-less databases differently than SQL databases do)
-		if (!setting.isSchemaCompatible) {
+		if (!setting.supportsCatalogs) {
 			database = schema;
 			schema = null;
 		}
@@ -290,30 +362,7 @@ public class MetaInput {
 		logger.debug("Supported data types are: " + dataTypeList.toString());	
 	}
 	
-	// 4) Get catalog list
-	private static void getCatalogList(Setting setting) {
-		
-		// Initialization
-		List<String> catalogList = new ArrayList<String>();
-		
-		// Get all relations from this table
-		try {
-			DatabaseMetaData meta = setting.connection.getMetaData();
-			ResultSet rs = meta.getCatalogs();
-
-			while (rs.next()) {
-				catalogList.add(rs.getString("TABLE_CAT"));
-			}
-		} catch (SQLException e) {
-			logger.error(e.getMessage());
-		}
-					
-		// And check that the database defined in the configuration actually exists
-		if (!catalogList.contains(setting.database)) {
-			logger.warn("The database \"" + setting.database + "\" does not exist.");
-			logger.debug("Available databases are: " + catalogList.toString());	
-		}
-	}
+	
 
 
 }
