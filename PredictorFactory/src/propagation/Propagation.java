@@ -154,7 +154,7 @@ public class Propagation{
 						
 						if (isEmpty) {
 							for (String tableCheck : tableCheckList) {
-								SQL.getDropTable(setting, tableCheck);
+								SQL.dropTable(setting, tableCheck);
 							}
 							
 							outputTable = trim(setting, table2, metaOutput.size());

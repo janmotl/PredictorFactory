@@ -12,11 +12,15 @@ public class DriverProperty {
 	@XmlAttribute String driverClass;
 	@XmlAttribute String defaultPort;
 	@XmlAttribute String urlPrefix;
-	@XmlAttribute String integratedSecurity;
 	@XmlAttribute String dbNameSeparator;
-	@XmlAttribute String quoteMarks;
-	@XmlAttribute String createTableAsCompatible;
-	@XmlAttribute String schemaCompatible;
+	@XmlAttribute String quoteAliasOpen;
+	@XmlAttribute String quoteAliasClose;
+	@XmlAttribute String quoteEntityOpen;
+	@XmlAttribute String quoteEntityClose;
+	@XmlAttribute Boolean supportsCatalogs;	
+	@XmlAttribute Boolean supportsSchemas;	
+	@XmlAttribute Boolean supportsCreateTableAs;
+	@XmlAttribute Boolean supportsWithData;
 	@XmlAttribute String dateAddSyntax;
 	@XmlAttribute String dateAddMonth;
 	@XmlAttribute String dateDiffSyntax;
@@ -28,7 +32,8 @@ public class DriverProperty {
 	@XmlAttribute String typeInteger;
 	@XmlAttribute String typeDecimal;
 	@XmlAttribute String typeTimestamp;
-	@XmlAttribute String withData;
 	@XmlAttribute String limitSyntax;
+	@XmlAttribute String indexNameSyntax;
 	@XmlAttribute String randomCommand;
+	@XmlAttribute String testQuery;
 }

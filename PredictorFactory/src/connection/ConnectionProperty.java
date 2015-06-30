@@ -14,5 +14,5 @@ public class ConnectionProperty {
 	@XmlAttribute public String database;
 	@XmlAttribute public String url;	// Alternative for {host, port, database} - practical for Windows login at MSSQL,...
 	@XmlAttribute public String username;
-	@XmlAttribute public String password;	
+	@XmlAttribute public String password;
 }

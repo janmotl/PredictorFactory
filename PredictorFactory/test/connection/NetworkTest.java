@@ -13,7 +13,7 @@ public class NetworkTest {
 	
 	@Before
 	public void connectToDatabase(){
-		setting = Network.getConnection(setting, "MariaDB", "financial");
+		setting = Network.openConnection(setting, "MariaDB", "financial");
 	}
 
 	// Would fail on Oracle and other databases when "from dual" syntax is required
@@ -28,6 +28,6 @@ public class NetworkTest {
 	// Would fail on databases with schema support
 	@Test
 	public void getDatabaseProperties() {
-		Assert.assertFalse(setting.isSchemaCompatible);
+		Assert.assertFalse(setting.supportsCatalogs);
 	}
 }

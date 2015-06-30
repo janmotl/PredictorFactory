@@ -24,7 +24,7 @@ public class AggregationTest {
 	@Before
 	public void connectToDatabase(){
 		// Initialize setting
-		setting = Network.getConnection(setting, "MariaDB", "financial");
+		setting = Network.openConnection(setting, "MariaDB", "financial");
 		
 		// Initialize pattern
 		SortedMap<String, String> parameter = new TreeMap<String, String>();

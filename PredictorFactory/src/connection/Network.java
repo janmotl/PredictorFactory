@@ -9,14 +9,13 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import java.util.SortedSet;
 
-import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import run.Setting;
-import utility.Meta;
+
+import com.zaxxer.hikari.HikariDataSource;
 
 
 
@@ -25,12 +24,15 @@ public final class Network {
 	private static final Logger logger = Logger.getLogger(Network.class.getName());
 	
 	// Return the connection and database configuration
-	// WOULDN'T java DataSource (javax.sql.DataSource) BE ENOUGH?
-	// I WOULD HAVE TO USE JNDI OR DRIVER SPECIFIC CLASS -> LET'S KEEP THE IMPLEMENTATION SIMPLE
-	// CONSIDER USING c3p0 (or HikariCP) DataSources for Recovery From Database Outages
-	// SEE: http://http://www.mchange.com/projects/c3p0/
-	public static Setting getConnection(Setting setting, String connectionPropertyName, String databasePropertyName) {
-        
+	// Note: We are not using driver's DataSource, because their interface for setting URL is variable.
+	// Note: DBCP2 doesn't work anymore with SAS driver, which is only JDBC 3.0 compliant.
+	// Note: c3p0 is a viable option. But may require setting fine tuning.
+	// NOTE: Have to change the logic to benefit from pooling (Recovery from database outages)
+	// See: http://http://www.mchange.com/projects/c3p0/
+	// NOTE: This function doesn't need databaseProperty anymore -> move it away
+	// NOTE: This function should permit passing of URL to deal with nonstandard situations (like domain login to MSSQL) 
+	public static Setting openConnection(Setting setting, String connectionPropertyName, String databasePropertyName) {
+		
         // Load the connection configuration from a XML
 		ConnectionPropertyList connectionPropertyList = ConnectionPropertyList.unmarshall();
 		DriverPropertyList driverPropertyList = DriverPropertyList.unmarshall(); 
@@ -42,15 +44,21 @@ public final class Network {
         DatabaseProperty databaseProperty = databasePropertyList.getDatabaseProperties(databasePropertyName);
         
 		// Build a DataSource
-		// Database is required because MySQL refuses to return DatabaseMetaData 
-		// within a connection, which was made without database.
-        BasicDataSource ds = new BasicDataSource(); 
-		ds.setDriverClassName(driverProperty.driverClass);
+        @SuppressWarnings("resource")	// WILL HAVE TO CHANGE
+		HikariDataSource ds = new HikariDataSource();
+		ds.setDriverClassName(driverProperty.driverClass);	// Old-school necessity for pre-JDBC 4.0 drivers 
 		ds.setUsername(connectionProperty.username);
 		ds.setPassword(connectionProperty.password);
-		String url = driverProperty.urlPrefix + connectionProperty.host + ":" + connectionProperty.port 
-				   + driverProperty.dbNameSeparator + connectionProperty.database;
-		ds.setUrl(url);
+		String url = driverProperty.urlPrefix + connectionProperty.host + ":" + connectionProperty.port
+					+ driverProperty.dbNameSeparator + connectionProperty.database; // Database is required by Azure
+		ds.setJdbcUrl(url);
+		
+		// Define a validation query for drivers that do not provide isValid() API.
+		// Do not set it for JDBC 4.0 compliant drivers as it would slow them down.
+		// See: https://github.com/brettwooldridge/HikariCP
+		if (driverProperty.testQuery != null) {
+			ds.setConnectionTestQuery(driverProperty.testQuery);
+		}
 		
 		// If the connectionProperty doesn't contain username and/or password, prompt the user.
 		// Note: The only way how to mask the password (that I am aware of) is to ask for the password 
@@ -71,28 +79,28 @@ public final class Network {
 			}
 		}
 		 
+		
 		// Connect to the server
-		int indentifierLengthMax = 0;
-		int columnMax = 0;
-		logger.debug("Connecting to the server with the following URL: " + ds.getUrl());
+		logger.debug("Connecting to the server with the following URL: " + url);
+		String quoteEntity = "  ";
 		
 		try {
 			setting.connection = ds.getConnection();
 			
-			// log metadata 
+			// Log metadata 
 			java.sql.DatabaseMetaData metaData = setting.connection.getMetaData();
 			logger.debug("Database product name: " + metaData.getDatabaseProductName());
 			logger.debug("Driver version: " + metaData.getDriverVersion());
-			logger.debug("JDBC version: " + metaData.getJDBCMajorVersion() + "." + metaData.getJDBCMinorVersion() + " (expected at least 4.0)");
 			logger.debug("Maximum number of characters for a column name: " + metaData.getMaxColumnNameLength());
 			logger.debug("Maximum number of characters in a table name: " + metaData.getMaxTableNameLength());
 			logger.debug("Maximum number of columns in a table: " + metaData.getMaxColumnsInTable());
-			logger.debug("Supports ANSI92 Entry level SQL: " + metaData.supportsANSI92EntryLevelSQL());
 			logger.debug("Identifier quote string: " + metaData.getIdentifierQuoteString());
 			
-			// collect metadata
-			indentifierLengthMax = Math.min(metaData.getMaxColumnNameLength(), metaData.getMaxTableNameLength());
-			columnMax = metaData.getMaxColumnsInTable();
+			// Store collected metadata
+			setting.indentifierLengthMax = Math.min(metaData.getMaxColumnNameLength(), metaData.getMaxTableNameLength());
+			setting.columnMax = metaData.getMaxColumnsInTable();
+			quoteEntity = metaData.getIdentifierQuoteString();
+			
 		} catch (SQLException e) {
 			logger.error(e.getMessage());
 			System.exit(1); // Likely wrong credentials -> gracefully close the application
@@ -101,17 +109,39 @@ public final class Network {
 		logger.info("#### Successfully connected to the database ####");
 		
 		// Set other settings
-		setting.indentifierLengthMax = indentifierLengthMax;
-		setting.columnMax = columnMax;
-		if (columnMax==0) {
+		if (setting.columnMax==0) {
 			setting.columnMax = Integer.MAX_VALUE;	// Databases with unlimited column count returns 0 -> use big default.
 		}
+		
+		if (driverProperty.quoteEntityOpen != null) {
+			setting.quoteEntityOpen = driverProperty.quoteEntityOpen;
+			setting.quoteEntityClose = driverProperty.quoteEntityClose;
+		} else {
+			setting.quoteEntityOpen = quoteEntity.substring(0, 1);		// Use what's provided by the driver
+			setting.quoteEntityClose = quoteEntity.substring(0, 1);	
+		}
+		
+		if (driverProperty.quoteAliasOpen != null) {
+			setting.quoteAliasOpen = driverProperty.quoteAliasOpen;
+			setting.quoteAliasClose = driverProperty.quoteAliasClose;
+		} else {
+			setting.quoteAliasOpen = "\"";	// The default 
+			setting.quoteAliasClose = "\"";
+		}
+			
+		if (driverProperty.indexNameSyntax != null) {
+			setting.indexNameSyntax = driverProperty.indexNameSyntax;
+		} else {
+			setting.indexNameSyntax = "table_idx";
+		}
+			
 			
 		setting.database = connectionProperty.database;
 		setting.databaseVendor = connectionProperty.driver;
-		setting.quoteMarks = driverProperty.quoteMarks;
-		setting.isCreateTableAsCompatible = "yes".equals(driverProperty.createTableAsCompatible);
-		setting.isSchemaCompatible = "yes".equals(driverProperty.schemaCompatible);
+		setting.supportsCatalogs = driverProperty.supportsCatalogs;
+		setting.supportsSchemas = driverProperty.supportsSchemas;
+		setting.supportsCreateTableAs = driverProperty.supportsCreateTableAs;
+		setting.supportsWithData = driverProperty.supportsWithData;
 		setting.dateAddSyntax = driverProperty.dateAddSyntax;
 		setting.dateAddMonth = driverProperty.dateAddMonth;
 		setting.dateDiffSyntax = driverProperty.dateDiffSyntax;
@@ -123,7 +153,6 @@ public final class Network {
 		setting.typeInteger = driverProperty.typeInteger;
 		setting.typeTimestamp = driverProperty.typeTimestamp;
 		setting.typeVarchar = driverProperty.typeVarchar;
-		setting.withData = "yes".equals(driverProperty.withData);
 		setting.limitSyntax = driverProperty.limitSyntax;
 		setting.randomCommand = driverProperty.randomCommand;
 		
@@ -136,17 +165,6 @@ public final class Network {
 		setting.blackListTable = databaseProperty.blackListTable;
 		setting.blackListColumn = databaseProperty.blackListColumn;
 		setting.task = databaseProperty.task;
-		
-		
-		// QC input and output schemas
-		// THIS IS A BAD PLACE FOR DOING IT AS SCHEMAS MAY NOT BE AVAILABLE
-		SortedSet<String> schemaSet = Meta.collectSchemas(setting, setting.database);
-		if (setting.inputSchema != null && !schemaSet.contains(setting.inputSchema)) {
-			logger.warn("The input schema \"" + setting.inputSchema + "\" doesn't exist in \"" + setting.database + "\" database.");
-		}
-		if (setting.inputSchema != null && !schemaSet.contains(setting.outputSchema)) {
-			logger.warn("The output schema \"" + setting.outputSchema + "\" doesn't exist in \"" + setting.database + "\" database.");
-		}
 		
 		return setting;
 	}
@@ -197,7 +215,6 @@ public final class Network {
 	    return isOk;
     }
     
-    
  	// Get list of strings
     public static List<String> executeQuery(Connection connection, String sql){
     	// Parameter checking
@@ -236,7 +253,6 @@ public final class Network {
 	    return result;
     }
 
-    
     // Return true, if the result set is empty.
 	public static boolean isResultSetEmpty(Connection connection, String sql){
     	// Parameter checking

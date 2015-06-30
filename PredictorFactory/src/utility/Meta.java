@@ -1,7 +1,9 @@
 package utility;
 
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -57,17 +59,33 @@ public class Meta {
 		// Initialization
 		SortedSet<String> schemaSet = new TreeSet<String>();
 		
-		// Query
-		if (!setting.isSchemaCompatible) {
-			// Schema-less databases
+		// If supports only catalogs (MySQL) -> get all catalogs
+		if (setting.supportsCatalogs && !setting.supportsSchemas) {
 			try (ResultSet rs = setting.connection.getMetaData().getCatalogs()) {
 				while (rs.next()) {
 					String schemaName = rs.getString("TABLE_CAT");
 					schemaSet.add(schemaName);
 				}
 			} catch (SQLException ignored) {}
-		} else {
-			// Get all schemas in the database
+		} 
+		
+		// If supports only schemas (SAS) -> get all schemas
+		if (!setting.supportsCatalogs && setting.supportsSchemas) {
+			try (ResultSet rs = setting.connection.getMetaData().getSchemas()) {
+				while (rs.next()) {
+					String schemaName = rs.getString("TABLE_SCHEM");
+					
+					if ("SAS".equals(setting.databaseVendor)) {
+						schemaName = schemaName.replace(" ", "");	// Remove space padding
+					}
+					
+					schemaSet.add(schemaName);
+				}
+			} catch (SQLException ignored) {}
+		} 
+		
+		// If supports catalogs and schemas -> get all schemas in the specified catalog
+		if (setting.supportsCatalogs && setting.supportsSchemas) {
 			try (ResultSet rs = setting.connection.getMetaData().getSchemas(database, "%")) {
 				while (rs.next()) {
 					String schemaName = rs.getString("TABLE_SCHEM");
@@ -78,7 +96,7 @@ public class Meta {
 
 		// QC schema count
 		if (schemaSet.isEmpty()) {
-			logger.warn("The count of available schemas in " + database + " is 0.");
+			logger.warn("The count of available schemas is 0.");
 		}
 		
 		return schemaSet;
@@ -86,11 +104,16 @@ public class Meta {
 	
 	// 1) Get all tables in the schema.
 	public static SortedSet<String> collectTables(Setting setting, String database, String schema) {
-		// If the database doesn't support schemas, use schema name as database name (java treats
-		// schema-less databases differently than SQL databases do)
-		if (!setting.isSchemaCompatible) {
+		// Deal with different combinations of catalog/schema support
+		// MySQL type
+		if (setting.supportsCatalogs && !setting.supportsSchemas) {
 			database = schema;
 			schema = null;
+		}
+		
+		// SAS type
+		if (!setting.supportsCatalogs && setting.supportsSchemas) {
+			database = null;
 		}
 				
 		// Initialization
@@ -102,6 +125,11 @@ public class Meta {
 
 			while (rs.next()) {
 				String tableName = rs.getString("TABLE_NAME");
+				
+				if ("SAS".equals(setting.databaseVendor)) {
+					tableName = tableName.replace(" ", "");	// Remove space padding
+				}
+				
 				tableSet.add(tableName);
 			}
 		} catch (SQLException ignored) {}
@@ -116,11 +144,16 @@ public class Meta {
 	
 	// 2) Get all columns in the table. Return <ColumnName, DataType>.
 	public static SortedMap<String, Integer> collectColumns(Setting setting, String database, String schema, String table) {
-		// If the database doesn't support schemas, use schema name as database name (java treats
-		// schema-less databases differently than SQL databases do)
-		if (!setting.isSchemaCompatible) {
+		// Deal with different combinations of catalog/schema support
+		// MySQL type
+		if (setting.supportsCatalogs && !setting.supportsSchemas) {
 			database = schema;
 			schema = null;
+		}
+		
+		// SAS type
+		if (!setting.supportsCatalogs && setting.supportsSchemas) {
+			database = null;
 		}
 		
 		// Initialization
@@ -151,7 +184,9 @@ public class Meta {
 				
 				columnMap.put(columnName, dataType);
 			}
-		} catch (SQLException ignored) {}
+		} catch (SQLException e) {
+			logger.warn(e.getMessage());
+		}
 		
 		return columnMap;
 	}
@@ -204,5 +239,151 @@ public class Meta {
 		table.timeColumn = time;
 		
 		return table;
+	}
+
+	// 4) Get all relationships in the table. The returned list contains all {FTable, Column, FColumn} for the selected Table.
+	public static List<List<String>> collectRelationships(Setting setting, String database, String schema, String table) {
+		// Deal with catalog/schema less databases		
+		// MySQL
+		if (setting.supportsCatalogs && !setting.supportsSchemas) {
+			database = schema;
+			schema = null;
+		}
+		
+		// SAS driver doesn't return keys. Use own query.
+		if ("SAS".equals(setting.databaseVendor)) {
+			return collectRelationshipsSAS(setting, schema, table);
+		}
+		
+		
+		// Initialization
+		List<List<String>> relationshipSet = new ArrayList<List<String>>();
+		
+		// Get all relations coming from this table
+		try {
+			DatabaseMetaData meta = setting.connection.getMetaData();
+			ResultSet rs = meta.getImportedKeys(database, schema, table);
+
+			while (rs.next()) {
+				ArrayList<String> relationship = new ArrayList<String>();
+				relationship.add(rs.getString("PKTABLE_NAME"));
+				relationship.add(rs.getString("FKCOLUMN_NAME"));
+				relationship.add(rs.getString("PKCOLUMN_NAME"));
+				relationshipSet.add(relationship);
+			}
+			
+			// And now Exported keys
+			rs = meta.getExportedKeys(database, schema, table);
+
+			while (rs.next()) {
+				ArrayList<String> relationship = new ArrayList<String>();
+				relationship.add(rs.getString("FKTABLE_NAME"));
+				relationship.add(rs.getString("PKCOLUMN_NAME"));
+				relationship.add(rs.getString("FKCOLUMN_NAME"));
+				relationshipSet.add(relationship);
+			}
+			
+		} catch (SQLException e) {
+			logger.error(e.getMessage());
+		}
+		
+		// Output Quality Control
+		if (relationshipSet.isEmpty()) {
+			logger.info("Table " + table + " doesn't have any predefined relationship.");
+		}
+		
+		return relationshipSet;
+	}
+
+	// 4.5) Subroutine: SAS JDBC driver doesn't return keys. Use dictionary tables instead.
+	// See: www2.sas.com/proceedings/sugi30/070-30.pdf
+	private static List<List<String>> collectRelationshipsSAS(Setting setting, String schema, String table) {
+		// Initialization
+		List<List<String>> relationshipSet = new ArrayList<List<String>>();
+		String sql = "select t1.memname as FKTABLE_NAME " +
+							", t1.unique_memname as PKTABLE_NAME " +
+							", t2.column_name as FKCOLUMN_NAME " +
+							", t3.column_name as PKCOLUMN_NAME " +
+						"from dictionary.REFERENTIAL_CONSTRAINTS t1 " +
+						"join dictionary.CONSTRAINT_COLUMN_USAGE t2 " +
+						"on t1.libname = t2.table_catalog " +
+						"and t1.memname = t2.table_name " +
+						"and t1.constraint_name = t2.constraint_name " +
+						"join dictionary.CONSTRAINT_COLUMN_USAGE t3 " +
+						"on t1.unique_libname = t3.table_catalog " +
+						"and t1.unique_memname = t3.table_name " +
+						"and t1.unique_constraint_name = t3.constraint_name ";
+						
+		
+		// Get all relations coming from this table
+		try (Statement stmt = setting.connection.createStatement()) {
+
+			String condition = "where t1.libname = '" + schema + "' and t1.memname = '" + table + "'";
+			ResultSet rs = stmt.executeQuery(sql + condition);
+
+			while (rs.next()) {
+				ArrayList<String> relationship = new ArrayList<String>();
+				relationship.add(rs.getString("PKTABLE_NAME").replace(" ", ""));
+				relationship.add(rs.getString("FKCOLUMN_NAME").replace(" ", ""));
+				relationship.add(rs.getString("PKCOLUMN_NAME").replace(" ", ""));
+				relationshipSet.add(relationship);
+			}
+
+			// And now Exported keys
+			condition = "where t1.unique_libname = '" + schema + "' and t1.unique_memname = '" + table + "'";
+			rs = stmt.executeQuery(sql + condition);
+
+			while (rs.next()) {
+				ArrayList<String> relationship = new ArrayList<String>();
+				relationship.add(rs.getString("FKTABLE_NAME").replace(" ", ""));
+				relationship.add(rs.getString("PKCOLUMN_NAME").replace(" ", ""));
+				relationship.add(rs.getString("FKCOLUMN_NAME").replace(" ", ""));
+				relationshipSet.add(relationship);
+			}
+
+		} catch (SQLException e) {
+			logger.error(e.getMessage());
+		}
+
+		return relationshipSet;
+	}
+
+	// 5) Get the single primary key (It would be the best if only artificial keys were returned. At least 
+	// we are excluding the composite keys).
+	public static String getPrimaryKey(Setting setting, String database, String schema, String table) {
+		// Deal with different combinations of catalog/schema support
+		// MySQL type
+		if (setting.supportsCatalogs && !setting.supportsSchemas) {
+			database = schema;
+			schema = null;
+		}
+		
+		// SAS type
+		if (!setting.supportsCatalogs && setting.supportsSchemas) {
+			database = null;
+		}
+		
+		// Initialization
+		List<String> primaryKeyList = new ArrayList<String>();
+		
+		// Get all columns making the primary key
+		try {
+			DatabaseMetaData meta = setting.connection.getMetaData();
+			ResultSet rs = meta.getPrimaryKeys(database, schema, table);
+
+			while (rs.next()) {
+				primaryKeyList.add(rs.getString("COLUMN_NAME"));
+			}
+		} catch (SQLException e) {
+			logger.error(e.getMessage());
+		}
+		
+		// If the table contains a PK composed of exactly one column, return the name of the column 
+		if (primaryKeyList.size() == 1) {
+			return primaryKeyList.get(0);
+		}
+		
+		// Otherwise return null;
+		return null;
 	}
 }

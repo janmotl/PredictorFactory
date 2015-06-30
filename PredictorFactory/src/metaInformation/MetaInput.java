@@ -14,10 +14,10 @@ import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 
-import connection.SQL;
 import run.Setting;
 import utility.Meta;
 import utility.Meta.Table;
+import connection.SQL;
 
 
 
@@ -34,21 +34,31 @@ public class MetaInput {
 		SortedMap<String, Table> tableMap = new TreeMap<String, Table>(); // Map of {tableName, tableData}
 		String database = setting.database;
 		String schema = setting.inputSchema;
+
 		
 		// What data types are used by the database? In journal file we use {3, 4, 12 and 93}.
-		getDataTypes(setting);
+		logger.debug("Supported data types are: " + getDataTypes(setting)); 
+
+		// QC input and output schemas
+		SortedSet<String> schemaSet = Meta.collectSchemas(setting, setting.database);
 		
-		// What catalogs are available (useful for typo detection and access right debugging).
-		// Logs a warning if "setting.database" is not present in the database.
-		getCatalogList(setting);
+		if (setting.inputSchema != null && !schemaSet.contains(setting.inputSchema)) {
+			logger.warn("The input schema '" + setting.inputSchema + "' doesn't exist in the database.");
+			logger.warn("Available schemas in the database are: " + schemaSet);
+		}
+		if (setting.outputSchema != null && !schemaSet.contains(setting.outputSchema)) {
+			logger.warn("The output schema '" + setting.outputSchema + "' doesn't exist in the database.");
+			logger.warn("Available schemas in the database are: " + schemaSet);
+		}
+		
 				
 		// Get tables
 		SortedSet<String> tableSet = utility.Meta.collectTables(setting, database, schema);
 		
-		// Validate that targetTable is in tableSet
-		// SHOULD GRACEFULY TERMINATE IF ERROR HAPPENS. Throw invalid argument exception?
+		// Validate that targetTable is in the tableSet
 		if (!tableSet.contains(setting.targetTable)) {
-			logger.error("'" + setting.targetTable + "' table is not present in '" + setting.database + "' database.");
+			logger.warn("The target table '" + setting.targetTable + "' doesn't exist in the database.");
+			logger.warn("Available tables are: " + tableSet);
 		}
 		
 		// Respect table blacklist
@@ -89,13 +99,13 @@ public class MetaInput {
 						
 			// Store relationships
 			Table tableData = tableMap.get(tableName);
-			tableData.relationship = collectRelationships(setting, database, schema, tableName);
+			tableData.relationship = Meta.collectRelationships(setting, database, schema, tableName);
 			
 			// Store idColumn (as a side effect) and get a map of columns without ids
 			columnMap = filterId(tableData, columnMap, tableData.relationship);
 			
 			// Deal with PKs
-			String pk = getPrimaryKey(setting, database, schema, tableName);
+			String pk = Meta.getPrimaryKey(setting, database, schema, tableName);
 			if (pk!=null) {
 				columnMap.remove(pk);
 				tableData.idColumn.add(pk);
@@ -144,55 +154,6 @@ public class MetaInput {
 	
 	
 	
-	// 1) Get all relationships in the table. The returned list contains all {FTable, Column, FColumn} for the selected Table.
-	public static List<List<String>> collectRelationships(Setting setting, String database, String schema, String table) {
-		// If the database doesn't support schemas, use schema name as database name (java treats
-		// schema-less databases differently than SQL databases do)
-		if (!setting.isSchemaCompatible) {
-			database = schema;
-			schema = null;
-		}
-		
-		// Initialization
-		List<List<String>> relationshipSet = new ArrayList<List<String>>();
-		
-		// Get all relations coming from this table
-		try {
-			DatabaseMetaData meta = setting.connection.getMetaData();
-			ResultSet rs = meta.getImportedKeys(database, schema, table);
-
-			while (rs.next()) {
-				ArrayList<String> relationship = new ArrayList<String>();
-				relationship.add(rs.getString("PKTABLE_NAME"));
-				relationship.add(rs.getString("FKCOLUMN_NAME"));
-				relationship.add(rs.getString("PKCOLUMN_NAME"));
-				relationshipSet.add(relationship);
-			}
-			
-			// And now Exported keys
-			rs = meta.getExportedKeys(database, schema, table);
-
-			while (rs.next()) {
-				ArrayList<String> relationship = new ArrayList<String>();
-				relationship.add(rs.getString("FKTABLE_NAME"));
-				relationship.add(rs.getString("PKCOLUMN_NAME"));
-				relationship.add(rs.getString("FKCOLUMN_NAME"));
-				relationshipSet.add(relationship);
-			}
-			
-		} catch (SQLException e) {
-			logger.error(e.getMessage());
-		}
-		
-		// Output Quality Control
-		if (relationshipSet.isEmpty()) {
-			logger.info("Table " + table + " doesn't have any predefined relationship.");
-		}
-		
-		return relationshipSet;
-	}
-
-	
 //	public static boolean isSymmetrical(){
 //		for (String table : tableSet) {
 //			// Get relationships 
@@ -212,41 +173,8 @@ public class MetaInput {
 //		}
 //	}
 	
-	// 1.5) Get the single primary key (It would be the best if only artificial keys were returned. At least 
-	// we are excluding the composite keys).
-	private static String getPrimaryKey(Setting setting, String database, String schema, String table) {
-		// If the database doesn't support schemas, use schema name as database name (java treats
-		// schema-less databases differently than SQL databases do)
-		if (!setting.isSchemaCompatible) {
-			database = schema;
-			schema = null;
-		}
-		
-		// Initialization
-		List<String> primaryKeyList = new ArrayList<String>();
-		
-		// Get all columns making the primary key
-		try {
-			DatabaseMetaData meta = setting.connection.getMetaData();
-			ResultSet rs = meta.getPrimaryKeys(database, schema, table);
 
-			while (rs.next()) {
-				primaryKeyList.add(rs.getString("COLUMN_NAME"));
-			}
-		} catch (SQLException e) {
-			logger.error(e.getMessage());
-		}
-		
-		// If the table contains a PK composed of exactly one column, return the name of the column 
-		if (primaryKeyList.size() == 1) {
-			return primaryKeyList.get(0);
-		}
-		
-		// Otherwise return null;
-		return null;
-	}
-	
-	// 2) Store idColumn and return column map without ids
+	// 1) Store idColumn and return column map without ids
 	private static Map<String, Integer> filterId(Table table, Map<String, Integer> columnMap, List<List<String>> relationship) {
 		
 		// Initialization
@@ -265,8 +193,8 @@ public class MetaInput {
 		return columnMap;
 	}
 	
-	// 3) Get list of supported data types
-	private static void getDataTypes(Setting setting) {
+	// 2) Get list of supported data types
+	private static List<List<String>> getDataTypes(Setting setting) {
 		
 		// Initialization
 		List<List<String>> dataTypeList = new ArrayList<List<String>>();
@@ -286,34 +214,7 @@ public class MetaInput {
 			logger.error(e.getMessage());
 		}
 			
-		// Log the result
-		logger.debug("Supported data types are: " + dataTypeList.toString());	
+		return dataTypeList;	
 	}
 	
-	// 4) Get catalog list
-	private static void getCatalogList(Setting setting) {
-		
-		// Initialization
-		List<String> catalogList = new ArrayList<String>();
-		
-		// Get all relations from this table
-		try {
-			DatabaseMetaData meta = setting.connection.getMetaData();
-			ResultSet rs = meta.getCatalogs();
-
-			while (rs.next()) {
-				catalogList.add(rs.getString("TABLE_CAT"));
-			}
-		} catch (SQLException e) {
-			logger.error(e.getMessage());
-		}
-					
-		// And check that the database defined in the configuration actually exists
-		if (!catalogList.contains(setting.database)) {
-			logger.warn("The database \"" + setting.database + "\" does not exist.");
-			logger.debug("Available databases are: " + catalogList.toString());	
-		}
-	}
-
-
 }

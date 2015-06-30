@@ -8,9 +8,12 @@ Description of the fields:
 	DefaultPort: The default port of the database.
 	UrlPrefix: The beginning of the connection string.  
 	DbNameSeparator: The separator between urlPrefix and database name.
-	QuoteMarks: GET RID OF IT! (BUT TEST IT THEN ON MSSQL)
-	CreateTableAsCompatible: Because of MS SQL specific syntax...
-	SchemaCompatible: GET RID OF IT THRU "getSchemaTerm".
+	quoteEntityOpen: By default we are using the character(s) that we are told by the database driver...  
+	quoteEntityClose: ...but users may have their own opinion about the right sequence. Also, the driver may not be well implemented. Or the driver can be outdated.  
+	quoteAliasOpen: By default double quote.
+	quoteAliasClose: By default double quote. 
+	SupportsCreateTableAs: Because of MS SQL specific syntax...
+	SupportsWithData: Because of MonetDB specific syntax...
 	DateAddSyntax: Because we want to be able to express time ranges. This syntax doesn't deal with leap years.  
 	DateAddMonth: Because we want to be able to express time ranges. This syntax correctly deals with leap years.  
 	DateDiffSyntax: Not all databases support conversion of time to number. Hence just use a diff against a constant. 
@@ -18,20 +21,46 @@ Description of the fields:
 	InsertTimestampSyntax: Syntax for timestamp (it's used for creation of journal table). ISN'T IT A DUPLICATE TO typeTimestamp?
 	StdDevCommand: The command for calculation of sample standard deviation.
 	CharLengthCommand: The command for calculation of string length.
-	WithData: Because of MonetDB specific syntax...
 -->
 
 
-<drivers>     	
+<drivers>
+	<!-- Draft -->	
 	<driver 
+		name="DB2"
+		driverClass="com.ibm.db2.jcc.DB2Driver" 
+		defaultPort="50000"
+		urlPrefix="jdbc:db2://"
+		dbNameSeparator="/"
+		supportsCatalogs="true"
+		supportsSchemas="true"
+		supportsCreateTableAs="true" 
+		supportsWithData="false"
+		dateAddSyntax="(@baseDate + INTERVAL '@amount @datePart')"
+		dateAddMonth="(@baseDate + INTERVAL '@amount month')" 
+		dateDiffSyntax="(@dateTo - @dateFrom)"
+		dateToNumber="extract(epoch from @column)"
+		insertTimestampSyntax="@timestamp"
+		stdDevCommand="stddev_samp"
+		charLengthCommand="char_length"
+		typeVarchar="VARCHAR"
+		typeInteger="INTEGER"
+		typeDecimal="DECIMAL"
+		typeTimestamp="TIMESTAMP"
+		limitSyntax="limit"
+		randomCommand="random()"
+	/>
+		
+	<driver
 		name="Microsoft SQL Server"
-		driverClass="com.microsoft.sqlserver.jdbc.SQLServerDriver" 
+		driverClass="com.microsoft.sqlserver.jdbc.SQLServerDriver"
 		defaultPort="1433"
 		urlPrefix="jdbc:sqlserver://"
 		dbNameSeparator=";databaseName="
-		quoteMarks="[]" 
-		createTableAsCompatible="no" 
-		schemaCompatible="yes"
+		supportsCatalogs="true"
+		supportsSchemas="true"
+		supportsCreateTableAs="false"
+		supportsWithData="false"
 		dateAddSyntax="DATEADD(@datePart, @amount, @baseDate)"
 		dateAddMonth="DATEADD(month, @amount, @baseDate)"
 		dateDiffSyntax="DATEDIFF(day, @dateTo, @dateFrom)"
@@ -42,21 +71,21 @@ Description of the fields:
 		typeVarchar="VARCHAR"
 		typeInteger="INTEGER"
 		typeDecimal="DECIMAL"
-		typeTimestamp="DATETIME" 
-		withData="no"
+		typeTimestamp="DATETIME"
 		limitSyntax="top"
 		randomCommand="RAND(CONVERT(varbinary, NEWID()))"
 	/>
 	
-	<driver 
+	<driver
 		name="MonetDB"
-		driverClass="nl.cwi.monetdb.jdbc.MonetDriver" 
+		driverClass="nl.cwi.monetdb.jdbc.MonetDriver"
 		defaultPort="1433"
 		urlPrefix="jdbc:monetdb://"
 		dbNameSeparator="/"
-		quoteMarks="&quot;&quot;" 
-		createTableAsCompatible="yes" 
-		schemaCompatible="yes"
+		supportsCatalogs="true"
+		supportsSchemas="true"
+		supportsCreateTableAs="true"
+		supportsWithData="true"
 		dateAddSyntax="DATEADD(@datePart, @amount, @baseDate)"
 		dateAddMonth="DATEADD(month, @amount, @baseDate)"
 		dateDiffSyntax="DATEDIFF(day, @dateTo, @dateFrom)"
@@ -68,20 +97,20 @@ Description of the fields:
 		typeInteger="INTEGER"
 		typeDecimal="DECIMAL"
 		typeTimestamp="TIMESTAMP"
-		withData="yes" 
 		limitSyntax="limit"
 		randomCommand="rand()"
 	/>
 	
-	<driver 
+	<driver
 		name="MySQL"
 		driverClass="com.mysql.jdbc.Driver"
 		defaultPort="3306"
 		urlPrefix="jdbc:mysql://"
 		dbNameSeparator="/"
-		quoteMarks="``" 
-		createTableAsCompatible="yes" 
-		schemaCompatible="no"
+		supportsCatalogs="true"
+		supportsSchemas="false"
+		supportsCreateTableAs="true"
+		supportsWithData="false"
 		dateAddSyntax="DATE_ADD(@baseDate, INTERVAL @amount @datePart)"
 		dateAddMonth="DATE_ADD(@baseDate, INTERVAL @amount month)"
 		dateDiffSyntax="DATEDIFF(@dateTo, @dateFrom)"
@@ -92,22 +121,22 @@ Description of the fields:
 		typeVarchar="VARCHAR"
 		typeInteger="INTEGER"
 		typeDecimal="DECIMAL"
-		typeTimestamp="TIMESTAMP" 
-		withData="no"
+		typeTimestamp="TIMESTAMP"
 		limitSyntax="limit"
 		randomCommand="rand()"
 	/>
 	
-	<!-- By default Netezza support for schemas is turned off. The only supported datePart is a month. --> 
-	<driver 
+	<!-- By default Netezza support for schemas is turned off. The only supported datePart is a month. -->
+	<driver
 		name="Netezza"
-		driverClass="org.netezza.Driver" 
-		defaultPort="5480"			
+		driverClass="org.netezza.Driver"
+		defaultPort="5480"	
 		urlPrefix="jdbc:netezza://"
 		dbNameSeparator="/"
-		quoteMarks="&quot;&quot;" 
-		createTableAsCompatible="yes" 
-		schemaCompatible="no"	
+		supportsCatalogs="true"
+		supportsSchemas="true"
+		supportsCreateTableAs="true"
+		supportsWithData="false"
 		dateAddMonth="add_months(@baseDate, @amount)"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="extract(epoch from @date)"
@@ -118,24 +147,24 @@ Description of the fields:
 		typeInteger="INTEGER"
 		typeDecimal="DECIMAL"
 		typeTimestamp="TIMESTAMP"
-		withData="no"
 		limitSyntax="limit"
 		randomCommand="random()"
 	/>
-		  
+	
 	<!-- Interval arithmetic can result into an invalid date -> use add_months for months and years
 	as it can correctly deal with different length of months and leap years. -->
-	<driver 
+	<driver
 		name="Oracle"
 		driverClass="oracle.jdbc.driver.OracleDriver"
-		defaultPort="1521"			
+		defaultPort="1521"	
 		urlPrefix="jdbc:oracle:thin:@"
 		dbNameSeparator=":"
-		quoteMarks="&quot;&quot;" 
-		createTableAsCompatible="yes" 
-		schemaCompatible="yes"
-		dateAddSyntax="(@baseDate + INTERVAL '@amount' @datePart)" 
-		dateAddMonth="add_months(@baseDate, @amount)" 
+		supportsCatalogs="true"
+		supportsSchemas="true"
+		supportsCreateTableAs="true"
+		supportsWithData="false"
+		dateAddSyntax="(@baseDate + INTERVAL '@amount' @datePart)"
+		dateAddMonth="add_months(@baseDate, @amount)"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="(@column - TO_DATE('01011970','DDMMYYYY'))"
 		insertTimestampSyntax="TO_TIMESTAMP(@timestamp, 'YYYY-MM-DD HH24:MI:SS.FF')"
@@ -145,22 +174,22 @@ Description of the fields:
 		typeInteger="NUMBER"
 		typeDecimal="NUMBER"
 		typeTimestamp="TIMESTAMP"
-		withData="no"
 		limitSyntax="rownum"
 		randomCommand="DBMS_RANDOM.VALUE"
 	/>
-		  
-	<driver 
+	
+	<driver
 		name="PostgreSQL"
-		driverClass="org.postgresql.Driver" 
+		driverClass="org.postgresql.Driver"
 		defaultPort="5432"
 		urlPrefix="jdbc:postgresql://"
 		dbNameSeparator="/"
-		quoteMarks="&quot;&quot;" 
-		createTableAsCompatible="yes" 
-		schemaCompatible="yes"
+		supportsCatalogs="true"
+		supportsSchemas="true"
+		supportsCreateTableAs="true"
+		supportsWithData="false"
 		dateAddSyntax="(@baseDate + INTERVAL '@amount @datePart')"
-		dateAddMonth="(@baseDate + INTERVAL '@amount month')" 
+		dateAddMonth="(@baseDate + INTERVAL '@amount month')"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="extract(epoch from @column)"
 		insertTimestampSyntax="@timestamp"
@@ -170,47 +199,53 @@ Description of the fields:
 		typeInteger="INTEGER"
 		typeDecimal="DECIMAL"
 		typeTimestamp="TIMESTAMP"
-		withData="no"
 		limitSyntax="limit"
 		randomCommand="random()"
 	/>
 	
 	<!-- Draft -->
-	<driver 
+	<driver
 		name="SAS"
-		driverClass="com.sas.net.sharenet.ShareNetDriver" 
+		driverClass="com.sas.net.sharenet.ShareNetDriver"
 		defaultPort="8561"
 		urlPrefix="jdbc:sharenet://"
-		dbNameSeparator=":"
-		quoteMarks="&quot;&quot;" 
-		createTableAsCompatible="yes" 
-		schemaCompatible="yes"
+		dbNameSeparator=""
+		quoteEntityOpen="'"
+		quoteEntityClose="'n"
+		quoteAliasOpen="'"
+		quoteAliasClose="'n"
+		supportsCatalogs="false"
+		supportsSchemas="true"
+		supportsCreateTableAs="true"
+		supportsWithData="false"
 		dateAddSyntax="(@baseDate + INTERVAL '@amount @datePart')"
-		dateAddMonth="(@baseDate + INTERVAL '@amount month')" 
+		dateAddMonth="(@baseDate + INTERVAL '@amount month')"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="extract(epoch from @column)"
 		insertTimestampSyntax="@timestamp"
-		stdDevCommand="stddev_samp"
+		stdDevCommand="std"
 		charLengthCommand="char_length"
 		typeVarchar="VARCHAR"
 		typeInteger="INTEGER"
 		typeDecimal="DECIMAL"
 		typeTimestamp="TIMESTAMP"
-		withData="no"
-		limitSyntax="limit"
-		randomCommand="random()"
+		limitSyntax="obs"
+		indexNameSyntax="column"
+		randomCommand="ranuni(2001)"
+		testQuery="SELECT 1"
 	/>
-
-	<!-- ADD_MONTHS intelligently identifies the Leap year and returns the correct date  -->
-	<driver 
+	
+	<!-- ADD_MONTHS intelligently identifies the Leap year and returns the correct date -->
+	<driver
 		name="Teradata"
-		driverClass="com.teradata.jdbc.TeraDriver" 
-		defaultPort="1025"			
+		driverClass="com.teradata.jdbc.TeraDriver"
+		defaultPort="1025"	
 		urlPrefix="jdbc:teradata://"
 		dbNameSeparator="/"
-		quoteMarks="&quot;&quot;" 
-		createTableAsCompatible="yes" 
-		schemaCompatible="no"
+		supportsCatalogs="true"
+		supportsSchemas="true"
+		supportsCreateTableAs="true"
+		supportsWithData="false"		
 		dateAddSyntax="(@baseDate + (INTERVAL '@amount' @datePart))"
 		dateAddMonth="add_months(@baseDate, @amount)"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
@@ -222,10 +257,9 @@ Description of the fields:
 		typeInteger="INTEGER"
 		typeDecimal="DECIMAL"
 		typeTimestamp="TIMESTAMP"
-		withData="no"
 		limitSyntax="ROW_NUMBER"
 		randomCommand="RANDOM(0, 1000)/1000"
-	/>
+		/>
 </drivers>
 
 
