@@ -71,7 +71,7 @@ public final class Setting {
 	public int propagationDepthMax = 10; 			// The maximal depth of base table propagation. Smaller value will result into faster propagation.
 	public Integer lag = 240; 						// The amount of data history (in months) we allow the model to use when making the prediction.
 	public Integer lead = 0;						// The period of time (in months) between the last data point the model can use to predict and the first data point the model actually predicts.
-	public int sampleSize = 100000;					// Downsample the base table to the given sample size per class (absent class is another class).
+	public int sampleSize = 100;					// Downsample the base table to the given sample size per class (absent class is another class).
 	//public boolean sample = true;				// If true, sample during propagation  
 	public int valueCount = 20;						// Count of discrete values to consider in existencional quantifier.
 	// missingValues (had to be implemented)

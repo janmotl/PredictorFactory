@@ -11,7 +11,6 @@
     <database name="cs_large" inputSchema="cs_large" outputSchema="predictor_factory" targetTable="target_churn" targetId="ACC_KEY" targetDate="date_horizon" targetColumn="target_churn" task="classification"/>
     <database name="classicmodels" inputSchema="classicmodels" outputSchema="predictor_factory" targetTable="payments" targetId="checkNumber" targetDate="paymentDate" targetColumn="amount" task="regression"/>
     <database name="employee" inputSchema="employee" outputSchema="predictor_factory" targetTable="salaries" targetId="emp_no" targetDate="from_date" targetColumn="salary" task="regression"/>
-    <database name="SAS" inputSchema="INPUT" outputSchema="OUTPUT" targetTable="LOAN" targetId="account_id" targetDate="date" targetColumn="status" task="classification"/>
     <database name="financial" inputSchema="financial" outputSchema="predictor_factory" targetTable="loan" targetId="account_id" targetDate="date" targetColumn="status" blackListTable="result" task="classification"/>
     <database name="financial_bin" inputSchema="financial_bin" outputSchema="predictor_factory" targetTable="loan" targetId="account_id" targetDate="date" targetColumn="target" blackListTable="result" blackListColumn="loan.status" task="classification"/>
     <database name="financial_missing_target" inputSchema="financial_missing_target" outputSchema="predictor_factory" targetTable="loan_missing" targetId="account_id" targetDate="date" targetColumn="status" blackListTable="result" task="classification"/>
@@ -46,6 +45,8 @@
     <database name="PremierLeague_sym" inputSchema="PremierLeague_sym" outputSchema="predictor_factory" targetTable="Matches" targetId="MatchID" targetDate="Date" targetColumn="ResultOfTeamHome" task="classification"/>
     <database name="pubs" inputSchema="pubs" outputSchema="predictor_factory" targetTable="titles" targetId="title_id" targetDate="pubdate" targetColumn="ytd_sales" task="regression"/>
     <database name="sakila" inputSchema="sakila" outputSchema="predictor_factory" targetTable="payment" targetId="payment_id" targetDate="payment_date" targetColumn="amount" task="regression"/>
+	<database name="SAS" inputSchema="INPUT" outputSchema="OUTPUT" targetTable="LOAN" targetId="account_id" targetDate="date" targetColumn="status" task="classification"/>
+	<database name="SAS_GE" inputSchema="INPUT" outputSchema="OUTPUT" targetTable="TARGET" targetId="IdCustomer" targetDate="DObservation" targetColumn="IsPersonalLoan" blackListTable="CAMPAIGNHISTORY,CLIENTCONTACT,CLOSEDCONTRACTS,CONTRACTSMONTHLY,CONTRACTSTRANSFERS,CUSTOMERHISTORIES,EBANKINGSESSION,EVENTS,INFOLIMIT,MAINSAMPLE_IB,PLACEDORDERS,TXNHISTORY" task="classification"/>    
     <database name="stats" description="It would have been better if I predicted tags on post" inputSchema="stats" outputSchema="predictor_factory" targetTable="users" targetId="Id" targetDate="LastAccessDate" targetColumn="Reputation" task="regression"/>
     <database name="Toxicology" inputSchema="Toxicology" outputSchema="predictor_factory" targetTable="molecule" targetId="molecule_id" targetColumn="label" task="classification"/>
     <database name="tpcc" inputSchema="tpcc" outputSchema="predictor_factory" targetTable="CUSTOMER" targetId="c_id" targetColumn="c_credit" task="classification"/>
