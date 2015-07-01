@@ -170,6 +170,11 @@ public class Meta {
 				int dataType = rs.getInt("DATA_TYPE");
 				String columnName = rs.getString("COLUMN_NAME");
 				
+				// SAS stores entity names in chars instead of in varchars
+				if ("SAS".equals(setting.databaseVendor)) {
+					columnName = columnName.replace(" ", "");	// Remove space padding
+				}
+				
 				// Oracle decided that NVARCHAR2 should be classified as "other" type (1111)
 				// even though it can be casted to String. Hence do the work that Oracle
 				// should have done.
@@ -372,7 +377,14 @@ public class Meta {
 			ResultSet rs = meta.getPrimaryKeys(database, schema, table);
 
 			while (rs.next()) {
-				primaryKeyList.add(rs.getString("COLUMN_NAME"));
+				String primaryKey = rs.getString("COLUMN_NAME");
+				
+				// SAS stores entity names in chars instead of in varchars
+				if ("SAS".equals(setting.databaseVendor)) {
+					primaryKey = primaryKey.replace(" ", "");	// Remove space padding
+				}
+				
+				primaryKeyList.add(primaryKey);
 			}
 		} catch (SQLException e) {
 			logger.error(e.getMessage());
