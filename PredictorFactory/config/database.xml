@@ -56,5 +56,5 @@
     <database name="world" inputSchema="world" outputSchema="predictor_factory" targetTable="Country" targetId="Code" targetColumn="Continent" task="classification"/>
     <database name="Yelp" inputSchema="Yelp" outputSchema="predictor_factory" targetTable="Reviews" targetId="review_id" targetDate="review_date" targetColumn="stars" task="regression"/>
     <database name="financial Savana" inputSchema="financial" outputSchema="financial" targetTable="loan" targetId="account_id" targetDate="date" targetColumn="status" blackListTable="result" task="classification"/>
-	<database name="GUI" inputSchema="financial" outputSchema="predictor_factory" targetTable="loan" targetId="account_id" targetDate="date" targetColumn="status" blackListTable="trans" blackListColumn="trans.account,trans.account_id,trans.amount,trans.balance,trans.bank,trans.date,trans.k_symbol,trans.operation,trans.trans_id,trans.type" task="classification"/>
+    <database name="GUI" inputSchema="INPUT" outputSchema="OUTPUT" targetTable="LOAN" targetId="account_id" targetDate="date" targetColumn="status" blackListTable="" blackListColumn="" task="classification"/>
 </databases>
