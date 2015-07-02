@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ASCII"?>
 <anttasks:AntTask xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:anttasks="http://org.eclipse.fx.ide.jdt/1.0" buildDirectory="${project}/release">
-  <deploy packagingFormat="exe">
-    <application name="PredictorFactory_GUI" mainclass="controller.MainApp" version="2.2"/>
+  <deploy packagingFormat="dmg">
+    <application name="PredictorFactory_GUI" mainclass="controller.MainApp" version="2.2" toolkit="fx"/>
     <info title="PredictorFactory" vendor="www.motl.us"/>
   </deploy>
   <signjar/>

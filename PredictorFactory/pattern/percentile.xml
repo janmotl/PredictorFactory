@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Percentile</name>
+	<description>Percentiles
+	
+	Note: The implementation for PostgreSQL is supported from PostgreSQL 9.4.
+	</description>
+	<author>Jan Motl</author>
+	<date>2014-12-22</date>
+	<code compatibility="PostgreSQL">SELECT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , percentile_cont(@value) WITHIN GROUP (ORDER BY @numericalColumn) AS "@columnName"
+		   FROM @propagatedTable
+		   GROUP BY @baseId, @baseDate, @baseTarget
+	</code>
+	<code compatibility="Microsoft SQL Server">SELECT DISTINCT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , percentile_cont(@value) WITHIN GROUP (ORDER BY @numericalColumn) OVER (PARTITION BY @baseId, @baseDate, @baseTarget) AS "@columnName"
+		   FROM @propagatedTable
+	</code>
+	<parameter key="@value" value="0.05, 0.5, 0.95"/>
+	<cardinality>n</cardinality>
+</pattern>

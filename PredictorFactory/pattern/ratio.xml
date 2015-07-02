@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Ratio</name>
+	<description>Ratio of the two fields X and Y.
+	
+	Ratio(NULL, Y) = NULL
+	Ratio(X, NULL) = NULL
+	Ratio(X, 0) = NULL
+	Ratio(0, Y) = 0
+	Ratio(X, Y) = 100*X/Y
+	
+	Note: The implementation prefers to return NULL when the ratio is ill defined.
+	If you want to 0 instead of NULL, just add coalesce.
+	
+	NOTE: COULD HAVE BEEN EXTENDED INTO RATIOS OF AGGREGATES
+
+	</description>
+	<example>
+	Customers with very low (loan_duration / regular_payment_amount) are unlikely to pay the loan in time.   
+	</example>
+	<author>Jan Motl</author>
+	<date>2014-12-22</date>
+	<code>SELECT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , 100*@numericalColumn1/nullif(@numericalColumn2, 0) AS "@columnName"
+		   FROM @propagatedTable
+	</code>
+	<cardinality>1</cardinality>
+</pattern>
