@@ -25,3 +25,4 @@ Troubleshooting
  - Port: 3306
  - Username: guest
  - Password: ```******``` (six asterisks)
+4. Does Eclipse complain during the build proces? Check that you are using JDK (not JRE) for building (Run>External Tools>External Tools Configurations>JRE).
