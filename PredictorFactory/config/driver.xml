@@ -18,7 +18,7 @@ Description of the fields:
 	DateAddMonth: Because we want to be able to express time ranges. This syntax correctly deals with leap years.  
 	DateDiffSyntax: Not all databases support conversion of time to number. Hence just use a diff against a constant. 
 	DateToNumber: EXPERIMENTAL
-	InsertTimestampSyntax: Syntax for timestamp (it's used for creation of journal table). ISN'T IT A DUPLICATE TO typeTimestamp?
+	InsertTimestampSyntax: Syntax for timestamp (it's used for creation of journal table). Because of SAS it generally has to be in single quotes.
 	StdDevCommand: The command for calculation of sample standard deviation.
 	CharLengthCommand: The command for calculation of string length.
 -->
@@ -40,7 +40,7 @@ Description of the fields:
 		dateAddMonth="(@baseDate + INTERVAL '@amount month')" 
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="extract(epoch from @column)"
-		insertTimestampSyntax="@timestamp"
+		insertTimestampSyntax="'@timestamp'"
 		stdDevCommand="stddev_samp"
 		charLengthCommand="char_length"
 		typeVarchar="VARCHAR"
@@ -65,7 +65,7 @@ Description of the fields:
 		dateAddMonth="DATEADD(month, @amount, @baseDate)"
 		dateDiffSyntax="DATEDIFF(day, @dateTo, @dateFrom)"
 		dateToNumber="datediff(hour,'1990-1-1', @column)"
-		insertTimestampSyntax="@timestamp"
+		insertTimestampSyntax="'@timestamp'"
 		stdDevCommand="stdev"
 		charLengthCommand="len"
 		typeVarchar="VARCHAR"
@@ -90,7 +90,7 @@ Description of the fields:
 		dateAddMonth="DATEADD(month, @amount, @baseDate)"
 		dateDiffSyntax="DATEDIFF(day, @dateTo, @dateFrom)"
 		dateToNumber="(@column - date '1970-01-01')"
-		insertTimestampSyntax="@timestamp"
+		insertTimestampSyntax="'@timestamp'"
 		stdDevCommand="SYS.STDDEV_SAMP "
 		charLengthCommand="LENGTH"
 		typeVarchar="VARCHAR"
@@ -115,7 +115,7 @@ Description of the fields:
 		dateAddMonth="DATE_ADD(@baseDate, INTERVAL @amount month)"
 		dateDiffSyntax="DATEDIFF(@dateTo, @dateFrom)"
 		dateToNumber="UNIX_TIMESTAMP(@column)"
-		insertTimestampSyntax="@timestamp"
+		insertTimestampSyntax="'@timestamp'"
 		stdDevCommand="stddev_samp"
 		charLengthCommand="char_length"
 		typeVarchar="VARCHAR"
@@ -140,7 +140,7 @@ Description of the fields:
 		dateAddMonth="add_months(@baseDate, @amount)"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="extract(epoch from @date)"
-		insertTimestampSyntax="@timestamp"
+		insertTimestampSyntax="'@timestamp'"
 		stdDevCommand="stddev_samp"
 		charLengthCommand="char_length"
 		typeVarchar="VARCHAR"
@@ -167,7 +167,7 @@ Description of the fields:
 		dateAddMonth="add_months(@baseDate, @amount)"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="(@column - TO_DATE('01011970','DDMMYYYY'))"
-		insertTimestampSyntax="TO_TIMESTAMP(@timestamp, 'YYYY-MM-DD HH24:MI:SS.FF')"
+		insertTimestampSyntax="TO_TIMESTAMP('@timestamp', 'YYYY-MM-DD HH24:MI:SS.FF')"
 		stdDevCommand="stddev_samp"
 		charLengthCommand="length"
 		typeVarchar="VARCHAR2"
@@ -192,7 +192,7 @@ Description of the fields:
 		dateAddMonth="(@baseDate + INTERVAL '@amount month')"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="extract(epoch from @column)"
-		insertTimestampSyntax="@timestamp"
+		insertTimestampSyntax="'@timestamp'"
 		stdDevCommand="stddev_samp"
 		charLengthCommand="char_length"
 		typeVarchar="VARCHAR"
@@ -203,17 +203,18 @@ Description of the fields:
 		randomCommand="random()"
 	/>
 	
-	<!-- Draft. Changed: {dateAddMonth, stdDevCommand, randomCommand} -->
+	<!-- Draft. Changed: {dateAddMonth, stdDevCommand, randomCommand, charLengthCommand, dateDiff} -->
+	<!-- quoteEntityClose="'n" -->
 	<driver
 		name="SAS"
 		driverClass="com.sas.net.sharenet.ShareNetDriver"
 		defaultPort="8561"
 		urlPrefix="jdbc:sharenet://"
 		dbNameSeparator=""
-		quoteEntityOpen="'"
-		quoteEntityClose="'n"
-		quoteAliasOpen="'"
-		quoteAliasClose="'n"
+		quoteEntityOpen=""
+		quoteEntityClose=""
+		quoteAliasOpen=""
+		quoteAliasClose=""
 		supportsCatalogs="false"
 		supportsSchemas="true"
 		supportsCreateTableAs="true"
@@ -222,9 +223,9 @@ Description of the fields:
 		dateAddMonth="intnx('month', @baseDate, @amount)"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="extract(epoch from @column)"
-		insertTimestampSyntax="@timestamp"
+		insertTimestampSyntax="%sysfunc(inputn(@timestamp, ymddttm20.3))"
 		stdDevCommand="std"
-		charLengthCommand="char_length"
+		charLengthCommand="length"
 		typeVarchar="VARCHAR"
 		typeInteger="INTEGER"
 		typeDecimal="DECIMAL"
@@ -250,7 +251,7 @@ Description of the fields:
 		dateAddMonth="add_months(@baseDate, @amount)"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="cast(@column as int)"
-		insertTimestampSyntax="@timestamp"
+		insertTimestampSyntax="'@timestamp'"
 		stdDevCommand="stddev_samp"
 		charLengthCommand="character_length"
 		typeVarchar="VARCHAR"

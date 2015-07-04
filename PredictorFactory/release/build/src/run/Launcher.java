@@ -3,12 +3,16 @@
  */
 package run;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
 import java.util.SortedMap;
 
 import metaInformation.MetaOutput;
 import metaInformation.MetaOutput.OutputTable;
 
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 import propagation.Propagation;
 import utility.Meta.Table;
@@ -19,18 +23,29 @@ import connection.SQL;
 public class Launcher{
 	// Logging
 	public static final Logger logger = Logger.getLogger(Launcher.class.getName());
-
 	
+
+		
 	// Where everything starts and ends...
 	public static void main(String[] arg){
 		
-		logger.info("#### Predictor Factory was initialized ####");
+		// Start measuring run time
 		long startTime = System.currentTimeMillis();
+				
+		// Setup logging
+		try {
+			Properties p = new Properties();
+		    p.load(new FileInputStream("config/log4j.properties"));
+		    PropertyConfigurator.configure(p);
+		} catch (IOException e) {}
+		
+		logger.info("#### Predictor Factory was initialized ####");
+		
 		
 		// Database setting
 		Setting setting = new Setting();
-		String connectionProperty = "MariaDB";	// Host identification as specified in resources/connection.xml
-		String databaseProperty = "financial";		// Dataset identification as specified in resources/database.xml 
+		String connectionProperty = "SAS";	// Host identification as specified in resources/connection.xml
+		String databaseProperty = "SAS_GE";		// Dataset identification as specified in resources/database.xml 
 
 		
 		// Read command line parameters if they are present (and overwrite defaults).
@@ -49,7 +64,7 @@ public class Launcher{
 		setting = Network.openConnection(setting, connectionProperty, databaseProperty);
 		
 		// Collect information about tables, columns and relations in the database
-		SortedMap<String, Table> inputMeta = metaInformation.MetaInput.getMetaInput(setting);
+		SortedMap<String, Table> metaInput = metaInformation.MetaInput.getMetaInput(setting);
 		logger.info("#### Finished collecting metadata ####");
 		
 		// Remove all the tables from the previous run
@@ -61,10 +76,10 @@ public class Launcher{
 		
 		// Make base table
 		SQL.getBase(setting);
-		SQL.getSubSample(setting);
+		SQL.getSubSample(setting, metaInput);
 		
 		// Propagate base table
-		SortedMap<String, OutputTable> outputMeta = Propagation.propagateBase(setting, inputMeta);
+		SortedMap<String, OutputTable> outputMeta = Propagation.propagateBase(setting, metaInput);
 		MetaOutput.exportPropagationSQL(outputMeta);
 		logger.info("#### Finished base propagation into " + outputMeta.size() +  " tables ####");
 						

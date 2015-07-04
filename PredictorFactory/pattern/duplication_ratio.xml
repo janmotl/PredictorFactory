@@ -17,7 +17,7 @@
 		  		SELECT @baseId
 					 , @baseDate
 					 , @baseTarget
-		       		 , Count(*) nrow
+		       		 , Count(*) AS nrow
 			    FROM @propagatedTable
 			    GROUP BY @baseId, @baseDate, @baseTarget
 			    ) t1

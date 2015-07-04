@@ -3,12 +3,16 @@
  */
 package run;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
 import java.util.SortedMap;
 
 import metaInformation.MetaOutput;
 import metaInformation.MetaOutput.OutputTable;
 
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 import propagation.Propagation;
 import utility.Meta.Table;
@@ -19,13 +23,24 @@ import connection.SQL;
 public class Launcher{
 	// Logging
 	public static final Logger logger = Logger.getLogger(Launcher.class.getName());
-
 	
+
+		
 	// Where everything starts and ends...
 	public static void main(String[] arg){
 		
-		logger.info("#### Predictor Factory was initialized ####");
+		// Start measuring run time
 		long startTime = System.currentTimeMillis();
+				
+		// Setup logging
+		try {
+			Properties p = new Properties();
+		    p.load(new FileInputStream("config/log4j.properties"));
+		    PropertyConfigurator.configure(p);
+		} catch (IOException e) {}
+		
+		logger.info("#### Predictor Factory was initialized ####");
+		
 		
 		// Database setting
 		Setting setting = new Setting();

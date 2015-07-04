@@ -126,8 +126,12 @@ public class MetaInput {
 			// The unique values will be used in patterns like "WoE" or "Existential count".
 			for (String columnName : tableData.nominalColumn) {
 				tableData.uniqueList.put(columnName, SQL.getUniqueRecords(setting, tableName, columnName, true));
-			}
+			}		
+		}
 		
+		// Get distinct values for the target iff we are performing classification AND target is a numerical column
+		if ("classification".equals(setting.task) && tableMap.get(setting.targetTable).numericalColumn.contains(setting.targetColumn)) {
+			tableMap.get(setting.targetTable).uniqueList.put(setting.targetColumn, SQL.getUniqueRecords(setting, setting.targetTable, setting.targetColumn, true));
 		}
 		
 		// Do not use targetColumn as a predictor. 

@@ -20,5 +20,12 @@
 	      FROM @propagatedTable
 	      GROUP BY @baseId, @baseDate, @baseTarget
 	</code>
+	<code compatibility="SAS">SELECT @baseId
+			   , @baseDate
+			   , @baseTarget
+			   , stddev_samp(@numericalColumn)/avg(@numericalColumn) AS "@columnName"
+	      FROM @propagatedTable
+	      GROUP BY @baseId, @baseDate, @baseTarget
+	</code>
 	<cardinality>n</cardinality>
 </pattern>

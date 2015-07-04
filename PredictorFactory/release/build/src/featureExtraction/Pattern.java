@@ -152,8 +152,38 @@ public class Pattern {
 			}
 		} while (true);
 		
-
+		// NullIf (SAS doesn't support it in JDBC)
+		if ("SAS".equals(setting.databaseVendor)) {
+			dialectCode = nullIf(dialectCode);
+		}
+		
 		
 		return dialectCode;
 	}
+	
+	// Subroutine for getDialect
+	private String nullIf(String dialectCode) {
+		java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(?is)(.*)(nullif\\()(.*?)(,+)(.*?)(\\))(.*)");
+		
+		do {
+			Matcher matcher = pattern.matcher(dialectCode);
+			if (matcher.find())
+			{		    
+			    // Extract the keywords
+			    String what = matcher.group(3);
+			    String value = matcher.group(5);
+					
+				// Replace
+				String caseWhen = "CASE WHEN @what = @value THEN null ELSE @what END";
+				caseWhen = caseWhen.replace("@what", what);
+				caseWhen = caseWhen.replace("@value", value);
+				dialectCode = matcher.group(1) + caseWhen + matcher.group(7);
+			} else {
+				break;
+			}
+		} while (true);
+		
+		return dialectCode;
+	}
+	
 }
