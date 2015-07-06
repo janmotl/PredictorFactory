@@ -7,6 +7,8 @@
 	NOTE: Works also on id!
 	
 	Note: The implementation for PostgreSQL is supported from PostgreSQL 9.4.
+	
+	NOTE: THE VERSION FOR SAS CAN RETURN TOO MANY ROWS BECAUSE OF TIES.
 	</description>
 	<example>
 		The typical payment amount.
@@ -28,10 +30,23 @@
 	           		SELECT TOP 1 @column 
 					FROM @propagatedTable t2 
 					WHERE t.@baseId = t2.@baseId AND t.@baseDate = t2.@baseDate
-					GROUP BY @column ORDER BY count(*) desc
+					GROUP BY @column 
+					ORDER BY count(*) desc
 				) AS "@columnName"
 			FROM  @propagatedTable  t
 			GROUP BY @baseId, @baseDate, @baseTarget
+	</code>
+	<code compatibility="SAS-errorenous">SELECT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , @column AS "@columnName" 
+			FROM (
+			        SELECT @baseId, @baseDate, @baseTarget, @column, count(*) AS count 
+			        FROM @propagatedTable 
+			        GROUP BY @baseId, @baseDate, @baseTarget, @column
+			      )
+			GROUP BY @baseId, @baseDate, @baseTarget
+			HAVING count=max(count);
 	</code>
 	<parameter key="@column" value="@nominalColumn, @numericalColumn"/>
 	<cardinality>n</cardinality>

@@ -178,6 +178,9 @@ public class Propagation{
 						stillNotPropagated.remove(table2);
 						newlyPropagated.add(outputTable);
 						
+						// Add indexes
+						SQL.addIndex(setting, outputTable);
+						
 						// Add the table into tableMetadata list
 						OutputTable table = new OutputTable();
 						table.originalName = table2;

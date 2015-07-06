@@ -7,7 +7,7 @@ import java.net.URL;
 
 public class ValidateResources {
 	
-	// Sanity check that all resources are at their places where they are expected
+	// Sanity check that all the resources are at the places where they are expected
 	// UGLY COPY&PASTE
 	public static boolean isResourceAvailable() {
 		File dir = new File("pattern");

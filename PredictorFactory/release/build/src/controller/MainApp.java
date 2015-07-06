@@ -19,7 +19,7 @@ public class MainApp extends Application {
     // Note: All network connections are automatically closed on window closing - no need to handle it manually. 
     public void start(Stage stage) throws Exception {
     	
-    	System.out.println("All the resources are their place: " + ValidateResources.isResourceAvailable());
+    	System.out.println("All the resources were found: " + ValidateResources.isResourceAvailable());
     	
         Parent root = FXMLLoader.load(getClass().getResource("/view/All.fxml"));
     	

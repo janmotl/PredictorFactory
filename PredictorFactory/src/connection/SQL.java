@@ -247,24 +247,18 @@ public final class SQL {
 		}
 	}
 	
-	// Assembly create index
-	// WILL BE PRIVATE
-	public static String getIndex(Setting setting, String outputTable) {	
+	// Create index on {baseId, baseDate}.
+	// Returns true if the update was successful.
+	public static boolean addIndex(Setting setting, String outputTable) {	
 		
-		String sql;
-		
-		if ("column".equals(setting.indexNameSyntax)) {
-			// In SAS, the simple index must have a name of the column 
-			sql = "CREATE INDEX " + setting.baseId + " ON @outputTable (@baseId)";
-		} else {
-			// The index name must be unique per schema (PostgreSQL). Do not escape outputTable in the index name.
-			sql = "CREATE INDEX " + outputTable + "_idx ON @outputTable (@baseId)";
-		}
+		String sql = "CREATE INDEX " + outputTable + "_idx ON @outputTable (@baseId, @baseDate)";
 		
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, outputTable);
 		
-		return sql;
+		boolean isOK = Network.executeUpdate(setting.connection, sql);
+		
+		return isOK;
 	}
 	
 	
@@ -394,6 +388,7 @@ public final class SQL {
 	// Subsample base table based on target class.
 	// Works only for classification! For sampling of regression problem neglect the target OR discretize the target. 
 	// Note: The selection is not guaranteed to be random.
+	// NOTE: BASE_SAMPLED NAME SHOULD BE A VARIABLE
 	public static void getSubSample(Setting setting, SortedMap<String, Table> metaInput) {
 		
 		// Initialization
@@ -420,8 +415,12 @@ public final class SQL {
 		sql = escapeEntity(setting, sql, "base_sampled");
 		
 		Network.executeUpdate(setting.connection, sql);
-				
+		
+		// Change setting for base table
 		setting.baseTable = "base_sampled";
+		
+		// Add indexes
+		addIndex(setting, "base_sampled");
 	}
 
 	// Could the two columns in the table describe a symmetric relation (like in borderLength(c1, c2))?
@@ -720,7 +719,7 @@ public final class SQL {
 		}
 		
 		// Add index
-		Network.executeUpdate(setting.connection, SQL.getIndex(setting, setting.baseTable));
+		SQL.addIndex(setting, setting.baseTable);
 		
 		return (isUnique && isCreated);
 	}
@@ -812,7 +811,7 @@ public final class SQL {
 		// Insert timestamp subquery
 		String template = setting.insertTimestampSyntax;
 		String timestamp = predictor.getTimestampBuilt().format(formatter);
-		timestamp = template.replace("@timestamp", "'" + timestamp + "'");
+		timestamp = template.replace("@timestamp", timestamp);
 		
 		// Assembly the insert
 		String sql = "INSERT INTO @outputTable VALUES (" +
@@ -950,7 +949,7 @@ public final class SQL {
 			Network.executeUpdate(setting.connection, sql);
 			
 			// Build index on BaseId in the temporary table for possibly faster final join
-			Network.executeUpdate(setting.connection, getIndex(setting, tempTable));
+			addIndex(setting, tempTable);
 			
 		}
 		

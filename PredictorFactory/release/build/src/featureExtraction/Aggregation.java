@@ -351,8 +351,7 @@ public class Aggregation {
 		// If we know that the creation of the predictor failed, save time and just log it.
 		if (predictor.isOk()) {
 			// Add index
-			String sql = SQL.getIndex(setting, predictor.outputTable);
-			Network.executeUpdate(setting.connection, sql);
+			SQL.addIndex(setting, predictor.outputTable);
 			
 			// Add row count
 			predictor.setRowCount(SQL.getRowCount(setting, predictor.outputTable));

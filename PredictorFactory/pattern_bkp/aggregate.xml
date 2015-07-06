@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Aggregate</name>
+	<description>
+		Apply aggregation function on numerical attributes. Following aggregate functions were selected for being 
+		supported in many databases: avg, min, max and stddev_samp.
+		
+		Note that "stddev_samp" is automatically translate to the database specific command for sample standard
+		deviation (for example, MS SQL is using "stddev" while Oracle is using "stddev_samp"). Hence if you want
+		sample standard deviation, use "stddev_samp" keyword, even if you are using MS SQL, to make the script 
+		transferable.
+		
+		Note that "count" attribute is not in the set as it is enough to calculate the count only once per table 
+		(see num_children). But aggregate functions are calculated per each numerical column. 
+		
+		The ratio of missing values is calculated in a separate pattern (null_ratio) as it can be calculated on 
+		any data column, not only on numerical columns.
+		
+		Distinct values are aggregate in a different pattern (aggregate_distinct) because min(distinct X) == min(X)
+		but count(distinct X) != count(X).
+		
+		Time values are aggregated in an a separate pattern (time_since) since it requires casting of time attribute
+		into number. 
+		
+		Note: Are you getting int overflows on avg()? Cast the ints first into biginst! See:
+			http://stackoverflow.com/questions/1197720/sql-server-giving-arithmetic-overflow-when-calculating-avg  
+		Of course, the same remedy applies to sum() and stddev_samp().
+		
+		Note: Sum aggregate is particularly prone on overflows. Furthermore, the sum can be represented by {avg, count}.
+		Hence, consider not using sum at all. 
+		
+		NOTE: ADDED SUM
+	</description>
+	<example>
+		Year of first gift,
+		Number of events attended,
+		Year person’s personal information in the database was last updated,
+		Total giving in last five years.
+	</example>
+	<author>Jan Motl</author>
+	<date>2014-10-14</date>
+	<code>SELECT @baseId
+			   , @baseDate
+			   , @baseTarget
+			   , @aggregateFunction(@numericalColumn) AS "@columnName"
+	      FROM @propagatedTable
+	      GROUP BY @baseId, @baseDate, @baseTarget
+	</code>
+    <parameter key="@aggregateFunction" value="stddev_samp, avg, min, max, sum"/>
+	<cardinality>n</cardinality>
+</pattern>
