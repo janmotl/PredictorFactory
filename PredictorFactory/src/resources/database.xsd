@@ -14,6 +14,10 @@
                 <attribute type="string" name="targetId" use="required"/>
                 <attribute type="string" name="targetColumn" use="required"/>
                 <attribute type="string" name="targetDate" use="optional"/>
+                <attribute type="string" name="unit" use="optional"/>
+                <attribute type="string" name="lag" use="optional"/>
+                <attribute type="string" name="lead" use="optional"/>
+                <attribute type="string" name="sampleCount" use="optional"/>
                 <attribute name="task" use="required">
 			       <simpleType>
 			         <restriction base="string">

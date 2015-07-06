@@ -17,6 +17,6 @@
 	      FROM @propagatedTable
 	      GROUP BY @baseId, @baseDate, @baseTarget
 	</code>
-	<parameter key="@aggregateFunction" value="min, max, avg, stddev_samp"/>
+	<parameter key="@aggregateFunction" value="min, max, avg, sum, stddev_samp"/>
 	<cardinality>n</cardinality>
 </pattern>

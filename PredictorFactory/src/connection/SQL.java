@@ -402,7 +402,7 @@ public final class SQL {
 		String quote = "";
 		
 		// Iff the target is nominal, quote the values with single quotes.
-		if (metaInput.get(setting.targetTable).nominalColumn.contains(setting.targetColumn)) {
+		if (setting.isTargetNominal) {
 			quote = "'";
 		}
 		

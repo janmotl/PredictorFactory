@@ -51,6 +51,7 @@ public final class Setting {
 	public String inputSchema;
 	public String outputSchema;
 	public String task;				// Classification or regression?
+	public boolean isTargetNominal = false;	// If the target is nominal, we have to escape the values
 	
 	// Names for entities created by Predictor Factory
 	public String baseTable = "base";				// The name of the base table.

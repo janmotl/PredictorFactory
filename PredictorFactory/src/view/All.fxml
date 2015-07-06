@@ -201,20 +201,6 @@
                               </ComboBox>
                            </children>
                         </VBox>
-                        <VBox layoutX="24.0" layoutY="305.0">
-                           <children>
-                              <Label text="Task">
-                                 <padding>
-                                    <Insets bottom="3.0" />
-                                 </padding>
-                              </Label>
-                              <ComboBox fx:id="comboBoxTask" prefWidth="170.0">
-                                 <tooltip>
-                                    <Tooltip text="If target is a scale, pick regression. If target is nominal, pick classification." />
-                                 </tooltip>
-                              </ComboBox>
-                           </children>
-                        </VBox>
                      </children>
                      <padding>
                         <Insets left="14.0" top="10.0" />
@@ -251,7 +237,7 @@
                   <TreeView fx:id="treeViewSelect" VBox.vgrow="ALWAYS" />
                </children>
                <padding>
-                  <Insets bottom="14.0" left="14.0" right="14.0" top="14.0" />
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                </padding>
             </VBox>
          </content>
@@ -282,6 +268,105 @@
             </ImageView>
          </graphic>
       </Tab>
+      <Tab text="Setting">
+         <graphic>
+            <ImageView fitHeight="15.0" fitWidth="15.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../../../../../../Downloads/1435964924_settings.png" />
+               </image>
+            </ImageView>
+         </graphic>
+         <content>
+            <VBox maxWidth="206.0">
+               <children>
+                  <VBox minHeight="57.0">
+                     <children>
+                        <Label text="Unit">
+                           <padding>
+                              <Insets bottom="3.0" />
+                           </padding>
+                        </Label>
+                        <ComboBox fx:id="comboBoxUnit" prefWidth="170.0" />
+                     </children>
+                     <VBox.margin>
+                        <Insets left="4.0" />
+                     </VBox.margin>
+                  </VBox>
+                  <VBox minHeight="57.0">
+                     <children>
+                        <Label text="Lag">
+                           <padding>
+                              <Insets bottom="3.0" />
+                           </padding>
+                        </Label>
+                        <Spinner fx:id="spinnerLag" prefWidth="170.0" />
+                     </children>
+                     <VBox.margin>
+                        <Insets left="4.0" />
+                     </VBox.margin>
+                  </VBox>
+                  <VBox minHeight="57.0">
+                     <children>
+                        <Label text="Lead">
+                           <padding>
+                              <Insets bottom="3.0" />
+                           </padding>
+                        </Label>
+                        <Spinner fx:id="spinnerLead" prefWidth="170.0" />
+                     </children>
+                     <VBox.margin>
+                        <Insets left="4.0" />
+                     </VBox.margin>
+                  </VBox>
+                  <Separator>
+                     <padding>
+                        <Insets bottom="8.0" top="3.0" />
+                     </padding>
+                  </Separator>
+                  <VBox minHeight="57.0">
+                     <children>
+                        <Label text="Sample count">
+                           <VBox.margin>
+                              <Insets />
+                           </VBox.margin>
+                           <padding>
+                              <Insets bottom="3.0" />
+                           </padding>
+                        </Label>
+                        <Spinner fx:id="spinnerSampleCount" prefWidth="170.0" />
+                     </children>
+                     <VBox.margin>
+                        <Insets left="4.0" />
+                     </VBox.margin>
+                  </VBox>
+                  <Separator>
+                     <padding>
+                        <Insets bottom="8.0" top="3.0" />
+                     </padding>
+                  </Separator>
+                  <VBox minHeight="57.0">
+                     <children>
+                        <Label text="Task">
+                           <padding>
+                              <Insets bottom="3.0" />
+                           </padding>
+                        </Label>
+                        <ComboBox fx:id="comboBoxTask" prefWidth="170.0" />
+                     </children>
+                     <VBox.margin>
+                        <Insets left="4.0" />
+                     </VBox.margin>
+                  </VBox>
+               </children>
+               <padding>
+                  <Insets bottom="10.0" left="10.0" right="14.0" top="10.0" />
+               </padding>
+               <opaqueInsets>
+                  <Insets />
+               </opaqueInsets>
+            </VBox>
+         </content>
+      </Tab>
       
       <Tab text="Run">
          <content>
@@ -309,6 +394,45 @@
                </image>
             </ImageView>
          </graphic>
+      </Tab>
+      <Tab disable="true" text="Dev">
+         <content>
+            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+               <children>
+                  <ImageView fitHeight="16.0" fitWidth="16.0" layoutX="395.0" layoutY="171.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../../../../../Downloads/1435965138_turtle-24.png" />
+                     </image>
+                  </ImageView>
+                  <Label layoutX="424.0" layoutY="170.0" text="Slow" />
+                  <ImageView fitHeight="16.0" fitWidth="16.0" layoutX="395.0" layoutY="106.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../../../../../Downloads/1435789590_access-time.png" />
+                     </image>
+                  </ImageView>
+                  <Label layoutX="424.0" layoutY="105.0" text="Time based" />
+                  <ImageView fitHeight="16.0" fitWidth="16.0" layoutX="400.0" layoutY="74.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../../../../../Downloads/baby-24-000000.png" />
+                     </image>
+                  </ImageView>
+                  <Label layoutX="429.0" layoutY="73.0" text="Basic" />
+                  <ImageView fitHeight="16.0" fitWidth="16.0" layoutX="398.0" layoutY="137.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../../../../../Downloads/android-account-balance-24-000000.png" />
+                     </image>
+                  </ImageView>
+                  <Label layoutX="427.0" layoutY="136.0" text="Advanced" />
+                  <ImageView fitHeight="16.0" fitWidth="16.0" layoutX="586.0" layoutY="74.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../../../../../Downloads/icon_table-24-000000.png" />
+                     </image>
+                  </ImageView>
+                  <Label layoutX="622.0" layoutY="73.0" text="Table" />
+                  <Label layoutX="521.0" layoutY="137.0" text="Nominal/numerical" />
+               </children>
+            </AnchorPane>
+         </content>
       </Tab>
   </tabs>
 </TabPane>
