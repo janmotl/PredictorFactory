@@ -403,12 +403,12 @@ public final class SQL {
 		
 		// Create union 
 		for (int i = 0; i < targetValueList.size(); i++) {
-			sql = sql + "(" + Parser.limitResultSet(setting, "SELECT * FROM @outputSchema.base WHERE @baseTarget = " + quote + targetValueList.get(i) + quote + "\n", setting.sampleSize) + ")"; 
+			sql = sql + "(" + Parser.limitResultSet(setting, "SELECT * FROM @outputSchema.base WHERE @baseTarget = " + quote + targetValueList.get(i) + quote + "\n", setting.sampleCount) + ")"; 
 			sql = sql + " UNION ALL \n";	// Add "union all" between all the selects.
 		}
 		
 		// Finally, add unclassified records.
-		sql = sql + "(" + Parser.limitResultSet(setting, "SELECT * FROM @outputSchema.base WHERE @baseTarget is null\n", setting.sampleSize) + ")";
+		sql = sql + "(" + Parser.limitResultSet(setting, "SELECT * FROM @outputSchema.base WHERE @baseTarget is null\n", setting.sampleCount) + ")";
 						
 		sql = addCreateTableAs(setting, sql);
 		sql = expandName(sql);

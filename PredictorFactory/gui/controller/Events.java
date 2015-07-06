@@ -44,7 +44,7 @@ public class Events implements Initializable {
 	private Setting setting = new Setting();
 	private List<CheckBoxTreeItem<String>> itemListTable = new ArrayList<CheckBoxTreeItem<String>>();
 	private List<CheckBoxTreeItem<String>> itemListColumn = new ArrayList<CheckBoxTreeItem<String>>();
-	private List<CheckBoxTreeItem<String>> itemListPredictor = new ArrayList<CheckBoxTreeItem<String>>();
+	private List<CheckBoxTreeItem<String>> itemListPattern = new ArrayList<CheckBoxTreeItem<String>>();
 	
 	// Define GUI elements. The values are automatically initialized by FXMLLoader.
     @FXML private Button buttonConnect;
@@ -62,13 +62,16 @@ public class Events implements Initializable {
 	@FXML private ComboBox<String> comboBoxTargetId;
 	@FXML private ComboBox<String> comboBoxTargetTimestamp;
 	@FXML private ComboBox<String> comboBoxTask;
+	@FXML private ComboBox<String> comboBoxUnit;
+	@FXML private TextField textLag;
+	@FXML private TextField textLead;
+	@FXML private TextField textSampleCount;
 	@FXML private TextArea textAreaConsole;
 	@FXML private TextArea textAreaDescription;
-	
 	@FXML private TreeView<String> treeViewSelect;
 	@FXML private TreeView<String> treeViewPattern;
 	
-
+	@FXML private TextField test;
 	
 	
 	// Event handlers
@@ -183,18 +186,22 @@ public class Events implements Initializable {
 		setting.targetColumn = comboBoxTargetColumn.getValue();
 		setting.targetId = comboBoxTargetId.getValue();
 		setting.targetDate = comboBoxTargetTimestamp.getValue();
+		setting.unit = comboBoxUnit.getValue();
+		setting.lag = Integer.valueOf(textLag.getText());
+		setting.lead = Integer.valueOf(textLead.getText());
+		setting.sampleCount = Integer.valueOf(textSampleCount.getText());
 		setting.task = comboBoxTask.getValue();
 
 		// BlackList tables
-		List<String> blackList = new ArrayList<String>(); 
+		List<String> blackListTable = new ArrayList<String>(); 
 		
 		for (CheckBoxTreeItem<String> treeItem : itemListTable) {
 			if (!treeItem.isSelected()) {
-				blackList.add(treeItem.getValue());
+				blackListTable.add(treeItem.getValue());
 			}
 		}
 
-		setting.blackListTable = StringUtils.join(blackList, ',');
+		setting.blackListTable = StringUtils.join(blackListTable, ',');
 		
 		
 		// BlackList columns
@@ -207,6 +214,17 @@ public class Events implements Initializable {
 		}
 
 		setting.blackListColumn = StringUtils.join(blackListColumn, ',');
+		
+		// BlackList patterns
+		List<String> blackListPattern = new ArrayList<String>(); 
+		
+		for (CheckBoxTreeItem<String> treeItem : itemListPattern) {
+			if (!treeItem.isSelected()) {
+				blackListPattern.add(treeItem.getValue());
+			}
+		}
+
+		setting.blackListPattern = StringUtils.join(blackListPattern, ',');
 		
 
 		// 3) Add (replace) the new connection into the list of connections
@@ -242,6 +260,7 @@ public class Events implements Initializable {
 		// VENDOR COMBOBOX SHOULD BE POPULATED BASED ON DRIVER.XML
         comboBoxVendor.getItems().addAll("Microsoft SQL Server", "MonetDB", "Netezza", "MySQL", "Oracle", "PostgreSQL", "SAS", "Teradata");
         comboBoxTask.getItems().addAll("classification", "regression");
+        comboBoxUnit.getItems().addAll("second", "day", "month", "year");
         
                 
 		// Populate the pattern tab
@@ -252,10 +271,10 @@ public class Events implements Initializable {
 		
 		for (Pattern pattern : patternList.values()) {
 			final CheckBoxTreeItem<String> itemPredictor = new CheckBoxTreeItem<String>(pattern.name);
-			itemListPredictor.add(itemPredictor);
+			itemListPattern.add(itemPredictor);
 		}
 		
-		rootItem.getChildren().addAll(itemListPredictor);
+		rootItem.getChildren().addAll(itemListPattern);
 		
 		treeViewPattern.setRoot(rootItem);
 		treeViewPattern.setCellFactory(CheckBoxTreeCell.<String>forTreeView());
@@ -279,10 +298,43 @@ public class Events implements Initializable {
             }
         });
 		
+		// Populate setting tab	
+		textLag.textProperty().addListener(new ChangeListener<String>() {
+			@Override
+			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+				try {
+					Integer.parseUnsignedInt(newValue); // Permit only nonnegative integers
+				} catch (NumberFormatException e) {
+					textLag.setText(oldValue);
+				}
+			}
+		});
 		
+		textLead.textProperty().addListener(new ChangeListener<String>() {
+			@Override
+			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+				try {
+					Integer.parseUnsignedInt(newValue); // Permit only nonnegative integers
+				} catch (NumberFormatException e) {
+					textLead.setText(oldValue);
+				}
+			}
+		});
+		
+		textSampleCount.textProperty().addListener(new ChangeListener<String>() {
+			@Override
+			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+				try {
+					Integer.parseUnsignedInt(newValue); // Permit only nonnegative integers
+				} catch (NumberFormatException e) {
+					textSampleCount.setText(oldValue);
+				}
+			}
+		});
 		
 		
         // Read past setting. If no past setting is available, leave it unfilled.
+		// NOTE: IF SOME ATTRIBUTE IS MISSING, IT WILL FAIL
         ConnectionPropertyList connectionList = connection.ConnectionPropertyList.unmarshall();
         ConnectionProperty connectionProperty = connectionList.getConnectionProperties("GUI");
         
@@ -295,7 +347,16 @@ public class Events implements Initializable {
         	textPassword.setText(connectionProperty.password);
         }
         
+        DatabasePropertyList databaseList = connection.DatabasePropertyList.unmarshall();
+        DatabaseProperty databaseProperty = databaseList.getDatabaseProperties("GUI");
      
+        if (databaseProperty != null) {
+        	comboBoxUnit.setValue(databaseProperty.unit);
+        	textLag.setText(databaseProperty.lag.toString());
+        	textLead.setText(databaseProperty.lead.toString());
+        	textSampleCount.setText(databaseProperty.sampleCount.toString());
+        	comboBoxTask.setValue(databaseProperty.task);
+        }
     }
 
 }

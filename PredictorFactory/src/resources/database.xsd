@@ -28,6 +28,7 @@
 			    </attribute>
                 <attribute type="string" name="blackListTable" use="optional"/>
                 <attribute type="string" name="blackListColumn" use="optional"/>
+                <attribute type="string" name="blackListPattern" use="optional"/>
               </extension>
             </simpleContent>
           </complexType>

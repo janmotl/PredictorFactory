@@ -2,20 +2,22 @@ package featureExtraction;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.regex.Matcher;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
 
 import metaInformation.MetaOutput.OutputTable;
+
+import org.apache.log4j.Logger;
+
 import run.Journal;
 import run.Setting;
 import utility.PatternMap;
-
-import org.apache.log4j.Logger;
 
 import com.rits.cloning.Cloner;
 
@@ -100,8 +102,14 @@ public class Aggregation {
 	// Subroutine 1: Get list of all the patterns in the pattern directory. Return list of predictors.
 	protected static List<Predictor> loopPatterns(Setting setting) {
 
+		// Initialize
 		List<Predictor> outputList = new ArrayList<Predictor>();
 		
+		// Skip blacklisted patterns
+		String[] blackList = setting.blackListPattern.split("");
+		PatternMap.getPatternMap().keySet().removeAll(Arrays.asList(blackList));
+		
+		// Get the dialect code
 		for (Pattern pattern : PatternMap.getPatternMap().values()) {
 			pattern.agnostic2dialectCode(setting);					// Initialize dialectCode. Once.
 			outputList.add(new Predictor(pattern));					// Build a predictor from the pattern

@@ -164,7 +164,12 @@ public final class Network {
 		setting.targetTable = databaseProperty.targetTable;
 		setting.blackListTable = databaseProperty.blackListTable;
 		setting.blackListColumn = databaseProperty.blackListColumn;
+		
+		setting.unit = databaseProperty.unit;
+		setting.lag = databaseProperty.lag;
+		setting.lead = databaseProperty.lead;
 		setting.task = databaseProperty.task;
+		setting.blackListPattern = databaseProperty.blackListPattern;
 		
 		return setting;
 	}
