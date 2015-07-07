@@ -82,20 +82,20 @@
                </center>
                <bottom>
                   <BorderPane BorderPane.alignment="CENTER_RIGHT">
-                     <center>
-                        <HBox alignment="CENTER_RIGHT" prefHeight="50.0" style="-fx-background-color: DDDDDD;" BorderPane.alignment="CENTER">
-                           <children>
-                              <Button fx:id="buttonConnect" onAction="#connectAction" text="Connect">
-                                 <HBox.margin>
-                                    <Insets right="14.0" />
-                                 </HBox.margin>
-                              </Button>
-                           </children>
-                        </HBox>
-                     </center>
                      <top>
                         <Pane prefHeight="1.0" prefWidth="20000.0" style="-fx-background-color: b5b5b5;" BorderPane.alignment="CENTER" />
                      </top>
+                     <center>
+                        <BorderPane prefHeight="50.0" style="-fx-background-color: DDD;" BorderPane.alignment="CENTER">
+                           <right>
+                              <Button fx:id="buttonConnect" onAction="#connectAction" text="Connect" BorderPane.alignment="CENTER">
+                                 <BorderPane.margin>
+                                    <Insets right="14.0" />
+                                 </BorderPane.margin>
+                              </Button>
+                           </right>
+                        </BorderPane>
+                     </center>
                   </BorderPane>
                </bottom>
             </BorderPane>
@@ -280,7 +280,7 @@
          <graphic>
             <ImageView fitHeight="15.0" fitWidth="15.0" pickOnBounds="true" preserveRatio="true">
                <image>
-                  <Image url="@../../../../../../Downloads/1435964924_settings.png" />
+                  <Image url="@../img/1435964924_settings.png" />
                </image>
             </ImageView>
          </graphic>
@@ -402,45 +402,6 @@
                </image>
             </ImageView>
          </graphic>
-      </Tab>
-      <Tab disable="true" text="Dev">
-         <content>
-            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-               <children>
-                  <ImageView fitHeight="16.0" fitWidth="16.0" layoutX="395.0" layoutY="171.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../../../../../../Downloads/1435965138_turtle-24.png" />
-                     </image>
-                  </ImageView>
-                  <Label layoutX="424.0" layoutY="170.0" text="Slow" />
-                  <ImageView fitHeight="16.0" fitWidth="16.0" layoutX="395.0" layoutY="106.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../../../../../../Downloads/1435789590_access-time.png" />
-                     </image>
-                  </ImageView>
-                  <Label layoutX="424.0" layoutY="105.0" text="Time based" />
-                  <ImageView fitHeight="16.0" fitWidth="16.0" layoutX="400.0" layoutY="74.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../../../../../../Downloads/baby-24-000000.png" />
-                     </image>
-                  </ImageView>
-                  <Label layoutX="429.0" layoutY="73.0" text="Basic" />
-                  <ImageView fitHeight="16.0" fitWidth="16.0" layoutX="398.0" layoutY="137.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../../../../../../Downloads/android-account-balance-24-000000.png" />
-                     </image>
-                  </ImageView>
-                  <Label layoutX="427.0" layoutY="136.0" text="Advanced" />
-                  <ImageView fitHeight="16.0" fitWidth="16.0" layoutX="586.0" layoutY="74.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../../../../../../Downloads/icon_table-24-000000.png" />
-                     </image>
-                  </ImageView>
-                  <Label layoutX="622.0" layoutY="73.0" text="Table" />
-                  <Label layoutX="521.0" layoutY="137.0" text="Nominal/numerical" />
-               </children>
-            </AnchorPane>
-         </content>
       </Tab>
   </tabs>
 </TabPane>

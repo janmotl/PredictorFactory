@@ -5,7 +5,10 @@
 
 package controller;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -17,14 +20,19 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBoxTreeItem;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.cell.CheckBoxTreeCell;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -71,11 +79,22 @@ public class Events implements Initializable {
 	@FXML private TreeView<String> treeViewSelect;
 	@FXML private TreeView<String> treeViewPattern;
 	
-	@FXML private TextField test;
-	
 	
 	// Event handlers
 	@FXML private void connectAction() {
+		
+		 // 0) Disconnect command?
+		if ("Disconnect".equals(buttonConnect.getText())) {
+			try {
+				setting.connection.close();
+			} catch (SQLException e) {
+				e.getMessage();
+			}
+			
+			buttonConnect.setText("Connect");
+			
+			return;
+		}
 		 
 		 // 1) Read current connections 
 		 ConnectionPropertyList connectionList = connection.ConnectionPropertyList.unmarshall();
@@ -100,6 +119,12 @@ public class Events implements Initializable {
 		 ///// Connect to the server /////
 		 setting = connection.Network.openConnection(setting, "GUI", "GUI");
 		 
+		//exceptionDialog();	SHOULD PASS THE CONNECTION ERRORS
+		 
+		 // Change the button text
+		 if (setting.connection != null) {
+			 buttonConnect.setText("Disconnect");
+		 }
 		 
         ////// Read past setting for the database tab ///////
         DatabasePropertyList databaseList = connection.DatabasePropertyList.unmarshall();
@@ -359,4 +384,40 @@ public class Events implements Initializable {
         }
     }
 
+    
+    // Subroutine: Exception dialog
+    // SHOULD BE IN A SEPARATE CLASS
+    protected void exceptionDialog(Exception ex) {
+	    Alert alert = new Alert(AlertType.ERROR);
+	    alert.setTitle("Predictor Factory");
+	    alert.setHeaderText(null);
+	    alert.setContentText("Could not connect to the database");
+	
+	    // Create expandable Exception.
+	    StringWriter sw = new StringWriter();
+	    PrintWriter pw = new PrintWriter(sw);
+	    ex.printStackTrace(pw);
+	    String exceptionText = sw.toString();
+	
+	    Label label = new Label("The exception stacktrace was:");
+	
+	    TextArea textArea = new TextArea(exceptionText);
+	    textArea.setEditable(false);
+	    textArea.setWrapText(true);
+	
+	    textArea.setMaxWidth(Double.MAX_VALUE);
+	    textArea.setMaxHeight(Double.MAX_VALUE);
+	    GridPane.setVgrow(textArea, Priority.ALWAYS);
+	    GridPane.setHgrow(textArea, Priority.ALWAYS);
+	
+	    GridPane expContent = new GridPane();
+	    expContent.setMaxWidth(Double.MAX_VALUE);
+	    expContent.add(label, 0, 0);
+	    expContent.add(textArea, 0, 1);
+	
+	    // Set expandable Exception into the dialog pane.
+	    alert.getDialogPane().setExpandableContent(expContent);
+	
+	    alert.showAndWait();
+    }
 }
