@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Zero crossing</name>
+	<description>
+		Count of how many times zero was crossed.
+		
+		Note: In the edge conditions such as 4 consecutive points {-1,0,0,1} we have to make a decision, whether
+		to consider this scenario as 1 or 2 zero crossings. With the presented implementation, 2 crossings would
+		be counted. 
+		
+		Note: Sometimes we may want to count only transitions from negative to positive numbers (or reversely).
+		However, in this implementation both directions are counted.
+		
+		Note: The inequality signs "less than" and "greater than" have to be escaped in XML. 
+	</description>
+	<example>
+		If balance at the account often crosses zero, the customer could be interested into a better credit card.
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-03-14</date>
+	<code compatibility="PostgreSQL">WITH intermediate AS (
+			SELECT @baseId
+			     , @baseDate
+			     , @baseTarget
+				 , @numericalColumn nowValue
+				 , LAG(@numericalColumn) OVER (PARTITION BY @baseId, @baseDate ORDER BY @timeColumn) AS lagValue
+			FROM @propagatedTable
+		  )
+		  SELECT @baseId
+		  	   , @baseDate
+			   , @baseTarget
+			   , sum(CASE WHEN SIGN(nowValue) &lt;&gt; SIGN(lagValue) THEN 1 ELSE 0 END) AS "@columnName"
+		  FROM intermediate
+		  GROUP BY @baseId, @baseDate, @baseTarget
+	</code>
+	<cardinality>n</cardinality>
+</pattern>

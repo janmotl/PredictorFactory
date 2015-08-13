@@ -1,13 +1,13 @@
 package metaInformation;
 
+import utility.Meta;
+
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
-import utility.Meta;
 
 // Table metadata
 public class MetaOutput {
@@ -24,7 +24,7 @@ public class MetaOutput {
 	
 	// Export SQL code for target table propagation.
 	public static void exportPropagationSQL(SortedMap<String, OutputTable> metaOutput) {
-		try (PrintWriter writer = new PrintWriter("./log/propagation.sql", "UTF-8");) {
+		try (PrintWriter writer = new PrintWriter("./log/propagation.sql", "UTF-8")) {
 
 			// Export the code in order of execution (by propagationOrder)
 			SortedMap<Integer, String> map = new TreeMap<Integer, String>();

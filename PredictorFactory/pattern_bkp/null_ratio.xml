@@ -5,6 +5,8 @@
 	<description>
 		Real-world data commonly contain contain missing values. And sometimes they are not missing at random. 
 		Thus we mine them.
+
+		This pattern has a good predictive power/runtime ratio.
 		 
 		Technical note: NULL values are not commonly accounted in count(@column) function. Hence we exploit it. 
 		An alternative is to use "case then" but that is slower.

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Time from peak</name>
+	<description>
+		Time from the peak.
+		
+		Note: NumericalColumn can be null and that can cause ties -> avoid nulls. However, ties can still happen ->
+		pick the most recent (the maximum) time value (note that it also deals with ties at timeColumn level).
+	</description>
+	<author>Jan Motl</author>
+	<date>2015-05-10</date>
+	<code compatibility="PostgreSQL">SELECT @baseId
+			     , @baseDate
+			     , @baseTarget
+			     , DATEDIFF(@baseDate, max(@timeColumn)) AS "@columnName"
+			FROM (SELECT @baseId
+			           , @baseDate
+			           , @baseTarget
+			           , @timeColumn
+		               , RANK() OVER (PARTITION BY @baseId, @baseDate ORDER BY @numericalColumn @sortOrder) AS rk 
+		          FROM @propagatedTable
+		          WHERE @numericalColumn IS NOT NULL
+		          ) t
+			WHERE  rk = 1
+			GROUP BY @baseId, @baseDate, @baseTarget
+	</code>
+	<parameter key="@sortOrder" value="DESC,ASC"/>
+	<cardinality>n</cardinality>
+</pattern>

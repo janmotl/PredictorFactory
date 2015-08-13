@@ -18,7 +18,7 @@
                 <attribute type="string" name="lag" use="optional"/>
                 <attribute type="string" name="lead" use="optional"/>
                 <attribute type="string" name="sampleCount" use="optional"/>
-                <attribute name="task" use="required">
+                <attribute name="task" use="optional">
 			       <simpleType>
 			         <restriction base="string">
 			           <enumeration value="classification"/>
@@ -26,8 +26,11 @@
 			         </restriction>
 			       </simpleType>
 			    </attribute>
+                <attribute type="string" name="whiteListTable" use="optional"/>
                 <attribute type="string" name="blackListTable" use="optional"/>
+                <attribute type="string" name="whiteListColumn" use="optional"/>
                 <attribute type="string" name="blackListColumn" use="optional"/>
+                <attribute type="string" name="whiteListPattern" use="optional"/>
                 <attribute type="string" name="blackListPattern" use="optional"/>
               </extension>
             </simpleContent>

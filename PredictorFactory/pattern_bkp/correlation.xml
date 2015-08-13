@@ -5,7 +5,7 @@
 	<description>
 		Calculate Pearson correlation of an attribute with time.
 	
-		Note: correlation of an attribute with another attrbiute will be implemented in a separate pattern because
+		Note: correlation of an attribute with another attribute will be implemented in a separate pattern because
 		time columns must be casted in some of the databases to a numerical columns. Hence the syntax differs. 
 
 	</description>

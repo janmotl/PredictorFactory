@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 
 <pattern>
-	<name>WOE limit</name>
+	<name>WOE</name>
 	<description>Weight of evidence.
-	
-	Considers only cases with at least 10 samples.
 	
 	The implementation is from: https://qizeresearch.wordpress.com/2014/05/21/utilize-woe-to-replace-dummy-variables/
 	
-	NOTE: Training and testing data are getting mixxed -> expect overly optimistic estimates.
+	NOTE: Training and testing data are getting mixed -> expect overly optimistic estimates.
 	
 	NOTE: WORKS ONLY ON BINARY TARGETS! -> produce a column for each target class
 	
@@ -42,7 +40,6 @@
 					          , sum(case when propagated_target &lt;&gt; '@targetValue' then 1.0 else 0 end) as total_nondefault 
 					  FROM @propagatedTable) total
 				 GROUP BY @nominalColumn
-				 HAVING count(*) &gt;= 10
 				 ) woe
 			on a.@nominalColumn = woe.@nominalColumn
 			GROUP BY a.@baseId, a.@baseDate, a.@baseTarget

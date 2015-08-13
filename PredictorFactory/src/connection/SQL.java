@@ -1,28 +1,18 @@
 package connection;
 
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
-
+import com.google.common.collect.Lists;
+import featureExtraction.Predictor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-
+import parser.ANTLR;
 import run.Setting;
 import utility.Meta;
 import utility.Meta.Table;
 
-import com.google.common.collect.Lists;
-
-import featureExtraction.Predictor;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public final class SQL {
 	// Logging
@@ -37,7 +27,20 @@ public final class SQL {
 		} else {
 			sql = "CREATE TABLE @outputTable AS " + sql;
 		}
-		
+
+		// MonetDB syntax?
+		if (setting.supportsWithData) {
+			sql = sql + " WITH DATA";
+		}
+
+		return sql;
+	}
+
+	// Subroutine 1.1: Add "Create table as" sequence into the pattern. Moved from private -> protected for unit testing.
+	protected static String addCreateViewAs(Setting setting, String sql) {
+
+		sql = "CREATE VIEW @outputTable AS " + sql;
+
 		// MonetDB syntax?
 		if (setting.supportsWithData) {
 			sql = sql + " WITH DATA";
@@ -114,10 +117,24 @@ public final class SQL {
 		// Get escape characters
 	    String QL = setting.quoteEntityOpen;
 		String QR = setting.quoteEntityClose;
+
+		// Escape each part of targetId individually
+		String escapedTargetId = "";
+		for (String id : setting.targetIdList) {
+			escapedTargetId = escapedTargetId + ", " + QL + id + QR;
+		}
+		escapedTargetId = escapedTargetId.substring(2);	// Remove the first two symbols
+
+		// Escape each part of baseId individually
+		String escapedBaseId = "";
+		for (String id : setting.baseIdList) {
+			escapedBaseId = escapedBaseId + ", " + QL + id + QR;
+		}
+		escapedBaseId = escapedBaseId.substring(2);	// Remove the first two symbols
 		
 		// Escape the entities
-		sql = sql.replaceAll("\\@idColumn\\b", QL + setting.targetId + QR);	// There can be several numbered id columns
-		sql = sql.replace("@baseId", QL + setting.baseId + QR);
+		sql = sql.replaceAll("\\@idColumn\\b", escapedTargetId);	// Ignore numbered id columns used in joins (\b is a word boundary)
+		sql = sql.replace("@baseId", escapedBaseId);
 		sql = sql.replace("@baseDate", QL + setting.baseDate + QR);
 		sql = sql.replace("@baseTarget", QL + setting.baseTarget + QR);
 		sql = sql.replace("@baseFold", QL + setting.baseFold + QR);
@@ -180,13 +197,13 @@ public final class SQL {
 		return sql;
 	}
 	
-	// Subroutine: Is the predictor categorical? Just ask the database.
+	// Subroutine: Is the predictor a string or a number? Just ask the database.
 	// Note: The data type could be predicted from the pattern and pattern parameters. But the implemented 
 	// method is foolproof, though slow.
 	private static String getPredictorType(Setting setting, String table, String column) {
 				
 		SortedMap<String, Integer> allColumns = Meta.collectColumns(setting, setting.database, setting.outputSchema, table);
-		SortedMap<String, Integer> columnMap = new TreeMap<String, Integer>();
+		SortedMap<String, Integer> columnMap = new TreeMap<>();
 		if (allColumns.containsKey(column)) { // Take care of scenario, when there isn't the column
 			columnMap.put(column, allColumns.get(column));
 		}
@@ -209,14 +226,45 @@ public final class SQL {
 		if (StringUtils.isBlank(outputTable)) {
 			throw new IllegalArgumentException("Output table is required");
 		}
-		
+
 		String sql = "DROP TABLE @outputTable";
+
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, outputTable);
 		
 		return Network.executeUpdate(setting.connection, sql);
 	}
-	
+
+	// Drop command
+	public static boolean dropView(Setting setting, String outputTable) {
+		// Test parameters
+		if (StringUtils.isBlank(outputTable)) {
+			throw new IllegalArgumentException("Output table is required");
+		}
+
+		String sql = "DROP VIEW @outputTable";
+
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, outputTable);
+
+		return Network.executeUpdate(setting.connection, sql);
+	}
+
+	// Drop command
+	public static boolean dropMaterializedView(Setting setting, String outputTable) {
+		// Test parameters
+		if (StringUtils.isBlank(outputTable)) {
+			throw new IllegalArgumentException("Output table is required");
+		}
+
+		String sql = "DROP MATERIALIZED VIEW @outputTable";
+
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, outputTable);
+
+		return Network.executeUpdate(setting.connection, sql);
+	}
+
 	// Remove all Predictor Factory related tables
 	// Note: The function is using names from the setting object. If the current setting doesn't match the setting
 	// with witch the tables were generated, the tables are NOT going to get dropped! 
@@ -226,31 +274,45 @@ public final class SQL {
 	// Also, if someone has set up Predictor Factory that inputSchema=outputSchema, we would delete all the user's data.
 	// Note: Use addBatch() for speeding up if possible. Take care of memory limits as described at:
 	// http://viralpatel.net/blogs/batch-insert-in-java-jdbc/
+	// Note: Maybe this is the right place for making backup of mainsample and journal.
+	// Note: We have to delete the tables/views in the reverse order of their creation because of dependencies if views
+	// are used.
 	public static void tidyUp(Setting setting) {
 		// Initialization
 		SortedSet<String> tableSet = utility.Meta.collectTables(setting, setting.database, setting.outputSchema);
-		SortedSet<String> dropSet = new TreeSet<String>(); 
+		SortedMap<String, String> dropMap = new TreeMap<>();
 		
 		// Select tables for dropping
 		for (String table : tableSet) {
-			if (table.startsWith(setting.predictorPrefix)) dropSet.add(table);	// Predictors
-			if (table.startsWith(setting.propagatedPrefix)) dropSet.add(table);	// Propagated tables
-			if (table.startsWith(setting.sampleTable)) dropSet.add(table);		// Mainsample and it's temporary tables
-			if (table.equals(setting.baseTable)) dropSet.add(table);			// Base table
-			if ("base_sampled".equals(table)) dropSet.add(table);			// Base table
-			if (table.equals(setting.journalTable)) dropSet.add(table);			// Journal table
+			if (table.startsWith(setting.sampleTable)) dropMap.put(1 + table, table);		// Mainsample and it's temporary tables
+			if (table.startsWith(setting.predictorPrefix)) dropMap.put(2 + table, table);	// Predictors
+			if (table.startsWith(setting.propagatedPrefix)) dropMap.put(3 + table, table);	// Propagated tables
+			if (table.equals(setting.baseSampled)) dropMap.put(4 + table, table);			// Sampled base table
+			if (table.equals(setting.baseTable)) dropMap.put(5 + table, table);				// Base table
+			if (table.equals(setting.journalTable)) dropMap.put(6 + table, table);			// Journal table
+		}
+
+
+		// DEBUGGING
+		for (String table : dropMap.values()) {
+			dropView(setting, table);
+		}
+
+		// DEBUGGING
+		for (String table : dropMap.values()) {
+			dropMaterializedView(setting, table);
 		}
 
 		// Drop the tables
-		for (String table : dropSet) {
+		for (String table : dropMap.values()) {
 			dropTable(setting, table);
 		}
 	}
 	
 	// Create index on {baseId, baseDate}.
 	// Returns true if the update was successful.
-	public static boolean addIndex(Setting setting, String outputTable) {	
-		
+	// THE INDEX NAME CAN BE TOO LONG -> ADD ABBREVIATION
+	public static boolean addIndex(Setting setting, String outputTable) {
 		String sql = "CREATE INDEX " + outputTable + "_idx ON @outputTable (@baseId, @baseDate)";
 		
 		sql = expandName(sql);
@@ -261,14 +323,27 @@ public final class SQL {
 		return isOK;
 	}
 	
-	
-	// Get rowCount
-	public static int getRowCount(Setting setting, String inputTable) {
-		String sql = "SELECT count(*) FROM @outputTable";
-		
+	// Set primary key for a table in the output schema.
+	public static boolean setPrimaryKey(Setting setting, String outputTable) {	
+
+		String sql = "ALTER TABLE @outputTable ADD PRIMARY KEY (@baseId, @baseDate)";
+
 		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, inputTable);
-		
+		sql = escapeEntity(setting, sql, outputTable);
+
+		boolean isOK = Network.executeUpdate(setting.connection, sql);
+
+		return isOK;
+	}
+	
+	
+	// Get rowCount for a table in the output schema
+	// SHOULD BE IN META OR USE BOOLEAN useInputSchema
+	public static int getRowCount(Setting setting, String schema, String table) {
+		String entity = setting.quoteEntityOpen + schema + setting.quoteEntityClose;
+		entity = entity + "." + setting.quoteEntityOpen + table + setting.quoteEntityClose;
+		String sql = "SELECT count(*) FROM " + entity;
+
 		// Dirt cheap approach how to get row count is unfortunately database specific. Hence universal count(*) 
 		// is implemented. Some databases, like MySQL, returns the answer to count(*) query immediately. In other 
 		// databases, like PostgreSQL, you may have to wait ~200ms.
@@ -286,14 +361,18 @@ public final class SQL {
 	
 	// Get count of non-null records
 	// Useful for QC of the predictors
-	public static int getNotNullCount(Setting setting, String table, String column) {
+	// SHOULD BE IN META OR USE BOOLEAN useInputSchema
+	public static int getNotNullCount(Setting setting, String schema, String table, String column) {
+		String entity = setting.quoteEntityOpen + schema + setting.quoteEntityClose;
+		entity = entity + "." + setting.quoteEntityOpen + table + setting.quoteEntityClose;
+
 		// By default count over a column ignores NULL values
-		String sql = "SELECT count(@column) FROM @outputTable";
+		String sql = "SELECT count(@column) FROM " + entity;
 		
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, table);
 		
-		Map<String, String> fieldMap = new HashMap<String, String>(); 
+		Map<String, String> fieldMap = new HashMap<>();
 		fieldMap.put("@column", column);
 		sql = escapeEntityMap(setting, sql, fieldMap);
 		
@@ -315,8 +394,21 @@ public final class SQL {
 	public static boolean isIdUnique(Setting setting, Map<String, String> map) {
 		String sql = "SELECT count(*) " +
 					 "FROM @inputTable " +
-					 "GROUP BY @idColumn2 " +
-					 "HAVING COUNT(*)>1"; 			
+					 "GROUP BY @idColumn2";
+
+		// If the foreign key constraint is composite, we have to respect it.
+		// NOTE: IT'S UGLY, BUT I DIDN'T FIND SOMETHING NICER. THE PROBLEM IS THAT WE ARE PROCESSING A MAP.
+		for (String id : map.keySet()) {
+			try {
+				Integer idNumber = Integer.valueOf(id.substring(9));
+				if (idNumber%2 == 0 && idNumber > 2) { // Even and bigger two because idColumn2 is already in the query.
+					sql = sql + ", " + id;
+				}
+			} catch (NumberFormatException e) {}
+
+		}
+
+		sql = sql +	" HAVING COUNT(*)>1";
 				
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, "dummy");
@@ -386,10 +478,8 @@ public final class SQL {
 	}
 	
 	// Subsample base table based on target class.
-	// Works only for classification! For sampling of regression problem neglect the target OR discretize the target. 
 	// Note: The selection is not guaranteed to be random.
-	// NOTE: BASE_SAMPLED NAME SHOULD BE A VARIABLE
-	public static void getSubSample(Setting setting, SortedMap<String, Table> metaInput) {
+	public static void getSubSampleClassification(Setting setting, SortedMap<String, Table> metaInput) {
 		
 		// Initialization
 		String sql = "";
@@ -402,9 +492,9 @@ public final class SQL {
 		}
 		
 		// Create union 
-		for (int i = 0; i < targetValueList.size(); i++) {
-			sql = sql + "(" + Parser.limitResultSet(setting, "SELECT * FROM @outputSchema.base WHERE @baseTarget = " + quote + targetValueList.get(i) + quote + "\n", setting.sampleCount) + ")"; 
-			sql = sql + " UNION ALL \n";	// Add "union all" between all the selects.
+		for (String targetValue : targetValueList) {
+			sql = sql + "(" + Parser.limitResultSet(setting, "SELECT * FROM @outputSchema.base WHERE @baseTarget = " + quote + targetValue + quote + "\n", setting.sampleCount) + ")";
+			sql = sql + " UNION ALL \n";    // Add "union all" between all the selects.
 		}
 		
 		// Finally, add unclassified records.
@@ -412,15 +502,36 @@ public final class SQL {
 						
 		sql = addCreateTableAs(setting, sql);
 		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, "base_sampled");
+		sql = escapeEntity(setting, sql, setting.baseSampled);
 		
 		Network.executeUpdate(setting.connection, sql);
 		
 		// Change setting for base table
-		setting.baseTable = "base_sampled";
+		setting.baseTable = setting.baseSampled;
 		
 		// Add indexes
-		addIndex(setting, "base_sampled");
+		addIndex(setting, setting.baseTable);
+	}
+
+	// Subsample base table.
+	// Note: The selection is not guaranteed to be random.
+	public static void getSubSampleRegression(Setting setting) {
+
+		// Initialize
+		String sql = Parser.limitResultSet(setting, "SELECT * FROM @outputSchema.base", setting.sampleCount);
+
+		// Execute
+		sql = addCreateTableAs(setting, sql);
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, setting.baseSampled);
+
+		Network.executeUpdate(setting.connection, sql);
+
+		// Change setting for base table
+		setting.baseTable = setting.baseSampled;
+
+		// Add indexes
+		addIndex(setting, setting.baseSampled);
 	}
 
 	// Could the two columns in the table describe a symmetric relation (like in borderLength(c1, c2))?
@@ -446,9 +557,9 @@ public final class SQL {
 		return "yes".equals(result.get(0));
 	}
 	
-	// Get R2. For discrete variables, use the method as described at:
-	// http://stats.stackexchange.com/questions/119835/correlation-between-a-nominal-iv-and-a-continuous-dv-variable 
-	// IMPLEMENTED FOR POSTGRESQL. TEST ON OTHER DATABASES.
+	// Get R2. For discrete variables, following method is used:
+	// http://stats.stackexchange.com/questions/119835/correlation-between-a-nominal-iv-and-a-continuous-dv-variable
+	// R2 is normalized by the count of non-null samples of the predictor to penalize for sparse predictors.
  	public static double getR2(Setting setting, String table, String column) {
  		// Initialization
  		String sql;
@@ -456,7 +567,7 @@ public final class SQL {
  		
  		// Is the predictor categorical, numeric or time? 		
  		if ("nominal".equals(dataType)) {
- 			sql = "select corr(t2.average, t1.@baseTarget)^2 " +
+ 			sql = "select count(*)*power(corr(t2.average, t1.@baseTarget), 2) " +
 					"from @outputTable t1 " +
 					"join ( " +
 						"select @column " + 
@@ -464,19 +575,25 @@ public final class SQL {
 						"from @outputTable " +
 						"group by @column " +
 					") t2 " +
-					"on t1.@column = t2.@column";
+					"on t1.@column = t2.@column" +
+					"where t1.@column is not null and t1.@baseTarget is not null";
  		} else if ("numerical".equals(dataType)){
- 			// "SELECT (Avg(@column * @baseTarget) - Avg(@column) * Avg(@baseTarget)) / (stdDev_samp(@column) * stdDev_samp(@baseTarget)) AS Correlation "
- 			
- 			sql = "SELECT corr(@column, @baseTarget)^2 " +
-					 "FROM @outputTable "; /* We are working with the outptutTable, hence schema & database are output. */
- 			
- 			// Take care of stdDev
- 			//sql = sql.replaceAll("stdDev_samp", setting.stdDevCommand);
+ 			sql = "SELECT count(@column)*power(corr(@column, @baseTarget), 2) " +
+					"FROM @outputTable " + /* We are working with the outputTable, hence schema & database are output. */
+					"WHERE @column is not null AND @baseTarget is not null";
  		} else {
- 			sql = "SELECT corr(EXTRACT(epoch FROM @column), @baseTarget)^2 " +
-					 "FROM @outputTable ";
+			// "SELECT count(@column)*corr(EXTRACT(epoch FROM @column), @baseTarget)^2 "
+ 			sql = "SELECT count(@column)*power(corr(datediff(@column, '2001-1-1'), @baseTarget), 2) " +
+					"FROM @outputTable " +
+					"WHERE @column is not null AND @baseTarget is not null";
  		}
+
+		// Replace the generic corr command with the database specific version.
+		// Also take care of dateDiff.
+		sql = ANTLR.parseSQL(sql, setting.dateDiffSyntax, setting.corrSyntax);
+
+		// Take care of stdDev (needed if the corr command is assembled from the basic commands)
+		sql = sql.replaceAll("stdDev_samp", setting.stdDevCommand);
  		
 		// Escape the entities
  		sql = expandName(sql);
@@ -495,7 +612,7 @@ public final class SQL {
 		try {
 			correlation = Double.parseDouble(response.get(0)); 
 		} catch (Exception e){
-			logger.info("The response in correlation calculation is null (empty table...), return 0.");
+			logger.info("The response in correlation calculation is null (constant values, empty table...), return 0.");
 			correlation = 0;
 		}
 		
@@ -685,29 +802,47 @@ public final class SQL {
  		logger.debug("# Setting up base table #");
  		
 		String sql;
+		String id = "";
+
+		// Get escape characters
+		String QL = setting.quoteEntityOpen;
+		String QR = setting.quoteEntityClose;
 		
 		// Detect duplicates in the base table
 		boolean isUnique = isUnique(setting, setting.targetTable, true);
-		
+
+
 		// Deduplicate the base table if necessary
 		if (!isUnique) {
 			logger.warn("The base table contains duplicate values in {BaseID, BaseDate}. " +
 					"Continuing without ALL duplicate values. " +
-					"The results will be uncomplete and possibly biased. " +
-					"To get correct results create an artificial key / use time column with higher precission...");
-		
-			sql = "SELECT @idColumn AS " + setting.baseId + ", @targetDate AS " + setting.baseDate + ", @targetColumn AS " + setting.baseTarget + ", FLOOR(" + setting.randomCommand + " * 10) AS " + setting.baseFold + " " +
+					"The results will be incomplete and possibly biased. " +
+					"To get correct results create an artificial key / use time column with higher precision...");
+
+			// Prepare aliases for idColumn
+			for (int i = 0; i < setting.baseIdList.size(); i++) {
+				id = id + " t1." + QL + setting.targetIdList.get(i) + QR + " AS " + setting.baseIdList.get(i) + ",";
+			}
+
+			// The query itself
+			sql = "SELECT" + id + " t1.@targetDate AS " + setting.baseDate + ", t1.@targetColumn AS " + setting.baseTarget + ", FLOOR(" + setting.randomCommand + " * 10) AS " + setting.baseFold + " " +
 					"FROM @targetTable t1 LEFT JOIN (" +
 					"SELECT @idColumn FROM @targetTable GROUP BY @idColumn, @targetDate HAVING count(*)>1 " +
 					") t2 " +
 					"ON t1.@idColumn = t2.@idColumn " +
-					"WHERE t2.@idColumn is null";
+					"WHERE t2.@idColumn is null AND t1." + setting.targetDate + " is not null";
 		} else {
-			sql = "SELECT @idColumn AS " + setting.baseId + ", @targetDate AS " + setting.baseDate + ", @targetColumn AS " + setting.baseTarget + ", FLOOR(" + setting.randomCommand + " * 10) AS " + setting.baseFold + " FROM @targetTable";
+			// Prepare aliases for idColumn
+			for (int i = 0; i < setting.baseIdList.size(); i++) {
+				id = id + QL + setting.targetIdList.get(i) + QR + " AS " + setting.baseIdList.get(i) + ", ";
+			}
+
+			// The query itself
+			sql = "SELECT " + id + " @targetDate AS " + setting.baseDate + ", @targetColumn AS " + setting.baseTarget + ", FLOOR(" + setting.randomCommand + " * 10) AS " + setting.baseFold + " FROM @targetTable WHERE " + setting.targetDate + " is not null";
 		}
 		
 		// Assembly the query
-		sql = addCreateTableAs(setting, sql);
+		sql = addCreateViewAs(setting, sql);
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, setting.baseTable);
 		
@@ -715,12 +850,9 @@ public final class SQL {
 		boolean isCreated = Network.executeUpdate(setting.connection, sql);
 		
 		if (!isCreated) {
-			logger.warn("The base table was not sussesfully created.");
+			logger.warn("The base table was not successfully created.");
 		}
-		
-		// Add index
-		SQL.addIndex(setting, setting.baseTable);
-		
+
 		return (isUnique && isCreated);
 	}
 	
@@ -729,8 +861,12 @@ public final class SQL {
 	// Technical note: We have to return SQL string, because these things are logged and exported for the user
  	// as the "scoring code" for predictors.
 	public static String propagateID(Setting setting, Map<String, String> map, boolean bottomBounded){
-				
-		String sql = "SELECT t1.@baseId, " +
+		String baseId = "";
+		for (String id : setting.baseIdList) {
+			baseId = baseId + "t1." + setting.quoteEntityOpen + id + setting.quoteEntityClose + ", ";
+		}
+
+		String sql = "SELECT " + baseId +
 				"t1.@baseDate, " +
 				"t1.@baseTarget, " +
 				"t1.@baseFold, " +
@@ -738,11 +874,18 @@ public final class SQL {
 				"FROM @propagatedTable t1 " +
 				"INNER JOIN @inputTable t2 " +
 				"ON t1.@idColumn1 = t2.@idColumn2";
-		
+
+		// If composite id is used, add the ids into the join condition
+		int idNumber = 3;
+
+		while (map.containsKey("@idColumn" + idNumber)) {
+			sql += " AND t1.@idColumn" + idNumber + " = t2.@idColumn" + (idNumber+1);
+			idNumber += 2;	// Because we have just added two ids
+		}
+
 		// Add time condition if dateColumn is present
 		// The comparison "t2.@dateColumn <= t1.@baseDate" has to use <= to get 
 		// the data from "the current date" when lead is 0.
-
 		if (map.containsKey( "@dateColumn")) {
 			// First the upper bound (lead)
 			sql = sql + " WHERE t2.@dateColumn <= " + setting.dateAddMonth;
@@ -831,7 +974,7 @@ public final class SQL {
 	        "'" + predictor.getPatternCode().replaceAll("'", "''") + "', " +	// Escape single quotes
 	        "'" + predictor.getSql().replaceAll("'", "''") + "', " +		// Escape single quotes
 			"'" + setting.targetColumn + "', " + 
-			      predictor.getRelevance().get(setting.baseTarget) + ", " + // Chi2
+			      predictor.getRelevance(setting.baseTarget) + ", " + // Chi2
 	              predictor.getRowCount() + ", " + 
 	              predictor.getNullCount() + ", " + 
 	              isOk + ")";
@@ -846,13 +989,13 @@ public final class SQL {
 	public static String getPredictor(Setting setting, Predictor predictor){
 		String sql;
 		
-		sql = addCreateTableAs(setting, predictor.getSql());  // The patternCode could be modified by parameters -> use SQL 
+		sql = addCreateTableAs(setting, predictor.getSql());  // The patternCode could be modified by parameters -> use SQL
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, predictor.outputTable);	
 		sql = escapeEntityPredictor(setting, sql, predictor);		
 		
 		if ("SAS".equals(setting.databaseVendor)) {
-			sql = sql.replace("\"", "");				// VERY UGLY wORKAROUND. SHOULD IMPLEMENT quoteAlias
+			sql = sql.replace("\"", "");				// VERY UGLY WORKAROUND. SHOULD IMPLEMENT quoteAlias
 		}
 		
 		return sql;
@@ -876,12 +1019,14 @@ public final class SQL {
 		List<Predictor> predictorList2 = new ArrayList<Predictor>();
 		
 		for (Predictor predictor : predictorList) {
-			if (predictor.getGroupId() != lagGroupId) {
+			if (predictor.getGroupId() != lagGroupId) {	// For each groupId select top n predictors
 				predictorList2.addAll(getTopN(predictorList, predictor));
 			}
 			lagGroupId = predictor.getGroupId();
 		}
-		
+
+		// One again, resort the relevances in descending order
+		Collections.sort(predictorList2, Predictor.RelevanceComparator.reversed());
 
 		// Cap the amount of predictors by columnMax
 		// RESERVE 3 COLUMNS FOR ID, TARGET AND TIME
@@ -903,7 +1048,17 @@ public final class SQL {
 		List<List<String>> columnListSmall = Lists.partition(columnListAll, 60);
 		
 		// Prepare a list of the temporary table names
-		List<String> tempTableList = new ArrayList<String>();
+		List<String> tempTableList = new ArrayList<>();
+
+		// Get escape characters
+		String QL = setting.quoteEntityOpen;
+		String QR = setting.quoteEntityClose;
+
+		// Id list
+		String idList = "";
+		for (String id : setting.baseIdList) {
+			idList += "t1." + QL + id + QR + ", ";
+		}
 		
 		// Create temporary tables
 		for (int i = 0; i < tableListSmall.size(); i++) {
@@ -913,10 +1068,10 @@ public final class SQL {
 			String tempTable = setting.sampleTable + "_temp" + (100+i); 	// The name of the temporary table
 			tempTableList.add(tempTable);
 			List<String> tableList = tableListSmall.get(i);					
-			List<String> columnList = columnListSmall.get(i);			
-			
+			List<String> columnList = columnListSmall.get(i);
+
 			// Select part 
-			stringBuffer.append("SELECT t1.@baseId, t1.@baseDate, t1.@baseTarget");
+			stringBuffer.append("SELECT " + idList + "t1.@baseDate, t1.@baseTarget");
 			tableCount = 2;
 			for (String column : columnList) {
 				stringBuffer.append(", t" + tableCount + ".@"  + column);	// The column name will be escaped
@@ -927,20 +1082,27 @@ public final class SQL {
 			stringBuffer.append(" FROM @baseTable t1");
 			tableCount = 2;
 			for (String table : tableList) {
+
+				// Join condition
+				String joinCondition = "";
+				for (String id : setting.baseIdList) {
+					joinCondition += "t1." + QL+ id + QR + " = t" + tableCount + "." + QL + id + QR + " AND ";
+				}
+
 				stringBuffer.append(" LEFT JOIN " + table + " t" + tableCount +
-						" ON t1.@baseId = t" + tableCount + ".@baseId AND t1.@baseDate = t" + tableCount + ".@baseDate");
+						" ON " + joinCondition + " t1.@baseDate = t" + tableCount + ".@baseDate");
 				tableCount++;
 			}
 			
 			// Make SQL from the pattern
 			String pattern_code = stringBuffer.toString();
-			pattern_code = addCreateTableAs(setting, pattern_code);
+			pattern_code = addCreateViewAs(setting, pattern_code);
 			pattern_code = expandName(pattern_code);
 			pattern_code = expandNameList(pattern_code, tableList);
 			pattern_code = escapeEntity(setting, pattern_code, tempTable); 
 			
 			// Escape table & column entities (tables can't be escaped in definition because they have to be first expanded...)
-			Map<String, String> map = new HashMap<String, String>(61);
+			Map<String, String> map = new HashMap<>(61);
 			for (String table : tableList) map.put(table, table);			// This is dangerous (no prefix... in the substitution) 
 			for (String column : columnList) map.put("@" + column, column);
 			String sql = escapeEntityMap(setting, pattern_code, map);
@@ -957,7 +1119,7 @@ public final class SQL {
 		StringBuilder stringBuffer = new StringBuilder(500);
 		
 		// Select part (like t1.column1)
-		stringBuffer.append("SELECT t1.@baseId, t1.@baseDate, t1.@baseTarget");
+		stringBuffer.append("SELECT " + idList + "t1.@baseDate, t1.@baseTarget");
 		
 		for (int i = 0; i < tempTableList.size(); i++) {
 			for (String column : columnListSmall.get(i)) {
@@ -971,8 +1133,15 @@ public final class SQL {
 		for (int i = 0; i < tempTableList.size(); i++) {
 			int tableCount = i+2;
 			String tempTable = tempTableList.get(i);
+
+			// Join condition
+			String joinCondition = "";
+			for (String id : setting.baseIdList) {
+				joinCondition += "t1." + QL+ id + QR + " = t" + tableCount + "." + QL + id + QR + " AND ";
+			}
+
 			stringBuffer.append(" INNER JOIN " + tempTable + " t" + tableCount +
-					" ON t1.@baseId = t" + tableCount + ".@baseId AND t1.@baseDate = t" + tableCount + ".@baseDate");
+					" ON " + joinCondition + "t1.@baseDate = t" + tableCount + ".@baseDate");
 		}
 		
 		// Make SQL from the pattern
@@ -983,7 +1152,7 @@ public final class SQL {
 		pattern_code = escapeEntity(setting, pattern_code, setting.sampleTable); 
 		
 		// Escape table & column entities (tables can't be escaped in definition because they have to be first expanded...)
-		Map<String, String> map = new HashMap<String, String>(61);
+		Map<String, String> map = new HashMap<>(61);
 		for (String table : tempTableList) map.put(table, table);
 		for (String column : columnListAll) map.put("@" + column, column);
 		String sql = escapeEntityMap(setting, pattern_code, map);
@@ -1002,7 +1171,9 @@ public final class SQL {
 		logger.debug("MainSample table contains: " + columnCount + " columns (the limit is: " + (setting.columnMax/8) + ")");
 	} 
 	
-	// Subroutine - return top n predictors from the list
+	// Subroutine - return top n predictors from the list. Assumes that the predictors are sorted by relevance in
+	// descending order.
+	// The "n" is defined in the predictor. Also the groupId is defined in the predictor.
 	private static List<Predictor> getTopN(List<Predictor> predictorList, Predictor predictor) {
 		List<Predictor> output = predictorList.stream().filter(p -> p.getGroupId()==predictor.getGroupId()).collect(Collectors.toList());
 		

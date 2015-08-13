@@ -14,10 +14,11 @@ Description of the fields:
 	quoteAliasClose: By default double quote. 
 	SupportsCreateTableAs: Because of MS SQL specific syntax...
 	SupportsWithData: Because of MonetDB specific syntax...
+	corrSyntax: Optional. Define the command for correlation if the database provides such command.
 	DateAddSyntax: Because we want to be able to express time ranges. This syntax doesn't deal with leap years.  
 	DateAddMonth: Because we want to be able to express time ranges. This syntax correctly deals with leap years.  
 	DateDiffSyntax: Not all databases support conversion of time to number. Hence just use a diff against a constant. 
-	DateToNumber: EXPERIMENTAL
+	DateToNumber: EXPERIMENTAL. SHOULD BE SUBSTITUTED WITH DATEDIFF SYNTAX AND CONSTANT
 	InsertTimestampSyntax: Syntax for timestamp (it's used for creation of journal table). Because of SAS it generally has to be in single quotes.
 	StdDevCommand: The command for calculation of sample standard deviation.
 	CharLengthCommand: The command for calculation of string length.
@@ -188,6 +189,7 @@ Description of the fields:
 		supportsSchemas="true"
 		supportsCreateTableAs="true"
 		supportsWithData="false"
+		corrSyntax="corr(@column1, @column2)"
 		dateAddSyntax="(@baseDate + INTERVAL '@amount @datePart')"
 		dateAddMonth="(@baseDate + INTERVAL '@amount month')"
 		dateDiffSyntax="(@dateTo - @dateFrom)"

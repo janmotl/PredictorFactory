@@ -10,6 +10,7 @@ import java.io.StringWriter;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -49,7 +50,7 @@ import featureExtraction.Pattern;
 public class Events implements Initializable {
 	
 	// Global variables
-	private Setting setting = new Setting();
+	private Setting setting = new Setting("GUI", "GUI");
 	private List<CheckBoxTreeItem<String>> itemListTable = new ArrayList<CheckBoxTreeItem<String>>();
 	private List<CheckBoxTreeItem<String>> itemListColumn = new ArrayList<CheckBoxTreeItem<String>>();
 	private List<CheckBoxTreeItem<String>> itemListPattern = new ArrayList<CheckBoxTreeItem<String>>();
@@ -71,6 +72,8 @@ public class Events implements Initializable {
 	@FXML private ComboBox<String> comboBoxTargetTimestamp;
 	@FXML private ComboBox<String> comboBoxTask;
 	@FXML private ComboBox<String> comboBoxUnit;
+	@FXML private Label labelPredictorCountText;
+	@FXML private Label labelPredictorCount;
 	@FXML private TextField textLag;
 	@FXML private TextField textLead;
 	@FXML private TextField textSampleCount;
@@ -100,24 +103,24 @@ public class Events implements Initializable {
 		 ConnectionPropertyList connectionList = connection.ConnectionPropertyList.unmarshall();
 		 
 		 // 2) Create a new connection
-		 ConnectionProperty property = new ConnectionProperty();
-		 property.name = "GUI";
-		 property.driver = comboBoxVendor.getValue();
-		 property.database = textDatabase.getText();
-		 property.host = textHost.getText();
-		 property.port = textPort.getText();
-		 property.username = textUsername.getText();
-		 property.password = textPassword.getText();	// WE SHOULD NOT WRITE THE PASSWORD INTO THE XML
+		 ConnectionProperty connectionProperty = new ConnectionProperty();
+		 connectionProperty.name = "GUI";
+		 connectionProperty.driver = comboBoxVendor.getValue();
+		 connectionProperty.database = textDatabase.getText();
+		 connectionProperty.host = textHost.getText();
+		 connectionProperty.port = textPort.getText();
+		 connectionProperty.username = textUsername.getText();
+		 connectionProperty.password = textPassword.getText();	// WE SHOULD NOT WRITE THE PASSWORD INTO THE XML
 		 	 
 		 // 3) Add (replace) the new connection into the list of connections
-		 connectionList.setConnectionProperties(property);
+		 connectionList.setConnectionProperties(connectionProperty);
 		 
 		 // 4) Write it into the XML
 		 connection.ConnectionPropertyList.marshall(connectionList);
 		 
 		 
 		 ///// Connect to the server /////
-		 setting = connection.Network.openConnection(setting, "GUI", "GUI");
+		 setting = connection.Network.openConnection(setting);
 		 
 		//exceptionDialog();	SHOULD PASS THE CONNECTION ERRORS
 		 
@@ -144,8 +147,6 @@ public class Events implements Initializable {
 		 SortedSet<String> schemaList = Meta.collectSchemas(setting, setting.database);
 		 comboBoxInputSchema.getItems().addAll(schemaList);
 		 comboBoxOutputSchema.getItems().addAll(schemaList);
-		 		 
-		//textHost.setEffect(new InnerShadow(3, new Color(1, 0, 0, 1))); // Highlight
 	}
 
 	@FXML private void inputSchemaAction() {
@@ -153,13 +154,16 @@ public class Events implements Initializable {
 		// Store the new value
 		setting.inputSchema = comboBoxInputSchema.getValue();
 		
-		// Populate setting in the target tab
+		// Target tab
 		SortedSet<String> tableList = Meta.collectTables(setting, setting.database, setting.inputSchema);
+		comboBoxTargetTable.getItems().clear();
 		comboBoxTargetTable.getItems().addAll(tableList);
 				
-		// Populate setting in the select tab
+		// Select tab
 		CheckBoxTreeItem<String> rootItem = new CheckBoxTreeItem<String>("Tables and their columns");
 		rootItem.setExpanded(true);
+		itemListTable.clear();
+		itemListColumn.clear();
 		
 		for (String table : tableList) {
 			final CheckBoxTreeItem<String> itemTable = new CheckBoxTreeItem<String>(table);
@@ -175,12 +179,13 @@ public class Events implements Initializable {
 			itemTable.getChildren().addAll(localItemListColumn);
 			itemListColumn.addAll(localItemListColumn);
 		}
-		rootItem.getChildren().addAll(itemListTable);
 		
+		
+		
+		
+		rootItem.getChildren().addAll(itemListTable);
 		treeViewSelect.setRoot(rootItem);
 		treeViewSelect.setCellFactory(CheckBoxTreeCell.<String>forTreeView());
-		
-		
 		
 	}
 	
@@ -189,33 +194,36 @@ public class Events implements Initializable {
 		// Store the new value
 		setting.targetTable = comboBoxTargetTable.getValue();
 		
-		// Populate other comboBoxes
+		// Target tab
 		SortedMap<String, Integer> columnListType = Meta.collectColumns(setting, setting.database, setting.inputSchema, setting.targetTable);
 		Set<String> columnList = columnListType.keySet();
+		comboBoxTargetColumn.getItems().clear();
+		comboBoxTargetId.getItems().clear();
+		comboBoxTargetTimestamp.getItems().clear();
 		comboBoxTargetColumn.getItems().addAll(columnList);
 		comboBoxTargetId.getItems().addAll(columnList);
 		comboBoxTargetTimestamp.getItems().addAll(columnList);
 	}
-		
+			
 	@FXML private void runAction() {
 
 		// 1) Read current database list
 		DatabasePropertyList databaseList = connection.DatabasePropertyList.unmarshall();
 
 		// 2) Create a new database
-		DatabaseProperty setting = new DatabaseProperty();
-		setting.name = "GUI";
-		setting.inputSchema = comboBoxInputSchema.getValue();
-		setting.outputSchema = comboBoxOutputSchema.getValue();
-		setting.targetTable = comboBoxTargetTable.getValue();
-		setting.targetColumn = comboBoxTargetColumn.getValue();
-		setting.targetId = comboBoxTargetId.getValue();
-		setting.targetDate = comboBoxTargetTimestamp.getValue();
-		setting.unit = comboBoxUnit.getValue();
-		setting.lag = Integer.valueOf(textLag.getText());
-		setting.lead = Integer.valueOf(textLead.getText());
-		setting.sampleCount = Integer.valueOf(textSampleCount.getText());
-		setting.task = comboBoxTask.getValue();
+		DatabaseProperty databaseProperty = new DatabaseProperty();
+		databaseProperty.name = "GUI";
+		databaseProperty.inputSchema = comboBoxInputSchema.getValue();
+		databaseProperty.outputSchema = comboBoxOutputSchema.getValue();
+		databaseProperty.targetTable = comboBoxTargetTable.getValue();
+		databaseProperty.targetColumn = comboBoxTargetColumn.getValue();
+		databaseProperty.targetId = comboBoxTargetId.getValue();
+		databaseProperty.targetDate = comboBoxTargetTimestamp.getValue();
+		databaseProperty.unit = comboBoxUnit.getValue();
+		databaseProperty.lag = Integer.valueOf(textLag.getText());
+		databaseProperty.lead = Integer.valueOf(textLead.getText());
+		databaseProperty.sampleCount = Integer.valueOf(textSampleCount.getText());
+		databaseProperty.task = comboBoxTask.getValue();
 
 		// BlackList tables
 		List<String> blackListTable = new ArrayList<String>(); 
@@ -226,7 +234,7 @@ public class Events implements Initializable {
 			}
 		}
 
-		setting.blackListTable = StringUtils.join(blackListTable, ',');
+		databaseProperty.blackListTable = StringUtils.join(blackListTable, ',');
 		
 		
 		// BlackList columns
@@ -238,7 +246,7 @@ public class Events implements Initializable {
 			}
 		}
 
-		setting.blackListColumn = StringUtils.join(blackListColumn, ',');
+		databaseProperty.blackListColumn = StringUtils.join(blackListColumn, ',');
 		
 		// BlackList patterns
 		List<String> blackListPattern = new ArrayList<String>(); 
@@ -249,15 +257,18 @@ public class Events implements Initializable {
 			}
 		}
 
-		setting.blackListPattern = StringUtils.join(blackListPattern, ',');
+		databaseProperty.blackListPattern = StringUtils.join(blackListPattern, ',');
 		
 
 		// 3) Add (replace) the new connection into the list of connections
-		databaseList.setDatabaseProperties(setting);
+		databaseList.setDatabaseProperties(databaseProperty);
 
 		// 4) Write it into the XML
 		connection.DatabasePropertyList.marshall(databaseList);
 
+		// 5) Clear the log window
+		textAreaConsole.clear();
+		
 		// Execute Predictor Factory in a thread (to keep GUI responsive)
 		Thread t1 = new Thread(new Runnable() {
 			public void run() {
@@ -265,10 +276,12 @@ public class Events implements Initializable {
 				run.Launcher.main(arguments);
 			}
 		}, "Core of Predictor Factory");
+		t1.setPriority(java.lang.Thread.MIN_PRIORITY);
 		t1.start();
 		
 	}
 	
+
 	
 	
 	// The initialize() method is automatically called after the FXML file has been loaded.
@@ -280,6 +293,9 @@ public class Events implements Initializable {
 		controller.TextAreaAppender textAreaHandler = new TextAreaAppender();
 		textAreaHandler.setTextArea(textAreaConsole);
 		
+		// HIDE CURRENTLY UNCONNECTED COUNTER
+		labelPredictorCountText.setVisible(false);
+		labelPredictorCount.setVisible(false);
 		
     	// Populate comboBoxes
 		// VENDOR COMBOBOX SHOULD BE POPULATED BASED ON DRIVER.XML
@@ -287,23 +303,54 @@ public class Events implements Initializable {
         comboBoxTask.getItems().addAll("classification", "regression");
         comboBoxUnit.getItems().addAll("second", "day", "month", "year");
         
+        // Read past setting. If no past setting is available, leave it unfilled.
+ 		// NOTE: IF SOME ATTRIBUTE IS MISSING, IT WILL FAIL
+         ConnectionPropertyList connectionList = connection.ConnectionPropertyList.unmarshall();
+         ConnectionProperty connectionProperty = connectionList.getConnectionProperties("GUI");
+         
+         if (connectionProperty != null) {
+         	comboBoxVendor.setValue(connectionProperty.driver);
+         	textDatabase.setText(connectionProperty.database);
+         	textHost.setText(connectionProperty.host);
+         	textPort.setText(connectionProperty.port);
+         	textUsername.setText(connectionProperty.username);
+         	textPassword.setText(connectionProperty.password);
+         }
+         
+         DatabasePropertyList databaseList = connection.DatabasePropertyList.unmarshall();
+         DatabaseProperty databaseProperty = databaseList.getDatabaseProperties("GUI");
+         List<String> blackListPattern  = new ArrayList<String>();	// Blacklisted patterns
+      
+         if (databaseProperty != null) {
+         	comboBoxUnit.setValue(databaseProperty.unit);
+         	textLag.setText(databaseProperty.lag.toString());
+         	textLead.setText(databaseProperty.lead.toString());
+         	textSampleCount.setText(databaseProperty.sampleCount.toString());
+         	comboBoxTask.setValue(databaseProperty.task);
+         	
+         	blackListPattern = Arrays.asList(databaseProperty.blackListPattern.split(","));	
+         }
+        
+        // Connection tab
+        ValidatorText.addNumericValidation(textPort);
                 
-		// Populate the pattern tab
-		SortedMap<String, Pattern> patternList = utility.PatternMap.getPatternMap();
-		
+		// Pattern tab - populate list of patterns
+		SortedMap<String, Pattern> patternList = utility.PatternMap.getPatternMap();	// Get patternList
 		CheckBoxTreeItem<String> rootItem = new CheckBoxTreeItem<String>("Patterns");
 		rootItem.setExpanded(true);
 		
 		for (Pattern pattern : patternList.values()) {
-			final CheckBoxTreeItem<String> itemPredictor = new CheckBoxTreeItem<String>(pattern.name);
-			itemListPattern.add(itemPredictor);
+			final CheckBoxTreeItem<String> itemPattern = new CheckBoxTreeItem<String>(pattern.name);	// Add checkboxes
+			itemListPattern.add(itemPattern);
 		}
 		
 		rootItem.getChildren().addAll(itemListPattern);
-		
 		treeViewPattern.setRoot(rootItem);
 		treeViewPattern.setCellFactory(CheckBoxTreeCell.<String>forTreeView());
 
+		for (CheckBoxTreeItem<String> item : itemListPattern) {
+			if (!blackListPattern.contains(item.getValue())) item.setSelected(true);	// Check checkboxes from the last run 
+		}
 	
 		// Pattern tab - description field. The text changes based on the currently selected pattern.
 		treeViewPattern.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<TreeItem<String>>() {
@@ -323,65 +370,12 @@ public class Events implements Initializable {
             }
         });
 		
-		// Populate setting tab	
-		textLag.textProperty().addListener(new ChangeListener<String>() {
-			@Override
-			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-				try {
-					Integer.parseUnsignedInt(newValue); // Permit only nonnegative integers
-				} catch (NumberFormatException e) {
-					textLag.setText(oldValue);
-				}
-			}
-		});
+		// Setting tab
+		ValidatorText.addNumericValidation(textLag);
+		ValidatorText.addNumericValidation(textLead);
+		ValidatorText.addNumericValidation(textSampleCount);
 		
-		textLead.textProperty().addListener(new ChangeListener<String>() {
-			@Override
-			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-				try {
-					Integer.parseUnsignedInt(newValue); // Permit only nonnegative integers
-				} catch (NumberFormatException e) {
-					textLead.setText(oldValue);
-				}
-			}
-		});
-		
-		textSampleCount.textProperty().addListener(new ChangeListener<String>() {
-			@Override
-			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-				try {
-					Integer.parseUnsignedInt(newValue); // Permit only nonnegative integers
-				} catch (NumberFormatException e) {
-					textSampleCount.setText(oldValue);
-				}
-			}
-		});
-		
-		
-        // Read past setting. If no past setting is available, leave it unfilled.
-		// NOTE: IF SOME ATTRIBUTE IS MISSING, IT WILL FAIL
-        ConnectionPropertyList connectionList = connection.ConnectionPropertyList.unmarshall();
-        ConnectionProperty connectionProperty = connectionList.getConnectionProperties("GUI");
         
-        if (connectionProperty != null) {
-        	comboBoxVendor.setValue(connectionProperty.driver);
-        	textDatabase.setText(connectionProperty.database);
-        	textHost.setText(connectionProperty.host);
-        	textPort.setText(connectionProperty.port);
-        	textUsername.setText(connectionProperty.username);
-        	textPassword.setText(connectionProperty.password);
-        }
-        
-        DatabasePropertyList databaseList = connection.DatabasePropertyList.unmarshall();
-        DatabaseProperty databaseProperty = databaseList.getDatabaseProperties("GUI");
-     
-        if (databaseProperty != null) {
-        	comboBoxUnit.setValue(databaseProperty.unit);
-        	textLag.setText(databaseProperty.lag.toString());
-        	textLead.setText(databaseProperty.lead.toString());
-        	textSampleCount.setText(databaseProperty.sampleCount.toString());
-        	comboBoxTask.setValue(databaseProperty.task);
-        }
     }
 
     
@@ -420,4 +414,7 @@ public class Events implements Initializable {
 	
 	    alert.showAndWait();
     }
+
+   
+	
 }

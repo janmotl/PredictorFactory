@@ -6,7 +6,7 @@
 	
 	The implementation is from: https://qizeresearch.wordpress.com/2014/05/21/utilize-woe-to-replace-dummy-variables/
 	
-	NOTE: Training and testing data are getting mixxed -> expect overly optimistic estimates.
+	NOTE: Training and testing data are getting mixed -> expect overly optimistic estimates.
 	
 	NOTE: WORKS ONLY ON BINARY TARGETS! -> produce a column for each target class
 	

@@ -1,20 +1,19 @@
 package utility;
 
-import java.io.IOException;
+import org.apache.log4j.Logger;
+import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
-
-import org.apache.log4j.Logger;
-import org.xml.sax.SAXException;
+import java.io.IOException;
 
 
 public final class XML {
 	// Logging
-	public static final Logger logger = Logger.getLogger(XML.class.getName());
+	private static final Logger logger = Logger.getLogger(XML.class.getName());
 
 	// Validate the XML
 	// The paths are relative to the class

@@ -1,5 +1,14 @@
 package featureExtraction;
 
+import org.apache.log4j.Logger;
+import parser.ANTLR;
+import run.Setting;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.io.File;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -7,26 +16,12 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
-import org.apache.log4j.Logger;
-
-import run.Setting;
-
 
 @XmlRootElement (name="pattern")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Pattern {
 	// Logging
-	public static final Logger logger = Logger.getLogger(Pattern.class.getName());
+	private static final Logger logger = Logger.getLogger(Pattern.class.getName());
 		
 	// Fields
 	@XmlAttribute public int topN = 1; // The default value is to return a single best predictor per predictor.groupId.
@@ -133,26 +128,9 @@ public class Pattern {
 		dialectCode = dialectCode.replaceAll("(?i)timestamp", setting.typeTimestamp);
 		
 		// DateDiff. Ignore line breaks with "s" parameter.
-		java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(?is)(.*)dateDiff\\((.*),(.*)\\)(.*)");	
+		dialectCode = ANTLR.parseSQL(dialectCode, setting.dateDiffSyntax, setting.corrSyntax);
 		
-		do {
-			Matcher matcher = pattern.matcher(dialectCode);
-			if (matcher.find())
-			{		    
-			    // Extract the keywords
-			    String dateTo = matcher.group(2);
-			    String dateFrom = matcher.group(3);
-					
-				// Replace
-				String dateDiff = setting.dateDiffSyntax.replace("@dateFrom", dateFrom);
-				dateDiff = dateDiff.replace("@dateTo", dateTo);
-				dialectCode = matcher.group(1) + dateDiff + matcher.group(4);
-			} else {
-				break;
-			}
-		} while (true);
-		
-		// NullIf (SAS doesn't support it in JDBC)
+		// NullIf (SAS doesn't support nullIf command in SQL over JDBC, rewrite nullIf with basic commands)
 		if ("SAS".equals(setting.databaseVendor)) {
 			dialectCode = nullIf(dialectCode);
 		}

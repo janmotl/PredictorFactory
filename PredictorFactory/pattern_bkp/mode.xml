@@ -3,12 +3,14 @@
 <pattern>
 	<name>Mode</name>
 	<description>Mode
+
+		This pattern is producing great predictors.
+
+		NOTE: Works also on id!
 	
-	NOTE: Works also on id!
+		Note: The implementation for PostgreSQL is supported from PostgreSQL 9.4.
 	
-	Note: The implementation for PostgreSQL is supported from PostgreSQL 9.4.
-	
-	NOTE: THE VERSION FOR SAS CAN RETURN TOO MANY ROWS BECAUSE OF TIES.
+		NOTE: THE VERSION FOR SAS CAN RETURN TOO MANY ROWS BECAUSE OF TIES.
 	</description>
 	<example>
 		The typical payment amount.

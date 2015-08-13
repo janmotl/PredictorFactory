@@ -9,11 +9,11 @@ import org.junit.Test;
 import run.Setting;
 
 public class NetworkTest {
-	private Setting setting = new Setting();
+	private Setting setting = new Setting("MariaDB", "financial");
 	
 	@Before
 	public void connectToDatabase(){
-		setting = Network.openConnection(setting, "MariaDB", "financial");
+		setting = Network.openConnection(setting);
 	}
 
 	// Would fail on Oracle and other databases when "from dual" syntax is required
@@ -28,6 +28,7 @@ public class NetworkTest {
 	// Would fail on databases with schema support
 	@Test
 	public void getDatabaseProperties() {
-		Assert.assertFalse(setting.supportsCatalogs);
+		Assert.assertTrue(setting.supportsCatalogs);
+		Assert.assertFalse(setting.supportsSchemas);
 	}
 }
