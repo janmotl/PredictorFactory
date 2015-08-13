@@ -4,7 +4,9 @@
 	<name>Direct field</name>
 	<description>
 		Returns ALL columns from the table. The advantage of "Direct field" in comparison to "Aggregate max" is 
-		that it also returns non-numerical columns. 
+		that it also returns non-numerical columns.
+
+		This pattern is commonly producing the best predictors.
 		
 		Note: Direct field also returns the target column! This is desirable as in time series analysis you may not
 		have anything but the past values of the target. But if lead==0 then the "current" target will leak into the 
@@ -12,7 +14,7 @@
 		
 		Note: Time variables are handled here with a fixed reference. For floating reference pattern time_since_direct
 		is used. Neither of the approaches completely dominates the other. Hence both approaches are tested. But only
-		one for the given attribute should be chosen (as they are higly correlated).
+		one for the given attribute should be chosen (as they are highly correlated).
 	</description>
 	<example>
 		Indicated “likely to donate” on 2009 alumni survey

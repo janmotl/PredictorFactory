@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Segment comparison</name>
+	<description>
+		Value of the numerical field divided by a statistic (MEAN, PERCENTILE) of the nominal field. 
+		Useful to be used in composition with pattern parent field or parent from hierarchical lookup.
+		
+		select Key
+		  , Ratio(Field, Y)
+		from Table t
+		  left join (select Segmentor, Y = Statistic(Field)
+		      from Table
+		      where Filter
+		      group by Segmentor) s 
+		    on t.Segmentor=s.Segmentor	
+		    
+		Warning: Data leakage happens as all @baseId are used to calculate the average while only training
+		samples should be used. If you have a lot of samples, balanced classes and no outliers the practical 
+		effect of data leakage should be minimal. But beware of extreme scenarios!
+
+		This pattern is producing great predictors.
+	</description>
+	<example>
+		Industry average
+		Regional average
+	</example>
+	<author>Filip Trojan</author>
+	<date>2014-12-31</date>
+	<code>SELECT @baseId
+			, @baseDate
+			, @baseTarget
+			, CASE 
+				WHEN Y IS NULL THEN NULL 
+				WHEN Y=0 THEN -9999 
+				ELSE @numericalColumn/Y 
+			  END AS "@columnName"
+	      FROM @propagatedTable a 
+	      LEFT JOIN (
+	      	SELECT @nominalColumn, avg(@numericalColumn) AS Y 
+	      	FROM @propagatedTable 
+	      	GROUP BY @nominalColumn) b 
+	      ON a.@nominalColumn = b.@nominalColumn
+	</code>
+	<cardinality>1</cardinality>
+</pattern>
