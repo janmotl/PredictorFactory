@@ -103,12 +103,11 @@ public class PatternTest {
 	
 	@Test
 	public void timeDateToNumberOracle() {
-		setting.dateDiffSyntax = "(@column - TO_DATE('01011970','DDMMYYYY'))";
-		String code = "DateToNumber(@column)";
-		String expected = "DATEDIFF(@baseDate, @timeColumn)";
+		setting.dateToNumber = "(@column - TO_DATE('01011970','DDMMYYYY'))";
+		String code = "SELECT DateToNumber(@column) FROM t1";
+		String expected = "SELECT (@column - TO_DATE('01011970','DDMMYYYY')) FROM t1";
 		String actual = pattern.getDialect(setting, code);
 
-		System.out.println(actual);
 		Assert.assertEquals(expected, actual);
 	}
 	

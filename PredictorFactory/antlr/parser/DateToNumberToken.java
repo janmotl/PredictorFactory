@@ -17,9 +17,8 @@ public class DateToNumberToken implements TerminalNode{
 
 	public DateToNumberToken(SQLParser.DatetonumberContext ctx2, String pattern) {
 		ctx = ctx2;
-		
-		// The first content
-        String column = (ctx.payload(0)).getText();
+
+        String column = ctx.payload().getText();
 
 		text = pattern.replace("@column", column);
 	}

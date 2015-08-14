@@ -326,13 +326,9 @@ public class SQLParser extends Parser {
 	public static class DatetonumberContext extends ParserRuleContext {
 		public TerminalNode DATETONUMBER() { return getToken(SQLParser.DATETONUMBER, 0); }
 		public TerminalNode LBR() { return getToken(SQLParser.LBR, 0); }
-		public List<PayloadContext> payload() {
-			return getRuleContexts(PayloadContext.class);
+		public PayloadContext payload() {
+			return getRuleContext(PayloadContext.class,0);
 		}
-		public PayloadContext payload(int i) {
-			return getRuleContext(PayloadContext.class,i);
-		}
-		public TerminalNode COMMA() { return getToken(SQLParser.COMMA, 0); }
 		public TerminalNode RBR() { return getToken(SQLParser.RBR, 0); }
 		public DatetonumberContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -361,10 +357,6 @@ public class SQLParser extends Parser {
 			setState(38);
 			payload();
 			setState(39);
-			match(COMMA);
-			setState(40);
-			payload();
-			setState(41);
 			match(RBR);
 			}
 		}
@@ -410,17 +402,17 @@ public class SQLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(43);
+			setState(41);
 			match(CORR);
-			setState(44);
+			setState(42);
 			match(LBR);
+			setState(43);
+			payload();
+			setState(44);
+			match(COMMA);
 			setState(45);
 			payload();
 			setState(46);
-			match(COMMA);
-			setState(47);
-			payload();
-			setState(48);
 			match(RBR);
 			}
 		}
@@ -493,52 +485,52 @@ public class SQLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(59);
+			setState(57);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << DATEDIFF) | (1L << DATETONUMBER) | (1L << CORR) | (1L << LBR) | (1L << TEXT) | (1L << ARITHMETIC) | (1L << WS))) != 0)) {
 				{
-				setState(57);
+				setState(55);
 				switch (_input.LA(1)) {
 				case TEXT:
 					{
-					setState(50);
+					setState(48);
 					match(TEXT);
 					}
 					break;
 				case LBR:
 					{
-					setState(51);
+					setState(49);
 					bracket();
 					}
 					break;
 				case WS:
 					{
-					setState(52);
+					setState(50);
 					match(WS);
 					}
 					break;
 				case ARITHMETIC:
 					{
-					setState(53);
+					setState(51);
 					match(ARITHMETIC);
 					}
 					break;
 				case DATEDIFF:
 					{
-					setState(54);
+					setState(52);
 					datediff();
 					}
 					break;
 				case DATETONUMBER:
 					{
-					setState(55);
+					setState(53);
 					datetonumber();
 					}
 					break;
 				case CORR:
 					{
-					setState(56);
+					setState(54);
 					corr();
 					}
 					break;
@@ -546,7 +538,7 @@ public class SQLParser extends Parser {
 					throw new NoViableAltException(this);
 				}
 				}
-				setState(61);
+				setState(59);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -564,24 +556,24 @@ public class SQLParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3\13A\4\2\t\2\4\3\t"+
+		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3\13?\4\2\t\2\4\3\t"+
 		"\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\7\2"+
 		"\27\n\2\f\2\16\2\32\13\2\3\3\3\3\3\3\3\3\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3"+
-		"\5\3\5\3\5\3\5\3\5\3\5\3\5\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\7\3\7\3\7\3\7"+
-		"\3\7\3\7\3\7\7\7<\n\7\f\7\16\7?\13\7\3\7\2\2\b\2\4\6\b\n\f\2\2I\2\30\3"+
-		"\2\2\2\4\33\3\2\2\2\6\37\3\2\2\2\b&\3\2\2\2\n-\3\2\2\2\f=\3\2\2\2\16\27"+
-		"\7\t\2\2\17\27\5\4\3\2\20\27\7\13\2\2\21\27\7\n\2\2\22\27\5\6\4\2\23\27"+
-		"\5\b\5\2\24\27\5\n\6\2\25\27\7\b\2\2\26\16\3\2\2\2\26\17\3\2\2\2\26\20"+
-		"\3\2\2\2\26\21\3\2\2\2\26\22\3\2\2\2\26\23\3\2\2\2\26\24\3\2\2\2\26\25"+
-		"\3\2\2\2\27\32\3\2\2\2\30\26\3\2\2\2\30\31\3\2\2\2\31\3\3\2\2\2\32\30"+
-		"\3\2\2\2\33\34\7\6\2\2\34\35\5\2\2\2\35\36\7\7\2\2\36\5\3\2\2\2\37 \7"+
-		"\3\2\2 !\7\6\2\2!\"\5\f\7\2\"#\7\b\2\2#$\5\f\7\2$%\7\7\2\2%\7\3\2\2\2"+
-		"&\'\7\4\2\2\'(\7\6\2\2()\5\f\7\2)*\7\b\2\2*+\5\f\7\2+,\7\7\2\2,\t\3\2"+
-		"\2\2-.\7\5\2\2./\7\6\2\2/\60\5\f\7\2\60\61\7\b\2\2\61\62\5\f\7\2\62\63"+
-		"\7\7\2\2\63\13\3\2\2\2\64<\7\t\2\2\65<\5\4\3\2\66<\7\13\2\2\67<\7\n\2"+
-		"\28<\5\6\4\29<\5\b\5\2:<\5\n\6\2;\64\3\2\2\2;\65\3\2\2\2;\66\3\2\2\2;"+
-		"\67\3\2\2\2;8\3\2\2\2;9\3\2\2\2;:\3\2\2\2<?\3\2\2\2=;\3\2\2\2=>\3\2\2"+
-		"\2>\r\3\2\2\2?=\3\2\2\2\6\26\30;=";
+		"\5\3\5\3\5\3\5\3\5\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\7\3\7\3\7\3\7\3\7\3\7"+
+		"\3\7\7\7:\n\7\f\7\16\7=\13\7\3\7\2\2\b\2\4\6\b\n\f\2\2G\2\30\3\2\2\2\4"+
+		"\33\3\2\2\2\6\37\3\2\2\2\b&\3\2\2\2\n+\3\2\2\2\f;\3\2\2\2\16\27\7\t\2"+
+		"\2\17\27\5\4\3\2\20\27\7\13\2\2\21\27\7\n\2\2\22\27\5\6\4\2\23\27\5\b"+
+		"\5\2\24\27\5\n\6\2\25\27\7\b\2\2\26\16\3\2\2\2\26\17\3\2\2\2\26\20\3\2"+
+		"\2\2\26\21\3\2\2\2\26\22\3\2\2\2\26\23\3\2\2\2\26\24\3\2\2\2\26\25\3\2"+
+		"\2\2\27\32\3\2\2\2\30\26\3\2\2\2\30\31\3\2\2\2\31\3\3\2\2\2\32\30\3\2"+
+		"\2\2\33\34\7\6\2\2\34\35\5\2\2\2\35\36\7\7\2\2\36\5\3\2\2\2\37 \7\3\2"+
+		"\2 !\7\6\2\2!\"\5\f\7\2\"#\7\b\2\2#$\5\f\7\2$%\7\7\2\2%\7\3\2\2\2&\'\7"+
+		"\4\2\2\'(\7\6\2\2()\5\f\7\2)*\7\7\2\2*\t\3\2\2\2+,\7\5\2\2,-\7\6\2\2-"+
+		".\5\f\7\2./\7\b\2\2/\60\5\f\7\2\60\61\7\7\2\2\61\13\3\2\2\2\62:\7\t\2"+
+		"\2\63:\5\4\3\2\64:\7\13\2\2\65:\7\n\2\2\66:\5\6\4\2\67:\5\b\5\28:\5\n"+
+		"\6\29\62\3\2\2\29\63\3\2\2\29\64\3\2\2\29\65\3\2\2\29\66\3\2\2\29\67\3"+
+		"\2\2\298\3\2\2\2:=\3\2\2\2;9\3\2\2\2;<\3\2\2\2<\r\3\2\2\2=;\3\2\2\2\6"+
+		"\26\309;";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
