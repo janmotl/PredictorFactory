@@ -100,9 +100,17 @@ public class Parser {
 		}
 		
 		// Set rownum (Oracle)
-		// WORKS ONLY IF WHERE CONDITION IS ALREADY PRESENT
 		if ("rownum".equals(setting.limitSyntax)) {
-			sql = sql.replaceAll("(?i)WHERE$", "WHERE ROWNUM <" + rowCount); // Case insensitive + the last occurrence
+			Pattern pattern = Pattern.compile("(?i)(.*)(WHERE)(.*)"); // Case insensitive + greedy
+			Matcher matcher = pattern.matcher(sql);
+			
+			if (matcher.find()) {
+				// Where condition is already present 
+				sql = matcher.group(1) + "WHERE ROWNUM <= " + rowCount + " AND" + matcher.group(3);
+			} else {
+				// BLINDLY ADD WHERE CONDITION
+				sql = sql + " WHERE ROWNUM <= " + rowCount;
+			}
 		}
 	
 		return sql;

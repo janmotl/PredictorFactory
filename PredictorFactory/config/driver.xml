@@ -8,17 +8,20 @@ Description of the fields:
 	DefaultPort: The default port of the database.
 	UrlPrefix: The beginning of the connection string.  
 	DbNameSeparator: The separator between urlPrefix and database name.
-	quoteEntityOpen: By default we are using the character(s) that we are told by the database driver...  
-	quoteEntityClose: ...but users may have their own opinion about the right sequence. Also, the driver may not be well implemented. Or the driver can be outdated.  
-	quoteAliasOpen: By default double quote.
-	quoteAliasClose: By default double quote. 
-	SupportsCreateTableAs: Because of MS SQL specific syntax...
-	SupportsWithData: Because of MonetDB specific syntax...
+	QuoteEntityOpen: By default we are using the character(s) that we are told by the database driver...  
+	QuoteEntityClose: ...but users may have their own opinion about the right sequence. Also, the driver may not be well implemented. Or the driver can be outdated.  
+	QuoteAliasOpen: By default double quote. In MySQL a single quote...
+	QuoteAliasClose: By default double quote. In MySQL a single quote...
+	SupportsCatalogs: By default true. False in SAS... (COULD BE DETECTED WITH JDBC DRIVER)
+	SupportsSchemas: By default true. False in MySQL... (COULD BE DETECTED WITH JDBC DRIVER)
+	SupportsCreateTableAs: By default true. False in MS SQL...
+	SupportsWithData: By default false. Has to be true for MonetDB... (SHOULD BE NAMED LIKE "DEFAULT_IS_WITHOUT_DATA")
 	corrSyntax: Optional. Define the command for correlation if the database provides such command.
 	DateAddSyntax: Because we want to be able to express time ranges. This syntax doesn't deal with leap years.  
 	DateAddMonth: Because we want to be able to express time ranges. This syntax correctly deals with leap years.  
 	DateDiffSyntax: Not all databases support conversion of time to number. Hence just use a diff against a constant. 
 	DateToNumber: EXPERIMENTAL. SHOULD BE SUBSTITUTED WITH DATEDIFF SYNTAX AND CONSTANT
+		But then we would have to support: dateDiff(date, date) and dateDiff(date, constant as string)
 	InsertTimestampSyntax: Syntax for timestamp (it's used for creation of journal table). Because of SAS it generally has to be in single quotes.
 	StdDevCommand: The command for calculation of sample standard deviation.
 	CharLengthCommand: The command for calculation of string length.
@@ -33,10 +36,6 @@ Description of the fields:
 		defaultPort="50000"
 		urlPrefix="jdbc:db2://"
 		dbNameSeparator="/"
-		supportsCatalogs="true"
-		supportsSchemas="true"
-		supportsCreateTableAs="true" 
-		supportsWithData="false"
 		dateAddSyntax="(@baseDate + INTERVAL '@amount @datePart')"
 		dateAddMonth="(@baseDate + INTERVAL '@amount month')" 
 		dateDiffSyntax="(@dateTo - @dateFrom)"
@@ -58,10 +57,7 @@ Description of the fields:
 		defaultPort="1433"
 		urlPrefix="jdbc:sqlserver://"
 		dbNameSeparator=";databaseName="
-		supportsCatalogs="true"
-		supportsSchemas="true"
 		supportsCreateTableAs="false"
-		supportsWithData="false"
 		dateAddSyntax="DATEADD(@datePart, @amount, @baseDate)"
 		dateAddMonth="DATEADD(month, @amount, @baseDate)"
 		dateDiffSyntax="DATEDIFF(day, @dateTo, @dateFrom)"
@@ -83,9 +79,6 @@ Description of the fields:
 		defaultPort="1433"
 		urlPrefix="jdbc:monetdb://"
 		dbNameSeparator="/"
-		supportsCatalogs="true"
-		supportsSchemas="true"
-		supportsCreateTableAs="true"
 		supportsWithData="true"
 		dateAddSyntax="DATEADD(@datePart, @amount, @baseDate)"
 		dateAddMonth="DATEADD(month, @amount, @baseDate)"
@@ -108,10 +101,10 @@ Description of the fields:
 		defaultPort="3306"
 		urlPrefix="jdbc:mysql://"
 		dbNameSeparator="/"
+		quoteAliasOpen="'"
+		quoteAliasClose="'"
 		supportsCatalogs="true"
 		supportsSchemas="false"
-		supportsCreateTableAs="true"
-		supportsWithData="false"
 		dateAddSyntax="DATE_ADD(@baseDate, INTERVAL @amount @datePart)"
 		dateAddMonth="DATE_ADD(@baseDate, INTERVAL @amount month)"
 		dateDiffSyntax="DATEDIFF(@dateTo, @dateFrom)"
@@ -134,10 +127,6 @@ Description of the fields:
 		defaultPort="5480"	
 		urlPrefix="jdbc:netezza://"
 		dbNameSeparator="/"
-		supportsCatalogs="true"
-		supportsSchemas="true"
-		supportsCreateTableAs="true"
-		supportsWithData="false"
 		dateAddMonth="add_months(@baseDate, @amount)"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="extract(epoch from @date)"
@@ -156,14 +145,11 @@ Description of the fields:
 	as it can correctly deal with different length of months and leap years. -->
 	<driver
 		name="Oracle"
-		driverClass="oracle.jdbc.driver.OracleDriver"
+		driverClass="oracle.jdbc.OracleDriver"
 		defaultPort="1521"	
 		urlPrefix="jdbc:oracle:thin:@"
 		dbNameSeparator=":"
-		supportsCatalogs="true"
-		supportsSchemas="true"
-		supportsCreateTableAs="true"
-		supportsWithData="false"
+		corrSyntax="corr(@column1, @column2)"
 		dateAddSyntax="(@baseDate + INTERVAL '@amount' @datePart)"
 		dateAddMonth="add_months(@baseDate, @amount)"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
@@ -185,10 +171,6 @@ Description of the fields:
 		defaultPort="5432"
 		urlPrefix="jdbc:postgresql://"
 		dbNameSeparator="/"
-		supportsCatalogs="true"
-		supportsSchemas="true"
-		supportsCreateTableAs="true"
-		supportsWithData="false"
 		corrSyntax="corr(@column1, @column2)"
 		dateAddSyntax="(@baseDate + INTERVAL '@amount @datePart')"
 		dateAddMonth="(@baseDate + INTERVAL '@amount month')"
@@ -218,9 +200,6 @@ Description of the fields:
 		quoteAliasOpen=""
 		quoteAliasClose=""
 		supportsCatalogs="false"
-		supportsSchemas="true"
-		supportsCreateTableAs="true"
-		supportsWithData="false"
 		dateAddSyntax="(intnx('@datePart', @baseDate, @amount))"
 		dateAddMonth="intnx('month', @baseDate, @amount)"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
@@ -245,10 +224,6 @@ Description of the fields:
 		defaultPort="1025"	
 		urlPrefix="jdbc:teradata://"
 		dbNameSeparator="/"
-		supportsCatalogs="true"
-		supportsSchemas="true"
-		supportsCreateTableAs="true"
-		supportsWithData="false"		
 		dateAddSyntax="(@baseDate + (INTERVAL '@amount' @datePart))"
 		dateAddMonth="add_months(@baseDate, @amount)"
 		dateDiffSyntax="(@dateTo - @dateFrom)"

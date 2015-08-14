@@ -26,8 +26,8 @@ public class MetaInput {
 		SortedMap<String, Table> tableMap = new TreeMap<>(); // Map of {tableName, tableData}
 		final String database = setting.database;
 		final String schema = setting.inputSchema;
-		final List whiteListTable = string2list(setting.whiteListTable); // Parsed values
-		final List blackListTable = string2list(setting.blackListTable); // Parsed values
+		final List<String> whiteListTable = string2list(setting.whiteListTable); // Parsed values
+		final List<String> blackListTable = string2list(setting.blackListTable); // Parsed values
 		final Map<String,List<String>> whiteMapColumn = list2map(string2list(setting.whiteListColumn)); // Parsed values
 		final Map<String,List<String>> blackMapColumn = list2map(string2list(setting.blackListColumn)); // Parsed values
 		

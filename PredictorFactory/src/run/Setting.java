@@ -119,6 +119,10 @@ public final class Setting {
  	   	quoteAliasOpen = MoreObjects.firstNonNull(driverProperty.quoteAliasOpen, "\"");
 		quoteAliasClose = MoreObjects.firstNonNull(driverProperty.quoteAliasClose, "\"");
 		indexNameSyntax = MoreObjects.firstNonNull(driverProperty.indexNameSyntax, "table_idx");
+		supportsCatalogs = MoreObjects.firstNonNull(driverProperty.supportsCatalogs, true); 
+		supportsSchemas = MoreObjects.firstNonNull(driverProperty.supportsSchemas, true); 
+		supportsCreateTableAs = MoreObjects.firstNonNull(driverProperty.supportsCreateTableAs, true); 
+		supportsWithData = MoreObjects.firstNonNull(driverProperty.supportsWithData, false);
 
 		// Note: the correct correlation is: select ((Avg(column1 * column2) - Avg(column1) * Avg(column2)) / (stdDev_samp(column1) * stdDev_samp(column2))), ((sum(column1 * column2) - count(*) * Avg(column1) * Avg(column2)) / (stdDev_samp(column1) * stdDev_samp(column2) * (count(*)-1))), stdDev_samp(column1), stdDev_samp(column2) FROM `predictor_factory`.`PREDICTOR100004` WHERE column2 is not null and column1 is not null
 		corrSyntax = MoreObjects.firstNonNull(driverProperty.corrSyntax, "((Sum(@column1 * @column2) - count(*) * Avg(@column1) * Avg(@column2)) / ((count(*) - 1) * (stdDev_samp(@column1) * stdDev_samp(@column2))))");
@@ -148,10 +152,6 @@ public final class Setting {
 		dbNameSeparator = driverProperty.dbNameSeparator;
 		urlPrefix = driverProperty.urlPrefix;
 		testQuery = driverProperty.testQuery;
-		supportsCatalogs = driverProperty.supportsCatalogs;
-		supportsSchemas = driverProperty.supportsSchemas;
-		supportsCreateTableAs = driverProperty.supportsCreateTableAs;
-		supportsWithData = driverProperty.supportsWithData;
 		dateAddSyntax = driverProperty.dateAddSyntax;
 		dateAddMonth = driverProperty.dateAddMonth;
 		dateDiffSyntax = driverProperty.dateDiffSyntax;

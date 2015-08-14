@@ -127,8 +127,8 @@ public class Pattern {
 		// Timestamp
 		dialectCode = dialectCode.replaceAll("(?i)timestamp", setting.typeTimestamp);
 		
-		// DateDiff. Ignore line breaks with "s" parameter.
-		dialectCode = ANTLR.parseSQL(dialectCode, setting.dateDiffSyntax, setting.corrSyntax);
+		// DateDiff, dateToNumber...
+		dialectCode = ANTLR.parseSQL(setting, dialectCode);
 		
 		// NullIf (SAS doesn't support nullIf command in SQL over JDBC, rewrite nullIf with basic commands)
 		if ("SAS".equals(setting.databaseVendor)) {

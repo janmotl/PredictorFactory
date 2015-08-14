@@ -8,7 +8,7 @@ LBR : '(';
 RBR : ')';
 COMMA : ',';
 TEXT : ~(' '|'\t'|'\r'|'\n'|'*'|'/'|'+'|'-'|'^'|'('|')'|',')+; // Everything except WS, arithmetic, brackets and COMMA
-ARITHMETIC : ('*'|'/'|'+'|'-'|'^'); // Arythmetic operands define token borders, just like white space characters
+ARITHMETIC : ('*'|'/'|'+'|'-'|'^'); // Arithmetic operands define token borders, just like white space characters
 WS : (' '|'\t'|'\r'|'\n');	// The space between the quotes is intentional
 
 //SINGLE_LINE_COMMENT : '--' ~[\r\n]* -> channel(HIDDEN);

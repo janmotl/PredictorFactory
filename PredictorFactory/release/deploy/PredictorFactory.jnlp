@@ -8,7 +8,7 @@
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="PredictorFactory.jar" size="109193" download="eager" />
+    <jar href="PredictorFactory.jar" size="95874" download="eager" />
     <jar href="libs\HikariCP-2.3.8.jar" size="98730" download="eager" />
     <jar href="libs\cloning-1.9.1.jar" size="25248" download="eager" />
     <jar href="libs\commons-lang3-3.3.2.jar" size="412740" download="eager" />

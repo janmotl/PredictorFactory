@@ -3,8 +3,10 @@ package run;
 
 import connection.Network;
 import connection.SQL;
+
 import org.junit.Assert;
 import org.junit.Test;
+
 import utility.Meta;
 
 import java.util.List;
@@ -47,6 +49,23 @@ public class LauncherTest {
     }
 
     @Test
+    public void test_Oracle() {
+        String[] arguments = new String[]{"Oracle", "financial_xe_test_setting"};
+        Launcher.main(arguments);
+
+        Setting setting = new Setting("Oracle", "financial_xe_test_setting");
+        Network.openConnection(setting);
+        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.sampleTable);
+        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.sampleTable);
+        Network.closeConnection(setting);
+
+        Assert.assertTrue(columnList.containsKey("order_amount_aggregate__100002"));
+        Assert.assertTrue(columnList.containsKey("loan_amount_directField_100006"));
+        Assert.assertEquals(120, rowCount);
+        Assert.assertEquals(11, columnList.size());
+    }
+    
+    @Test
     public void test_PostgreSQL() {
         String[] arguments = new String[]{"PostgreSQL", "financial_test_setting"};
         Launcher.main(arguments);
@@ -87,6 +106,23 @@ public class LauncherTest {
         Assert.assertEquals(11, columnList.size());
     }
 
+    @Test
+    public void test_regression_Oracle() {
+        String[] arguments = new String[]{"Oracle", "financial_xe_test_setting_regression"};
+        Launcher.main(arguments);
+
+        Setting setting = new Setting("Oracle", "financial_xe_test_setting_regression");
+        Network.openConnection(setting);
+        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.sampleTable);
+        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.sampleTable);
+        Network.closeConnection(setting);
+
+        Assert.assertTrue(columnList.containsKey("order_amount_aggregate__100002"));
+        Assert.assertTrue(columnList.containsKey("loan_amount_directField_100006"));
+        Assert.assertEquals(120, rowCount);
+        Assert.assertEquals(11, columnList.size());
+    }
+    
     @Test
     public void test_regression_PostgreSQL() {
         String[] arguments = new String[]{"PostgreSQL", "financial_test_setting_regression"};

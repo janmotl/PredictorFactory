@@ -5,7 +5,10 @@
 
 package controller;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -17,14 +20,19 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBoxTreeItem;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.cell.CheckBoxTreeCell;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -44,7 +52,7 @@ public class Events implements Initializable {
 	private Setting setting = new Setting();
 	private List<CheckBoxTreeItem<String>> itemListTable = new ArrayList<CheckBoxTreeItem<String>>();
 	private List<CheckBoxTreeItem<String>> itemListColumn = new ArrayList<CheckBoxTreeItem<String>>();
-	private List<CheckBoxTreeItem<String>> itemListPredictor = new ArrayList<CheckBoxTreeItem<String>>();
+	private List<CheckBoxTreeItem<String>> itemListPattern = new ArrayList<CheckBoxTreeItem<String>>();
 	
 	// Define GUI elements. The values are automatically initialized by FXMLLoader.
     @FXML private Button buttonConnect;
@@ -62,17 +70,31 @@ public class Events implements Initializable {
 	@FXML private ComboBox<String> comboBoxTargetId;
 	@FXML private ComboBox<String> comboBoxTargetTimestamp;
 	@FXML private ComboBox<String> comboBoxTask;
+	@FXML private ComboBox<String> comboBoxUnit;
+	@FXML private TextField textLag;
+	@FXML private TextField textLead;
+	@FXML private TextField textSampleCount;
 	@FXML private TextArea textAreaConsole;
 	@FXML private TextArea textAreaDescription;
-	
 	@FXML private TreeView<String> treeViewSelect;
 	@FXML private TreeView<String> treeViewPattern;
-	
-
 	
 	
 	// Event handlers
 	@FXML private void connectAction() {
+		
+		 // 0) Disconnect command?
+		if ("Disconnect".equals(buttonConnect.getText())) {
+			try {
+				setting.connection.close();
+			} catch (SQLException e) {
+				e.getMessage();
+			}
+			
+			buttonConnect.setText("Connect");
+			
+			return;
+		}
 		 
 		 // 1) Read current connections 
 		 ConnectionPropertyList connectionList = connection.ConnectionPropertyList.unmarshall();
@@ -97,6 +119,12 @@ public class Events implements Initializable {
 		 ///// Connect to the server /////
 		 setting = connection.Network.openConnection(setting, "GUI", "GUI");
 		 
+		//exceptionDialog();	SHOULD PASS THE CONNECTION ERRORS
+		 
+		 // Change the button text
+		 if (setting.connection != null) {
+			 buttonConnect.setText("Disconnect");
+		 }
 		 
         ////// Read past setting for the database tab ///////
         DatabasePropertyList databaseList = connection.DatabasePropertyList.unmarshall();
@@ -183,18 +211,22 @@ public class Events implements Initializable {
 		setting.targetColumn = comboBoxTargetColumn.getValue();
 		setting.targetId = comboBoxTargetId.getValue();
 		setting.targetDate = comboBoxTargetTimestamp.getValue();
+		setting.unit = comboBoxUnit.getValue();
+		setting.lag = Integer.valueOf(textLag.getText());
+		setting.lead = Integer.valueOf(textLead.getText());
+		setting.sampleCount = Integer.valueOf(textSampleCount.getText());
 		setting.task = comboBoxTask.getValue();
 
 		// BlackList tables
-		List<String> blackList = new ArrayList<String>(); 
+		List<String> blackListTable = new ArrayList<String>(); 
 		
 		for (CheckBoxTreeItem<String> treeItem : itemListTable) {
 			if (!treeItem.isSelected()) {
-				blackList.add(treeItem.getValue());
+				blackListTable.add(treeItem.getValue());
 			}
 		}
 
-		setting.blackListTable = StringUtils.join(blackList, ',');
+		setting.blackListTable = StringUtils.join(blackListTable, ',');
 		
 		
 		// BlackList columns
@@ -207,6 +239,17 @@ public class Events implements Initializable {
 		}
 
 		setting.blackListColumn = StringUtils.join(blackListColumn, ',');
+		
+		// BlackList patterns
+		List<String> blackListPattern = new ArrayList<String>(); 
+		
+		for (CheckBoxTreeItem<String> treeItem : itemListPattern) {
+			if (!treeItem.isSelected()) {
+				blackListPattern.add(treeItem.getValue());
+			}
+		}
+
+		setting.blackListPattern = StringUtils.join(blackListPattern, ',');
 		
 
 		// 3) Add (replace) the new connection into the list of connections
@@ -242,6 +285,7 @@ public class Events implements Initializable {
 		// VENDOR COMBOBOX SHOULD BE POPULATED BASED ON DRIVER.XML
         comboBoxVendor.getItems().addAll("Microsoft SQL Server", "MonetDB", "Netezza", "MySQL", "Oracle", "PostgreSQL", "SAS", "Teradata");
         comboBoxTask.getItems().addAll("classification", "regression");
+        comboBoxUnit.getItems().addAll("second", "day", "month", "year");
         
                 
 		// Populate the pattern tab
@@ -252,10 +296,10 @@ public class Events implements Initializable {
 		
 		for (Pattern pattern : patternList.values()) {
 			final CheckBoxTreeItem<String> itemPredictor = new CheckBoxTreeItem<String>(pattern.name);
-			itemListPredictor.add(itemPredictor);
+			itemListPattern.add(itemPredictor);
 		}
 		
-		rootItem.getChildren().addAll(itemListPredictor);
+		rootItem.getChildren().addAll(itemListPattern);
 		
 		treeViewPattern.setRoot(rootItem);
 		treeViewPattern.setCellFactory(CheckBoxTreeCell.<String>forTreeView());
@@ -279,10 +323,43 @@ public class Events implements Initializable {
             }
         });
 		
+		// Populate setting tab	
+		textLag.textProperty().addListener(new ChangeListener<String>() {
+			@Override
+			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+				try {
+					Integer.parseUnsignedInt(newValue); // Permit only nonnegative integers
+				} catch (NumberFormatException e) {
+					textLag.setText(oldValue);
+				}
+			}
+		});
 		
+		textLead.textProperty().addListener(new ChangeListener<String>() {
+			@Override
+			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+				try {
+					Integer.parseUnsignedInt(newValue); // Permit only nonnegative integers
+				} catch (NumberFormatException e) {
+					textLead.setText(oldValue);
+				}
+			}
+		});
+		
+		textSampleCount.textProperty().addListener(new ChangeListener<String>() {
+			@Override
+			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+				try {
+					Integer.parseUnsignedInt(newValue); // Permit only nonnegative integers
+				} catch (NumberFormatException e) {
+					textSampleCount.setText(oldValue);
+				}
+			}
+		});
 		
 		
         // Read past setting. If no past setting is available, leave it unfilled.
+		// NOTE: IF SOME ATTRIBUTE IS MISSING, IT WILL FAIL
         ConnectionPropertyList connectionList = connection.ConnectionPropertyList.unmarshall();
         ConnectionProperty connectionProperty = connectionList.getConnectionProperties("GUI");
         
@@ -295,7 +372,52 @@ public class Events implements Initializable {
         	textPassword.setText(connectionProperty.password);
         }
         
+        DatabasePropertyList databaseList = connection.DatabasePropertyList.unmarshall();
+        DatabaseProperty databaseProperty = databaseList.getDatabaseProperties("GUI");
      
+        if (databaseProperty != null) {
+        	comboBoxUnit.setValue(databaseProperty.unit);
+        	textLag.setText(databaseProperty.lag.toString());
+        	textLead.setText(databaseProperty.lead.toString());
+        	textSampleCount.setText(databaseProperty.sampleCount.toString());
+        	comboBoxTask.setValue(databaseProperty.task);
+        }
     }
 
+    
+    // Subroutine: Exception dialog
+    // SHOULD BE IN A SEPARATE CLASS
+    protected void exceptionDialog(Exception ex) {
+	    Alert alert = new Alert(AlertType.ERROR);
+	    alert.setTitle("Predictor Factory");
+	    alert.setHeaderText(null);
+	    alert.setContentText("Could not connect to the database");
+	
+	    // Create expandable Exception.
+	    StringWriter sw = new StringWriter();
+	    PrintWriter pw = new PrintWriter(sw);
+	    ex.printStackTrace(pw);
+	    String exceptionText = sw.toString();
+	
+	    Label label = new Label("The exception stacktrace was:");
+	
+	    TextArea textArea = new TextArea(exceptionText);
+	    textArea.setEditable(false);
+	    textArea.setWrapText(true);
+	
+	    textArea.setMaxWidth(Double.MAX_VALUE);
+	    textArea.setMaxHeight(Double.MAX_VALUE);
+	    GridPane.setVgrow(textArea, Priority.ALWAYS);
+	    GridPane.setHgrow(textArea, Priority.ALWAYS);
+	
+	    GridPane expContent = new GridPane();
+	    expContent.setMaxWidth(Double.MAX_VALUE);
+	    expContent.add(label, 0, 0);
+	    expContent.add(textArea, 0, 1);
+	
+	    // Set expandable Exception into the dialog pane.
+	    alert.getDialogPane().setExpandableContent(expContent);
+	
+	    alert.showAndWait();
+    }
 }

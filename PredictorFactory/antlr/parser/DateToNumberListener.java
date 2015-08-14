@@ -19,17 +19,17 @@ public class DateToNumberListener extends SQLBaseListener {
     public void enterDatetonumber(SQLParser.DatetonumberContext ctx) {
         
     	// Assembly a new token based on the data
-    	DateToNumberToken newDateDiff = new DateToNumberToken(ctx, pattern);
+    	DateToNumberToken newToken = new DateToNumberToken(ctx, pattern);
     	
     	// Remove the old block
     	ctx.removeLastChild();
     	ctx.removeLastChild();
     	ctx.removeLastChild();
     	ctx.removeLastChild();
-    	ctx.removeLastChild();
-    	ctx.removeLastChild();
+    	//ctx.removeLastChild();
+    	//ctx.removeLastChild();
     	
     	// And replace it with the new block
-    	ctx.addChild(newDateDiff);
+    	ctx.addChild(newToken);
     }
 }

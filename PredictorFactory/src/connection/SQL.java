@@ -78,76 +78,76 @@ public final class SQL {
 	}
 	
 	// Subroutine 3.1: Replace & escape the entities present in setting
-	private static String escapeEntity(Setting setting, String sql, String outputTable) {
-		// Test parameters
-		if (StringUtils.isBlank(sql)) {
-			throw new IllegalArgumentException("Code is required");
-		}
-		if (StringUtils.isBlank(outputTable)) {
-			throw new IllegalArgumentException("Output table is required");
-		}
-		if (StringUtils.isBlank(setting.targetId)) {
-			throw new IllegalArgumentException("Id column is required");
-		}
-		if (StringUtils.isBlank(setting.baseTable)) {
-			throw new IllegalArgumentException("Base table is required");
-		}
-		if (StringUtils.isBlank(setting.targetColumn)) {
-			throw new IllegalArgumentException("Target column is required");
-		}
-		if (StringUtils.isBlank(setting.targetTable)) {
-			throw new IllegalArgumentException("Target table is required");
-		}
-		if (StringUtils.isBlank(setting.inputSchema)) {
-			throw new IllegalArgumentException("InputSchema is required");
-		}
-		if (StringUtils.isBlank(setting.outputSchema)) {
-			throw new IllegalArgumentException("OutputSchema is required");
-		}
-		if (StringUtils.isBlank(setting.baseId)) {
-			throw new IllegalArgumentException("Base id is required");
-		}
-		if (StringUtils.isBlank(setting.baseDate)) {
-			throw new IllegalArgumentException("Base date is required");
-		}
-		if (StringUtils.isBlank(setting.baseTarget)) {
-			throw new IllegalArgumentException("Base target is required");
-		}
-		
-		// Get escape characters
-	    String QL = setting.quoteEntityOpen;
-		String QR = setting.quoteEntityClose;
+		private static String escapeEntity(Setting setting, String sql, String outputTable) {
+			// Test parameters
+			if (StringUtils.isBlank(sql)) {
+				throw new IllegalArgumentException("Code is required");
+			}
+			if (StringUtils.isBlank(outputTable)) {
+				throw new IllegalArgumentException("Output table is required");
+			}
+			if (StringUtils.isBlank(setting.targetId)) {
+				throw new IllegalArgumentException("Id column is required");
+			}
+			if (StringUtils.isBlank(setting.baseTable)) {
+				throw new IllegalArgumentException("Base table is required");
+			}
+			if (StringUtils.isBlank(setting.targetColumn)) {
+				throw new IllegalArgumentException("Target column is required");
+			}
+			if (StringUtils.isBlank(setting.targetTable)) {
+				throw new IllegalArgumentException("Target table is required");
+			}
+			if (StringUtils.isBlank(setting.inputSchema)) {
+				throw new IllegalArgumentException("InputSchema is required");
+			}
+			if (StringUtils.isBlank(setting.outputSchema)) {
+				throw new IllegalArgumentException("OutputSchema is required");
+			}
+			if (StringUtils.isBlank(setting.baseId)) {
+				throw new IllegalArgumentException("Base id is required");
+			}
+			if (StringUtils.isBlank(setting.baseDate)) {
+				throw new IllegalArgumentException("Base date is required");
+			}
+			if (StringUtils.isBlank(setting.baseTarget)) {
+				throw new IllegalArgumentException("Base target is required");
+			}
+			
+			// Get escape characters
+		    String QL = setting.quoteEntityOpen;
+			String QR = setting.quoteEntityClose;
 
-		// Escape each part of targetId individually
-		String escapedTargetId = "";
-		for (String id : setting.targetIdList) {
-			escapedTargetId = escapedTargetId + ", " + QL + id + QR;
-		}
-		escapedTargetId = escapedTargetId.substring(2);	// Remove the first two symbols
+			// Escape each part of targetId individually
+			String escapedTargetId = "";
+			for (String id : setting.targetIdList) {
+				escapedTargetId = escapedTargetId + ", " + QL + id + QR;
+			}
+			escapedTargetId = escapedTargetId.substring(2);	// Remove the first two symbols
 
-		// Escape each part of baseId individually
-		String escapedBaseId = "";
-		for (String id : setting.baseIdList) {
-			escapedBaseId = escapedBaseId + ", " + QL + id + QR;
+			// Escape each part of baseId individually
+			String escapedBaseId = "";
+			for (String id : setting.baseIdList) {
+				escapedBaseId = escapedBaseId + ", " + QL + id + QR;
+			}
+			escapedBaseId = escapedBaseId.substring(2);	// Remove the first two symbols
+			
+			// Escape the entities
+			sql = sql.replaceAll("\\@idColumn\\b", escapedTargetId);	// Ignore numbered id columns used in joins (\b is a word boundary)
+			sql = sql.replace("@baseId", escapedBaseId);
+			sql = sql.replace("@baseDate", QL + setting.baseDate + QR);
+			sql = sql.replace("@baseTarget", QL + setting.baseTarget + QR);
+			sql = sql.replace("@baseFold", QL + setting.baseFold + QR);
+			sql = sql.replace("@baseTable", QL + setting.baseTable + QR);
+			sql = sql.replace("@targetDate", QL + setting.targetDate + QR);
+			sql = sql.replace("@targetColumn", QL + setting.targetColumn + QR);
+			sql = sql.replace("@targetTable", QL + setting.targetTable + QR);
+			sql = sql.replace("@inputSchema", QL + setting.inputSchema + QR);
+			sql = sql.replace("@outputSchema", QL + setting.outputSchema + QR);
+			sql = sql.replace("@outputTable", QL + outputTable + QR);
+							
+			return sql;
 		}
-		escapedBaseId = escapedBaseId.substring(2);	// Remove the first two symbols
-		
-		// Escape the entities
-		sql = sql.replaceAll("\\@idColumn\\b", escapedTargetId);	// Ignore numbered id columns used in joins (\b is a word boundary)
-		sql = sql.replace("@baseId", escapedBaseId);
-		sql = sql.replace("@baseDate", QL + setting.baseDate + QR);
-		sql = sql.replace("@baseTarget", QL + setting.baseTarget + QR);
-		sql = sql.replace("@baseFold", QL + setting.baseFold + QR);
-		sql = sql.replace("@baseTable", QL + setting.baseTable + QR);
-		sql = sql.replace("@targetDate", QL + setting.targetDate + QR);
-		sql = sql.replace("@targetColumn", QL + setting.targetColumn + QR);
-		sql = sql.replace("@targetTable", QL + setting.targetTable + QR);
-		sql = sql.replace("@inputSchema", QL + setting.inputSchema + QR);
-		sql = sql.replace("@outputSchema", QL + setting.outputSchema + QR);
-		sql = sql.replace("@outputTable", QL + outputTable + QR);
-						
-		return sql;
-	}
 
 	// Subroutine 3.2: Replace & escape the entities from predictor fields
 	private static String escapeEntityPredictor(Setting setting, String sql, Predictor predictor) {
@@ -195,6 +195,11 @@ public final class SQL {
 		}
 
 		return sql;
+	}
+	
+	// Subroutine: Get escaped alias. Oracle is using double quotes. MySQL single quotes...
+	private static String escapeAlias(Setting setting, String alias) {
+		return setting.quoteAliasOpen + alias + setting.quoteAliasClose;
 	}
 	
 	// Subroutine: Is the predictor a string or a number? Just ask the database.
@@ -339,6 +344,7 @@ public final class SQL {
 	
 	// Get rowCount for a table in the output schema
 	// SHOULD BE IN META OR USE BOOLEAN useInputSchema
+	// IS NOT USING SYSTEM ESCAPING
 	public static int getRowCount(Setting setting, String schema, String table) {
 		String entity = setting.quoteEntityOpen + schema + setting.quoteEntityClose;
 		entity = entity + "." + setting.quoteEntityOpen + table + setting.quoteEntityClose;
@@ -362,6 +368,7 @@ public final class SQL {
 	// Get count of non-null records
 	// Useful for QC of the predictors
 	// SHOULD BE IN META OR USE BOOLEAN useInputSchema
+	// IS NOT USING SYSTEM ESCAPING
 	public static int getNotNullCount(Setting setting, String schema, String table, String column) {
 		String entity = setting.quoteEntityOpen + schema + setting.quoteEntityClose;
 		entity = entity + "." + setting.quoteEntityOpen + table + setting.quoteEntityClose;
@@ -477,63 +484,6 @@ public final class SQL {
 		return Network.executeQuery(setting.connection, sql);
 	}
 	
-	// Subsample base table based on target class.
-	// Note: The selection is not guaranteed to be random.
-	public static void getSubSampleClassification(Setting setting, SortedMap<String, Table> metaInput) {
-		
-		// Initialization
-		String sql = "";
-		List<String> targetValueList = metaInput.get(setting.targetTable).uniqueList.get(setting.targetColumn);
-		String quote = "";
-		
-		// Iff the target is nominal, quote the values with single quotes.
-		if (setting.isTargetNominal) {
-			quote = "'";
-		}
-		
-		// Create union 
-		for (String targetValue : targetValueList) {
-			sql = sql + "(" + Parser.limitResultSet(setting, "SELECT * FROM @outputSchema.base WHERE @baseTarget = " + quote + targetValue + quote + "\n", setting.sampleCount) + ")";
-			sql = sql + " UNION ALL \n";    // Add "union all" between all the selects.
-		}
-		
-		// Finally, add unclassified records.
-		sql = sql + "(" + Parser.limitResultSet(setting, "SELECT * FROM @outputSchema.base WHERE @baseTarget is null\n", setting.sampleCount) + ")";
-						
-		sql = addCreateTableAs(setting, sql);
-		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, setting.baseSampled);
-		
-		Network.executeUpdate(setting.connection, sql);
-		
-		// Change setting for base table
-		setting.baseTable = setting.baseSampled;
-		
-		// Add indexes
-		addIndex(setting, setting.baseTable);
-	}
-
-	// Subsample base table.
-	// Note: The selection is not guaranteed to be random.
-	public static void getSubSampleRegression(Setting setting) {
-
-		// Initialize
-		String sql = Parser.limitResultSet(setting, "SELECT * FROM @outputSchema.base", setting.sampleCount);
-
-		// Execute
-		sql = addCreateTableAs(setting, sql);
-		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, setting.baseSampled);
-
-		Network.executeUpdate(setting.connection, sql);
-
-		// Change setting for base table
-		setting.baseTable = setting.baseSampled;
-
-		// Add indexes
-		addIndex(setting, setting.baseSampled);
-	}
-
 	// Could the two columns in the table describe a symmetric relation (like in borderLength(c1, c2))?
 	// DEVELOPMENTAL AND LIKELY USELESS...
 	public static boolean isSymmetric(Setting setting, HashMap<String, String> map) {
@@ -583,14 +533,14 @@ public final class SQL {
 					"WHERE @column is not null AND @baseTarget is not null";
  		} else {
 			// "SELECT count(@column)*corr(EXTRACT(epoch FROM @column), @baseTarget)^2 "
- 			sql = "SELECT count(@column)*power(corr(datediff(@column, '2001-1-1'), @baseTarget), 2) " +
+ 			sql = "SELECT count(@column)*power(corr(dateToNumber(@column), @baseTarget), 2) " +
 					"FROM @outputTable " +
 					"WHERE @column is not null AND @baseTarget is not null";
  		}
 
 		// Replace the generic corr command with the database specific version.
-		// Also take care of dateDiff.
-		sql = ANTLR.parseSQL(sql, setting.dateDiffSyntax, setting.corrSyntax);
+		// Also take care of dateToNumber
+		sql = ANTLR.parseSQL(setting, sql);
 
 		// Take care of stdDev (needed if the corr command is assembled from the basic commands)
 		sql = sql.replaceAll("stdDev_samp", setting.stdDevCommand);
@@ -792,12 +742,90 @@ public final class SQL {
 		Network.executeUpdate(setting.connection, sql);
  	}
  	
+
+	// 1a) Return create journal_predictor table command
+	// Return true if the journal table was successfully created.
+	// Note: Default values are not supported on SAS data sets -> avoid them.
+	public static boolean getJournal(Setting setting) {
+		logger.debug("# Setting up journal table #");
+		
+		String sql = "CREATE TABLE @outputTable ("+
+	      "predictor_id " + setting.typeInteger + ", " +
+	      "group_id " + setting.typeInteger + ", " +
+	      "start_time " + setting.typeTimestamp + ", " +
+	      "run_time " + setting.typeDecimal + "(18,3), " +  // Old MySQL and SQL92 do not have/require support for fractions of a second. 
+	      "predictor_name " + setting.typeVarchar + "(255), " +	// In MySQL pure char is limited to 255 bytes -> stick to this value if possible
+	      "table_name " + setting.typeVarchar + "(1024), " +	// Table is a reserved keyword -> use table_name
+	      "column_list " + setting.typeVarchar + "(1024), " +
+	      "propagation_path " + setting.typeVarchar + "(1024), " +
+	      "propagation_depth " + setting.typeInteger + ", " +	
+	      "date_constrain " + setting.typeVarchar + "(255), " +
+	      "parameter_list " + setting.typeVarchar + "(1024), " +
+	      "pattern_name " + setting.typeVarchar + "(255), " + 
+	      "pattern_author " + setting.typeVarchar + "(255), " + 
+	      "pattern_code " + setting.typeVarchar + "(2024), " +	// For example code for WoE is close to 1024 chars
+	      "sql_code " + setting.typeVarchar + "(2024), " + // For example code for WoE is close to 1024 chars
+	      "target " + setting.typeVarchar + "(255), " +
+	      "relevance " + setting.typeDecimal + "(18,3), " +
+	      "qc_rowCount " + setting.typeInteger + ", " +
+	      "qc_nullCount " + setting.typeInteger + ", " +
+	      "is_ok " + setting.typeInteger + ", " +
+	      "CONSTRAINT pk_journal PRIMARY KEY (predictor_id))";
+		
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, setting.journalTable);
+		
+		return Network.executeUpdate(setting.connection, sql);
+	}
+	 
+	// 1b) Add record into the journal_predictor
+	// Return true if the journal table was successfully updated.
+	public static boolean addToJournal(Setting setting, Predictor predictor) {
+		DateTimeFormatter formatter =  DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+		
+		// Convert bool to int
+		int isOk = predictor.isOk()? 1 : 0;
+		
+		// Insert timestamp subquery
+		String template = setting.insertTimestampSyntax;
+		String timestamp = predictor.getTimestampBuilt().format(formatter);
+		timestamp = template.replace("@timestamp", timestamp);
+		
+		// Assembly the insert
+		String sql = "INSERT INTO @outputTable VALUES (" +
+	        predictor.getId() + ", " +
+	        predictor.getGroupId() + ", " +
+	              timestamp + ", " +
+	              predictor.getTimestampBuilt().until(predictor.getTimestampDelivered(), ChronoUnit.MILLIS)/1000.0 + ", " +
+	        "'" + predictor.getName() + "', " +
+	        "'" + predictor.originalTable + "', " + 			
+	        "'" + predictor.columnMap.toString() + "', " + 		// Should be a list...
+	        "'" + predictor.propagationPath.toString() + "', " + 
+	              predictor.propagationPath.size() + ", " + 
+	        "'" + predictor.propagationDate + "', " + 
+	        "'" + predictor.getParameterMap().toString() + "', " +  // Violates the 1st norm...
+	        "'" + predictor.getPatternName() + "', " + 
+	        "'" + predictor.getPatternAuthor() + "', " + 
+	        "'" + predictor.getPatternCode().replaceAll("'", "''") + "', " +	// Escape single quotes
+	        "'" + predictor.getSql().replaceAll("'", "''") + "', " +		// Escape single quotes
+			"'" + setting.targetColumn + "', " + 
+			      predictor.getRelevance(setting.baseTarget) + ", " + // Chi2
+	              predictor.getRowCount() + ", " + 
+	              predictor.getNullCount() + ", " + 
+	              isOk + ")";
+		
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, setting.journalTable);
+
+		return Network.executeUpdate(setting.connection, sql);
+	}
+	
  	
  	
- 	
-	// 1) Get base table (a table with id, targets and horizon dates).
+	// 2) Get base table (a table with id, targets and horizon dates).
  	// The base table could be practical, because we may simply add random sample column.
  	// Return true if the base table was successfully created.
+	// IS NOT USING SYSTEM ESCAPING
  	public static boolean getBase(Setting setting) {
  		logger.debug("# Setting up base table #");
  		
@@ -821,24 +849,24 @@ public final class SQL {
 
 			// Prepare aliases for idColumn
 			for (int i = 0; i < setting.baseIdList.size(); i++) {
-				id = id + " t1." + QL + setting.targetIdList.get(i) + QR + " AS " + setting.baseIdList.get(i) + ",";
+				id = id + " t1." + QL + setting.targetIdList.get(i) + QR + " AS " + escapeAlias(setting, setting.baseIdList.get(i)) + ",";
 			}
 
 			// The query itself
-			sql = "SELECT" + id + " t1.@targetDate AS " + setting.baseDate + ", t1.@targetColumn AS " + setting.baseTarget + ", FLOOR(" + setting.randomCommand + " * 10) AS " + setting.baseFold + " " +
+			sql = "SELECT" + id + " t1.@targetDate AS " + escapeAlias(setting, setting.baseDate) + ", t1.@targetColumn AS " + escapeAlias(setting, setting.baseTarget) + ", FLOOR(" + setting.randomCommand + " * 10) AS " + escapeAlias(setting, setting.baseFold) + " " +
 					"FROM @targetTable t1 LEFT JOIN (" +
 					"SELECT @idColumn FROM @targetTable GROUP BY @idColumn, @targetDate HAVING count(*)>1 " +
 					") t2 " +
 					"ON t1.@idColumn = t2.@idColumn " +
-					"WHERE t2.@idColumn is null AND t1." + setting.targetDate + " is not null";
+					"WHERE t2.@idColumn is null AND t1.@targetDate is not null";
 		} else {
 			// Prepare aliases for idColumn
 			for (int i = 0; i < setting.baseIdList.size(); i++) {
-				id = id + QL + setting.targetIdList.get(i) + QR + " AS " + setting.baseIdList.get(i) + ", ";
+				id = id + QL + setting.targetIdList.get(i) + QR + " AS " + escapeAlias(setting, setting.baseIdList.get(i)) + ", ";
 			}
 
 			// The query itself
-			sql = "SELECT " + id + " @targetDate AS " + setting.baseDate + ", @targetColumn AS " + setting.baseTarget + ", FLOOR(" + setting.randomCommand + " * 10) AS " + setting.baseFold + " FROM @targetTable WHERE " + setting.targetDate + " is not null";
+			sql = "SELECT " + id + " @targetDate AS " + escapeAlias(setting, setting.baseDate) + ", @targetColumn AS " + escapeAlias(setting, setting.baseTarget) + ", FLOOR(" + setting.randomCommand + " * 10) AS " + escapeAlias(setting, setting.baseFold) + " FROM @targetTable WHERE @targetDate IS NOT NULL";
 		}
 		
 		// Assembly the query
@@ -856,10 +884,70 @@ public final class SQL {
 		return (isUnique && isCreated);
 	}
 	
-	// 2) Propagate ID. The map should contain @outputTable, @propagatedTable, @inputTable and @idColumn[?].
+
+	// Subsample base table based on target class.
+	// Note: The selection is not guaranteed to be random.
+	public static void getSubSampleClassification(Setting setting, SortedMap<String, Table> metaInput) {
+		
+		// Initialization
+		String sql = "";
+		List<String> targetValueList = metaInput.get(setting.targetTable).uniqueList.get(setting.targetColumn);
+		String quote = "";
+		
+		// Iff the target is nominal, quote the values with single quotes.
+		if (setting.isTargetNominal) {
+			quote = "'";
+		}
+		
+		// Create union 
+		for (String targetValue : targetValueList) {
+			sql = sql + "(" + Parser.limitResultSet(setting, "SELECT * FROM @baseTable WHERE @baseTarget = " + quote + targetValue + quote + "\n", setting.sampleCount) + ")";
+			sql = sql + " UNION ALL \n";    // Add "union all" between all the selects.
+		}
+		
+		// Finally, add unclassified records.
+		sql = sql + "(" + Parser.limitResultSet(setting, "SELECT * FROM @baseTable WHERE @baseTarget is null\n", setting.sampleCount) + ")";
+						
+		sql = addCreateTableAs(setting, sql);
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, setting.baseSampled);
+		
+		Network.executeUpdate(setting.connection, sql);
+		
+		// Change setting for base table
+		setting.baseTable = setting.baseSampled;
+		
+		// Add indexes
+		addIndex(setting, setting.baseTable);
+	}
+
+	// Subsample base table.
+	// Note: The selection is not guaranteed to be random.
+	public static void getSubSampleRegression(Setting setting) {
+
+		// Initialize
+		String sql = Parser.limitResultSet(setting, "SELECT * FROM @baseTable", setting.sampleCount);
+
+		// Execute
+		sql = addCreateTableAs(setting, sql);
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, setting.baseSampled);
+
+		Network.executeUpdate(setting.connection, sql);
+
+		// Change setting for base table
+		setting.baseTable = setting.baseSampled;
+
+		// Add indexes
+		addIndex(setting, setting.baseSampled);
+	}
+
+ 	
+	// 3) Propagate ID. The map should contain @outputTable, @propagatedTable, @inputTable and @idColumn[?].
 	// If the map contains @dateColumn, time condition is added.
 	// Technical note: We have to return SQL string, because these things are logged and exported for the user
  	// as the "scoring code" for predictors.
+	// IS NOT USING SYSTEM ESCAPING
 	public static String propagateID(Setting setting, Map<String, String> map, boolean bottomBounded){
 		String baseId = "";
 		for (String id : setting.baseIdList) {
@@ -908,83 +996,6 @@ public final class SQL {
 		return sql;
 	}
 	
-	// 3a) Return create journal_predictor table command
-	// Return true if the journal table was successfully created.
-	// Note: Default values are not supported on SAS data sets -> avoid them.
-	public static boolean getJournal(Setting setting) {
-		logger.debug("# Setting up journal table #");
-		
-		String sql = "CREATE TABLE @outputTable ("+
-	      "predictor_id " + setting.typeInteger + ", " +
-	      "group_id " + setting.typeInteger + ", " +
-	      "start_time " + setting.typeTimestamp + ", " +
-	      "run_time " + setting.typeDecimal + "(18,3), " +  // Old MySQL and SQL92 do not have/require support for fractions of a second. 
-	      "predictor_name " + setting.typeVarchar + "(255), " +	// In MySQL pure char is limited to 255 bytes -> stick to this value if possible
-	      "table_name " + setting.typeVarchar + "(1024), " +	// Table is a reserved keyword -> use table_name
-	      "column_list " + setting.typeVarchar + "(1024), " +
-	      "propagation_path " + setting.typeVarchar + "(1024), " +
-	      "propagation_depth " + setting.typeInteger + ", " +	
-	      "date_constrain " + setting.typeVarchar + "(255), " +
-	      "parameter_list " + setting.typeVarchar + "(1024), " +
-	      "pattern_name " + setting.typeVarchar + "(255), " + 
-	      "pattern_author " + setting.typeVarchar + "(255), " + 
-	      "pattern_code " + setting.typeVarchar + "(2024), " +	// For example code for WoE is close to 1024 chars
-	      "sql_code " + setting.typeVarchar + "(2024), " + // For example code for WoE is close to 1024 chars
-	      "target " + setting.typeVarchar + "(255), " +
-	      "relevance " + setting.typeDecimal + "(18,3), " +
-	      "qc_rowCount " + setting.typeInteger + ", " +
-	      "qc_nullCount " + setting.typeInteger + ", " +
-	      "is_ok " + setting.typeInteger + ", " +
-	      "CONSTRAINT pk_journal PRIMARY KEY (predictor_id))";
-		
-		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, setting.journalTable);
-		
-		return Network.executeUpdate(setting.connection, sql);
-	}
-	 
-	// 3b) Add record into the journal_predictor
-	// Return true if the journal table was successfully updated.
-	public static boolean addToJournal(Setting setting, Predictor predictor) {
-		DateTimeFormatter formatter =  DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-		
-		// Convert bool to int
-		int isOk = predictor.isOk()? 1 : 0;
-		
-		// Insert timestamp subquery
-		String template = setting.insertTimestampSyntax;
-		String timestamp = predictor.getTimestampBuilt().format(formatter);
-		timestamp = template.replace("@timestamp", timestamp);
-		
-		// Assembly the insert
-		String sql = "INSERT INTO @outputTable VALUES (" +
-	        predictor.getId() + ", " +
-	        predictor.getGroupId() + ", " +
-	              timestamp + ", " +
-	              predictor.getTimestampBuilt().until(predictor.getTimestampDelivered(), ChronoUnit.MILLIS)/1000.0 + ", " +
-	        "'" + predictor.getName() + "', " +
-	        "'" + predictor.originalTable + "', " + 			
-	        "'" + predictor.columnMap.toString() + "', " + 		// Should be a list...
-	        "'" + predictor.propagationPath.toString() + "', " + 
-	              predictor.propagationPath.size() + ", " + 
-	        "'" + predictor.propagationDate + "', " + 
-	        "'" + predictor.getParameterMap().toString() + "', " +  // Violates the 1st norm...
-	        "'" + predictor.getPatternName() + "', " + 
-	        "'" + predictor.getPatternAuthor() + "', " + 
-	        "'" + predictor.getPatternCode().replaceAll("'", "''") + "', " +	// Escape single quotes
-	        "'" + predictor.getSql().replaceAll("'", "''") + "', " +		// Escape single quotes
-			"'" + setting.targetColumn + "', " + 
-			      predictor.getRelevance(setting.baseTarget) + ", " + // Chi2
-	              predictor.getRowCount() + ", " + 
-	              predictor.getNullCount() + ", " + 
-	              isOk + ")";
-		
-		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, setting.journalTable);
-
-		return Network.executeUpdate(setting.connection, sql);
-	}
-	
 	// 4) Get predictor
 	public static String getPredictor(Setting setting, Predictor predictor){
 		String sql;
@@ -1004,6 +1015,7 @@ public final class SQL {
 	// 5) Assembly the final step - the output table
 	// Note: The current implementation stores only up to ~3600 predictors. So far the limit is acceptable as column 
 	// count in a table is commonly limited (1600 columns in PostgreSQL and 1000 columns in Oracle).
+	// UNSYSTEMATIC ESCAPING
 	public static void getMainSample(Setting setting, List<Predictor> journal) {
 		
 		// Consider only good predictors 

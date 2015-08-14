@@ -130,8 +130,14 @@ public class MetaInput {
 		}
 		
 		// Get distinct values for the target iff we are performing classification AND target is a numerical column
+		// (in the case the target is nominal we already have the unique values)
 		if ("classification".equals(setting.task) && tableMap.get(setting.targetTable).numericalColumn.contains(setting.targetColumn)) {
 			tableMap.get(setting.targetTable).uniqueList.put(setting.targetColumn, SQL.getUniqueRecords(setting, setting.targetTable, setting.targetColumn, true));
+		}
+		
+		// If the target is nominal, store the information.
+		if (tableMap.get(setting.targetTable).nominalColumn.contains(setting.targetColumn)) {
+			setting.isTargetNominal = true;
 		}
 		
 		// Do not use targetColumn as a predictor. 

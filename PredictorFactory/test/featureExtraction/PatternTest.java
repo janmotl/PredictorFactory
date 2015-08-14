@@ -99,6 +99,20 @@ public class PatternTest {
 
 		Assert.assertEquals(expected, actual);
 	}
+	
+	
+	@Test
+	public void timeDateToNumberOracle() {
+		setting.dateDiffSyntax = "(@column - TO_DATE('01011970','DDMMYYYY'))";
+		String code = "DateToNumber(@column)";
+		String expected = "DATEDIFF(@baseDate, @timeColumn)";
+		String actual = pattern.getDialect(setting, code);
+
+		System.out.println(actual);
+		Assert.assertEquals(expected, actual);
+	}
+	
+	
 
 	@Test
 	public void allPatterns() {

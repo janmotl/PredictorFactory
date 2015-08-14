@@ -138,12 +138,17 @@
 		<mkdir dir="project" />
 		<copy todir="project">
 			<fileset dir="C:\Users\Jan\Documents\Git\PredictorFactory\PredictorFactory">
+				<include name="src/**" />
+			</fileset>
+		</copy>
+		<copy todir="project">
+			<fileset dir="C:\Users\Jan\Documents\Git\PredictorFactory\PredictorFactory">
 				<include name="test/**" />
 			</fileset>
 		</copy>
 		<copy todir="project">
 			<fileset dir="C:\Users\Jan\Documents\Git\PredictorFactory\PredictorFactory">
-				<include name="src/**" />
+				<include name="gui/**" />
 			</fileset>
 		</copy>
 	
@@ -197,6 +202,11 @@
 				<include name="**/*"/>
 			</fileset>
 		</copy>
+		<copy todir="build/src">
+			<fileset dir="project/gui">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
 	
 		<javac includeantruntime="false" source="1.8" target="1.8" srcdir="build/src" destdir="build/classes" encoding="Cp1252">
 			<classpath>
@@ -212,6 +222,9 @@
 			<exclude name="**/*.java"/>
 		</fileset>
 		<fileset dir="project/src">
+			<exclude name="**/*.java"/>
+		</fileset>
+		<fileset dir="project/gui">
 			<exclude name="**/*.java"/>
 		</fileset>
 		</copy>
@@ -256,7 +269,7 @@
 			<manifest>
 				<attribute name="Implementation-Vendor" value="www.motl.us"/>
 				<attribute name="Implementation-Title" value="PredictorFactory"/>
-				<attribute name="Implementation-Version" value="2.2"/>
+				<attribute name="Implementation-Version" value="2.3"/>
 				<attribute name="JavaFX-Feature-Proxy" value="None"/>
 			</manifest>
 		</fx:jar>
