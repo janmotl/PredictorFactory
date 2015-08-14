@@ -38,6 +38,16 @@ public interface SQLListener extends ParseTreeListener {
 	 */
 	void exitDatediff(SQLParser.DatediffContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link SQLParser#datetonumber}.
+	 * @param ctx the parse tree
+	 */
+	void enterDatetonumber(SQLParser.DatetonumberContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SQLParser#datetonumber}.
+	 * @param ctx the parse tree
+	 */
+	void exitDatetonumber(SQLParser.DatetonumberContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SQLParser#corr}.
 	 * @param ctx the parse tree
 	 */

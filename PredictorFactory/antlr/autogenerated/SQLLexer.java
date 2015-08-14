@@ -17,21 +17,23 @@ public class SQLLexer extends Lexer {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		DATEDIFF=1, CORR=2, LBR=3, RBR=4, COMMA=5, TEXT=6, ARITHMETIC=7, WS=8;
+		DATEDIFF=1, DATETONUMBER=2, CORR=3, LBR=4, RBR=5, COMMA=6, TEXT=7, ARITHMETIC=8, 
+		WS=9;
 	public static String[] modeNames = {
 		"DEFAULT_MODE"
 	};
 
 	public static final String[] ruleNames = {
-		"DATEDIFF", "CORR", "LBR", "RBR", "COMMA", "TEXT", "ARITHMETIC", "WS"
+		"DATEDIFF", "DATETONUMBER", "CORR", "LBR", "RBR", "COMMA", "TEXT", "ARITHMETIC", 
+		"WS"
 	};
 
 	private static final String[] _LITERAL_NAMES = {
-		null, null, null, "'('", "')'", "','"
+		null, null, null, null, "'('", "')'", "','"
 	};
 	private static final String[] _SYMBOLIC_NAMES = {
-		null, "DATEDIFF", "CORR", "LBR", "RBR", "COMMA", "TEXT", "ARITHMETIC", 
-		"WS"
+		null, "DATEDIFF", "DATETONUMBER", "CORR", "LBR", "RBR", "COMMA", "TEXT", 
+		"ARITHMETIC", "WS"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 
@@ -88,21 +90,25 @@ public class SQLLexer extends Lexer {
 	public ATN getATN() { return _ATN; }
 
 	public static final String _serializedATN =
-		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\2\n\60\b\1\4\2\t\2"+
-		"\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\3\2\3\2\3\2\3"+
-		"\2\3\2\3\2\3\2\3\2\3\2\3\3\3\3\3\3\3\3\3\3\3\4\3\4\3\5\3\5\3\6\3\6\3\7"+
-		"\6\7)\n\7\r\7\16\7*\3\b\3\b\3\t\3\t\2\2\n\3\3\5\4\7\5\t\6\13\7\r\b\17"+
-		"\t\21\n\3\2\16\4\2FFff\4\2CCcc\4\2VVvv\4\2GGgg\4\2KKkk\4\2HHhh\4\2EEe"+
-		"e\4\2QQqq\4\2TTtt\b\2\13\f\17\17\"\"*/\61\61``\6\2,-//\61\61``\5\2\13"+
-		"\f\17\17\"\"\60\2\3\3\2\2\2\2\5\3\2\2\2\2\7\3\2\2\2\2\t\3\2\2\2\2\13\3"+
-		"\2\2\2\2\r\3\2\2\2\2\17\3\2\2\2\2\21\3\2\2\2\3\23\3\2\2\2\5\34\3\2\2\2"+
-		"\7!\3\2\2\2\t#\3\2\2\2\13%\3\2\2\2\r(\3\2\2\2\17,\3\2\2\2\21.\3\2\2\2"+
-		"\23\24\t\2\2\2\24\25\t\3\2\2\25\26\t\4\2\2\26\27\t\5\2\2\27\30\t\2\2\2"+
-		"\30\31\t\6\2\2\31\32\t\7\2\2\32\33\t\7\2\2\33\4\3\2\2\2\34\35\t\b\2\2"+
-		"\35\36\t\t\2\2\36\37\t\n\2\2\37 \t\n\2\2 \6\3\2\2\2!\"\7*\2\2\"\b\3\2"+
-		"\2\2#$\7+\2\2$\n\3\2\2\2%&\7.\2\2&\f\3\2\2\2\')\n\13\2\2(\'\3\2\2\2)*"+
-		"\3\2\2\2*(\3\2\2\2*+\3\2\2\2+\16\3\2\2\2,-\t\f\2\2-\20\3\2\2\2./\t\r\2"+
-		"\2/\22\3\2\2\2\4\2*\2";
+		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\2\13?\b\1\4\2\t\2\4"+
+		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\3\2\3\2"+
+		"\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3"+
+		"\3\3\3\3\3\3\4\3\4\3\4\3\4\3\4\3\5\3\5\3\6\3\6\3\7\3\7\3\b\6\b8\n\b\r"+
+		"\b\16\b9\3\t\3\t\3\n\3\n\2\2\13\3\3\5\4\7\5\t\6\13\7\r\b\17\t\21\n\23"+
+		"\13\3\2\22\4\2FFff\4\2CCcc\4\2VVvv\4\2GGgg\4\2KKkk\4\2HHhh\4\2QQqq\4\2"+
+		"PPpp\4\2WWww\4\2OOoo\4\2DDdd\4\2TTtt\4\2EEee\b\2\13\f\17\17\"\"*/\61\61"+
+		"``\6\2,-//\61\61``\5\2\13\f\17\17\"\"?\2\3\3\2\2\2\2\5\3\2\2\2\2\7\3\2"+
+		"\2\2\2\t\3\2\2\2\2\13\3\2\2\2\2\r\3\2\2\2\2\17\3\2\2\2\2\21\3\2\2\2\2"+
+		"\23\3\2\2\2\3\25\3\2\2\2\5\36\3\2\2\2\7+\3\2\2\2\t\60\3\2\2\2\13\62\3"+
+		"\2\2\2\r\64\3\2\2\2\17\67\3\2\2\2\21;\3\2\2\2\23=\3\2\2\2\25\26\t\2\2"+
+		"\2\26\27\t\3\2\2\27\30\t\4\2\2\30\31\t\5\2\2\31\32\t\2\2\2\32\33\t\6\2"+
+		"\2\33\34\t\7\2\2\34\35\t\7\2\2\35\4\3\2\2\2\36\37\t\2\2\2\37 \t\3\2\2"+
+		" !\t\4\2\2!\"\t\5\2\2\"#\t\4\2\2#$\t\b\2\2$%\t\t\2\2%&\t\n\2\2&\'\t\13"+
+		"\2\2\'(\t\f\2\2()\t\5\2\2)*\t\r\2\2*\6\3\2\2\2+,\t\16\2\2,-\t\b\2\2-."+
+		"\t\r\2\2./\t\r\2\2/\b\3\2\2\2\60\61\7*\2\2\61\n\3\2\2\2\62\63\7+\2\2\63"+
+		"\f\3\2\2\2\64\65\7.\2\2\65\16\3\2\2\2\668\n\17\2\2\67\66\3\2\2\289\3\2"+
+		"\2\29\67\3\2\2\29:\3\2\2\2:\20\3\2\2\2;<\t\20\2\2<\22\3\2\2\2=>\t\21\2"+
+		"\2>\24\3\2\2\2\4\29\2";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
