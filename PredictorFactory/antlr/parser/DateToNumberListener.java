@@ -18,18 +18,16 @@ public class DateToNumberListener extends SQLBaseListener {
 	@Override
     public void enterDatetonumber(SQLParser.DatetonumberContext ctx) {
         
-    	// Assembly a new token based on the data
-    	DateToNumberToken newToken = new DateToNumberToken(ctx, pattern);
+    	// Assembly a new node (since TerminalNode is not modifiable)
+    	DateToNumberNode newNode = new DateToNumberNode(ctx, pattern);
     	
-    	// Remove the old block
-    	ctx.removeLastChild();
-    	ctx.removeLastChild();
-    	ctx.removeLastChild();
-    	ctx.removeLastChild();
-    	//ctx.removeLastChild();
-    	//ctx.removeLastChild();
+    	// Remove, in total, 4 old nodes:
+    	ctx.removeLastChild();	// dateToNumber
+    	ctx.removeLastChild();	// (
+    	ctx.removeLastChild();	// payload
+    	ctx.removeLastChild();  // )
     	
-    	// And replace it with the new block
-    	ctx.addChild(newToken);
+    	// And replace it with the single new node:
+    	ctx.addChild(newNode);
     }
 }

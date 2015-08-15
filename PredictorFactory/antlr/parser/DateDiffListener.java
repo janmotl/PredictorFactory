@@ -19,7 +19,7 @@ public class DateDiffListener extends SQLBaseListener {
     public void enterDatediff(SQLParser.DatediffContext ctx) {
         
     	// Assembly a new dateDiff based on the data
-    	DateDiffToken newDateDiff = new DateDiffToken(ctx, pattern);
+    	DateDiffNode newNode = new DateDiffNode(ctx, pattern);
     	
     	// Remove the old dateDiff block
     	ctx.removeLastChild();
@@ -30,6 +30,6 @@ public class DateDiffListener extends SQLBaseListener {
     	ctx.removeLastChild();
     	
     	// And replace it with the new dateDiff block
-    	ctx.addChild(newDateDiff);
+    	ctx.addChild(newNode);
     }
 }

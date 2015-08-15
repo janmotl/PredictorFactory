@@ -19,7 +19,7 @@ public class CorrListener extends SQLBaseListener {
     public void enterCorr(SQLParser.CorrContext ctx) {
         
     	// Assembly a new block based on the data
-    	CorrToken newCorr = new CorrToken(ctx, pattern);
+    	CorrNode newCorr = new CorrNode(ctx, pattern);
     	
     	// Remove the old block
     	ctx.removeLastChild();

@@ -11,12 +11,12 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 
 // THIS IS A ROUGH IMPLEMENTATION - ONLY GETTEXT IS GUARANTEED TO WORK AS EXPECTED.
-public class DateDiffToken implements TerminalNode{
+public class DateDiffNode implements TerminalNode{
 
 	SQLParser.DatediffContext ctx;
 	String text;
 
-	public DateDiffToken(DatediffContext ctx2, String pattern) {
+	public DateDiffNode(DatediffContext ctx2, String pattern) {
 		ctx = ctx2;
 		
 		// The first content
