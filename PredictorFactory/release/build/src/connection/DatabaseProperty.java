@@ -25,12 +25,15 @@ public class DatabaseProperty {
 	@XmlAttribute public String targetId;
 	@XmlAttribute public String targetDate;
 	@XmlAttribute public String targetColumn;
+	@XmlAttribute public String whiteListTable;
 	@XmlAttribute public String blackListTable;
+	@XmlAttribute public String whiteListColumn;
 	@XmlAttribute public String blackListColumn;
 	@XmlAttribute public String unit;	// The items {unit, lag, lead, sampleCount and task} should be somewhere else
 	@XmlAttribute public Integer lag;
 	@XmlAttribute public Integer lead;
 	@XmlAttribute public Integer sampleCount;
 	@XmlAttribute public String task;
+	@XmlAttribute public String whiteListPattern;
 	@XmlAttribute public String blackListPattern;
 }

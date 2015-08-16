@@ -21,8 +21,8 @@ public class LauncherTest {
 
         Setting setting = new Setting("Azure", "financial_test_setting");
         Network.openConnection(setting);
-        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.sampleTable);
-        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.sampleTable);
+        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
         Assert.assertTrue(columnList.containsKey("order_amount_aggregate_avg_100002"));
@@ -38,8 +38,8 @@ public class LauncherTest {
 
         Setting setting = new Setting("MariaDB", "financial_test_setting");
         Network.openConnection(setting);
-        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.sampleTable);
-        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.sampleTable);
+        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
         Assert.assertTrue(columnList.containsKey("order_amount_aggregate_avg_100002"));
@@ -55,8 +55,8 @@ public class LauncherTest {
 
         Setting setting = new Setting("Oracle", "financial_xe_test_setting");
         Network.openConnection(setting);
-        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.sampleTable);
-        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.sampleTable);
+        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
         Assert.assertTrue(columnList.containsKey("order_amount_aggregate__100002"));
@@ -72,7 +72,7 @@ public class LauncherTest {
 
         Setting setting = new Setting("PostgreSQL", "financial_test_setting");
         Network.openConnection(setting);
-        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.sampleTable);
+        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         String sql = "select column_name " +
                 "from information_schema.columns " +
                 "where table_schema = 'predictor_factory' " +
@@ -88,6 +88,24 @@ public class LauncherTest {
         Assert.assertEquals(11, columnList.size());
     }
 
+    
+
+    @Test
+    public void test_regression_Azure() {
+        String[] arguments = new String[]{"Azure", "financial_test_setting_regression"};
+        Launcher.main(arguments);
+
+        Setting setting = new Setting("Azure", "financial_test_setting_regression");
+        Network.openConnection(setting);
+        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
+        Network.closeConnection(setting);
+
+        Assert.assertTrue(columnList.containsKey("order_amount_aggregate_avg_100002"));
+        Assert.assertTrue(columnList.containsKey("loan_status_directField_nominalColumn_100006"));
+        Assert.assertEquals(30, rowCount);
+        Assert.assertEquals(11, columnList.size());
+    }
 
     @Test
     public void test_regression_MySQL() {
@@ -96,8 +114,8 @@ public class LauncherTest {
 
         Setting setting = new Setting("MariaDB", "financial_test_setting_regression");
         Network.openConnection(setting);
-        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.sampleTable);
-        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.sampleTable);
+        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
         Assert.assertTrue(columnList.containsKey("order_amount_aggregate_avg_100002"));
@@ -113,13 +131,13 @@ public class LauncherTest {
 
         Setting setting = new Setting("Oracle", "financial_xe_test_setting_regression");
         Network.openConnection(setting);
-        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.sampleTable);
-        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.sampleTable);
+        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
         Assert.assertTrue(columnList.containsKey("order_amount_aggregate__100002"));
-        Assert.assertTrue(columnList.containsKey("loan_amount_directField_100006"));
-        Assert.assertEquals(120, rowCount);
+        Assert.assertTrue(columnList.containsKey("loan_status_directField_100006"));
+        Assert.assertEquals(30, rowCount);
         Assert.assertEquals(11, columnList.size());
     }
     
@@ -130,7 +148,7 @@ public class LauncherTest {
 
         Setting setting = new Setting("PostgreSQL", "financial_test_setting_regression");
         Network.openConnection(setting);
-        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.sampleTable);
+        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         String sql = "select column_name " +
                 "from information_schema.columns " +
                 "where table_schema = 'predictor_factory' " +
@@ -155,7 +173,7 @@ public class LauncherTest {
 
         Setting setting = new Setting("PostgreSQL", "voc_test_setting");
         Network.openConnection(setting);
-        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.sampleTable);
+        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         String sql = "select column_name " +
                 "from information_schema.columns " +
                 "where table_schema = 'predictor_factory' " +

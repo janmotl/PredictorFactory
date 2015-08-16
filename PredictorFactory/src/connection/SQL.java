@@ -289,11 +289,11 @@ public final class SQL {
 		
 		// Select tables for dropping
 		for (String table : tableSet) {
-			if (table.startsWith(setting.sampleTable)) dropMap.put(1 + table, table);		// Mainsample and it's temporary tables
+			if (table.startsWith(setting.mainTable)) dropMap.put(1 + table, table);			// Mainsample and it's temporary tables
 			if (table.startsWith(setting.predictorPrefix)) dropMap.put(2 + table, table);	// Predictors
 			if (table.startsWith(setting.propagatedPrefix)) dropMap.put(3 + table, table);	// Propagated tables
-			if (table.equals(setting.baseSampled)) dropMap.put(4 + table, table);			// Sampled base table
-			if (table.equals(setting.baseTable)) dropMap.put(5 + table, table);				// Base table
+			//if (table.equals(setting.baseSampled)) dropMap.put(4 + table, table);			// Sampled base table
+			//if (table.equals(setting.baseTable)) dropMap.put(5 + table, table);				// Base table
 			if (table.equals(setting.journalTable)) dropMap.put(6 + table, table);			// Journal table
 		}
 
@@ -521,7 +521,7 @@ public final class SQL {
 					"from @outputTable t1 " +
 					"join ( " +
 						"select @column " + 
-							", avg(@baseTarget) as average " +
+							", cast(avg(@baseTarget) as decimal(38, 10)) as average " +	// NOT NICE: Solves frequent arithmetic errors on MSSQL.
 						"from @outputTable " +
 						"group by @column " +
 					") t2 " +
@@ -532,7 +532,6 @@ public final class SQL {
 					"FROM @outputTable " + /* We are working with the outputTable, hence schema & database are output. */
 					"WHERE @column is not null AND @baseTarget is not null";
  		} else {
-			// "SELECT count(@column)*corr(EXTRACT(epoch FROM @column), @baseTarget)^2 "
  			sql = "SELECT count(@column)*power(corr(dateToNumber(@column), @baseTarget), 2) " +
 					"FROM @outputTable " +
 					"WHERE @column is not null AND @baseTarget is not null";
@@ -1077,7 +1076,7 @@ public final class SQL {
 			// Initialization
 			StringBuilder stringBuffer = new StringBuilder(500);
 			int tableCount;													// The tables are named t1..t* in the join
-			String tempTable = setting.sampleTable + "_temp" + (100+i); 	// The name of the temporary table
+			String tempTable = setting.mainTable + "_temp" + (100+i); 	// The name of the temporary table
 			tempTableList.add(tempTable);
 			List<String> tableList = tableListSmall.get(i);					
 			List<String> columnList = columnListSmall.get(i);
@@ -1161,7 +1160,7 @@ public final class SQL {
 		pattern_code = addCreateTableAs(setting, pattern_code);
 		pattern_code = expandName(pattern_code);
 		pattern_code = expandNameList(pattern_code, tempTableList);
-		pattern_code = escapeEntity(setting, pattern_code, setting.sampleTable); 
+		pattern_code = escapeEntity(setting, pattern_code, setting.mainTable); 
 		
 		// Escape table & column entities (tables can't be escaped in definition because they have to be first expanded...)
 		Map<String, String> map = new HashMap<>(61);
@@ -1179,7 +1178,7 @@ public final class SQL {
 			logger.warn("Following patterns always failed: " + suspiciousPatternList.toString());
 		}
 		
-		int columnCount = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.sampleTable).size();
+		int columnCount = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable).size();
 		logger.debug("MainSample table contains: " + columnCount + " columns (the limit is: " + (setting.columnMax/8) + ")");
 	} 
 	

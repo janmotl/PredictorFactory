@@ -1,8 +1,6 @@
 package connection;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import org.apache.log4j.Logger;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -11,17 +9,18 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.apache.log4j.Logger;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @XmlRootElement (name="connections")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ConnectionPropertyList {
 	// Logging
-	public static final Logger logger = Logger.getLogger(ConnectionPropertyList.class.getName());
+	private static final Logger logger = Logger.getLogger(ConnectionPropertyList.class.getName());
 	
-	// Private Fields. Note that we are using List because it's marshable by default. 
+	// Private Fields. Note that we are using List because it's marshalable by default.
 	private List<ConnectionProperty> connection = new ArrayList<ConnectionProperty>();
 	
 	// Get property by name

@@ -1,0 +1,362 @@
+2015-08-16/11:20:00.232/CEST [run.Launcher] INFO  #### Predictor Factory was initialized ####
+2015-08-16/11:20:00.257/CEST [connection.Network] INFO  #### Successfully connected to the database ####
+2015-08-16/11:20:14.117/CEST [run.Launcher] INFO  #### Finished collecting metadata ####
+2015-08-16/11:20:14.137/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."mainSample"
+2015-08-16/11:20:14.168/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100006"
+2015-08-16/11:20:14.170/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100007"
+2015-08-16/11:20:14.172/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100008"
+2015-08-16/11:20:14.175/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100009"
+2015-08-16/11:20:14.177/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100010"
+2015-08-16/11:20:14.179/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100011"
+2015-08-16/11:20:14.182/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100012"
+2015-08-16/11:20:14.184/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100013"
+2015-08-16/11:20:14.186/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100014"
+2015-08-16/11:20:14.188/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100015"
+2015-08-16/11:20:14.191/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100031"
+2015-08-16/11:20:14.194/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100032"
+2015-08-16/11:20:14.197/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100033"
+2015-08-16/11:20:14.199/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100034"
+2015-08-16/11:20:14.201/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100035"
+2015-08-16/11:20:14.204/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100036"
+2015-08-16/11:20:14.206/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100041"
+2015-08-16/11:20:14.209/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100042"
+2015-08-16/11:20:14.212/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100043"
+2015-08-16/11:20:14.215/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100044"
+2015-08-16/11:20:14.217/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100045"
+2015-08-16/11:20:14.220/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100046"
+2015-08-16/11:20:14.222/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100047"
+2015-08-16/11:20:14.225/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100048"
+2015-08-16/11:20:14.228/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100049"
+2015-08-16/11:20:14.231/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100050"
+2015-08-16/11:20:14.234/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100051"
+2015-08-16/11:20:14.238/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100052"
+2015-08-16/11:20:14.241/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100053"
+2015-08-16/11:20:14.244/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100054"
+2015-08-16/11:20:14.248/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100055"
+2015-08-16/11:20:14.250/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100056"
+2015-08-16/11:20:14.252/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100057"
+2015-08-16/11:20:14.254/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100058"
+2015-08-16/11:20:14.256/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100059"
+2015-08-16/11:20:14.259/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100060"
+2015-08-16/11:20:14.261/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100064"
+2015-08-16/11:20:14.264/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100065"
+2015-08-16/11:20:14.266/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100066"
+2015-08-16/11:20:14.268/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100067"
+2015-08-16/11:20:14.270/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100068"
+2015-08-16/11:20:14.272/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100069"
+2015-08-16/11:20:14.275/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100070"
+2015-08-16/11:20:14.277/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100071"
+2015-08-16/11:20:14.279/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100072"
+2015-08-16/11:20:14.282/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100073"
+2015-08-16/11:20:14.284/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100074"
+2015-08-16/11:20:14.287/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100075"
+2015-08-16/11:20:14.289/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100076"
+2015-08-16/11:20:14.292/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100077"
+2015-08-16/11:20:14.294/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100078"
+2015-08-16/11:20:14.297/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100079"
+2015-08-16/11:20:14.299/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100080"
+2015-08-16/11:20:14.301/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100081"
+2015-08-16/11:20:14.304/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100082"
+2015-08-16/11:20:14.307/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100083"
+2015-08-16/11:20:14.311/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100084"
+2015-08-16/11:20:14.314/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100089"
+2015-08-16/11:20:14.317/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100090"
+2015-08-16/11:20:14.319/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100091"
+2015-08-16/11:20:14.322/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100092"
+2015-08-16/11:20:14.325/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100097"
+2015-08-16/11:20:14.327/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100098"
+2015-08-16/11:20:14.330/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100099"
+2015-08-16/11:20:14.338/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."PREDICTOR100100"
+2015-08-16/11:20:14.340/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."propagated_account_002"
+2015-08-16/11:20:14.344/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."propagated_card_009"
+2015-08-16/11:20:14.346/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."propagated_client_007"
+2015-08-16/11:20:14.348/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."propagated_client_008"
+2015-08-16/11:20:14.350/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."propagated_disp_004"
+2015-08-16/11:20:14.353/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."propagated_district_003"
+2015-08-16/11:20:14.355/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."propagated_loan_001"
+2015-08-16/11:20:14.357/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."propagated_order_005"
+2015-08-16/11:20:14.360/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."propagated_trans_006"
+2015-08-16/11:20:14.362/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."base_sampled"
+2015-08-16/11:20:14.375/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP VIEW "PREDICTOR_FACTORY"."journal"
+2015-08-16/11:20:14.382/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."mainSample" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."mainSample"
+2015-08-16/11:20:14.384/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."mainSample_temp100" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."mainSample_temp100"
+2015-08-16/11:20:14.387/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."mainSample_temp101" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."mainSample_temp101"
+2015-08-16/11:20:14.389/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100006" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100006"
+2015-08-16/11:20:14.392/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100007" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100007"
+2015-08-16/11:20:14.394/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100008" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100008"
+2015-08-16/11:20:14.397/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100009" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100009"
+2015-08-16/11:20:14.400/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100010" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100010"
+2015-08-16/11:20:14.403/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100011" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100011"
+2015-08-16/11:20:14.405/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100012" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100012"
+2015-08-16/11:20:14.408/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100013" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100013"
+2015-08-16/11:20:14.411/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100014" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100014"
+2015-08-16/11:20:14.413/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100015" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100015"
+2015-08-16/11:20:14.415/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100031" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100031"
+2015-08-16/11:20:14.418/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100032" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100032"
+2015-08-16/11:20:14.420/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100033" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100033"
+2015-08-16/11:20:14.422/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100034" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100034"
+2015-08-16/11:20:14.425/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100035" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100035"
+2015-08-16/11:20:14.427/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100036" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100036"
+2015-08-16/11:20:14.429/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100041" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100041"
+2015-08-16/11:20:14.432/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100042" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100042"
+2015-08-16/11:20:14.434/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100043" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100043"
+2015-08-16/11:20:14.436/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100044" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100044"
+2015-08-16/11:20:14.438/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100045" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100045"
+2015-08-16/11:20:14.441/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100046" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100046"
+2015-08-16/11:20:14.444/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100047" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100047"
+2015-08-16/11:20:14.446/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100048" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100048"
+2015-08-16/11:20:14.449/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100049" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100049"
+2015-08-16/11:20:14.451/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100050" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100050"
+2015-08-16/11:20:14.453/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100051" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100051"
+2015-08-16/11:20:14.456/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100052" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100052"
+2015-08-16/11:20:14.458/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100053" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100053"
+2015-08-16/11:20:14.461/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100054" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100054"
+2015-08-16/11:20:14.463/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100055" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100055"
+2015-08-16/11:20:14.466/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100056" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100056"
+2015-08-16/11:20:14.468/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100057" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100057"
+2015-08-16/11:20:14.470/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100058" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100058"
+2015-08-16/11:20:14.473/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100059" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100059"
+2015-08-16/11:20:14.475/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100060" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100060"
+2015-08-16/11:20:14.477/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100064" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100064"
+2015-08-16/11:20:14.479/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100065" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100065"
+2015-08-16/11:20:14.482/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100066" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100066"
+2015-08-16/11:20:14.484/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100067" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100067"
+2015-08-16/11:20:14.486/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100068" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100068"
+2015-08-16/11:20:14.489/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100069" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100069"
+2015-08-16/11:20:14.492/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100070" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100070"
+2015-08-16/11:20:14.500/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100071" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100071"
+2015-08-16/11:20:14.502/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100072" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100072"
+2015-08-16/11:20:14.505/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100073" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100073"
+2015-08-16/11:20:14.507/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100074" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100074"
+2015-08-16/11:20:14.510/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100075" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100075"
+2015-08-16/11:20:14.512/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100076" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100076"
+2015-08-16/11:20:14.515/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100077" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100077"
+2015-08-16/11:20:14.517/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100078" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100078"
+2015-08-16/11:20:14.519/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100079" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100079"
+2015-08-16/11:20:14.521/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100080" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100080"
+2015-08-16/11:20:14.523/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100081" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100081"
+2015-08-16/11:20:14.526/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100082" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100082"
+2015-08-16/11:20:14.529/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100083" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100083"
+2015-08-16/11:20:14.531/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100084" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100084"
+2015-08-16/11:20:14.533/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100089" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100089"
+2015-08-16/11:20:14.535/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100090" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100090"
+2015-08-16/11:20:14.537/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100091" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100091"
+2015-08-16/11:20:14.540/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100092" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100092"
+2015-08-16/11:20:14.542/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100097" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100097"
+2015-08-16/11:20:14.544/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100098" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100098"
+2015-08-16/11:20:14.546/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100099" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100099"
+2015-08-16/11:20:14.549/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."PREDICTOR100100" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."PREDICTOR100100"
+2015-08-16/11:20:14.551/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."propagated_account_002" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."propagated_account_002"
+2015-08-16/11:20:14.553/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."propagated_card_009" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."propagated_card_009"
+2015-08-16/11:20:14.555/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."propagated_client_007" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."propagated_client_007"
+2015-08-16/11:20:14.557/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."propagated_client_008" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."propagated_client_008"
+2015-08-16/11:20:14.560/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."propagated_disp_004" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."propagated_disp_004"
+2015-08-16/11:20:14.563/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."propagated_district_003" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."propagated_district_003"
+2015-08-16/11:20:14.565/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."propagated_loan_001" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."propagated_loan_001"
+2015-08-16/11:20:14.567/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."propagated_order_005" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."propagated_order_005"
+2015-08-16/11:20:14.569/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."propagated_trans_006" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."propagated_trans_006"
+2015-08-16/11:20:14.571/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."base_sampled" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."base_sampled"
+2015-08-16/11:20:14.574/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."base" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."base"
+2015-08-16/11:20:14.576/CEST [connection.Network] INFO  ORA-12003: materialized view "PREDICTOR_FACTORY"."journal" does not exist
+ | DROP MATERIALIZED VIEW "PREDICTOR_FACTORY"."journal"
+2015-08-16/11:20:14.611/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP TABLE "PREDICTOR_FACTORY"."mainSample_temp100"
+2015-08-16/11:20:14.613/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP TABLE "PREDICTOR_FACTORY"."mainSample_temp101"
+2015-08-16/11:20:15.360/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | DROP TABLE "PREDICTOR_FACTORY"."base"
+2015-08-16/11:20:15.371/CEST [run.Launcher] INFO  #### Finished cleaning ####
+2015-08-16/11:20:15.452/CEST [propagation.Propagation] INFO  #### Finished propagation at depth: 1 ####
+2015-08-16/11:20:15.476/CEST [propagation.Propagation] INFO  #### Finished propagation at depth: 2 ####
+2015-08-16/11:20:15.863/CEST [propagation.Propagation] INFO  #### Finished propagation at depth: 3 ####
+2015-08-16/11:20:16.033/CEST [run.Launcher] INFO  #### Finished base propagation into 9 tables ####
+2015-08-16/11:20:16.264/CEST [connection.Network] INFO  ORA-30482: DISTINCT option not allowed for this function
+ | CREATE TABLE "PREDICTOR_FACTORY"."PREDICTOR100001" AS SELECT "propagated_id1" , "propagated_date" , "propagated_target" , stddev_samp(distinct "account_to") AS "order_account_t_aggrega_100001" FROM "PREDICTOR_FACTORY"."propagated_order_005" GROUP BY "propagated_id1", "propagated_date", "propagated_target" 
+2015-08-16/11:20:16.272/CEST [connection.Network] INFO  ORA-30482: DISTINCT option not allowed for this function
+ | CREATE TABLE "PREDICTOR_FACTORY"."PREDICTOR100002" AS SELECT "propagated_id1" , "propagated_date" , "propagated_target" , stddev_samp(distinct "amount") AS "order_amount_aggregateD_100002" FROM "PREDICTOR_FACTORY"."propagated_order_005" GROUP BY "propagated_id1", "propagated_date", "propagated_target" 
+2015-08-16/11:20:16.278/CEST [connection.Network] INFO  ORA-30482: DISTINCT option not allowed for this function
+ | CREATE TABLE "PREDICTOR_FACTORY"."PREDICTOR100003" AS SELECT "propagated_id1" , "propagated_date" , "propagated_target" , stddev_samp(distinct "account") AS "trans_account_aggregate_100003" FROM "PREDICTOR_FACTORY"."propagated_trans_006" GROUP BY "propagated_id1", "propagated_date", "propagated_target" 
+2015-08-16/11:20:16.284/CEST [connection.Network] INFO  ORA-30482: DISTINCT option not allowed for this function
+ | CREATE TABLE "PREDICTOR_FACTORY"."PREDICTOR100004" AS SELECT "propagated_id1" , "propagated_date" , "propagated_target" , stddev_samp(distinct "amount") AS "trans_amount_aggregateD_100004" FROM "PREDICTOR_FACTORY"."propagated_trans_006" GROUP BY "propagated_id1", "propagated_date", "propagated_target" 
+2015-08-16/11:20:16.290/CEST [connection.Network] INFO  ORA-30482: DISTINCT option not allowed for this function
+ | CREATE TABLE "PREDICTOR_FACTORY"."PREDICTOR100005" AS SELECT "propagated_id1" , "propagated_date" , "propagated_target" , stddev_samp(distinct "balance") AS "trans_balance_aggregate_100005" FROM "PREDICTOR_FACTORY"."propagated_trans_006" GROUP BY "propagated_id1", "propagated_date", "propagated_target" 
+2015-08-16/11:20:19.683/CEST [connection.Network] INFO  ORA-01426: numeric overflow
+ | CREATE TABLE "PREDICTOR_FACTORY"."PREDICTOR100064" AS SELECT "propagated_id1" , "propagated_date" , "propagated_target" , CASE WHEN MinVal = 0 THEN 0 WHEN MOD(Neg, 2) = 1 THEN -1 * EXP(ABSMult) ELSE EXP(ABSMult) END "trans_amount_product_100064" FROM ( SELECT "propagated_id1" , "propagated_date" , "propagated_target" --log of positive row values , SUM(LN(ABS(NULLIF("amount", 0)))) AS ABSMult --count of negative values , SUM(SIGN(CASE WHEN "amount" < 0 THEN 1 ELSE 0 END)) AS Neg --anything * zero = zero , MIN(ABS("amount")) AS MinVal FROM "PREDICTOR_FACTORY"."propagated_trans_006" GROUP BY "propagated_id1", "propagated_date", "propagated_target" ) foo 
+2015-08-16/11:20:19.952/CEST [connection.Network] INFO  ORA-01426: numeric overflow
+ | CREATE TABLE "PREDICTOR_FACTORY"."PREDICTOR100065" AS SELECT "propagated_id1" , "propagated_date" , "propagated_target" , CASE WHEN MinVal = 0 THEN 0 WHEN MOD(Neg, 2) = 1 THEN -1 * EXP(ABSMult) ELSE EXP(ABSMult) END "trans_balance_product_100065" FROM ( SELECT "propagated_id1" , "propagated_date" , "propagated_target" --log of positive row values , SUM(LN(ABS(NULLIF("balance", 0)))) AS ABSMult --count of negative values , SUM(SIGN(CASE WHEN "balance" < 0 THEN 1 ELSE 0 END)) AS Neg --anything * zero = zero , MIN(ABS("balance")) AS MinVal FROM "PREDICTOR_FACTORY"."propagated_trans_006" GROUP BY "propagated_id1", "propagated_date", "propagated_target" ) foo 
+2015-08-16/11:20:21.015/CEST [connection.Network] INFO  ORA-30076: invalid extract field for extract source
+ | CREATE TABLE "PREDICTOR_FACTORY"."PREDICTOR100087" AS SELECT "propagated_id1" , "propagated_date" , "propagated_target" , EXTRACT(hour from "date") AS "account_date_timePartDi_100087" FROM "PREDICTOR_FACTORY"."propagated_account_002" 
+2015-08-16/11:20:21.019/CEST [connection.Network] INFO  ORA-30076: invalid extract field for extract source
+ | CREATE TABLE "PREDICTOR_FACTORY"."PREDICTOR100088" AS SELECT "propagated_id1" , "propagated_date" , "propagated_target" , EXTRACT(hour from "issued") AS "card_issued_timePartDir_100088" FROM "PREDICTOR_FACTORY"."propagated_card_009" 
+2015-08-16/11:20:21.023/CEST [connection.Network] INFO  ORA-30076: invalid extract field for extract source
+ | CREATE TABLE "PREDICTOR_FACTORY"."PREDICTOR100089" AS SELECT "propagated_id1" , "propagated_date" , "propagated_target" , EXTRACT(hour from "date") AS "loan_date_timePartDirec_100089" FROM "PREDICTOR_FACTORY"."propagated_loan_001" 
+2015-08-16/11:20:21.114/CEST [connection.Network] INFO  ORA-00907: missing right parenthesis
+ | CREATE TABLE "PREDICTOR_FACTORY"."PREDICTOR100093" AS SELECT "propagated_id1" , "propagated_date" , "propagated_target" , EXTRACT( dow from "date") AS "account_date_timePartDi_100093" FROM "PREDICTOR_FACTORY"."propagated_account_002" 
+2015-08-16/11:20:21.118/CEST [connection.Network] INFO  ORA-00907: missing right parenthesis
+ | CREATE TABLE "PREDICTOR_FACTORY"."PREDICTOR100094" AS SELECT "propagated_id1" , "propagated_date" , "propagated_target" , EXTRACT( dow from "issued") AS "card_issued_timePartDir_100094" FROM "PREDICTOR_FACTORY"."propagated_card_009" 
+2015-08-16/11:20:21.123/CEST [connection.Network] INFO  ORA-00907: missing right parenthesis
+ | CREATE TABLE "PREDICTOR_FACTORY"."PREDICTOR100095" AS SELECT "propagated_id1" , "propagated_date" , "propagated_target" , EXTRACT( dow from "date") AS "loan_date_timePartDirec_100095" FROM "PREDICTOR_FACTORY"."propagated_loan_001" 
+2015-08-16/11:20:21.448/CEST [connection.Network] INFO  ORA-01702: a view is not appropriate here
+ | CREATE INDEX mainSample_temp100_idx ON "PREDICTOR_FACTORY"."mainSample_temp100" ("propagated_id1", "propagated_date")
+2015-08-16/11:20:21.485/CEST [connection.Network] INFO  ORA-01702: a view is not appropriate here
+ | CREATE INDEX mainSample_temp101_idx ON "PREDICTOR_FACTORY"."mainSample_temp101" ("propagated_id1", "propagated_date")
+2015-08-16/11:20:22.146/CEST [run.Launcher] INFO  #### Finished making the table of predictors ####
+2015-08-16/11:20:22.210/CEST [connection.Network] INFO  ORA-00942: table or view does not exist
+ | insert into "PREDICTOR_FACTORY"."log" (schema_name, runtime) values ('FINANCIAL', 22256)
+2015-08-16/11:20:22.211/CEST [run.Launcher] INFO  #### Finished testing 98 predictors ####

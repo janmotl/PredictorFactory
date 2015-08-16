@@ -14,8 +14,10 @@
 	
 	NOTE: Interestingly enough, average of woe works better than sum of woe.
 	
-	NOTE: Laplace correction is applied to deal with division by zero and log of zeo. Note that non-standard value of
-	0.5 (instead of 1) is used because it worked better on ftp dataset. Also note that I am not performing normalisation
+	NOTE: Oracle may require specifying logarithm base. 
+	
+	NOTE: Laplace correction is applied to deal with division by zero and log of zero. Note that non-standard value of
+	0.5 (instead of 1) is used because it worked better on ftp dataset. Also note that I am not performing normalization
 	based on the count of unique values in @nominalValue multiplied by the count of classes.
 	
 	Could theoretically update woe estimates based on already estimated samples from testing set (iterative learning).  

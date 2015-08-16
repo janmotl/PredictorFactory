@@ -3,31 +3,22 @@
  */
 package run;
 
-import java.io.File;
-
 import org.apache.log4j.Logger;
-
 import utility.XML;
+
+import java.io.File;
 
 public class InputQualityControl {
 	// Logging
-	public static final Logger logger = Logger.getLogger(InputQualityControl.class.getName());
+	private static final Logger logger = Logger.getLogger(InputQualityControl.class.getName());
 	
 	// Validate all XMLs in config and pattern directories
-	public static void validateConfiguration(Setting setting) {
+	public static void validateConfiguration() {
 		// Validate all XML files
 		qcPatterns();
 		qcConnection();
 		qcDatabase();
 		qcDriver();
-		
-		// Parameters
-		if (setting.lag < 0) {
-			logger.warn("Lag parameter must be non-negative.");
-		}
-		if (setting.lead < 0) {
-			logger.warn("Lead parameter must be non-negative.");
-		}
 	}
 	
 

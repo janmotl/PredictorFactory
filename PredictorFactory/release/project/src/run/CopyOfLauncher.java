@@ -1,25 +1,23 @@
 package run;
 
+import connection.Network;
+import connection.SQL;
+import org.apache.log4j.Logger;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.SortedSet;
 
-import org.apache.log4j.Logger;
-
-import connection.Network;
-import connection.SQL;
-
 // Evaluate symmetry...
 public class CopyOfLauncher{
 	// Logging
-	public static final Logger logger = Logger.getLogger(CopyOfLauncher.class.getName());
+	private static final Logger logger = Logger.getLogger(CopyOfLauncher.class.getName());
 
 	public static void main(String[] arg){
 		
 		logger.info("#### Predictor Factory was initialized ####");
 		
 		// Database setting
-		Setting setting = new Setting();
 		String connectionProperty = "PostgreSQL";	// Host identification as specified in resources/connection.xml
 		String databaseProperty = "cs";		// Dataset identification as specified in resources/database.xml 
 		
@@ -29,9 +27,10 @@ public class CopyOfLauncher{
 		 databaseProperty = arg[1];
 		}
 
+		Setting setting = new Setting(connectionProperty, databaseProperty);
 	
 		// Connect to the server
-		setting = Network.openConnection(setting, connectionProperty, databaseProperty);
+		setting = Network.openConnection(setting);
 		
 		// Get tables
 		SortedSet<String> tableSet = utility.Meta.collectTables(setting, setting.database, setting.inputSchema);

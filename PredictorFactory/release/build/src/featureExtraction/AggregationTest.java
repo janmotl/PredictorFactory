@@ -1,30 +1,25 @@
 package featureExtraction;
 
+import metaInformation.MetaOutput;
+import metaInformation.MetaOutput.OutputTable;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import run.Setting;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import metaInformation.MetaOutput;
-import metaInformation.MetaOutput.OutputTable;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import connection.Network;
-import run.Setting;
-
 public class AggregationTest {
-	private Setting setting = new Setting();
+	private Setting setting = new Setting("PostgreSQL", "financial");
 	private Pattern pattern = new Pattern();
 	private Predictor predictor;
 	private SortedMap<String, OutputTable> tableMetadata = new TreeMap<String, MetaOutput.OutputTable>();
 	
 	@Before
-	public void connectToDatabase(){
-		// Initialize setting
-		setting = Network.openConnection(setting, "MariaDB", "financial");
+	public void initialize(){
 		
 		// Initialize pattern
 		SortedMap<String, String> parameter = new TreeMap<String, String>();
@@ -41,7 +36,7 @@ public class AggregationTest {
 		predictor.setSql("select * from t1 where propagated_target = '@targetValue'");
 		predictor.propagatedTable = "propagatedTable1";
 		predictor.columnMap.put("@nominalColumn", "column1");
-		predictor.addParameter("@value", "value1");
+		predictor.setParameter("@value", "value1");
 		
 		// Initialize tableMetadata
 		OutputTable outputTable = new OutputTable();
@@ -71,17 +66,17 @@ public class AggregationTest {
 		Assert.assertNotNull(list);
 		Assert.assertFalse(list.get(0).getPatternCode().isEmpty());		// Will fail if pattern directory is empty
 	}
-	
+		
 	@Test
 	public void addTargetValue() {
 		ArrayList<String> uniqueList = new ArrayList<String>();
 		uniqueList.add("value55");
-		Predictor output = Aggregation.addTargetValue(predictor, uniqueList);
+		List<Predictor> list = Aggregation.addTargetValue(setting, predictor, uniqueList);
 
-		Assert.assertTrue(output.getParameterMap().containsKey("@targetValue"));
-		Assert.assertTrue(output.getParameterMap().containsValue("value55"));
-		Assert.assertFalse(output.getParameterMap().containsKey("unexpectedKey"));
-		Assert.assertFalse(output.getParameterMap().containsValue("unexpectedValue"));
+		Assert.assertTrue(list.get(0).getParameterMap().containsKey("@targetValue"));
+		Assert.assertTrue(list.get(0).getParameterMap().containsValue("value55"));
+		Assert.assertFalse(list.get(0).getParameterMap().containsKey("unexpectedKey"));
+		Assert.assertFalse(list.get(0).getParameterMap().containsValue("unexpectedValue"));
 	}
 
 	@Test
@@ -98,6 +93,7 @@ public class AggregationTest {
 	
 	@Test
 	public void loopTables() {
+		System.out.println("");
 		List<Predictor> list = Aggregation.loopTables(predictor, tableMetadata);
 		
 		Assert.assertEquals(2, list.size());

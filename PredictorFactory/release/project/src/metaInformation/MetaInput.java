@@ -1,40 +1,35 @@
 package metaInformation;
 
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
+import connection.SQL;
 import org.apache.log4j.Logger;
-
 import run.Setting;
 import utility.Meta;
 import utility.Meta.Table;
-import connection.SQL;
 
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
 
 
 public class MetaInput {
 	
 	// Logging
-	public static final Logger logger = Logger.getLogger(MetaInput.class.getName());
+	private static final Logger logger = Logger.getLogger(MetaInput.class.getName());
 
 
 	// Return map of tables in the input schema
+	// IDS ARE WRONGFULLY IGNORED FROM THE BLACK/WHITE LISTS
 	public static SortedMap<String, Table> getMetaInput(Setting setting) {
 		
 		// Initialization
-		SortedMap<String, Table> tableMap = new TreeMap<String, Table>(); // Map of {tableName, tableData}
-		String database = setting.database;
-		String schema = setting.inputSchema;
-
+		SortedMap<String, Table> tableMap = new TreeMap<>(); // Map of {tableName, tableData}
+		final String database = setting.database;
+		final String schema = setting.inputSchema;
+		final List<String> whiteListTable = string2list(setting.whiteListTable); // Parsed values
+		final List<String> blackListTable = string2list(setting.blackListTable); // Parsed values
+		final Map<String,List<String>> whiteMapColumn = list2map(string2list(setting.whiteListColumn)); // Parsed values
+		final Map<String,List<String>> blackMapColumn = list2map(string2list(setting.blackListColumn)); // Parsed values
 		
 		// What data types are used by the database? In journal file we use {3, 4, 12 and 93}.
 		logger.debug("Supported data types are: " + getDataTypes(setting)); 
@@ -55,26 +50,32 @@ public class MetaInput {
 		// Get tables
 		SortedSet<String> tableSet = utility.Meta.collectTables(setting, database, schema);
 		
-		// Validate that targetTable is in the tableSet
+		// QC that targetTable is in the tableSet
 		if (!tableSet.contains(setting.targetTable)) {
 			logger.warn("The target table '" + setting.targetTable + "' doesn't exist in the database.");
-			logger.warn("Available tables are: " + tableSet);
+			logger.warn("Available tables in the database are: " + tableSet);
 		}
+
+		// QC that targetDate doesn't contain nulls
+		if ((SQL.getRowCount(setting, setting.inputSchema, setting.targetTable)-SQL.getNotNullCount(setting, setting.inputSchema, setting.targetTable, setting.targetDate)) > 0) {
+			logger.warn("Target date column '" + setting.targetDate + "' contains null. Rows with the null in target date column WILL BE IGNORED!");
+		}
+
+		// Apply black/white lists
+		if (!whiteListTable.isEmpty()) {
+			tableSet.retainAll(whiteListTable);	// If whiteList is used, perform intersect with the available tables
+		}
+		tableSet.removeAll(blackListTable); // Remove blackListed tables
 		
-		// Respect table blacklist
-		if (setting.blackListTable != null) {
-			List<String> blackListTable = Arrays.asList(setting.blackListTable.split(","));
-			tableSet.removeAll(blackListTable);
+		// QC: Count of tables after blacklisting should be > 0
+		if (tableSet.isEmpty()) {
+			logger.warn("The count of available tables is 0.");
 		}
-		
-		// Initialize column blacklist
-		List<String> blackListColumn = new ArrayList<String>();
-		if (setting.blackListColumn != null) {
-			blackListColumn = Arrays.asList(setting.blackListColumn.split(","));
-		}
+
+
 		
 		// Initialize table-map with Table objects 
-		tableMap.clear(); // We have to remove tables from previous runs 
+		tableMap.clear(); // We have to remove tables from previous runs (WTF?)
 		for (String tableName : tableSet) {
 			Table tableData = new Table();
 			tableMap.put(tableName, tableData);
@@ -88,21 +89,21 @@ public class MetaInput {
 			
 			// Collect columns
 			Map<String, Integer> columnMap = Meta.collectColumns(setting, database, schema, tableName);
-			
-			// Respect column blacklist
-			for (String blackTuple : blackListColumn) {
-				List<String> blackTableColumn = Arrays.asList(blackTuple.split("\\.")); // Dot, but escaped for regex
-				if (blackTableColumn.get(0).equals(tableName)) {
-					columnMap.remove(blackTableColumn.get(1));
-				}
+
+			// Respect white/black lists
+			if (whiteMapColumn.get(tableName) != null) {
+				columnMap.keySet().retainAll(whiteMapColumn.get(tableName)); // If applicable, calculate intersect
 			}
-						
+			if (blackMapColumn.get(tableName) != null) {
+				columnMap.keySet().removeAll(blackMapColumn.get(tableName)); // If applicable, remove all blacklisted columns
+			}
+
 			// Store relationships
 			Table tableData = tableMap.get(tableName);
-			tableData.relationship = Meta.collectRelationships(setting, database, schema, tableName);
+			tableData.foreignConstraint = ForeignConstraint.combine(ForeignConstraint.jdbcToList(Meta.collectRelationships(setting, database, schema, tableName), tableName));
 			
 			// Store idColumn (as a side effect) and get a map of columns without ids
-			columnMap = filterId(tableData, columnMap, tableData.relationship);
+			columnMap = filterId(tableData, columnMap, tableData.foreignConstraint);
 			
 			// Deal with PKs
 			String pk = Meta.getPrimaryKey(setting, database, schema, tableName);
@@ -150,10 +151,10 @@ public class MetaInput {
 			logger.warn("The target table was not found among the traversed tables. Check your blacklist/whitelist.");
 		}
 		
-		// Output quality control
+		// QC that relationships were extracted
 		int relationshipCount = 0;
 		for (Table table : tableMap.values()) {
-			relationshipCount += table.relationship.size();
+			relationshipCount += table.foreignConstraint.size();
 		}
 		if (relationshipCount == 0) {
 			logger.warn("No relationships were detected");
@@ -185,16 +186,17 @@ public class MetaInput {
 	
 
 	// 1) Store idColumn and return column map without ids
-	private static Map<String, Integer> filterId(Table table, Map<String, Integer> columnMap, List<List<String>> relationship) {
+	private static Map<String, Integer> filterId(Table table, Map<String, Integer> columnMap, List<ForeignConstraint> relationship) {
 		
 		// Initialization
 		SortedSet<String> idColumnSet = new TreeSet<String>();
 		
 		// Add ids present in FK constrains 
-		for (List<String> relation : relationship) {
-			String idColumnName = relation.get(1);	// Get the id column name
-			columnMap.remove(idColumnName);			// Remove the id column name
-			idColumnSet.add(idColumnName);			// And put the id column name into a special set
+		for (ForeignConstraint relation : relationship) {
+			for (String idColumnName : relation.column) {
+				columnMap.remove(idColumnName);			// Remove the id column name
+				idColumnSet.add(idColumnName);			// And put the id column name into a special set
+			}
 		}
 				
 		// Store the id set
@@ -203,7 +205,7 @@ public class MetaInput {
 		return columnMap;
 	}
 	
-	// 2) Get list of supported data types
+	// 2) Get list of supported data types from the database
 	private static List<List<String>> getDataTypes(Setting setting) {
 		
 		// Initialization
@@ -226,5 +228,38 @@ public class MetaInput {
 			
 		return dataTypeList;	
 	}
-	
+
+	// 3) Convert comma delimited string to list
+	private static List<String> string2list(String string) {
+		// Initialization
+		List<String> result = new ArrayList<>();
+
+		// Deal with nulls and empty strings
+		if (string == null || string.isEmpty()) return result;
+
+		// Parsing
+		return Arrays.asList(string.split(","));
+	}
+
+	// 4) Convert dot delimited list to map
+	private static Map<String, List<String>> list2map(List<String> list) {
+		Map<String, List<String>> result = new HashMap<>();
+
+		for (String tuple : list) {
+			String[] tableColumn = tuple.split("\\."); // Dot, but escaped for regex
+			if (tableColumn.length != 2) continue;	// Take care of empty strings...
+			String table = tableColumn[0];
+			String column = tableColumn[1];
+
+			if (result.containsKey(table)) {
+				result.get(table).add(column); // Add column into a present table
+			} else {
+				result.put(table, new LinkedList<>(Arrays.asList(column))); // Make a new table with the column
+			}
+		}
+
+		return result;
+	}
+
+
 }

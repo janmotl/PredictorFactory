@@ -10,9 +10,12 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="cloning" level="project" />
-    <orderEntry type="library" name="jdbc-pool" level="project" />
     <orderEntry type="library" name="lib" level="project" />
+    <orderEntry type="library" name="cloning" level="project" />
+    <orderEntry type="library" name="objenesis-2.1" level="project" />
+    <orderEntry type="library" name="jdbc-pool" level="project" />
+    <orderEntry type="library" name="jdbc-driver" level="project" />
+    <orderEntry type="library" name="sas" level="project" />
     <orderEntry type="module-library">
       <library name="JUnit4">
         <CLASSES>
@@ -26,8 +29,5 @@
         </SOURCES>
       </library>
     </orderEntry>
-    <orderEntry type="library" name="sas" level="project" />
-    <orderEntry type="library" name="objenesis-2.1" level="project" />
-    <orderEntry type="library" name="jdbc-driver" level="project" />
   </component>
 </module>
