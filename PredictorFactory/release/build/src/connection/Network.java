@@ -97,7 +97,7 @@ public final class Network {
 			logger.debug("Identifier quote string: " + metaData.getIdentifierQuoteString());
 			
 			// Store collected metadata
-			setting.indentifierLengthMax = Math.min(metaData.getMaxColumnNameLength(), metaData.getMaxTableNameLength());
+			setting.identifierLengthMax = Math.min(metaData.getMaxColumnNameLength(), metaData.getMaxTableNameLength());
 			setting.columnMax = metaData.getMaxColumnsInTable();
 			quoteEntity = metaData.getIdentifierQuoteString();
 			

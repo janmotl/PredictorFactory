@@ -76,7 +76,7 @@ public class Launcher{
 		
 		// Make base table
 		SQL.getBase(setting);
-		SQL.getSubSample(setting, metaInput);
+		SQL.getSubSampleClassification(setting, metaInput);
 		
 		// Propagate base table
 		SortedMap<String, OutputTable> outputMeta = Propagation.propagateBase(setting, metaInput);

@@ -227,7 +227,7 @@ public class Propagation{
 	// but make sure the name is unique.
 	private static String trim(Setting setting, String outputTable, int counter) {
 		outputTable = setting.propagatedPrefix + outputTable;
-		int stringLength = Math.min(outputTable.length(), setting.indentifierLengthMax - 4); 
+		int stringLength = Math.min(outputTable.length(), setting.identifierLengthMax - 4);
 		outputTable = outputTable.substring(0, stringLength);
 		outputTable = outputTable + "_" + String.format("%03d", counter);
 		

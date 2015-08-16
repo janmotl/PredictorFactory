@@ -128,7 +128,7 @@ public class Predictor implements Comparable<Predictor> {
 	}
 	
 	public String getNameOnce(Setting setting) {
-		int indentifierLengthMax = setting.indentifierLengthMax;
+		int indentifierLengthMax = setting.identifierLengthMax;
 		
 		// 3 characters are reserved for underscores, 6 characters are for id.
 		int length = (int) Math.floor((indentifierLengthMax-9)/3); 
