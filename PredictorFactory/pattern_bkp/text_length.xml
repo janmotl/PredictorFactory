@@ -14,7 +14,7 @@
 	
 	Note: Text_length_std bear similarity with concentration pattern. 
 	
-	Note, that this pattern will fail on non-string nominal columns. Such behavior is normal. 
+	Note, that this pattern will fail on non-string nominal columns. Such behavior is normal.
 	</description>
 	<author>Jan Motl</author>
 	<date>2015-01-25</date>

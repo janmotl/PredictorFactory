@@ -3,31 +3,42 @@
  */
 package run;
 
+import connection.Network;
+import connection.SQL;
+import metaInformation.MetaOutput;
+import metaInformation.MetaOutput.OutputTable;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+import propagation.Propagation;
+import utility.Meta.Table;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.SortedMap;
 
-import metaInformation.MetaOutput;
-import metaInformation.MetaOutput.OutputTable;
-
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
-
-import propagation.Propagation;
-import utility.Meta.Table;
-import connection.Network;
-import connection.SQL;
-
 
 public class Launcher{
 	// Logging
-	public static final Logger logger = Logger.getLogger(Launcher.class.getName());
+	private static final Logger logger = Logger.getLogger(Launcher.class.getName());
 	
 
 		
 	// Where everything starts and ends...
 	public static void main(String[] arg){
+		
+		// Connect to the following server and database:
+		String connectionProperty = "Oracle";	// Host identification as specified in resources/connection.xml
+		String databaseProperty = "financial_xe";		// Dataset identification as specified in resources/database.xml
+		
+		// Read command line parameters if they are present (and overwrite the defaults).
+		if (arg.length==1 || arg.length>2) { 
+			throw new IllegalArgumentException("The valid arguments are: connectionName databaseName.");
+		}
+		if (arg.length==2) {
+			connectionProperty = arg[0];
+			databaseProperty = arg[1];
+		}
 		
 		// Start measuring run time
 		long startTime = System.currentTimeMillis();
@@ -37,31 +48,30 @@ public class Launcher{
 			Properties p = new Properties();
 		    p.load(new FileInputStream("config/log4j.properties"));
 		    PropertyConfigurator.configure(p);
-		} catch (IOException e) {}
+		} catch (IOException e) {
+			System.out.println(e.getMessage());
+			System.out.println("The working directory is: " + System.getProperty("user.dir"));
+		}
 		
-		logger.info("#### Predictor Factory was initialized ####");
+		// Validate all XMLs 
+		InputQualityControl.validateConfiguration();
 		
-		
+<<<<<<< HEAD
 		// Database setting
 		Setting setting = new Setting();
 		String connectionProperty = "SAS";	// Host identification as specified in resources/connection.xml
 		String databaseProperty = "SAS_GE";		// Dataset identification as specified in resources/database.xml 
 
+=======
+		// Construct the setting object
+		Setting setting = new Setting(connectionProperty, databaseProperty);
+		logger.info("#### Predictor Factory was initialized ####");
+		logger.debug(setting.toString());
+>>>>>>> origin/master
 		
-		// Read command line parameters if they are present (and overwrite defaults).
-		if (arg.length>2) { 
-			throw new IllegalArgumentException("The valid arguments are: connectionName databaseName.");
-		}
-		if (arg.length>0) {
-			connectionProperty = arg[0];
-			databaseProperty = arg[1];
-		}
-
-		// Validate configuration 
-		InputQualityControl.validateConfiguration(setting);
 		
 		// Connect to the server
-		setting = Network.openConnection(setting, connectionProperty, databaseProperty);
+		setting = Network.openConnection(setting);
 		
 		// Collect information about tables, columns and relations in the database
 		SortedMap<String, Table> metaInput = metaInformation.MetaInput.getMetaInput(setting);
@@ -76,7 +86,15 @@ public class Launcher{
 		
 		// Make base table
 		SQL.getBase(setting);
+<<<<<<< HEAD
 		SQL.getSubSampleClassification(setting, metaInput);
+=======
+		if ("classification".equals(setting.task)) {
+			SQL.getSubSampleClassification(setting, metaInput);
+		} else {
+			SQL.getSubSampleRegression(setting);
+		}
+>>>>>>> origin/master
 		
 		// Propagate base table
 		SortedMap<String, OutputTable> outputMeta = Propagation.propagateBase(setting, metaInput);

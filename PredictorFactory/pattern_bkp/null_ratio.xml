@@ -7,9 +7,12 @@
 		Thus we mine them.
 
 		This pattern has a good predictive power/runtime ratio.
-		 
-		Technical note: NULL values are not commonly accounted in count(@column) function. Hence we exploit it. 
-		An alternative is to use "case then" but that is slower.
+
+		NOTE: THE PATTERN PRODUCES NULL VALUES FOR propagated_id NOT PRESENT IN THE propagated_table.
+		A REMEDY IS TESTED IN PATTERN null_ratio_v2.
+
+		Technical note: Count(*) counts all values regardless of NULLs, while count(@column) excludes NULLs.
+		An alternative way how to calculate the predictor is to use "case then" but that is slower.
 		
 		Do not confuse this pattern with aggregation or num_children. Aggregation is only for numerical attributes. 
 		And num_children works on table level. Also note that direct_field takes care of the scenario where 
@@ -25,7 +28,7 @@
 	<code>SELECT @baseId
 			   , @baseDate
 			   , @baseTarget
-			   , coalesce((count(*) - count(@column)) / count(*), 0) AS "@columnName"
+			   , (count(*) - count(@column)) / count(*) AS "@columnName"
 	      FROM @propagatedTable
 	      GROUP BY @baseId, @baseDate, @baseTarget
 	</code>

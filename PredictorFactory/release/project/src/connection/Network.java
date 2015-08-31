@@ -1,6 +1,12 @@
 package connection;
 
 
+import com.google.common.base.MoreObjects;
+import com.zaxxer.hikari.HikariDataSource;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
+import run.Setting;
+
 import java.io.Console;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -9,13 +15,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
-
-import run.Setting;
-
-import com.zaxxer.hikari.HikariDataSource;
 
 
 
@@ -29,46 +28,35 @@ public final class Network {
 	// Note: c3p0 is a viable option. But may require setting fine tuning.
 	// NOTE: Have to change the logic to benefit from pooling (Recovery from database outages)
 	// See: http://http://www.mchange.com/projects/c3p0/
-	// NOTE: This function doesn't need databaseProperty anymore -> move it away
 	// NOTE: This function should permit passing of URL to deal with nonstandard situations (like domain login to MSSQL) 
-	public static Setting openConnection(Setting setting, String connectionPropertyName, String databasePropertyName) {
+	public static Setting openConnection(Setting setting) {
 		
-        // Load the connection configuration from a XML
-		ConnectionPropertyList connectionPropertyList = ConnectionPropertyList.unmarshall();
-		DriverPropertyList driverPropertyList = DriverPropertyList.unmarshall(); 
-		DatabasePropertyList databasePropertyList = DatabasePropertyList.unmarshall();
-        
-        // Get the configuration for the specified database vendor		
-        ConnectionProperty connectionProperty = connectionPropertyList.getConnectionProperties(connectionPropertyName);
-        DriverProperty driverProperty = driverPropertyList.getDriverProperties(connectionProperty.driver);
-        DatabaseProperty databaseProperty = databasePropertyList.getDatabaseProperties(databasePropertyName);
-        
 		// Build a DataSource
         @SuppressWarnings("resource")	// WILL HAVE TO CHANGE
 		HikariDataSource ds = new HikariDataSource();
-		ds.setDriverClassName(driverProperty.driverClass);	// Old-school necessity for pre-JDBC 4.0 drivers 
-		ds.setUsername(connectionProperty.username);
-		ds.setPassword(connectionProperty.password);
-		String url = driverProperty.urlPrefix + connectionProperty.host + ":" + connectionProperty.port
-					+ driverProperty.dbNameSeparator + connectionProperty.database; // Database is required by Azure
+		ds.setDriverClassName(setting.driverClass);	// Old-school necessity for pre-JDBC 4.0 drivers 
+		ds.setUsername(setting.username);
+		ds.setPassword(setting.password);
+		String url = setting.urlPrefix + setting.host + ":" + setting.port
+					+ setting.dbNameSeparator + setting.database; // Database is required by Azure
 		ds.setJdbcUrl(url);
 		
 		// Define a validation query for drivers that do not provide isValid() API.
 		// Do not set it for JDBC 4.0 compliant drivers as it would slow them down.
 		// See: https://github.com/brettwooldridge/HikariCP
-		if (driverProperty.testQuery != null) {
-			ds.setConnectionTestQuery(driverProperty.testQuery);
+		if (setting.testQuery != null) {
+			ds.setConnectionTestQuery(setting.testQuery);
 		}
 		
 		// If the connectionProperty doesn't contain username and/or password, prompt the user.
 		// Note: The only way how to mask the password (that I am aware of) is to ask for the password 
 		// during the runtime. And when we are asking for the password, we may also ask for the username, if necessary.
 		try (Scanner input = new Scanner(System.in)) {	// The issue with scanner is that once it's closed it can't be reopened.
-			if (connectionProperty.username == null) {
+			if (setting.username == null) {
 				System.out.print("Enter your username for the database: ");
 				ds.setUsername(input.nextLine());
 			}
-			if (connectionProperty.password == null) {
+			if (setting.password == null) {
 				System.out.print("Enter your password for the database: ");
 				Console console = System.console();
 				if (console == null) {	// In Eclipse IDE "console" doesn't work. Use regular System.in instead.
@@ -79,7 +67,6 @@ public final class Network {
 			}
 		}
 		 
-		
 		// Connect to the server
 		logger.debug("Connecting to the server with the following URL: " + url);
 		String quoteEntity = "  ";
@@ -95,12 +82,11 @@ public final class Network {
 			logger.debug("Maximum number of characters in a table name: " + metaData.getMaxTableNameLength());
 			logger.debug("Maximum number of columns in a table: " + metaData.getMaxColumnsInTable());
 			logger.debug("Identifier quote string: " + metaData.getIdentifierQuoteString());
-			
+
 			// Store collected metadata
 			setting.identifierLengthMax = Math.min(metaData.getMaxColumnNameLength(), metaData.getMaxTableNameLength());
 			setting.columnMax = metaData.getMaxColumnsInTable();
 			quoteEntity = metaData.getIdentifierQuoteString();
-			
 		} catch (SQLException e) {
 			logger.error(e.getMessage());
 			System.exit(1); // Likely wrong credentials -> gracefully close the application
@@ -108,69 +94,15 @@ public final class Network {
 		
 		logger.info("#### Successfully connected to the database ####");
 		
-		// Set other settings
+		// Take care of columnMax
 		if (setting.columnMax==0) {
 			setting.columnMax = Integer.MAX_VALUE;	// Databases with unlimited column count returns 0 -> use big default.
 		}
 		
-		if (driverProperty.quoteEntityOpen != null) {
-			setting.quoteEntityOpen = driverProperty.quoteEntityOpen;
-			setting.quoteEntityClose = driverProperty.quoteEntityClose;
-		} else {
-			setting.quoteEntityOpen = quoteEntity.substring(0, 1);		// Use what's provided by the driver
-			setting.quoteEntityClose = quoteEntity.substring(0, 1);	
-		}
-		
-		if (driverProperty.quoteAliasOpen != null) {
-			setting.quoteAliasOpen = driverProperty.quoteAliasOpen;
-			setting.quoteAliasClose = driverProperty.quoteAliasClose;
-		} else {
-			setting.quoteAliasOpen = "\"";	// The default 
-			setting.quoteAliasClose = "\"";
-		}
-			
-		if (driverProperty.indexNameSyntax != null) {
-			setting.indexNameSyntax = driverProperty.indexNameSyntax;
-		} else {
-			setting.indexNameSyntax = "table_idx";
-		}
-			
-			
-		setting.database = connectionProperty.database;
-		setting.databaseVendor = connectionProperty.driver;
-		setting.supportsCatalogs = driverProperty.supportsCatalogs;
-		setting.supportsSchemas = driverProperty.supportsSchemas;
-		setting.supportsCreateTableAs = driverProperty.supportsCreateTableAs;
-		setting.supportsWithData = driverProperty.supportsWithData;
-		setting.dateAddSyntax = driverProperty.dateAddSyntax;
-		setting.dateAddMonth = driverProperty.dateAddMonth;
-		setting.dateDiffSyntax = driverProperty.dateDiffSyntax;
-		setting.dateToNumber = driverProperty.dateToNumber;
-		setting.insertTimestampSyntax = driverProperty.insertTimestampSyntax;
-		setting.stdDevCommand = driverProperty.stdDevCommand;
-		setting.charLengthCommand = driverProperty.charLengthCommand;
-		setting.typeDecimal = driverProperty.typeDecimal;
-		setting.typeInteger = driverProperty.typeInteger;
-		setting.typeTimestamp = driverProperty.typeTimestamp;
-		setting.typeVarchar = driverProperty.typeVarchar;
-		setting.limitSyntax = driverProperty.limitSyntax;
-		setting.randomCommand = driverProperty.randomCommand;
-		
-		setting.inputSchema = databaseProperty.inputSchema;
-		setting.outputSchema = databaseProperty.outputSchema;
-		setting.targetId = databaseProperty.targetId;
-		setting.targetDate = databaseProperty.targetDate;
-		setting.targetColumn = databaseProperty.targetColumn;
-		setting.targetTable = databaseProperty.targetTable;
-		setting.blackListTable = databaseProperty.blackListTable;
-		setting.blackListColumn = databaseProperty.blackListColumn;
-		
-		setting.unit = databaseProperty.unit;
-		setting.lag = databaseProperty.lag;
-		setting.lead = databaseProperty.lead;
-		setting.task = databaseProperty.task;
-		setting.blackListPattern = databaseProperty.blackListPattern;
-		
+		// Set default values if they are not provided 
+		setting.quoteEntityOpen = MoreObjects.firstNonNull(setting.quoteEntityOpen, quoteEntity.substring(0, 1));
+		setting.quoteEntityClose = MoreObjects.firstNonNull(setting.quoteEntityClose, quoteEntity.substring(0, 1));
+	
 		return setting;
 	}
      
@@ -207,7 +139,7 @@ public final class Network {
 			logger.info(e.getMessage() + " | " + sql);
 			try {
 				// The isValid method is used to check if a connection is still usable after an SQL exception has been thrown. 
-				// SHOULD BE DEALED AT POOL LEVEL.
+				// SHOULD BE DEALT AT POOL LEVEL.
 				boolean isConnected = connection.isValid(1000);
 				if (!isConnected) logger.warn("The connection doesn't appear to be open.");
 				// CALL getConnection. RERUN THE CODE? AND RETURN NEW CONNECTION.

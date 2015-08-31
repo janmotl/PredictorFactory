@@ -1,17 +1,13 @@
 package connection;
 
+import org.apache.commons.lang3.StringUtils;
+import run.Setting;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
-
-import run.Setting;
-
 public class Parser {
-	// Logging
-	public static final Logger logger = Logger.getLogger(Parser.class.getName());
-	
+
 	// Transform SELECT...FROM... into SELECT...INTO...FROM...
 	// This transformation is convenient only for MS SQL SERVER/ACCESS
 	public static String addIntoClause(String sql) {
@@ -74,9 +70,8 @@ public class Parser {
 		if (count == 1) return false;
 		
 		count = StringUtils.countMatches(sql, "'")%2;
-		if (count == 1) return false;
+		return count != 1;
 
-		return true;
 	}
 
 	// Limit the count of returned rows
@@ -105,9 +100,17 @@ public class Parser {
 		}
 		
 		// Set rownum (Oracle)
-		// WORKS ONLY IF WHERE CONDITION IS ALREADY PRESENT
 		if ("rownum".equals(setting.limitSyntax)) {
-			sql = sql.replaceAll("(?i)WHERE$", "WHERE ROWNUM <" + rowCount); // Case insensitive + the last occurrence
+			Pattern pattern = Pattern.compile("(?i)(.*)(WHERE)(.*)"); // Case insensitive + greedy
+			Matcher matcher = pattern.matcher(sql);
+			
+			if (matcher.find()) {
+				// Where condition is already present 
+				sql = matcher.group(1) + "WHERE ROWNUM <= " + rowCount + " AND" + matcher.group(3);
+			} else {
+				// BLINDLY ADD WHERE CONDITION
+				sql = sql + " WHERE ROWNUM <= " + rowCount;
+			}
 		}
 	
 		return sql;

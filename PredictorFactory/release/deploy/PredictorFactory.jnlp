@@ -8,8 +8,9 @@
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="PredictorFactory.jar" size="95874" download="eager" />
+    <jar href="PredictorFactory.jar" size="125734" download="eager" />
     <jar href="libs\HikariCP-2.3.8.jar" size="98730" download="eager" />
+    <jar href="libs\antlr-4.5-complete.jar" size="1543365" download="eager" />
     <jar href="libs\cloning-1.9.1.jar" size="25248" download="eager" />
     <jar href="libs\commons-lang3-3.3.2.jar" size="412740" download="eager" />
     <jar href="libs\guava-18.0.jar" size="2256213" download="eager" />
@@ -24,6 +25,7 @@
     <jar href="libs\mysql-connector-java-5.1.34-bin.jar" size="960374" download="eager" />
     <jar href="libs\objenesis-2.1.jar" size="41755" download="eager" />
     <jar href="libs\ojdbc6.jar" size="2739670" download="eager" />
+    <jar href="libs\ojdbc7.jar" size="3397734" download="eager" />
     <jar href="libs\org.hamcrest.core_1.3.0.v201303031735.jar" size="55802" download="eager" />
     <jar href="libs\postgresql-9.3-1102.jdbc41.jar" size="592322" download="eager" />
     <jar href="libs\sas.core.jar" size="908515" download="eager" />

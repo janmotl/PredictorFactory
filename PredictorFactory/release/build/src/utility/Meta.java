@@ -1,37 +1,32 @@
 package utility;
 
+import metaInformation.ForeignConstraint;
+import org.apache.log4j.Logger;
+import run.Setting;
+
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
-import org.apache.log4j.Logger;
-
-import run.Setting;
+import java.util.*;
 
 public class Meta {
 	
 	// Logging
-	public static final Logger logger = Logger.getLogger(Meta.class.getName());
+	private static final Logger logger = Logger.getLogger(Meta.class.getName());
 
 	// Define struct. 
 	// Always create collections to avoid null pointer exception and need to create collections at many places.
 	// SortedSet is used to make selection of a single element easy to write.
 	public static class Table {
-		public SortedSet<String> idColumn = new TreeSet<String>();					// Foreign and primary keys
-		public SortedSet<String> nominalColumn = new TreeSet<String>();				// Categorical columns
-		public SortedSet<String> numericalColumn = new TreeSet<String>();			// Additive columns 
-		public SortedSet<String> timeColumn = new TreeSet<String>();				// Time, date, datetime, timestamp...
-		public List<List<String>> relationship = new ArrayList<List<String>>();		// List of {thatTable, thisColumn, thatColumn} 
-		public boolean isUnique;													// Does combination {baseId, baseDate} repeat?
-		public Map<String, List<String>> uniqueList = new TreeMap<String, List<String>>(); // Map of {columnName, unique value list}
+		public SortedSet<String> idColumn = new TreeSet<>();			// Foreign and primary keys
+		public SortedSet<String> nominalColumn = new TreeSet<>();		// Categorical columns
+		public SortedSet<String> numericalColumn = new TreeSet<>();		// Additive columns
+		public SortedSet<String> timeColumn = new TreeSet<>();			// Time, date, datetime, timestamp...
+		//public List<List<String>> relationship = new ArrayList<>();		// List of {thatTable, thisColumn, thatColumn}
+		public List<ForeignConstraint> foreignConstraint = new ArrayList<>();
+		public boolean isUnique;										// Does combination {baseId, baseDate} repeat?
+		public Map<String, List<String>> uniqueList = new TreeMap<>(); 	// Map of {columnName, unique value list}
 		
 		@Override 
 		public String toString() {
@@ -102,7 +97,7 @@ public class Meta {
 		return schemaSet;
 	}
 	
-	// 1) Get all tables in the schema.
+	// 1) Get all tables and views in the schema.
 	public static SortedSet<String> collectTables(Setting setting, String database, String schema) {
 		// Deal with different combinations of catalog/schema support
 		// MySQL type
@@ -117,8 +112,8 @@ public class Meta {
 		}
 				
 		// Initialization
-		SortedSet<String> tableSet = new TreeSet<String>();
-		String[] tableType = {"TABLE"};
+		SortedSet<String> tableSet = new TreeSet<>();
+		String[] tableType = {"TABLE", "VIEW", "MATERIALIZED VIEW"};
 		
 		// Get all the columns in the table using try-with-resources.
 		try (ResultSet rs = setting.connection.getMetaData().getTables(database, schema, "%", tableType)) {

@@ -5,7 +5,7 @@ import java.net.URL;
 
 
 
-public class ValidateResources {
+public class ValidatorResource {
 	
 	// Sanity check that all the resources are at the places where they are expected
 	// UGLY COPY&PASTE
@@ -23,19 +23,19 @@ public class ValidateResources {
 			return false;
 		}
 		
-		URL location = ValidateResources.class.getResource("/img");
+		URL location = ValidatorResource.class.getResource("/img");
 		if (location == null) {
 			System.out.println("Img resource (package) is missing.");
 			return false;
 		}
 	
-		location = ValidateResources.class.getResource("/view");
+		location = ValidatorResource.class.getResource("/view");
 		if (location == null) {
 			System.out.println("View resource (package) is missing.");
 			return false;
 		}
 		
-		location = ValidateResources.class.getResource("/view/All.fxml");
+		location = ValidatorResource.class.getResource("/view/All.fxml");
 		if (location == null) {
 			System.out.println("View.All.fxml resource is missing.");
 			return false;

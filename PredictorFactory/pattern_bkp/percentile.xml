@@ -5,6 +5,7 @@
 	<description>Percentiles
 	
 	Note: The implementation for PostgreSQL is supported from PostgreSQL 9.4.
+	Note: Schizofrenic window functions - PostgreSQL requires "group by", MSSQL requires "over".
 	</description>
 	<author>Jan Motl</author>
 	<date>2014-12-22</date>

@@ -77,7 +77,7 @@ public final class Setting {
 	public String baseTarget = "propagated_target";	// The name of the target column. This name should be new & unique in input schema.
 	public String baseFold = "propagated_fold";		// The name for fold in x-fold cross-validation.
 	public String baseSampled = "base_sampled";		// The name of the sampled base table.
-	public String sampleTable = "mainSample";		// The name of the result table with predictors.
+	public String mainTable = "mainSample";		// The name of the result table with predictors.
 	public String journalTable = "journal"; 		// The name of predictors' journal table.
 
 	public boolean useView = true;					// Create views instead of tables if possible?

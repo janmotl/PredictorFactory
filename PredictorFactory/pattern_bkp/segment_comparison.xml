@@ -19,7 +19,7 @@
 		samples should be used. If you have a lot of samples, balanced classes and no outliers the practical 
 		effect of data leakage should be minimal. But beware of extreme scenarios!
 
-		This pattern is producing great predictors.
+		This pattern is producing great predictors with reasonable speed.
 	</description>
 	<example>
 		Industry average

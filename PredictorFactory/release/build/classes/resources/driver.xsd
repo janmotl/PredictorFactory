@@ -15,10 +15,11 @@
                 <attribute type="string" name="quoteAliasClose" use="optional"/>
                 <attribute type="string" name="quoteEntityOpen" use="optional"/>
                 <attribute type="string" name="quoteEntityClose" use="optional"/>
-                <attribute type="boolean" name="supportsCatalogs" use="required"/>
-                <attribute type="boolean" name="supportsSchemas" use="required"/>
-                <attribute type="boolean" name="supportsCreateTableAs" use="required"/>
-                <attribute type="boolean" name="supportsWithData" use="required"/>
+                <attribute type="boolean" name="supportsCatalogs" use="optional"/>
+                <attribute type="boolean" name="supportsSchemas" use="optional"/>
+                <attribute type="boolean" name="supportsCreateTableAs" use="optional"/>
+                <attribute type="boolean" name="supportsWithData" use="optional"/>
+                <attribute type="string" name="corrSyntax" use="optional"/>
                 <attribute type="string" name="dateAddSyntax" use="optional"/>
                 <attribute type="string" name="dateAddMonth" use="required"/>
                 <attribute type="string" name="dateDiffSyntax" use="required"/>

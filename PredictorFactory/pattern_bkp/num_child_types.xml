@@ -3,7 +3,9 @@
 <pattern>
 	<name>Number of child types</name>
 	<description>
-		Number of distinct values of the child nominal field with the child filter F			
+		Number of distinct values of the child nominal field with the child filter F.
+
+		This is a very fast pattern with modest predictive power.
 	</description>
 	<example>
 		Average distinct number of cache sets accessed during a given time unit.

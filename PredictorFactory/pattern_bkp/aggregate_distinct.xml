@@ -8,6 +8,8 @@
 		Note that distinct count is implemented in "num_child_types" because it can be executed on any data type.
 		
 		Note that stddev_samp distinct doesn't work in MariaDB.
+		
+		Note that to get standard deviation working with distinct in Oracle, we have to use "stddev" command.
 	</description>
 	<author>Jan Motl</author>
 	<date>2015-03-04</date>

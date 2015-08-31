@@ -32,7 +32,7 @@
 					 , avg(case when @baseTarget &lt;&gt; '@targetValue' then 1 else 0 end)+1 as b
 				FROM @propagatedTable
 				GROUP BY @nominalColumn
-			) as t2
+			) t2
 		  ON t1.@nominalColumn = t2.@nominalColumn
 		  GROUP BY @baseId, @baseDate, @baseTarget
 	</code>

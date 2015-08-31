@@ -11,6 +11,8 @@
 		Note: The implementation for PostgreSQL is supported from PostgreSQL 9.4.
 	
 		NOTE: THE VERSION FOR SAS CAN RETURN TOO MANY ROWS BECAUSE OF TIES.
+
+		This pattern is fast and produces good predictors.
 	</description>
 	<example>
 		The typical payment amount.
@@ -48,7 +50,14 @@
 			        GROUP BY @baseId, @baseDate, @baseTarget, @column
 			      )
 			GROUP BY @baseId, @baseDate, @baseTarget
-			HAVING count=max(count);
+			HAVING count=max(count)
+	</code>
+	<code compatibility="Oracle">SELECT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , STATS_MODE(@column) AS "@columnName"
+		   FROM @propagatedTable
+		   GROUP BY @baseId, @baseDate, @baseTarget
 	</code>
 	<parameter key="@column" value="@nominalColumn, @numericalColumn"/>
 	<cardinality>n</cardinality>

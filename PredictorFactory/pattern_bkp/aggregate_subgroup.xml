@@ -14,7 +14,9 @@
 			  if the person is jobless). A remedy for this problem would be to collect unique values on the propagated 
 			  tables. But then we could be forced to do much more work than before (e.g. if there are loops in the 
 			  schema, the same table can be propagated several times).
-			- When the @value appears just once in the original table. And stddev_samp is applied. 
+			- When the @value appears just once in the original table. And stddev_samp is applied.
+
+		This pattern can be ridiculously slow, but it can provide good predictors.
 	</description>
 	<author>Jan Motl</author>
 	<date>2015-04-12</date>

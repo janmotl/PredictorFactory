@@ -1,17 +1,11 @@
 package featureExtraction;
 
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.SortedMap;
-import java.util.TreeMap;
-
 import org.apache.commons.lang3.text.WordUtils;
-
 import run.Setting;
+
+import java.time.LocalDateTime;
+import java.util.*;
 
 
 public class Predictor implements Comparable<Predictor> {
@@ -32,7 +26,7 @@ public class Predictor implements Comparable<Predictor> {
 		
 	// Private
 	private int id; 								// Unique number. SHOULD BE FINAL.
-	private int groupId;							// Return topN best predictors from the group with the same groupId
+	private int groupId;							// Id of the optimisation group
 	private String sql;								// SQL code
 	private boolean isOk;							// Flag 
 	private int rowCount;							// Count of rows in the predictor's table
@@ -128,10 +122,14 @@ public class Predictor implements Comparable<Predictor> {
 	}
 	
 	public String getNameOnce(Setting setting) {
+<<<<<<< HEAD
 		int indentifierLengthMax = setting.identifierLengthMax;
+=======
+		int identifierLengthMax = setting.identifierLengthMax;
+>>>>>>> origin/master
 		
 		// 3 characters are reserved for underscores, 6 characters are for id.
-		int length = (int) Math.floor((indentifierLengthMax-9)/3); 
+		int length = (int) Math.floor((identifierLengthMax-9)/3);
 		
 		// Add table name
 		String name = originalTable.substring(0, Math.min(originalTable.length(), length));
@@ -179,10 +177,11 @@ public class Predictor implements Comparable<Predictor> {
 	}
 	  
     // Sometimes we may want to sort based on maximal relevance (for example when exporting the computed predictors)
+	// HAVE TO DEAL WITH NULLS AND EMPTY RELEVANCE MAPS
     public static final Comparator<Predictor> RelevanceComparator = new Comparator<Predictor>(){
         @Override
-        public int compare(Predictor o1, Predictor o2) {
-            return Collections.max(o1.getRelevance().values()).compareTo(Collections.max(o2.getRelevance().values()));
+        public int compare(Predictor o1, Predictor o2) {       	
+            return Collections.max(o1.getRelevanceMap().values()).compareTo(Collections.max(o2.getRelevanceMap().values()));
         }
     };
     
@@ -214,10 +213,17 @@ public class Predictor implements Comparable<Predictor> {
     
     
     /////////// Convenience getters and setters //////////
-    public void addParameter(String key, String value) {
+    public void setParameter(String key, String value) {
     	parameterMap.put(key, value);
     }
     
+    public Double getRelevance(String target) {
+		return relevance.get(target);
+	}
+	
+	public void setRelevance(String target, Double value) {
+		relevance.put(target, value);
+	}
     
 
 	/////////// Generic setters and getters /////////////
@@ -342,13 +348,13 @@ public class Predictor implements Comparable<Predictor> {
 	public void setNullCount(int nullCount) {
 		this.nullCount = nullCount;
 	}
-
-	public SortedMap<String, Double> getRelevance() {
+	
+	public SortedMap<String, Double> getRelevanceMap() {
 		return relevance;
 	}
 	
-	public void setRelevance(SortedMap<String, Double> relevanceList) {
-		this.relevance = relevanceList;
+	public void setRelevanceMap(SortedMap<String, Double> relevanceMap) {
+		this.relevance = relevanceMap;
 	}
 
 
