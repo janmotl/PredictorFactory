@@ -9,7 +9,8 @@
 		This pattern has a good predictive power/runtime ratio.
 
 		NOTE: THE PATTERN PRODUCES NULL VALUES FOR propagated_id NOT PRESENT IN THE propagated_table.
-		A REMEDY IS TESTED IN PATTERN null_ratio_v2.
+		A REMEDY IS TESTED IN PATTERN null_ratio_v2. OR this pattern should be imputed with zeros during mainsample
+		assembly.
 
 		Technical note: Count(*) counts all values regardless of NULLs, while count(@column) excludes NULLs.
 		An alternative way how to calculate the predictor is to use "case then" but that is slower.

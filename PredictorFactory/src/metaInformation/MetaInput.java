@@ -100,10 +100,10 @@ public class MetaInput {
 
 			// Store relationships
 			Table tableData = tableMap.get(tableName);
-			tableData.foreignConstraint = ForeignConstraint.combine(ForeignConstraint.jdbcToList(Meta.collectRelationships(setting, database, schema, tableName), tableName));
+			tableData.foreignConstraintList = Meta.collectRelationships(setting, schema, tableName);
 			
 			// Store idColumn (as a side effect) and get a map of columns without ids
-			columnMap = filterId(tableData, columnMap, tableData.foreignConstraint);
+			columnMap = filterId(tableData, columnMap, tableData.foreignConstraintList);
 			
 			// Deal with PKs
 			String pk = Meta.getPrimaryKey(setting, database, schema, tableName);
@@ -154,7 +154,7 @@ public class MetaInput {
 		// QC that relationships were extracted
 		int relationshipCount = 0;
 		for (Table table : tableMap.values()) {
-			relationshipCount += table.foreignConstraint.size();
+			relationshipCount += table.foreignConstraintList.size();
 		}
 		if (relationshipCount == 0) {
 			logger.warn("No relationships were detected");
@@ -168,7 +168,7 @@ public class MetaInput {
 //	public static boolean isSymmetrical(){
 //		for (String table : tableSet) {
 //			// Get relationships 
-//			List<List<String>> relationshipList = MetaInput.collectRelationships(setting, setting.database, setting.inputSchema, table);
+//			List<List<String>> relationshipList = MetaInput.downloadRelationships(setting, setting.database, setting.inputSchema, table);
 //			System.out.println(relationshipList);
 //			
 //			// Detection

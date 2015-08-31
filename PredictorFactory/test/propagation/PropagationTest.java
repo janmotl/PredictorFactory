@@ -14,7 +14,7 @@ public class PropagationTest {
 
 	@Test
 	public void propagateBase() {
-		Setting setting = new Setting("MariaDB", "mutagenesis");
+		Setting setting = new Setting("PostgreSQL", "mutagenesis");
 
 		setting = Network.openConnection(setting);
 		SQL.tidyUp(setting);
@@ -23,6 +23,7 @@ public class PropagationTest {
 
 		// Run!
 		Propagation.propagateBase(setting, metaInput);
+		Network.closeConnection(setting);
 		
 		// Validate
 		Assert.assertEquals(188, SQL.getRowCount(setting, setting.outputSchema, "propagated_molecule_001"));

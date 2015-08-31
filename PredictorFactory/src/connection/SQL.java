@@ -2,6 +2,7 @@ package connection;
 
 import com.google.common.collect.Lists;
 import featureExtraction.Predictor;
+import metaInformation.MetaOutput;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import parser.ANTLR;
@@ -9,6 +10,7 @@ import run.Setting;
 import utility.Meta;
 import utility.Meta.Table;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -40,11 +42,6 @@ public final class SQL {
 	protected static String addCreateViewAs(Setting setting, String sql) {
 
 		sql = "CREATE VIEW @outputTable AS " + sql;
-
-		// MonetDB syntax?
-		if (setting.supportsWithData) {
-			sql = sql + " WITH DATA";
-		}
 
 		return sql;
 	}
@@ -78,7 +75,7 @@ public final class SQL {
 	}
 	
 	// Subroutine 3.1: Replace & escape the entities present in setting
-		private static String escapeEntity(Setting setting, String sql, String outputTable) {
+	private static String escapeEntity(Setting setting, String sql, String outputTable) {
 			// Test parameters
 			if (StringUtils.isBlank(sql)) {
 				throw new IllegalArgumentException("Code is required");
@@ -131,7 +128,7 @@ public final class SQL {
 				escapedBaseId = escapedBaseId + ", " + QL + id + QR;
 			}
 			escapedBaseId = escapedBaseId.substring(2);	// Remove the first two symbols
-			
+
 			// Escape the entities
 			sql = sql.replaceAll("\\@idColumn\\b", escapedTargetId);	// Ignore numbered id columns used in joins (\b is a word boundary)
 			sql = sql.replace("@baseId", escapedBaseId);
@@ -196,7 +193,29 @@ public final class SQL {
 
 		return sql;
 	}
-	
+
+	private static String escapeEntityTable(Setting setting, String sql, MetaOutput.OutputTable table) {
+		// Get escape characters
+		String QL = setting.quoteEntityOpen;
+		String QR = setting.quoteEntityClose;
+
+		// Escape primitive entities
+		sql = sql.replace("@inputTable", QL + table.originalName + QR);
+		sql = sql.replace("@propagatedTable", QL + table.propagationTable + QR);
+		sql = sql.replace("@outputTable", QL + table.propagatedName + QR);
+		sql = sql.replace("@dateColumn", QL + table.constrainDate + QR);
+
+		// Escape ids
+		String idCommaSeparated = "";
+		for (String id : table.foreignConstraint.column) {
+			idCommaSeparated += QL + id + QR + ",";
+		}
+		idCommaSeparated = idCommaSeparated.substring(0, idCommaSeparated.length()-1);
+		sql = sql.replace("@idCommaSeparated", idCommaSeparated);
+
+		return sql;
+	}
+
 	// Subroutine: Get escaped alias. Oracle is using double quotes. MySQL single quotes...
 	private static String escapeAlias(Setting setting, String alias) {
 		return setting.quoteAliasOpen + alias + setting.quoteAliasClose;
@@ -255,20 +274,6 @@ public final class SQL {
 		return Network.executeUpdate(setting.connection, sql);
 	}
 
-	// Drop command
-	public static boolean dropMaterializedView(Setting setting, String outputTable) {
-		// Test parameters
-		if (StringUtils.isBlank(outputTable)) {
-			throw new IllegalArgumentException("Output table is required");
-		}
-
-		String sql = "DROP MATERIALIZED VIEW @outputTable";
-
-		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, outputTable);
-
-		return Network.executeUpdate(setting.connection, sql);
-	}
 
 	// Remove all Predictor Factory related tables
 	// Note: The function is using names from the setting object. If the current setting doesn't match the setting
@@ -292,26 +297,18 @@ public final class SQL {
 			if (table.startsWith(setting.mainTable)) dropMap.put(1 + table, table);			// Mainsample and it's temporary tables
 			if (table.startsWith(setting.predictorPrefix)) dropMap.put(2 + table, table);	// Predictors
 			if (table.startsWith(setting.propagatedPrefix)) dropMap.put(3 + table, table);	// Propagated tables
-			//if (table.equals(setting.baseSampled)) dropMap.put(4 + table, table);			// Sampled base table
-			//if (table.equals(setting.baseTable)) dropMap.put(5 + table, table);				// Base table
-			if (table.equals(setting.journalTable)) dropMap.put(6 + table, table);			// Journal table
-		}
-
-
-		// DEBUGGING
-		for (String table : dropMap.values()) {
-			dropView(setting, table);
-		}
-
-		// DEBUGGING
-		for (String table : dropMap.values()) {
-			dropMaterializedView(setting, table);
+			if (table.equals(setting.baseSampled)) dropMap.put(4 + table, table);			// Sampled base table
+			if (table.equals(setting.journalTable)) dropMap.put(5 + table, table);			// Journal table
+			if (table.equals(setting.journalPropagationTable)) dropMap.put(6 + table, table);	// Journal propagated table
 		}
 
 		// Drop the tables
 		for (String table : dropMap.values()) {
 			dropTable(setting, table);
 		}
+
+		// Drop the view
+		dropView(setting, setting.baseTable);				// Base table
 	}
 	
 	// Create index on {baseId, baseDate}.
@@ -398,33 +395,20 @@ public final class SQL {
 	// Note that we are working with the input tables -> alter commands are forbidden.
 	// It was difficult to write a version that would be more effective than sum(... having count(*)>1).
 	// If you decide to replace this query, test it with several database engines!
-	public static boolean isIdUnique(Setting setting, Map<String, String> map) {
+	public static boolean isIdUnique(Setting setting, MetaOutput.OutputTable table) {
 		String sql = "SELECT count(*) " +
 					 "FROM @inputTable " +
-					 "GROUP BY @idColumn2";
-
-		// If the foreign key constraint is composite, we have to respect it.
-		// NOTE: IT'S UGLY, BUT I DIDN'T FIND SOMETHING NICER. THE PROBLEM IS THAT WE ARE PROCESSING A MAP.
-		for (String id : map.keySet()) {
-			try {
-				Integer idNumber = Integer.valueOf(id.substring(9));
-				if (idNumber%2 == 0 && idNumber > 2) { // Even and bigger two because idColumn2 is already in the query.
-					sql = sql + ", " + id;
-				}
-			} catch (NumberFormatException e) {}
-
-		}
-
-		sql = sql +	" HAVING COUNT(*)>1";
+					 "GROUP BY @idCommaSeparated " +
+					 "HAVING COUNT(*)>1";
 				
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, "dummy");
-		sql = escapeEntityMap(setting, sql, map);
+		sql = escapeEntityTable(setting, sql, table);
 		
 		boolean result = Network.isResultSetEmpty(setting.connection, sql);
 		
-		if (result) logger.trace("# Column " + map.get("idColumn2") + " in " + map.get("inputTable") + " doesn't contain duplicates #");
-		else logger.trace("# Column " + map.get("idColumn2") + " in " + map.get("inputTable") + " CONTAINS duplicates #");
+		if (result) logger.trace("# Column " + table.foreignConstraint.column + " in " + table.originalName + " doesn't contain duplicates #");
+		else logger.trace("# Column " + table.foreignConstraint.column + " in " + table.originalName + " CONTAINS duplicates #");
 		
 		return result;
 	}
@@ -780,21 +764,18 @@ public final class SQL {
 	// 1b) Add record into the journal_predictor
 	// Return true if the journal table was successfully updated.
 	public static boolean addToJournal(Setting setting, Predictor predictor) {
-		DateTimeFormatter formatter =  DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-		
+
 		// Convert bool to int
 		int isOk = predictor.isOk()? 1 : 0;
 		
 		// Insert timestamp subquery
-		String template = setting.insertTimestampSyntax;
-		String timestamp = predictor.getTimestampBuilt().format(formatter);
-		timestamp = template.replace("@timestamp", timestamp);
+		String timestampBuild = date2query(setting, predictor.getTimestampBuilt());
 		
 		// Assembly the insert
 		String sql = "INSERT INTO @outputTable VALUES (" +
 	        predictor.getId() + ", " +
 	        predictor.getGroupId() + ", " +
-	              timestamp + ", " +
+	              timestampBuild + ", " +
 	              predictor.getTimestampBuilt().until(predictor.getTimestampDelivered(), ChronoUnit.MILLIS)/1000.0 + ", " +
 	        "'" + predictor.getName() + "', " +
 	        "'" + predictor.originalTable + "', " + 			
@@ -818,9 +799,67 @@ public final class SQL {
 
 		return Network.executeUpdate(setting.connection, sql);
 	}
-	
- 	
- 	
+
+	public static boolean getJournalPropagation(Setting setting) {
+		logger.debug("# Setting up journal table for propagated tables #");
+
+		String sql = "CREATE TABLE @outputTable ("+
+				"table_id " + setting.typeInteger + ", " +
+				"start_time " + setting.typeTimestamp + ", " +
+				"run_time " + setting.typeDecimal + "(18,3), " +
+				"table_name " + setting.typeVarchar + "(255), " +
+				"original_name " + setting.typeVarchar + "(255), " +
+				"date_constrain " + setting.typeVarchar + "(255), " +
+				"candidate_date_list " + setting.typeVarchar + "(2024), " +
+				"candidate_date_count " + setting.typeInteger + ", " +
+				"propagation_path " + setting.typeVarchar + "(1024), " +
+				"propagation_depth " + setting.typeInteger + ", " +
+				"sql_code " + setting.typeVarchar + "(2024), " + // For example code for WoE is close to 1024 chars
+				"is_id_unique " + setting.typeInteger + ", " +
+				"qc_rowCount " + setting.typeInteger + ", " +
+				"qc_successfullyExecuted " + setting.typeInteger + ", " +
+				"CONSTRAINT pk_journal_propagated PRIMARY KEY (table_id))";
+
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, setting.journalPropagationTable);
+
+		return Network.executeUpdate(setting.connection, sql);
+	}
+
+	public static boolean addToJournalPropagation(Setting setting, MetaOutput.OutputTable table) {
+
+		// Convert bool to int
+		int isOk = table.isSuccessfullyExecuted ? 1 : 0;
+		int isIdUnique = table.isIdUnique ? 1 : 0;
+
+		// Convert date to query
+		String timestampDesigned = date2query(setting, table.timestampDesigned);
+
+		// Assembly the insert
+		String sql = "INSERT INTO @outputTable VALUES (" +
+				table.propagationOrder + ", " +
+				timestampDesigned + ", " +
+				table.timestampDesigned.until(table.timestampDelivered, ChronoUnit.MILLIS)/1000.0 + ", " +
+				"'" + table.propagatedName + "', " +
+				"'" + table.originalName + "', " +
+				"'" + table.constrainDate + "', " +
+				"'" + table.timeColumn + "', " +
+				table.timeColumn.size() + ", " +
+				"'" + table.propagationPath.toString() + "', " +
+				table.propagationPath.size() + ", " +
+				"'" + table.sql.replaceAll("'", "''") + "', " +		// Escape single quotes
+				isIdUnique + ", " +
+				table.rowCount + ", " +
+				isOk + ")";
+
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, setting.journalPropagationTable);
+
+		return Network.executeUpdate(setting.connection, sql);
+	}
+
+
+
 	// 2) Get base table (a table with id, targets and horizon dates).
  	// The base table could be practical, because we may simply add random sample column.
  	// Return true if the base table was successfully created.
@@ -947,10 +986,21 @@ public final class SQL {
 	// Technical note: We have to return SQL string, because these things are logged and exported for the user
  	// as the "scoring code" for predictors.
 	// IS NOT USING SYSTEM ESCAPING
-	public static String propagateID(Setting setting, Map<String, String> map, boolean bottomBounded){
+	public static String propagateID(Setting setting, MetaOutput.OutputTable table){
+		// Get escape characters
+		String QL = setting.quoteEntityOpen;
+		String QR = setting.quoteEntityClose;
+
+		// Escape the select part
 		String baseId = "";
 		for (String id : setting.baseIdList) {
-			baseId = baseId + "t1." + setting.quoteEntityOpen + id + setting.quoteEntityClose + ", ";
+			baseId = baseId + "t1." + QL + id + QR + ", ";
+		}
+
+		// Escape the join part
+		String joinOn = "ON t1." + QL + table.foreignConstraint.column.get(0) + QR + " = t2." + QL + table.foreignConstraint.fColumn.get(0) + QR;
+		for (int i = 1; i < table.foreignConstraint.column.size(); i++) {
+			joinOn += " AND t1." + QL + table.foreignConstraint.column.get(i) + QR + " = t2." + QL + table.foreignConstraint.fColumn.get(i) + QR;
 		}
 
 		String sql = "SELECT " + baseId +
@@ -959,38 +1009,31 @@ public final class SQL {
 				"t1.@baseFold, " +
 				"t2.* " + 
 				"FROM @propagatedTable t1 " +
-				"INNER JOIN @inputTable t2 " +
-				"ON t1.@idColumn1 = t2.@idColumn2";
-
-		// If composite id is used, add the ids into the join condition
-		int idNumber = 3;
-
-		while (map.containsKey("@idColumn" + idNumber)) {
-			sql += " AND t1.@idColumn" + idNumber + " = t2.@idColumn" + (idNumber+1);
-			idNumber += 2;	// Because we have just added two ids
-		}
+				"INNER JOIN @inputTable t2 " + joinOn;
 
 		// Add time condition if dateColumn is present
 		// The comparison "t2.@dateColumn <= t1.@baseDate" has to use <= to get 
 		// the data from "the current date" when lead is 0.
-		if (map.containsKey( "@dateColumn")) {
+		if (table.constrainDate!=null) {
 			// First the upper bound (lead)
-			sql = sql + " WHERE t2.@dateColumn <= " + setting.dateAddMonth;
+			sql = sql + " WHERE t2.@dateColumn <= " + setting.dateAddSyntax;
 			sql = sql.replaceAll("@amount", "-" + setting.lead.toString()); // Negative lead		
 			
 			// Then, if required, add the lower bound (lag)
-			if (bottomBounded) {
-				sql = sql + " AND " + setting.dateAddMonth + " <= t2.@dateColumn";
+			if (table.dateBottomBounded) {
+				sql = sql + " AND " + setting.dateAddSyntax + " <= t2.@dateColumn";
 				Integer leadLag = setting.lead + setting.lag;
 				sql = sql.replaceAll("@amount", "-" + leadLag.toString()); // Negative lead+lag
-			} 
+			}
+
+			sql = sql.replaceAll("@datePart", setting.unit);
 		}
 						
 		// Pattern_code to SQL conversion
 		sql = addCreateTableAs(setting, sql);
 		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, map.get("@outputTable"));
-		sql = escapeEntityMap(setting, sql, map);
+		sql = escapeEntity(setting, sql, table.propagatedName);
+		sql = escapeEntityTable(setting, sql, table);
 					
 		return sql;
 	}
@@ -1107,7 +1150,7 @@ public final class SQL {
 			
 			// Make SQL from the pattern
 			String pattern_code = stringBuffer.toString();
-			pattern_code = addCreateViewAs(setting, pattern_code);
+			pattern_code = addCreateTableAs(setting, pattern_code);
 			pattern_code = expandName(pattern_code);
 			pattern_code = expandNameList(pattern_code, tableList);
 			pattern_code = escapeEntity(setting, pattern_code, tempTable); 
@@ -1180,8 +1223,18 @@ public final class SQL {
 		
 		int columnCount = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable).size();
 		logger.debug("MainSample table contains: " + columnCount + " columns (the limit is: " + (setting.columnMax/8) + ")");
-	} 
-	
+	}
+
+	private static String date2query(Setting setting, LocalDateTime date) {
+		DateTimeFormatter formatter =  DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+
+		String template = setting.insertTimestampSyntax;
+		String timestamp = date.format(formatter);
+		timestamp = template.replace("@timestamp", timestamp);
+
+		return timestamp;
+	}
+
 	// Subroutine - return top n predictors from the list. Assumes that the predictors are sorted by relevance in
 	// descending order.
 	// The "n" is defined in the predictor. Also the groupId is defined in the predictor.

@@ -5,7 +5,6 @@ package run;
 
 import connection.Network;
 import connection.SQL;
-import metaInformation.MetaOutput;
 import metaInformation.MetaOutput.OutputTable;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -28,8 +27,8 @@ public class Launcher{
 	public static void main(String[] arg){
 		
 		// Connect to the following server and database:
-		String connectionProperty = "Oracle";	// Host identification as specified in resources/connection.xml
-		String databaseProperty = "financial_xe";		// Dataset identification as specified in resources/database.xml
+		String connectionProperty = "PostgreSQL";	// Host identification as specified in resources/connection.xml
+		String databaseProperty = "financial";		// Dataset identification as specified in resources/database.xml
 		
 		// Read command line parameters if they are present (and overwrite the defaults).
 		if (arg.length==1 || arg.length>2) { 
@@ -75,6 +74,10 @@ public class Launcher{
 		
 		// Setup journal - log of all predictors
 		Journal journal = new Journal(setting);
+
+		// Setup journal of propagated tables
+		SQL.getJournalPropagation(setting);
+
 		
 		// Make base table
 		SQL.getBase(setting);
@@ -86,7 +89,6 @@ public class Launcher{
 		
 		// Propagate base table
 		SortedMap<String, OutputTable> outputMeta = Propagation.propagateBase(setting, metaInput);
-		MetaOutput.exportPropagationSQL(outputMeta);
 		logger.info("#### Finished base propagation into " + outputMeta.size() +  " tables ####");
 						
 		// Loop over all patterns in pattern directory

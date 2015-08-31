@@ -32,7 +32,7 @@ public final class Network {
 	public static Setting openConnection(Setting setting) {
 		
 		// Build a DataSource
-        @SuppressWarnings("resource")	// WILL HAVE TO CHANGE
+        @SuppressWarnings("resource")	// WILL HAVE TO CHANGE - IT ISN'T ENOUGH TO JUST CLOSE CONNECTION
 		HikariDataSource ds = new HikariDataSource();
 		ds.setDriverClassName(setting.driverClass);	// Old-school necessity for pre-JDBC 4.0 drivers 
 		ds.setUsername(setting.username);

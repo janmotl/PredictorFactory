@@ -17,9 +17,9 @@ Description of the fields:
 	SupportsCreateTableAs: By default true. False in MS SQL...
 	SupportsWithData: By default false. Has to be true for MonetDB... (SHOULD BE NAMED LIKE "DEFAULT_IS_WITHOUT_DATA")
 	corrSyntax: Optional. Define the command for correlation if the database provides such command.
-	DateAddSyntax: Because we want to be able to express time ranges. This syntax doesn't deal with leap years.  
-	DateAddMonth: Because we want to be able to express time ranges. This syntax correctly deals with leap years.  
-	DateDiffSyntax: Not all databases support conversion of time to number. Hence just use a diff against a constant. 
+	DateAddSyntax: Because we want to be able to express time ranges. This syntax doesn't deal with leap years.
+	DateAddMonth: Because we want to be able to express time ranges. This syntax correctly deals with leap years. CURRENTLY NOT USED.
+	DateDiffSyntax: Not all databases support conversion of time to number. Hence just use a diff against a constant.
 	DateToNumber: EXPERIMENTAL. SHOULD BE SUBSTITUTED WITH DATEDIFF SYNTAX AND CONSTANT
 		But then we would have to support: dateDiff(date, date) and dateDiff(date, constant as string)
 	InsertTimestampSyntax: Syntax for timestamp (it's used for creation of journal table). Because of SAS it generally has to be in single quotes.
@@ -37,17 +37,21 @@ Description of the fields:
 		urlPrefix="jdbc:db2://"
 		dbNameSeparator="/"
 		dateAddSyntax="(@baseDate + INTERVAL '@amount @datePart')"
-		dateAddMonth="(@baseDate + INTERVAL '@amount month')" 
+		dateAddMonth="(@baseDate + INTERVAL '@amount month')"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="extract(epoch from @column)"
-		insertTimestampSyntax="'@timestamp'"
-		stdDevCommand="stddev_samp"
 		charLengthCommand="char_length"
-		typeVarchar="VARCHAR"
-		typeInteger="INTEGER"
-		typeDecimal="DECIMAL"
-		typeTimestamp="TIMESTAMP"
-		limitSyntax="limit"
+		randomCommand="random()"
+	/>
+
+	<driver
+		name="HSQLDB"
+		driverClass="org.hsqldb.jdbc.JDBCDriver"
+		defaultPort="1433"
+		urlPrefix="jdbc:hsqldb"
+		dbNameSeparator=":file:"
+		dateToNumber="cast(datediff(hour,'1990-1-1', @column) as decimal(38, 10))"
+		charLengthCommand="len"
 		randomCommand="random()"
 	/>
 		
@@ -58,16 +62,9 @@ Description of the fields:
 		urlPrefix="jdbc:sqlserver://"
 		dbNameSeparator=";databaseName="
 		supportsCreateTableAs="false"
-		dateAddSyntax="DATEADD(@datePart, @amount, @baseDate)"
-		dateAddMonth="DATEADD(month, @amount, @baseDate)"
-		dateDiffSyntax="DATEDIFF(day, @dateTo, @dateFrom)"
 		dateToNumber="cast(datediff(hour,'1990-1-1', @column) as decimal(38, 10))"
-		insertTimestampSyntax="'@timestamp'"
 		stdDevCommand="stdev"
 		charLengthCommand="len"
-		typeVarchar="VARCHAR"
-		typeInteger="INTEGER"
-		typeDecimal="DECIMAL"
 		typeTimestamp="DATETIME"
 		limitSyntax="top"
 		randomCommand="RAND(CONVERT(varbinary, NEWID()))"
@@ -80,18 +77,9 @@ Description of the fields:
 		urlPrefix="jdbc:monetdb://"
 		dbNameSeparator="/"
 		supportsWithData="true"
-		dateAddSyntax="DATEADD(@datePart, @amount, @baseDate)"
-		dateAddMonth="DATEADD(month, @amount, @baseDate)"
-		dateDiffSyntax="DATEDIFF(day, @dateTo, @dateFrom)"
 		dateToNumber="(@column - date '1970-01-01')"
-		insertTimestampSyntax="'@timestamp'"
 		stdDevCommand="SYS.STDDEV_SAMP "
 		charLengthCommand="LENGTH"
-		typeVarchar="VARCHAR"
-		typeInteger="INTEGER"
-		typeDecimal="DECIMAL"
-		typeTimestamp="TIMESTAMP"
-		limitSyntax="limit"
 		randomCommand="rand()"
 	/>
 	
@@ -109,14 +97,7 @@ Description of the fields:
 		dateAddMonth="DATE_ADD(@baseDate, INTERVAL @amount month)"
 		dateDiffSyntax="DATEDIFF(@dateTo, @dateFrom)"
 		dateToNumber="UNIX_TIMESTAMP(@column)"
-		insertTimestampSyntax="'@timestamp'"
-		stdDevCommand="stddev_samp"
 		charLengthCommand="char_length"
-		typeVarchar="VARCHAR"
-		typeInteger="INTEGER"
-		typeDecimal="DECIMAL"
-		typeTimestamp="TIMESTAMP"
-		limitSyntax="limit"
 		randomCommand="rand()"
 	/>
 	
@@ -130,14 +111,7 @@ Description of the fields:
 		dateAddMonth="add_months(@baseDate, @amount)"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="extract(epoch from @date)"
-		insertTimestampSyntax="'@timestamp'"
-		stdDevCommand="stddev_samp"
 		charLengthCommand="char_length"
-		typeVarchar="VARCHAR"
-		typeInteger="INTEGER"
-		typeDecimal="DECIMAL"
-		typeTimestamp="TIMESTAMP"
-		limitSyntax="limit"
 		randomCommand="random()"
 	/>
 	
@@ -155,12 +129,10 @@ Description of the fields:
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="(@column - TO_DATE('01011970','DDMMYYYY'))"
 		insertTimestampSyntax="TO_TIMESTAMP('@timestamp', 'YYYY-MM-DD HH24:MI:SS.FF')"
-		stdDevCommand="stddev_samp"
 		charLengthCommand="length"
 		typeVarchar="VARCHAR2"
 		typeInteger="NUMBER"
 		typeDecimal="NUMBER"
-		typeTimestamp="TIMESTAMP"
 		limitSyntax="rownum"
 		randomCommand="DBMS_RANDOM.VALUE"
 	/>
@@ -176,14 +148,7 @@ Description of the fields:
 		dateAddMonth="(@baseDate + INTERVAL '@amount month')"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="extract(epoch from @column)"
-		insertTimestampSyntax="'@timestamp'"
-		stdDevCommand="stddev_samp"
 		charLengthCommand="char_length"
-		typeVarchar="VARCHAR"
-		typeInteger="INTEGER"
-		typeDecimal="DECIMAL"
-		typeTimestamp="TIMESTAMP"
-		limitSyntax="limit"
 		randomCommand="random()"
 	/>
 	
@@ -207,10 +172,6 @@ Description of the fields:
 		insertTimestampSyntax="%sysfunc(inputn(@timestamp, ymddttm20.3))"
 		stdDevCommand="std"
 		charLengthCommand="length"
-		typeVarchar="VARCHAR"
-		typeInteger="INTEGER"
-		typeDecimal="DECIMAL"
-		typeTimestamp="TIMESTAMP"
 		limitSyntax="obs"
 		indexNameSyntax="column"
 		randomCommand="ranuni(2001)"
@@ -228,13 +189,7 @@ Description of the fields:
 		dateAddMonth="add_months(@baseDate, @amount)"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="cast(@column as int)"
-		insertTimestampSyntax="'@timestamp'"
-		stdDevCommand="stddev_samp"
 		charLengthCommand="character_length"
-		typeVarchar="VARCHAR"
-		typeInteger="INTEGER"
-		typeDecimal="DECIMAL"
-		typeTimestamp="TIMESTAMP"
 		limitSyntax="ROW_NUMBER"
 		randomCommand="RANDOM(0, 1000)/1000"
 		/>

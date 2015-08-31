@@ -1,12 +1,13 @@
 package connection;
 
-import java.util.List;
-
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
 import run.Setting;
+
+import java.sql.SQLException;
+import java.util.List;
 
 public class NetworkTest {
 	private Setting setting = new Setting("MariaDB", "financial");
@@ -30,5 +31,22 @@ public class NetworkTest {
 	public void getDatabaseProperties() {
 		Assert.assertTrue(setting.supportsCatalogs);
 		Assert.assertFalse(setting.supportsSchemas);
+	}
+
+	// I AM NOT PASSING THIS TEST!
+	@Test
+	public void properClosing() throws SQLException {
+		for (int i = 0; i < 100; i++) {
+			Network.closeConnection(setting);
+			Network.openConnection(setting);
+		}
+
+		Assert.assertTrue(setting.connection.isValid(2));
+	}
+
+
+	@After
+	public void closeConnection(){
+		Network.closeConnection(setting);
 	}
 }

@@ -77,8 +77,9 @@ public final class Setting {
 	public String baseTarget = "propagated_target";	// The name of the target column. This name should be new & unique in input schema.
 	public String baseFold = "propagated_fold";		// The name for fold in x-fold cross-validation.
 	public String baseSampled = "base_sampled";		// The name of the sampled base table.
-	public String mainTable = "mainSample";		// The name of the result table with predictors.
+	public String mainTable = "mainSample";			// The name of the result table with predictors.
 	public String journalTable = "journal"; 		// The name of predictors' journal table.
+	public String journalPropagationTable = "journal_table"; 		// The name of propagation journal table.
 
 	public boolean useView = true;					// Create views instead of tables if possible?
 	public int predictorStart = 100000;  			// Convenience for "natural sorting".
@@ -123,6 +124,16 @@ public final class Setting {
 		supportsSchemas = MoreObjects.firstNonNull(driverProperty.supportsSchemas, true); 
 		supportsCreateTableAs = MoreObjects.firstNonNull(driverProperty.supportsCreateTableAs, true); 
 		supportsWithData = MoreObjects.firstNonNull(driverProperty.supportsWithData, false);
+		insertTimestampSyntax = MoreObjects.firstNonNull(driverProperty.insertTimestampSyntax, "'@timestamp'");
+		stdDevCommand = MoreObjects.firstNonNull(driverProperty.stdDevCommand, "stddev_samp");
+		limitSyntax = MoreObjects.firstNonNull(driverProperty.limitSyntax, "limit");
+		dateAddSyntax = MoreObjects.firstNonNull(driverProperty.dateAddSyntax, "DATEADD(@datePart, @amount, @baseDate)");
+		dateAddMonth = MoreObjects.firstNonNull(driverProperty.dateAddSyntax, "DATEADD(month, @amount, @baseDate)");
+		dateDiffSyntax = MoreObjects.firstNonNull(driverProperty.dateDiffSyntax, "DATEDIFF(day, @dateTo, @dateFrom)");
+		typeVarchar = MoreObjects.firstNonNull(driverProperty.typeVarchar, "VARCHAR");
+		typeInteger = MoreObjects.firstNonNull(driverProperty.typeInteger, "INTEGER");
+		typeDecimal = MoreObjects.firstNonNull(driverProperty.typeDecimal, "DECIMAL");
+		typeTimestamp = MoreObjects.firstNonNull(driverProperty.typeTimestamp, "TIMESTAMP");
 
 		// Note: the correct correlation is: select ((Avg(column1 * column2) - Avg(column1) * Avg(column2)) / (stdDev_samp(column1) * stdDev_samp(column2))), ((sum(column1 * column2) - count(*) * Avg(column1) * Avg(column2)) / (stdDev_samp(column1) * stdDev_samp(column2) * (count(*)-1))), stdDev_samp(column1), stdDev_samp(column2) FROM `predictor_factory`.`PREDICTOR100004` WHERE column2 is not null and column1 is not null
 		corrSyntax = MoreObjects.firstNonNull(driverProperty.corrSyntax, "((Sum(@column1 * @column2) - count(*) * Avg(@column1) * Avg(@column2)) / ((count(*) - 1) * (stdDev_samp(@column1) * stdDev_samp(@column2))))");
@@ -152,30 +163,20 @@ public final class Setting {
 		dbNameSeparator = driverProperty.dbNameSeparator;
 		urlPrefix = driverProperty.urlPrefix;
 		testQuery = driverProperty.testQuery;
-		dateAddSyntax = driverProperty.dateAddSyntax;
-		dateAddMonth = driverProperty.dateAddMonth;
-		dateDiffSyntax = driverProperty.dateDiffSyntax;
 		dateToNumber = driverProperty.dateToNumber;
-		insertTimestampSyntax = driverProperty.insertTimestampSyntax;
-		stdDevCommand = driverProperty.stdDevCommand;
 		charLengthCommand = driverProperty.charLengthCommand;
-		typeDecimal = driverProperty.typeDecimal;
-		typeInteger = driverProperty.typeInteger;
-		typeTimestamp = driverProperty.typeTimestamp;
-		typeVarchar = driverProperty.typeVarchar;
-		limitSyntax = driverProperty.limitSyntax;
 		randomCommand = driverProperty.randomCommand;
 		
 		// Load database properties
 		inputSchema = databaseProperty.inputSchema;
 		outputSchema = databaseProperty.outputSchema;
 		targetId = databaseProperty.targetId;
-		targetIdList = Arrays.asList(databaseProperty.targetId.split(","));	// EXPERIMENTAL LINE
+		targetIdList = Arrays.asList(databaseProperty.targetId.split(","));	// Permit composite id
 		targetDate = databaseProperty.targetDate;
 		targetColumn = databaseProperty.targetColumn;
 		targetTable = databaseProperty.targetTable;
 
-		// EXPERIMENTAL
+		// Deal with composite id
 		for (int i = 0; i < targetIdList.size(); i++) {
 			baseIdList.add("propagated_id" + (i+1));	// Indexing from 1
 		}

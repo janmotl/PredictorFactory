@@ -23,8 +23,7 @@ public class Meta {
 		public SortedSet<String> nominalColumn = new TreeSet<>();		// Categorical columns
 		public SortedSet<String> numericalColumn = new TreeSet<>();		// Additive columns
 		public SortedSet<String> timeColumn = new TreeSet<>();			// Time, date, datetime, timestamp...
-		//public List<List<String>> relationship = new ArrayList<>();		// List of {thatTable, thisColumn, thatColumn}
-		public List<ForeignConstraint> foreignConstraint = new ArrayList<>();
+		public List<ForeignConstraint> foreignConstraintList = new ArrayList<>();
 		public boolean isUnique;										// Does combination {baseId, baseDate} repeat?
 		public Map<String, List<String>> uniqueList = new TreeMap<>(); 	// Map of {columnName, unique value list}
 		
@@ -48,7 +47,7 @@ public class Meta {
 	
 	// 0) Get list of all schemas.
 	// POSSIBLY I COULD ASSUME THAT: database = setting.database
-	// HENCE ELIMINATE ONE OF THE PARAMETERS
+	// HENCE ELIMINATE ONE OF THE PARAMETERS (and we are already passing setting...)
 	public static SortedSet<String> collectSchemas(Setting setting, String database) {
 
 		// Initialization
@@ -241,23 +240,45 @@ public class Meta {
 		return table;
 	}
 
-	// 4) Get all relationships in the table. The returned list contains all {FTable, Column, FColumn} for the selected Table.
-	public static List<List<String>> collectRelationships(Setting setting, String database, String schema, String table) {
-		// Deal with catalog/schema less databases		
+	// 4) Get all relationships related to the table.
+	public static List<ForeignConstraint> collectRelationships(Setting setting, String schema, String table) {
+		List<ForeignConstraint> relationshipList = Meta.downloadRelationships(setting, schema, table);
+		List<ForeignConstraint> result = new ArrayList<>();
+
+		// Assume that the elements in relationshipList are ordered by fTable (as we are guaranteed by JDBC).
+		for (ForeignConstraint fc : relationshipList) {
+			if (result.contains(fc)) {
+				ForeignConstraint constrainReference = result.get(result.size()-1);
+				constrainReference.column.addAll(fc.column);
+				constrainReference.fColumn.addAll(fc.fColumn);
+			} else {
+				result.add(fc);
+			}
+		}
+
+		return result;
+	}
+
+	private static List<ForeignConstraint> downloadRelationships(Setting setting, String schema, String table) {
+		String database;
+
+		// Deal with catalog/schema less databases
 		// MySQL
 		if (setting.supportsCatalogs && !setting.supportsSchemas) {
 			database = schema;
 			schema = null;
+		} else {
+			database = setting.database;
 		}
 		
 		// SAS driver doesn't return keys. Use own query.
 		if ("SAS".equals(setting.databaseVendor)) {
-			return collectRelationshipsSAS(setting, schema, table);
+			return downloadRelationshipsSAS(setting, schema, table);
 		}
 		
 		
 		// Initialization
-		List<List<String>> relationshipSet = new ArrayList<List<String>>();
+		List<ForeignConstraint> relationshipList = new ArrayList<>();
 		
 		// Get all relations coming from this table
 		try {
@@ -265,22 +286,26 @@ public class Meta {
 			ResultSet rs = meta.getImportedKeys(database, schema, table);
 
 			while (rs.next()) {
-				ArrayList<String> relationship = new ArrayList<String>();
-				relationship.add(rs.getString("PKTABLE_NAME"));
-				relationship.add(rs.getString("FKCOLUMN_NAME"));
-				relationship.add(rs.getString("PKCOLUMN_NAME"));
-				relationshipSet.add(relationship);
+				ForeignConstraint relationship = new ForeignConstraint();
+				relationship.name = rs.getString("FK_NAME");
+				relationship.table = table;
+				relationship.fTable = rs.getString("PKTABLE_NAME");
+				relationship.column.add(rs.getString("FKCOLUMN_NAME"));
+				relationship.fColumn.add(rs.getString("PKCOLUMN_NAME"));
+				relationshipList.add(relationship);
 			}
 			
 			// And now Exported keys
 			rs = meta.getExportedKeys(database, schema, table);
 
 			while (rs.next()) {
-				ArrayList<String> relationship = new ArrayList<String>();
-				relationship.add(rs.getString("FKTABLE_NAME"));
-				relationship.add(rs.getString("PKCOLUMN_NAME"));
-				relationship.add(rs.getString("FKCOLUMN_NAME"));
-				relationshipSet.add(relationship);
+				ForeignConstraint relationship = new ForeignConstraint();
+				relationship.name = rs.getString("FK_NAME");
+				relationship.table = table;
+				relationship.fTable = rs.getString("FKTABLE_NAME");
+				relationship.column.add(rs.getString("PKCOLUMN_NAME"));
+				relationship.fColumn.add(rs.getString("FKCOLUMN_NAME"));
+				relationshipList.add(relationship);
 			}
 			
 		} catch (SQLException e) {
@@ -288,18 +313,19 @@ public class Meta {
 		}
 		
 		// Output Quality Control
-		if (relationshipSet.isEmpty()) {
+		if (relationshipList.isEmpty()) {
 			logger.info("Table " + table + " doesn't have any predefined relationship.");
 		}
 		
-		return relationshipSet;
+		return relationshipList;
 	}
 
-	// 4.5) Subroutine: SAS JDBC driver doesn't return keys. Use dictionary tables instead.
+	// Subroutine: SAS JDBC driver doesn't return keys. Use dictionary tables instead.
 	// See: www2.sas.com/proceedings/sugi30/070-30.pdf
-	private static List<List<String>> collectRelationshipsSAS(Setting setting, String schema, String table) {
+	// HAVE TO CHANGE THE QUERY TO INCLUDE FK_NAME.
+	private static List<ForeignConstraint> downloadRelationshipsSAS(Setting setting, String schema, String table) {
 		// Initialization
-		List<List<String>> relationshipSet = new ArrayList<List<String>>();
+		List<ForeignConstraint> relationshipList = new ArrayList<>();
 		String sql = "select t1.memname as FKTABLE_NAME " +
 							", t1.unique_memname as PKTABLE_NAME " +
 							", t2.column_name as FKCOLUMN_NAME " +
@@ -322,11 +348,13 @@ public class Meta {
 			ResultSet rs = stmt.executeQuery(sql + condition);
 
 			while (rs.next()) {
-				ArrayList<String> relationship = new ArrayList<String>();
-				relationship.add(rs.getString("PKTABLE_NAME").replace(" ", ""));
-				relationship.add(rs.getString("FKCOLUMN_NAME").replace(" ", ""));
-				relationship.add(rs.getString("PKCOLUMN_NAME").replace(" ", ""));
-				relationshipSet.add(relationship);
+				ForeignConstraint relationship = new ForeignConstraint();
+				relationship.name = rs.getString("FK_NAME");
+				relationship.table = table;
+				relationship.fTable = rs.getString("PKTABLE_NAME");
+				relationship.column.add(rs.getString("FKCOLUMN_NAME"));
+				relationship.fColumn.add(rs.getString("PKCOLUMN_NAME"));
+				relationshipList.add(relationship);
 			}
 
 			// And now Exported keys
@@ -334,18 +362,20 @@ public class Meta {
 			rs = stmt.executeQuery(sql + condition);
 
 			while (rs.next()) {
-				ArrayList<String> relationship = new ArrayList<String>();
-				relationship.add(rs.getString("FKTABLE_NAME").replace(" ", ""));
-				relationship.add(rs.getString("PKCOLUMN_NAME").replace(" ", ""));
-				relationship.add(rs.getString("FKCOLUMN_NAME").replace(" ", ""));
-				relationshipSet.add(relationship);
+				ForeignConstraint relationship = new ForeignConstraint();
+				relationship.name = rs.getString("FK_NAME");
+				relationship.table = table;
+				relationship.fTable = rs.getString("FKTABLE_NAME");
+				relationship.column.add(rs.getString("PKCOLUMN_NAME"));
+				relationship.fColumn.add(rs.getString("FKCOLUMN_NAME"));
+				relationshipList.add(relationship);
 			}
 
 		} catch (SQLException e) {
 			logger.error(e.getMessage());
 		}
 
-		return relationshipSet;
+		return relationshipList;
 	}
 
 	// 5) Get the single primary key (It would be the best if only artificial keys were returned. At least 

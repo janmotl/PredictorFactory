@@ -1,13 +1,28 @@
 package connection;
 
+import metaInformation.ForeignConstraint;
+import metaInformation.MetaOutput;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import run.Setting;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
 
 public class SQLTest {
+
+    private MetaOutput.OutputTable table;
+
+    @Before
+    public void initialization() {
+        table = new MetaOutput.OutputTable();
+        table.originalName = "trans";
+        table.propagatedName = "propagated_trans";
+        table.propagationTable = "propagated_account";
+
+        ForeignConstraint fc = new ForeignConstraint();
+        table.foreignConstraint = fc;
+    }
 
 
     @Test
@@ -18,16 +33,14 @@ public class SQLTest {
         setting.quoteEntityClose = "]";
 
         // Parameters
-        Map<String, String> hashMap = new HashMap<String, String>();
-        hashMap.put("@idColumn1", "account_id");
-        hashMap.put("@idColumn2", "account_id");
-        hashMap.put("@propagatedTable", "propagated_account");
-        hashMap.put("@inputTable", "trans");
-        hashMap.put("@outputTable", "propagated_trans");
+        table.foreignConstraint.column = new ArrayList<>();
+        table.foreignConstraint.fColumn = new ArrayList<>();
+        table.foreignConstraint.column.add("account_id");
+        table.foreignConstraint.fColumn.add("account_id");
 
         // Test
-        String actual =  SQL.propagateID(setting, hashMap, false);
-        String expected = "SELECT t1.[propagated_id], t1.[propagated_date], t1.[propagated_target], t1.[propagated_fold], t2.* INTO [predictor_factory].[propagated_trans] FROM [predictor_factory].[propagated_account] t1 INNER JOIN [financial].[trans] t2 ON t1.[account_id] = t2.[account_id]";
+        String actual =  SQL.propagateID(setting, table);
+        String expected = "SELECT t1.[propagated_id1], t1.[propagated_date], t1.[propagated_target], t1.[propagated_fold], t2.* INTO [predictor_factory].[propagated_trans] FROM [predictor_factory].[propagated_account] t1 INNER JOIN [financial].[trans] t2 ON t1.[account_id] = t2.[account_id]";
         Assert.assertEquals(expected, actual);
     }
 
@@ -37,23 +50,21 @@ public class SQLTest {
         Setting setting = new Setting("MSSQL Jan", "financial");
         setting.quoteEntityOpen = "[";
         setting.quoteEntityClose = "]";
+        setting.baseIdList.add("propagated_id2");
 
         // Parameters
-        Map<String, String> hashMap = new HashMap<String, String>();
-        hashMap.put("@propagatedTable", "propagated_account");
-        hashMap.put("@inputTable", "trans");
-        hashMap.put("@outputTable", "propagated_trans");
-        hashMap.put("@idColumn1", "account_id1");
-        hashMap.put("@idColumn2", "account_id2");
-        hashMap.put("@idColumn3", "account_id3");
-        hashMap.put("@idColumn4", "account_id4");
+        table.foreignConstraint.column = new ArrayList<>();
+        table.foreignConstraint.fColumn = new ArrayList<>();
+        table.foreignConstraint.column.add("account_id1");
+        table.foreignConstraint.fColumn.add("account_id2");
+        table.foreignConstraint.column.add("account_id3");
+        table.foreignConstraint.fColumn.add("account_id4");
 
         // Test
-        String actual =  SQL.propagateID(setting, hashMap, false);
-        String expected = "SELECT t1.[propagated_id], t1.[propagated_date], t1.[propagated_target], t1.[propagated_fold], t2.* INTO [predictor_factory].[propagated_trans] FROM [predictor_factory].[propagated_account] t1 INNER JOIN [financial].[trans] t2 ON t1.[account_id1] = t2.[account_id2] AND t1.[account_id3] = t2.[account_id4]";
+        String actual =  SQL.propagateID(setting, table);
+        String expected = "SELECT t1.[propagated_id1], t1.[propagated_id2], t1.[propagated_date], t1.[propagated_target], t1.[propagated_fold], t2.* INTO [predictor_factory].[propagated_trans] FROM [predictor_factory].[propagated_account] t1 INNER JOIN [financial].[trans] t2 ON t1.[account_id1] = t2.[account_id2] AND t1.[account_id3] = t2.[account_id4]";
         Assert.assertEquals(expected, actual);
     }
-
 
     @Test
     public void addCreateTableAs1() {

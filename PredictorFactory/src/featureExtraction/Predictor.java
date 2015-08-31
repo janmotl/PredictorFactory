@@ -10,18 +10,19 @@ import java.util.*;
 
 public class Predictor implements Comparable<Predictor> {
 
+	// SHOULD UNIFY - PUBLIC AND PRIVATE looks ugly
 	// Struct for predictor's metadata. Make sure that each collection is initialized to something and doesn't return null!
 	public String outputTable;			// The name of the constructed predictor table.
 	public String propagatedTable;		// The input table name after propagation.
 	public String originalTable;		// The input table name before propagation. Useful for origin tracking.
 	public String propagationDate;		// The single column name that was used during base propagation as time constrain.
-	public List<String> propagationPath = new ArrayList<String>();	// In the case of loops path makes difference
-	public SortedMap<String, String> columnMap = new TreeMap<String, String>();	// Contains {@nominalColumn=gender,...}
+	public List<String> propagationPath = new ArrayList<>();	// In the case of loops path makes difference
+	public SortedMap<String, String> columnMap = new TreeMap<>();	// Contains {@nominalColumn=gender,...}
 	
 	
 	// Relevance of the predictor for classification
 	// SHOULD CONTAIN: Target, MeasureType, Value
-	private SortedMap<String, Double> relevance = new TreeMap<String, Double>(); 
+	private SortedMap<String, Double> relevance = new TreeMap<>();
 	
 		
 	// Private

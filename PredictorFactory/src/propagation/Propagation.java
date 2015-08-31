@@ -1,6 +1,7 @@
 package propagation;
 
 
+import com.rits.cloning.Cloner;
 import connection.Network;
 import connection.SQL;
 import metaInformation.ForeignConstraint;
@@ -9,12 +10,16 @@ import org.apache.log4j.Logger;
 import run.Setting;
 import utility.Meta.Table;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class Propagation{
 	// Logging
 	private static final Logger logger = Logger.getLogger(Propagation.class.getName());
+
+	// Deep cloning
+	private static Cloner cloner = new Cloner();
 
 	// Propagate tuples from the base table into all other tables
 	// BLIND APPROACH IS IMPLEMENTED - get list of PK-FK pairs
@@ -35,8 +40,8 @@ public class Propagation{
 		base.idColumn.add(setting.baseId);
 		base.timeColumn.add(setting.baseDate);
 		base.nominalColumn.add(setting.baseTarget);	// NOT ALWAYS, but do we care if we are removing the table at the end?
-		ForeignConstraint fc = new ForeignConstraint(setting.baseTable, setting.targetTable, setting.baseIdList, setting.targetIdList);
-		base.foreignConstraint.add(fc);
+		ForeignConstraint fc = new ForeignConstraint("FK_baseTable_targetTable",setting.baseTable, setting.targetTable, setting.baseIdList, setting.targetIdList);
+		base.foreignConstraintList.add(fc);
 		metaOutput.put(setting.baseTable, base);	//... into tableMetadata.
 		
 		// Call BFS
@@ -59,120 +64,105 @@ public class Propagation{
 	private static SortedMap<String, OutputTable> bfs(Setting setting, int depth, Set<String> propagated, Set<String> notPropagated, SortedMap<String, Table> metaInput, SortedMap<String, OutputTable> metaOutput) {
 
 		// Initialization
-		String sql = "";
-		Set<String> newlyPropagated = new HashSet<String>();		// Set of tables propagated at the current depth
-		Set<String> stillNotPropagated = new HashSet<String>(notPropagated);	// Set of tables to propagate
+		Set<String> newlyPropagated = new HashSet<>();		// Set of tables propagated at the current depth
+		Set<String> stillNotPropagated = new HashSet<>(notPropagated);	// Set of tables to propagate
 
+		// Loop over tables
 		for (String table1 : propagated) {
-			for (String table2 : notPropagated) {	
-				
+			for (String table2 : notPropagated) {
+
 				// Get time columns (from table2)
 				SortedSet<String> timeSet = metaInput.get(table2).timeColumn;
 				
 				// Get relationships between table1 and table2
-				List<ForeignConstraint> relationshipList = metaOutput.get(table1).foreignConstraint.stream().filter(foreignConstraint -> table2.equals(foreignConstraint.fTable)).collect(Collectors.toList());
+				List<ForeignConstraint> relationshipList = metaOutput.get(table1).foreignConstraintList.stream().filter(foreignConstraint -> table2.equals(foreignConstraint.fTable)).collect(Collectors.toList());
 
-				for (ForeignConstraint relation : relationshipList) {
-					// Define parameters
-					boolean isPropagated = false;	// True if the query finished successfully 
-					String outputTable;				// The name of the generated table
-					Map<String, String> parameterMap = relation.getMap(); // Maps: @variable -> value
+				for (ForeignConstraint relationship : relationshipList) {
+					// Initialize
+					OutputTable table = new OutputTable();
+					table.timeColumn = metaInput.get(table2).timeColumn;
+					table.nominalColumn = metaInput.get(table2).nominalColumn;
+					table.numericalColumn = metaInput.get(table2).numericalColumn;
+					table.idColumn = metaInput.get(table2).idColumn;
+					table.foreignConstraintList = metaInput.get(table2).foreignConstraintList;
+					table.uniqueList = metaInput.get(table2).uniqueList;
 
-					// We have to make sure that outputTable name is short enough but unique
-					outputTable = trim(setting, table2, metaOutput.size());
-					
-					parameterMap.put("@propagatedTable", table1);
-					parameterMap.put("@inputTable", table2);
-					parameterMap.put("@outputTable", outputTable);
-					
+					table.propagatedName = trim(setting, table2, metaOutput.size()); // We have to make sure that outputTable name is short enough but unique (we add id)
+					table.originalName = table2;
+					table.propagationTable = table1;
+					table.propagationPath = getPropagationPath(metaOutput.get(table1));
+					table.foreignConstraint = relationship;
+					table.dateBottomBounded = false;
+
 					// If idColumn2 is distinct in table2, it is unnecessary to set time condition.
 					// For example, in Customer table, which contains only static information, like Birth_date,
 					// it is not necessary to set the time constrain.
-					boolean isIdUnique = SQL.isIdUnique(setting, parameterMap); // Cardinality of idColumn2
+					table.isIdUnique = SQL.isIdUnique(setting, table);
 					
-					// Use time constrain
-					if (!isIdUnique & !timeSet.isEmpty()) {
-						// Initialize list of generated tables
-						ArrayList<String> tableCheckList = new ArrayList<>();
+					// Attempt to use time constrain
+					if (!table.isIdUnique & !timeSet.isEmpty() & timeSet.size()<3) {
+						// Initialize list of candidate tables
+						ArrayList<OutputTable> candidateList = new ArrayList<>();
 						
 						// Generate a table for each date
 						for (String date : timeSet) {
-							// Define parameters
-							outputTable = trim(setting, table2, metaOutput.size() + tableCheckList.size()); 
-							parameterMap.put("@outputTable", outputTable);
-							parameterMap.put("@dateColumn", date);
+							// Redefine parameters
+							table.propagatedName = trim(setting, table2, metaOutput.size() + candidateList.size());
+							table.constrainDate = date;
+							table.dateBottomBounded = true;
 							
-							// Make new table
-							sql = SQL.propagateID(setting, parameterMap, true); // bottom bounded
-							isPropagated = Network.executeUpdate(setting.connection, sql);
-							
-							// Log the result
-							if (isPropagated) {
-								tableCheckList.add(outputTable);
+							// Make a new table
+							table.sql = SQL.propagateID(setting, table);
+							Network.executeUpdate(setting.connection, table.sql);
+
+							// Get the row count
+							table.rowCount = SQL.getRowCount(setting, setting.outputSchema, table.propagatedName);
+
+							// If the row count is 0, drop the table
+							if  (table.rowCount == 0) {
+								SQL.dropTable(setting, table.propagatedName);
+							} else {
+								candidateList.add(cloner.deepClone(table));
 							}
 						}
-				
-						// If each date condition on the table results into an empty table, ignore the time bound.
-						// This exception is handy, if the table contains date_birth column and not other date column.
-						boolean isEmpty = true;
-						for (String tableCheck : tableCheckList) {
-							int rowCount = SQL.getRowCount(setting, setting.outputSchema, tableCheck);
-							if (rowCount != 0) {
-								isEmpty = false;
-								break;
-							}
+
+						// If all attempts failed, do not use any time constrain
+						if (candidateList.isEmpty()) {
+							table.propagatedName = trim(setting, table2, metaOutput.size());
+							table.constrainDate = null;
+							table.rowCount = null;
+							table.dateBottomBounded = false;
+							table.sql =  SQL.propagateID(setting, table);
+							Network.executeUpdate(setting.connection, table.sql);
+						} else {
+							table = candidateList.get(0);	// Just pick the first suitable table
 						}
-						
-						if (isEmpty) {
-							for (String tableCheck : tableCheckList) {
-								SQL.dropTable(setting, tableCheck);
-							}
-							
-							outputTable = trim(setting, table2, metaOutput.size());
-							parameterMap.put("@outputTable", outputTable);
-							parameterMap.remove("@dateColumn");
-							sql =  SQL.propagateID(setting, parameterMap, true);
-							isPropagated = Network.executeUpdate(setting.connection, sql);
-						}
+
 					}
-					
-					
-			
-					// DateList is empty. Or the cardinality is 1. In that case propagate without the date constrain.
-					if (timeSet.isEmpty() || isIdUnique) {	
-						sql =  SQL.propagateID(setting, parameterMap, true);
-						isPropagated = Network.executeUpdate(setting.connection, sql);
+
+					// Propagate without the date constrain
+					if (timeSet.isEmpty() || table.isIdUnique) {
+						table.sql =  SQL.propagateID(setting, table);
+						Network.executeUpdate(setting.connection, table.sql);
 					} 
-			
-					// Evaluate
-					if (isPropagated) {
-						stillNotPropagated.remove(table2);
-						newlyPropagated.add(outputTable);
-						
-						// Add indexes
-						SQL.addIndex(setting, outputTable);
-						
-						// Add the table into tableMetadata list
-						OutputTable table = new OutputTable();
-						table.originalName = table2;
-						table.propagatedName = outputTable;
-						table.isUnique = SQL.isUnique(setting, outputTable, false);
-						table.propagationDate = parameterMap.get("@dateColumn");
-						table.propagationOrder = metaOutput.size();
-						table.sql = sql;
-						
-						table.timeColumn = metaInput.get(table2).timeColumn;
-						table.nominalColumn = metaInput.get(table2).nominalColumn;
-						table.numericalColumn = metaInput.get(table2).numericalColumn;
-						table.idColumn = metaInput.get(table2).idColumn;
-						table.foreignConstraint = metaInput.get(table2).foreignConstraint;
-						table.uniqueList = metaInput.get(table2).uniqueList;
-						
-						List<String> path = new ArrayList<>(metaOutput.get(table1).propagationPath); // Add copy of the propagation path from table1...
-						path.add(metaOutput.get(table1).originalName); 	//... and add table1 name...
-						table.propagationPath = path; 						// ...to the table.
-						metaOutput.put(outputTable, table);	
-					}
+
+					// Add indexes
+					SQL.addIndex(setting, table.propagatedName);
+
+					// Update the state
+					stillNotPropagated.remove(table2);
+					newlyPropagated.add(table.propagatedName);
+
+					// Collect metadata
+					table.isUnique = SQL.isUnique(setting, table.propagatedName, false);
+					table.propagationOrder = metaOutput.size();
+					table.timestampDelivered = LocalDateTime.now();
+
+					// Add the table into tableMetadata list
+					metaOutput.put(table.propagatedName, table);
+
+					// Log it
+					SQL.addToJournalPropagation(setting, table);
 				}
 			}
 		}
@@ -193,7 +183,7 @@ public class Propagation{
 		logger.info("#### Finished propagation at depth: " + depth + " ####");
 		return bfs(setting, ++depth, newlyPropagated, stillNotPropagated, metaInput, metaOutput);
 	}
-	
+
 	// Trim the length of a table name to the length permitted by the database
 	// but make sure the name is unique.
 	private static String trim(Setting setting, String outputTable, int counter) {
@@ -203,5 +193,11 @@ public class Propagation{
 		outputTable = outputTable + "_" + String.format("%03d", counter);
 		
 		return outputTable;
+	}
+
+	private static List<String> getPropagationPath(OutputTable table) {
+		List<String> path = new ArrayList<>(table.propagationPath);
+		path.add(table.originalName);
+		return path;
 	}
 }

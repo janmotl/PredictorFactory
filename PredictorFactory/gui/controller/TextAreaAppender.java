@@ -1,13 +1,12 @@
 package controller;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import javafx.application.Platform;
 import javafx.scene.control.TextArea;
-
 import org.apache.log4j.WriterAppender;
 import org.apache.log4j.spi.LoggingEvent;
+
+import java.util.LinkedList;
+import java.util.List;
  
 /**
  * Print logs into a TextArea.
@@ -19,7 +18,7 @@ public class TextAreaAppender extends WriterAppender {
     private static TextArea textArea = null;			// The text area
     private static final int messageCountLimit = 100;		// Maximum lines allowed in the text area. Must be bigger than 1.
     private static String text = "...The log window is limited to the last " + messageCountLimit + " messages. The whole log is in the 'log' directory.\n";
-    private static List<Integer> messageLengthList = new LinkedList<Integer>(); // Lengths of messages within the text area
+    private static List<Integer> messageLengthList = new LinkedList<>(); // Lengths of messages within the text area
  
     /**
      * Set the target TextArea for the logging information to appear.

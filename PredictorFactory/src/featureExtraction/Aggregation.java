@@ -19,7 +19,7 @@ public class Aggregation {
 	// Logging
 	private static final Logger logger = Logger.getLogger(Aggregation.class.getName());
 
-	// Global variables - deep cloning
+	// Deep cloning
 	private static Cloner cloner = new Cloner(); 
 	
 	
@@ -204,7 +204,7 @@ public class Aggregation {
 			// Store the necessary data into the clone
 			cloned.propagatedTable = workingTable.propagatedName;
 			cloned.originalTable = workingTable.originalName;
-			cloned.propagationDate = workingTable.propagationDate;
+			cloned.propagationDate = workingTable.constrainDate;
 			cloned.propagationPath = workingTable.propagationPath;
 			
 			// Store the clone

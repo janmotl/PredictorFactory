@@ -25,7 +25,41 @@ public class LauncherTest {
         int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
-        Assert.assertTrue(columnList.containsKey("order_amount_aggregate_avg_100002"));
+        Assert.assertTrue(columnList.containsKey("trans_amount_aggregate_avg_100002"));
+        Assert.assertTrue(columnList.containsKey("loan_amount_directField_numericalColumn_100006"));
+        Assert.assertEquals(120, rowCount);
+        Assert.assertEquals(11, columnList.size());
+    }
+
+    @Test
+    public void test_HSQLDB() {
+        String[] arguments = new String[]{"HSQLDB", "financial_test_setting"};
+        Launcher.main(arguments);
+
+        Setting setting = new Setting("HSQLDB", "financial_test_setting");
+        Network.openConnection(setting);
+        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
+        Network.closeConnection(setting);
+
+        Assert.assertTrue(columnList.containsKey("trans_amount_aggregate_avg_100002"));
+        Assert.assertTrue(columnList.containsKey("loan_amount_directField_numericalColumn_100006"));
+        Assert.assertEquals(120, rowCount);
+        Assert.assertEquals(11, columnList.size());
+    }
+
+    @Test
+    public void test_MonetDB() {
+        String[] arguments = new String[]{"MonetDB", "financial_test_setting"};
+        Launcher.main(arguments);
+
+        Setting setting = new Setting("MonetDB", "financial_test_setting");
+        Network.openConnection(setting);
+        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
+        Network.closeConnection(setting);
+
+        Assert.assertTrue(columnList.containsKey("trans_amount_aggregate_avg_100002"));
         Assert.assertTrue(columnList.containsKey("loan_amount_directField_numericalColumn_100006"));
         Assert.assertEquals(120, rowCount);
         Assert.assertEquals(11, columnList.size());
@@ -42,7 +76,7 @@ public class LauncherTest {
         int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
-        Assert.assertTrue(columnList.containsKey("order_amount_aggregate_avg_100002"));
+        Assert.assertTrue(columnList.containsKey("trans_amount_aggregate_avg_100002"));
         Assert.assertTrue(columnList.containsKey("loan_amount_directField_numericalColumn_100006"));
         Assert.assertEquals(120, rowCount);
         Assert.assertEquals(11, columnList.size());
@@ -78,17 +112,23 @@ public class LauncherTest {
                 "where table_schema = 'predictor_factory' " +
                 "and table_name = 'mainSample'";
         List<String> columnList = Network.executeQuery(setting.connection, sql);
+        sql = "select date_constrain " +
+                "from predictor_factory.journal_table " +
+                "where original_name = 'trans'";
+        List<String> constrainColumn = Network.executeQuery(setting.connection, sql);
         Network.closeConnection(setting);
 
-        Assert.assertTrue(columnList.contains("order_amount_aggregate_avg_100002"));
+        Assert.assertTrue(columnList.contains("trans_amount_aggregate_avg_100002"));
         Assert.assertTrue(columnList.contains("loan_amount_directField_numericalColumn_100006"));
         Assert.assertEquals("loan_date_directField_timeColumn_100008", columnList.get(3)); // Sorted in desc. order by relevance
-        Assert.assertEquals("order_amount_aggregate_min_100003", columnList.get(6)); // Sorted in desc. order by relevance
+        Assert.assertEquals("trans_amount_aggregate_min_100003", columnList.get(10)); // Sorted in desc. order by relevance
+        Assert.assertEquals("date", constrainColumn.get(0));    // Was time constrain applied?
         Assert.assertEquals(120, rowCount);
         Assert.assertEquals(11, columnList.size());
     }
 
-    
+
+    /////////////////// REGRESSION ///////////////
 
     @Test
     public void test_regression_Azure() {
@@ -101,7 +141,7 @@ public class LauncherTest {
         int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
-        Assert.assertTrue(columnList.containsKey("order_amount_aggregate_avg_100002"));
+        Assert.assertTrue(columnList.containsKey("trans_amount_aggregate_avg_100002"));
         Assert.assertTrue(columnList.containsKey("loan_status_directField_nominalColumn_100006"));
         Assert.assertEquals(30, rowCount);
         Assert.assertEquals(11, columnList.size());
@@ -118,7 +158,7 @@ public class LauncherTest {
         int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
-        Assert.assertTrue(columnList.containsKey("order_amount_aggregate_avg_100002"));
+        Assert.assertTrue(columnList.containsKey("trans_amount_aggregate_avg_100002"));
         Assert.assertTrue(columnList.containsKey("loan_status_directField_nominalColumn_100006"));
         Assert.assertEquals(30, rowCount);
         Assert.assertEquals(11, columnList.size());
@@ -156,10 +196,10 @@ public class LauncherTest {
         List<String> columnList = Network.executeQuery(setting.connection, sql);
         Network.closeConnection(setting);
 
-        Assert.assertTrue(columnList.contains("order_amount_aggregate_avg_100002"));
+        Assert.assertTrue(columnList.contains("trans_amount_aggregate_avg_100002"));
         Assert.assertTrue(columnList.contains("loan_status_directField_nominalColumn_100006"));
-        Assert.assertEquals("loan_date_directField_timeColumn_100008", columnList.get(7)); // Sorted in desc. order by relevance
-        Assert.assertEquals("order_amount_aggregate_min_100003", columnList.get(3)); // Sorted in desc. order by relevance
+        Assert.assertEquals("loan_date_directField_timeColumn_100008", columnList.get(8)); // Sorted in desc. order by relevance
+        Assert.assertEquals("trans_amount_aggregate_sum_100005", columnList.get(7)); // Sorted in desc. order by relevance
         Assert.assertEquals(30, rowCount);
         Assert.assertEquals(11, columnList.size());
     }

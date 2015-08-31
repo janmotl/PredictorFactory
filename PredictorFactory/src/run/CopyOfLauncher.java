@@ -37,11 +37,11 @@ public class CopyOfLauncher{
 		
 		for (String table : tableSet) {
 			// Get relationships 
-			List<List<String>> relationshipList = utility.Meta.collectRelationships(setting, setting.database, setting.inputSchema, table);
+			List<List<String>> relationshipList = null; // OBSOLETE code...
 			System.out.println(relationshipList);
 			
 			// Detection of a loop between two tables - a sign of possible symmetry.
-			// We are relying on the fact that the relations are sorted by FTable from "collectRelationships".
+			// We are relying on the fact that the relations are sorted by FTable from "downloadRelationships".
 			String lagFTable = "";
 			String lagColumn = "";
 			String lagFColumn = "";
