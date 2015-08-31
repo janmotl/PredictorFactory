@@ -75,8 +75,9 @@ public class Propagation{
 				SortedSet<String> timeSet = metaInput.get(table2).timeColumn;
 				
 				// Get relationships between table1 and table2
-				List<ForeignConstraint> relationshipList = metaOutput.get(table1).foreignConstraintList.stream().filter(foreignConstraint -> table2.equals(foreignConstraint.fTable)).collect(Collectors.toList());
-
+				//List<ForeignConstraint> relationshipList = metaOutput.get(table1).foreignConstraintList.stream().filter(foreignConstraint -> table2.equals(foreignConstraint.fTable)).collect(Collectors.toList());
+				List<ForeignConstraint> relationshipList = metaInput.get(table2).foreignConstraintList.stream().filter(foreignConstraint -> table1.equals(foreignConstraint.fTable)).collect(Collectors.toList());
+				
 				for (ForeignConstraint relationship : relationshipList) {
 					// Initialize
 					OutputTable table = new OutputTable();
@@ -130,20 +131,18 @@ public class Propagation{
 						if (candidateList.isEmpty()) {
 							table.propagatedName = trim(setting, table2, metaOutput.size());
 							table.constrainDate = null;
-							table.rowCount = null;
 							table.dateBottomBounded = false;
 							table.sql =  SQL.propagateID(setting, table);
 							Network.executeUpdate(setting.connection, table.sql);
+							table.rowCount = SQL.getRowCount(setting, setting.outputSchema, table.propagatedName);
 						} else {
 							table = candidateList.get(0);	// Just pick the first suitable table
 						}
 
-					}
-
-					// Propagate without the date constrain
-					if (timeSet.isEmpty() || table.isIdUnique) {
+					} else {	// Propagate without the date constrain
 						table.sql =  SQL.propagateID(setting, table);
 						Network.executeUpdate(setting.connection, table.sql);
+						table.rowCount = SQL.getRowCount(setting, setting.outputSchema, table.propagatedName);
 					} 
 
 					// Add indexes

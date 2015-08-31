@@ -813,6 +813,7 @@ public final class SQL {
 				"candidate_date_list " + setting.typeVarchar + "(2024), " +
 				"candidate_date_count " + setting.typeInteger + ", " +
 				"propagation_path " + setting.typeVarchar + "(1024), " +
+				"join_on_list " + setting.typeVarchar + "(1024), " +
 				"propagation_depth " + setting.typeInteger + ", " +
 				"sql_code " + setting.typeVarchar + "(2024), " + // For example code for WoE is close to 1024 chars
 				"is_id_unique " + setting.typeInteger + ", " +
@@ -847,6 +848,7 @@ public final class SQL {
 				table.timeColumn.size() + ", " +
 				"'" + table.propagationPath.toString() + "', " +
 				table.propagationPath.size() + ", " +
+				table.foreignConstraint.column + ", " +
 				"'" + table.sql.replaceAll("'", "''") + "', " +		// Escape single quotes
 				isIdUnique + ", " +
 				table.rowCount + ", " +
