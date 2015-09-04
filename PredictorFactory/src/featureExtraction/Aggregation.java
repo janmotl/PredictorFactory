@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 public class Aggregation {
 	// Logging
@@ -35,7 +36,7 @@ public class Aggregation {
 		
 		// 2) Set @targetValue
 			// First, get the cached list of unique values in the target column
-			List<String> uniqueList = new ArrayList<String>();
+			List<String> uniqueList = new ArrayList<>();
 			for (OutputTable table : tableMetadata.values()) {
 				if (setting.targetTable.equals(table.originalName)) {
 					uniqueList = table.uniqueList.get(setting.targetColumn);
@@ -44,38 +45,38 @@ public class Aggregation {
 			}
 
 			// Second, Loop over all the predictors
-			List<Predictor> predictorList2 = new ArrayList<Predictor>();
+			List<Predictor> predictorList2 = new ArrayList<>();
 			for (Predictor predictor : predictorList) {
 				predictorList2.addAll(addTargetValue(setting, predictor, uniqueList));
 			}
 
 		
 		// 3) Loop over parameters
-		List<Predictor> predictorList3 = new ArrayList<Predictor>(); 
+		List<Predictor> predictorList3 = new ArrayList<>();
 		for (Predictor predictor : predictorList2) {
 			predictorList3.addAll(loopParameters(predictor));
 		}
 		
 		// 4) Loop over tables
-		List<Predictor> predictorList4 = new ArrayList<Predictor>(); 
+		List<Predictor> predictorList4 = new ArrayList<>();
 		for (Predictor predictor : predictorList3) {
 			predictorList4.addAll(loopTables(predictor, tableMetadata));
 		}
 		
 		// 5) Loop over columns
-		List<Predictor> predictorList5 = new ArrayList<Predictor>(); 
+		List<Predictor> predictorList5 = new ArrayList<>();
 		for (Predictor predictor : predictorList4) {
 			predictorList5.addAll(loopColumns(predictor, tableMetadata));
 		}
 		
 		// 6) Loop over @value
-		List<Predictor> predictorList6 = new ArrayList<Predictor>(); 
+		List<Predictor> predictorList6 = new ArrayList<>();
 		for (Predictor predictor : predictorList5) {
 			predictorList6.addAll(addValue(setting, predictor, tableMetadata));
 		}
 		
 		// 7) Optimize parameters
-		List<Predictor> predictorList7 = new ArrayList<Predictor>(); 
+		List<Predictor> predictorList7 = new ArrayList<>();
 		for (Predictor predictor : predictorList6) {
 			predictorList7.addAll(optimizeAll(predictor, groupId));
 			groupId++; // GroupId is unique per optimization group
@@ -97,7 +98,7 @@ public class Aggregation {
 	protected static List<Predictor> loopPatterns(Setting setting) {
 
 		// Initialize
-		List<Predictor> outputList = new ArrayList<Predictor>();
+		List<Predictor> outputList = new ArrayList<>();
 		SortedMap<String, Pattern> patternMap = PatternMap.getPatternMap();
 
 		// If whitelist is not empty, perform intersect
@@ -108,17 +109,28 @@ public class Aggregation {
 		// Skip blacklisted patterns
 		String[] blackList = setting.blackListPattern.split(",");
 		patternMap.keySet().removeAll(Arrays.asList(blackList));
-		
+
 		// Get the dialect code
 		for (Pattern pattern : patternMap.values()) {
-			pattern.agnostic2dialectCode(setting);					// Initialize dialectCode. Once.
-			outputList.add(new Predictor(pattern));					// Build a predictor from the pattern
+			pattern.initialize(setting);				// Initialize dialectCode. Once.
+			outputList.add(new Predictor(pattern));		// Build a predictor from the pattern
 		}
+
+		// Skip predictors requiring baseDate, if targetDate is not available
+		outputList = filterRequiresBaseDate(setting, outputList);
 		
 		return outputList;
 	}
-	
-	
+
+	private static List<Predictor> filterRequiresBaseDate(Setting setting, List<Predictor> predictorList) {
+		if (setting.targetDate == null) {
+			return predictorList.stream().filter(predictor -> !predictor.getPatternRequiresBaseDate()).collect(Collectors.toList());
+		}
+
+		return predictorList;
+	}
+
+
 	// Subroutine 2: Populate @targetValue (based on unique values in the target column in the target window) and set SQL.
 	// If we are performing regression, remove patterns that are using target value, as these patterns are not applicable.
 	// CURRENTLY IMPLEMENTED ONLY FOR THE FIRST VALUE -> IT RETURNS JUST A SINGLE PREDICTOR
@@ -132,7 +144,7 @@ public class Aggregation {
 			if (isClassification) {
 				predictor.setParameter("@targetValue", uniqueList.get(0));
 			} else {
-				return new ArrayList<Predictor>();
+				return new ArrayList<>();
 			}
 		}
 
@@ -148,7 +160,7 @@ public class Aggregation {
 	protected static List<Predictor> loopParameters(Predictor predictor) {
 		
 		// Initialize the output
-		List<Predictor> predictorList = new ArrayList<Predictor>();
+		List<Predictor> predictorList = new ArrayList<>();
 		predictorList.add(predictor);
 		
 		// Loop over each parameter
@@ -167,7 +179,7 @@ public class Aggregation {
 	
 	private static List<Predictor> expandParameter(List<Predictor> predictorList, String parameterName, String[] parameterValueList) {
 		
-		List<Predictor> outputList = new ArrayList<Predictor>();
+		List<Predictor> outputList = new ArrayList<>();
 		
 		for (Predictor predictor : predictorList) {
 			for (String parameterValue : parameterValueList) {
@@ -187,7 +199,7 @@ public class Aggregation {
 	protected static List<Predictor> loopTables(Predictor predictor, SortedMap<String, OutputTable> tableMetadata) {
 		
 		// Initialize the output
-		List<Predictor> outputList = new ArrayList<Predictor>();
+		List<Predictor> outputList = new ArrayList<>();
 		
 		// For each propagated table.
 		for (OutputTable workingTable : tableMetadata.values()) {
@@ -221,10 +233,10 @@ public class Aggregation {
 	protected static List<Predictor> loopColumns(Predictor predictor, SortedMap<String, OutputTable> tableMetadata) {
 		
 		// Initialize the output
-		List<Predictor> predictorList = new ArrayList<Predictor>();
+		List<Predictor> predictorList = new ArrayList<>();
 		predictorList.add(predictor);
 		
-	    // Find each occurrence of "@?*column*" in SQL. The search is case sensitive (to force nicely formated patterns).
+	    // Find each occurrence of "@?*column*" in SQL. The search is case sensitive (to force nicely formatted patterns).
 		String regexPattern = "@\\w+Column\\w*";
 		Matcher m = java.util.regex.Pattern.compile(regexPattern).matcher(predictor.getSql());
 		while (m.find()) {
@@ -236,16 +248,16 @@ public class Aggregation {
 			predictorList = expandColumn(predictorList, parameter.getKey(), tableMetadata.get(predictor.propagatedTable));
 		}
 		
-		return predictorList;		
+		return predictorList;
 	}
 	
 	private static List<Predictor> expandColumn(List<Predictor> predictorList, String columnKey, OutputTable table) {
 		
-		List<Predictor> outputList = new ArrayList<Predictor>();
+		List<Predictor> outputList = new ArrayList<>();
 		
 		for (Predictor predictor : predictorList) {
 			// Select columns from the table with the correct data type. 	
-			SortedSet<String> columnValueSet = new TreeSet<String>();
+			SortedSet<String> columnValueSet = new TreeSet<>();
 			
 			// Matches: Case insensitive plus suffix with any number of digits
 			if (columnKey.matches("(?i)@NUMERICALCOLUMN\\d*")) columnValueSet = table.numericalColumn;	
@@ -271,7 +283,7 @@ public class Aggregation {
 	protected static List<Predictor> addValue(Setting setting, Predictor predictor, SortedMap<String, OutputTable> tableMetadata) {
 		
 		// Initialize the output
-		List<Predictor> predictorList = new ArrayList<Predictor>();
+		List<Predictor> predictorList = new ArrayList<>();
 
 		// If the pattern code contains @value
 		if (predictor.getPatternCode().contains("@value")) {
@@ -310,7 +322,7 @@ public class Aggregation {
 	// Subroutine 7: Optimize the parameter.
 	private static List<Predictor> optimizeAll(Predictor predictor, int groupId) {
 		// Initialization
-		List<Predictor> outputList = new ArrayList<Predictor>();
+		List<Predictor> outputList = new ArrayList<>();
 		outputList.add(predictor);
 		
 		// Loop over all parameters to optimize
@@ -333,7 +345,7 @@ public class Aggregation {
 	
 	private static List<Predictor> optimize(List<Predictor> predictorList, OptimizeParameters parameter) {
 		// Initialization
-		List<Predictor> outputList = new ArrayList<Predictor>();
+		List<Predictor> outputList = new ArrayList<>();
 		
 		for (Predictor predictor : predictorList) {
 			// CURRENTLY JUST SWEEP OVER THE VALUES. USE A REAL OPTIMALISATION TOOLBOX.

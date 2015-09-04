@@ -37,6 +37,7 @@ public class Predictor implements Comparable<Predictor> {
 	private final String patternAuthor;				// Adds an element of gamification
 	private final String patternCode;				// Inherited from the pattern
 	private final String patternCardinality;		// Inherited from the pattern
+	private final Boolean patternRequiresBaseDate;	// Inherited from the pattern
 	private final SortedMap<String, String> patternParameterMap;	// Inherited from the pattern
 	private final List<Pattern.OptimizeParameters> patternOptimizeList;	// Inherited from the pattern
 	private String name;							// Predictor's name abbreviated to comply with vendor's limits
@@ -76,6 +77,7 @@ public class Predictor implements Comparable<Predictor> {
 		patternCode = pattern.dialectCode;
 		patternAuthor = pattern.author;	
 		patternCardinality = pattern.cardinality;
+		patternRequiresBaseDate = pattern.requiresBaseDate;
 		patternParameterMap = pattern.dialectParameter;
 		patternOptimizeList = pattern.optimizeParameter;
 		patternTopN = pattern.topN;
@@ -320,6 +322,10 @@ public class Predictor implements Comparable<Predictor> {
 
 	public void setSql(String sql) {
 		this.sql = sql;
+	}
+
+	public Boolean getPatternRequiresBaseDate() {
+		return patternRequiresBaseDate;
 	}
 
 	public boolean isOk() {

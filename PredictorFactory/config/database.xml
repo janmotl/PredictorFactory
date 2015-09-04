@@ -30,9 +30,13 @@
     <database name="legalActs" inputSchema="legalActs" outputSchema="predictor_factory" targetTable="legalacts" targetId="id" targetDate="update" targetColumn="ActKind" task="classification"/>
     <database name="library" inputSchema="library" outputSchema="predictor_factory" targetTable="customer" targetId="CID" targetColumn="class" task="classification"/>
     <database name="medical" inputSchema="medical" outputSchema="predictor_factory" targetTable="TSUM_B" targetId="ID" targetDate="Examination Date" targetColumn="Thrombosis" task="classification"/>
-    <database name="Mondial" inputSchema="Mondial" outputSchema="predictor_factory" targetTable="religion" targetId="Country" targetColumn="Name" task="classification"/>
+
+    <database name="Mondial" inputSchema="Mondial" outputSchema="predictor_factory" targetTable="target" targetId="Country" targetColumn="Target" task="classification"/>
+
     <database name="Mondial_geo" inputSchema="Mondial_geo" outputSchema="predictor_factory" targetTable="Country" targetId="Code" targetColumn="Population" task="classification"/>
     <database name="mutagenesis" inputSchema="mutagenesis" outputSchema="predictor_factory" targetTable="molecule" targetId="molecule_id" targetColumn="mutagenic" task="classification"/>
+    <database name="mutagenesis_test_setting" inputSchema="mutagenesis" outputSchema="predictor_factory" targetTable="molecule" targetId="molecule_id" targetColumn="mutagenic" task="classification" whiteListPattern="Aggregate,Direct field,Time since direct"/>
+
     <database name="mutagenesis_disc_sym" inputSchema="mutagenesis_disc_sym" outputSchema="predictor_factory" targetTable="molecule" targetId="molecule_id" targetColumn="mutagenic" task="classification"/>
     <database name="mutagenesis_disc" inputSchema="mutagenesis_disc" outputSchema="predictor_factory" targetTable="molecule" targetId="molecule_id" targetColumn="mutagenic" task="classification"/>
     <database name="mutagenesis_42" inputSchema="mutagenesis_42" outputSchema="predictor_factory" targetTable="drugs" targetId="id" targetColumn="active" blackListColumn="drugs.act" task="classification"/>
@@ -59,7 +63,7 @@
     <database name="trains" inputSchema="trains" outputSchema="predictor_factory" targetTable="trains" targetId="id" targetColumn="direction" task="classification"/>
     <database name="unielwin" inputSchema="unielwin" outputSchema="predictor_factory" targetTable="student" targetId="student_id" targetColumn="intelligence" task="classification"/>
     <database name="UW_std" inputSchema="UW_std" outputSchema="predictor_factory" targetTable="person" targetId="p_id" targetColumn="inPhase" task="classification"/>
-    <database name="voc" inputSchema="voc" outputSchema="predictor_factory" targetTable="voyages" targetId="number, number_sup" targetDate="arrival_date" targetColumn="arrival_harbour" task="classification"/>
+    <database name="voc" inputSchema="voc" outputSchema="predictor_factory" targetTable="voyages" targetId="number,number_sup" targetDate="arrival_date" targetColumn="arrival_harbour" task="classification"/>
     <database name="voc_test_setting" inputSchema="voc" outputSchema="predictor_factory" targetTable="voyages" targetId="number,number_sup" targetDate="arrival_date" targetColumn="arrival_harbour" whiteListTable="voyages,total" whiteListColumn="voyages.number,voyages.number_sup,voyages.arrival_date,voyages.master,voyages.cape_departure,total.number,total.number_sup,total.death_during_voyage" sampleCount="30" task="classification" whiteListPattern="Aggregate,Direct field,Time since direct"/>
     <database name="world" inputSchema="world" outputSchema="predictor_factory" targetTable="Country" targetId="Code" targetColumn="Continent" task="classification"/>
     <database name="Yelp" inputSchema="Yelp" outputSchema="predictor_factory" targetTable="Reviews" targetId="review_id" targetDate="review_date" targetColumn="stars" task="regression"/>

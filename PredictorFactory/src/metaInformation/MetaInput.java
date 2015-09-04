@@ -57,8 +57,10 @@ public class MetaInput {
 		}
 
 		// QC that targetDate doesn't contain nulls
-		if ((SQL.getRowCount(setting, setting.inputSchema, setting.targetTable)-SQL.getNotNullCount(setting, setting.inputSchema, setting.targetTable, setting.targetDate)) > 0) {
-			logger.warn("Target date column '" + setting.targetDate + "' contains null. Rows with the null in target date column WILL BE IGNORED!");
+		if (setting.targetDate != null) {
+			if ((SQL.getRowCount(setting, setting.inputSchema, setting.targetTable) - SQL.getNotNullCount(setting, setting.inputSchema, setting.targetTable, setting.targetDate)) > 0) {
+				logger.warn("Target date column '" + setting.targetDate + "' contains null. Rows with the null in target date column WILL BE IGNORED!");
+			}
 		}
 
 		// Apply black/white lists

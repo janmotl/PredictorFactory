@@ -20,18 +20,12 @@ public class DatabasePropertyList {
 	private static final Logger logger = Logger.getLogger(DatabasePropertyList.class.getName());
 	
 	// Private Fields
-	private ArrayList<DatabaseProperty> database = new ArrayList<DatabaseProperty>();
+	private ArrayList<DatabaseProperty> database = new ArrayList<>();
 	
 	// Get property by name
 	public DatabaseProperty getDatabaseProperties(String name) {
 		for (DatabaseProperty properties : database) {
 			if (properties.name.equals(name)) {
-				
-				// Treat statical datasets as dynamic - it is inefficient, but simple  
-				if (properties.targetDate == null) {
-					properties.targetDate = properties.targetId; 
-				}
-				
 				return properties;
 			}
 		}

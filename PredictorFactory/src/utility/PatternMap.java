@@ -1,10 +1,10 @@
 package utility;
 
+import featureExtraction.Pattern;
+
 import java.io.File;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
-import featureExtraction.Pattern;
 
 public class PatternMap {
 
@@ -14,7 +14,7 @@ public class PatternMap {
 	public static SortedMap<String, Pattern> getPatternMap() {
 
 		// Initialize the output
-		SortedMap<String, Pattern> outputMap = new TreeMap<String, Pattern>();
+		SortedMap<String, Pattern> outputMap = new TreeMap<>();
 		
 		// Get list of file paths
 		File dir = new File("pattern");

@@ -55,8 +55,7 @@ public final class Setting {
 	// Setup related
 	// WHITELISTS AND BLACKLISTS SHOULD BE ARRAYLISTS
 	// ALSO TARGETID AND TARGET COLUMN SHOULD BE LISTS
-	public String targetId;			// The id column (like IdCustomer). Used only for base construction.
-	public List<String> targetIdList = new ArrayList<>();	// EXPERIMENTAL
+	public List<String> targetIdList = new ArrayList<>();	// The id column (like IdCustomer).
 	public String targetDate;		// The date column. Used only for base construction.
 	public String targetColumn;		// The target column. Used only for base construction.
 	public String targetTable;		// The table with the target column. Used only for base construction.
@@ -80,12 +79,9 @@ public final class Setting {
 	public String mainTable = "mainSample";			// The name of the result table with predictors.
 	public String journalTable = "journal"; 		// The name of predictors' journal table.
 	public String journalPropagationTable = "journal_table"; 		// The name of propagation journal table.
-
-	public boolean useView = true;					// Create views instead of tables if possible?
-	public int predictorStart = 100000;  			// Convenience for "natural sorting".
-	
 	public String propagatedPrefix = "propagated_";	// For single schema databases.
 	public String predictorPrefix = "PREDICTOR";  	// Tables with predictors have uniform prefix.
+	public int predictorStart = 100000;  			// Convenience for "natural sorting".
 	
 	// Parameters
 	public int propagationDepthMax = 10; 			// The maximal depth of base table propagation. Smaller value will result into faster propagation.
@@ -101,11 +97,10 @@ public final class Setting {
 	public int valueCount = 20;						// Count of discrete values to consider in existential quantifier.
 	// missingValues (had to be implemented)
 	
-	// Constructor
- 	public Setting() {
-	}
+	// Constructors
+	public Setting() {}
 
- 	public Setting(String connectionPropertyName, String databasePropertyName) {
+	public Setting(String connectionPropertyName, String databasePropertyName) {
  	   // Load the configuration XMLs
 		ConnectionPropertyList connectionPropertyList = ConnectionPropertyList.unmarshall();
 		DriverPropertyList driverPropertyList = DriverPropertyList.unmarshall(); 
@@ -170,13 +165,12 @@ public final class Setting {
 		// Load database properties
 		inputSchema = databaseProperty.inputSchema;
 		outputSchema = databaseProperty.outputSchema;
-		targetId = databaseProperty.targetId;
 		targetIdList = Arrays.asList(databaseProperty.targetId.split(","));	// Permit composite id
 		targetDate = databaseProperty.targetDate;
 		targetColumn = databaseProperty.targetColumn;
 		targetTable = databaseProperty.targetTable;
 
-		// Deal with composite id
+		// Initialize baseIdList based on the count of columns in targetIdList
 		for (int i = 0; i < targetIdList.size(); i++) {
 			baseIdList.add("propagated_id" + (i+1));	// Indexing from 1
 		}

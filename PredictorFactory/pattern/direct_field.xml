@@ -21,9 +21,7 @@
 	</example>
 	<author>Jan Motl</author>
 	<date>2014-10-14</date>
-	<code>SELECT @baseId
-			   , @baseDate
-			   , @baseTarget
+	<code>SELECT @base
 			   , @column AS "@columnName"
 		  FROM @propagatedTable</code>
 	<parameter key="@column" value="@nominalColumn, @numericalColumn, @timeColumn"/>

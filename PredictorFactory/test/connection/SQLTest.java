@@ -21,7 +21,7 @@ public class SQLTest {
         table.propagationTable = "propagated_account";
 
         ForeignConstraint fc = new ForeignConstraint();
-        table.foreignConstraint = fc;
+        table.propagationForeignConstraint = fc;
     }
 
 
@@ -33,10 +33,10 @@ public class SQLTest {
         setting.quoteEntityClose = "]";
 
         // Parameters
-        table.foreignConstraint.column = new ArrayList<>();
-        table.foreignConstraint.fColumn = new ArrayList<>();
-        table.foreignConstraint.column.add("account_id");
-        table.foreignConstraint.fColumn.add("account_id");
+        table.propagationForeignConstraint.column = new ArrayList<>();
+        table.propagationForeignConstraint.fColumn = new ArrayList<>();
+        table.propagationForeignConstraint.column.add("account_id");
+        table.propagationForeignConstraint.fColumn.add("account_id");
 
         // Test
         String actual =  SQL.propagateID(setting, table);
@@ -53,12 +53,12 @@ public class SQLTest {
         setting.baseIdList.add("propagated_id2");
 
         // Parameters
-        table.foreignConstraint.column = new ArrayList<>();
-        table.foreignConstraint.fColumn = new ArrayList<>();
-        table.foreignConstraint.column.add("account_id1");
-        table.foreignConstraint.fColumn.add("account_id2");
-        table.foreignConstraint.column.add("account_id3");
-        table.foreignConstraint.fColumn.add("account_id4");
+        table.propagationForeignConstraint.column = new ArrayList<>();
+        table.propagationForeignConstraint.fColumn = new ArrayList<>();
+        table.propagationForeignConstraint.column.add("account_id1");
+        table.propagationForeignConstraint.fColumn.add("account_id2");
+        table.propagationForeignConstraint.column.add("account_id3");
+        table.propagationForeignConstraint.fColumn.add("account_id4");
 
         // Test
         String actual =  SQL.propagateID(setting, table);

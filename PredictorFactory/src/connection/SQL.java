@@ -48,7 +48,6 @@ public final class SQL {
 		
 	// Subroutine 2.1: Expand tables (like: Table -> Schema.Table)
 	private static String expandName(String sql){
-	
 		// While MySQL doesn't implement "true" schemas, it implements information_schema
 		// and places it next to the database (instead of inside the database). 
 		// Hence purely based on the hierarchical structure we call MySQL's database as schema.
@@ -77,74 +76,74 @@ public final class SQL {
 	// Subroutine 3.1: Replace & escape the entities present in setting
 	private static String escapeEntity(Setting setting, String sql, String outputTable) {
 			// Test parameters
-			if (StringUtils.isBlank(sql)) {
-				throw new IllegalArgumentException("Code is required");
-			}
-			if (StringUtils.isBlank(outputTable)) {
-				throw new IllegalArgumentException("Output table is required");
-			}
-			if (StringUtils.isBlank(setting.targetId)) {
-				throw new IllegalArgumentException("Id column is required");
-			}
-			if (StringUtils.isBlank(setting.baseTable)) {
-				throw new IllegalArgumentException("Base table is required");
-			}
-			if (StringUtils.isBlank(setting.targetColumn)) {
-				throw new IllegalArgumentException("Target column is required");
-			}
-			if (StringUtils.isBlank(setting.targetTable)) {
-				throw new IllegalArgumentException("Target table is required");
-			}
-			if (StringUtils.isBlank(setting.inputSchema)) {
-				throw new IllegalArgumentException("InputSchema is required");
-			}
-			if (StringUtils.isBlank(setting.outputSchema)) {
-				throw new IllegalArgumentException("OutputSchema is required");
-			}
-			if (StringUtils.isBlank(setting.baseId)) {
-				throw new IllegalArgumentException("Base id is required");
-			}
-			if (StringUtils.isBlank(setting.baseDate)) {
-				throw new IllegalArgumentException("Base date is required");
-			}
-			if (StringUtils.isBlank(setting.baseTarget)) {
-				throw new IllegalArgumentException("Base target is required");
-			}
-			
-			// Get escape characters
-		    String QL = setting.quoteEntityOpen;
-			String QR = setting.quoteEntityClose;
-
-			// Escape each part of targetId individually
-			String escapedTargetId = "";
-			for (String id : setting.targetIdList) {
-				escapedTargetId = escapedTargetId + ", " + QL + id + QR;
-			}
-			escapedTargetId = escapedTargetId.substring(2);	// Remove the first two symbols
-
-			// Escape each part of baseId individually
-			String escapedBaseId = "";
-			for (String id : setting.baseIdList) {
-				escapedBaseId = escapedBaseId + ", " + QL + id + QR;
-			}
-			escapedBaseId = escapedBaseId.substring(2);	// Remove the first two symbols
-
-			// Escape the entities
-			sql = sql.replaceAll("\\@idColumn\\b", escapedTargetId);	// Ignore numbered id columns used in joins (\b is a word boundary)
-			sql = sql.replace("@baseId", escapedBaseId);
-			sql = sql.replace("@baseDate", QL + setting.baseDate + QR);
-			sql = sql.replace("@baseTarget", QL + setting.baseTarget + QR);
-			sql = sql.replace("@baseFold", QL + setting.baseFold + QR);
-			sql = sql.replace("@baseTable", QL + setting.baseTable + QR);
-			sql = sql.replace("@targetDate", QL + setting.targetDate + QR);
-			sql = sql.replace("@targetColumn", QL + setting.targetColumn + QR);
-			sql = sql.replace("@targetTable", QL + setting.targetTable + QR);
-			sql = sql.replace("@inputSchema", QL + setting.inputSchema + QR);
-			sql = sql.replace("@outputSchema", QL + setting.outputSchema + QR);
-			sql = sql.replace("@outputTable", QL + outputTable + QR);
-							
-			return sql;
+		if (setting.targetIdList == null || setting.targetIdList.isEmpty()) {
+			throw new IllegalArgumentException("Id column is required");
 		}
+		if (StringUtils.isBlank(sql)) {
+			throw new IllegalArgumentException("Code is required");
+		}
+		if (StringUtils.isBlank(outputTable)) {
+			throw new IllegalArgumentException("Output table is required");
+		}
+		if (StringUtils.isBlank(setting.baseTable)) {
+			throw new IllegalArgumentException("Base table is required");
+		}
+		if (StringUtils.isBlank(setting.targetColumn)) {
+			throw new IllegalArgumentException("Target column is required");
+		}
+		if (StringUtils.isBlank(setting.targetTable)) {
+			throw new IllegalArgumentException("Target table is required");
+		}
+		if (StringUtils.isBlank(setting.inputSchema)) {
+			throw new IllegalArgumentException("InputSchema is required");
+		}
+		if (StringUtils.isBlank(setting.outputSchema)) {
+			throw new IllegalArgumentException("OutputSchema is required");
+		}
+		if (StringUtils.isBlank(setting.baseId)) {
+			throw new IllegalArgumentException("Base id is required");
+		}
+		if (StringUtils.isBlank(setting.baseDate)) {
+			throw new IllegalArgumentException("Base date is required");
+		}
+		if (StringUtils.isBlank(setting.baseTarget)) {
+			throw new IllegalArgumentException("Base target is required");
+		}
+
+		// Get escape characters
+		String QL = setting.quoteEntityOpen;
+		String QR = setting.quoteEntityClose;
+
+		// Escape each part of targetId individually
+		String escapedTargetId = "";
+		for (String id : setting.targetIdList) {
+			escapedTargetId = escapedTargetId + ", " + QL + id + QR;
+		}
+		escapedTargetId = escapedTargetId.substring(2);	// Remove the first two symbols
+
+		// Escape each part of baseId individually
+		String escapedBaseId = "";
+		for (String id : setting.baseIdList) {
+			escapedBaseId = escapedBaseId + ", " + QL + id + QR;
+		}
+		escapedBaseId = escapedBaseId.substring(2);	// Remove the first two symbols
+
+		// Escape the entities
+		sql = sql.replaceAll("\\@idColumn\\b", escapedTargetId);	// Ignore numbered id columns used in joins (\b is a word boundary)
+		sql = sql.replace("@baseId", escapedBaseId);
+		sql = sql.replace("@baseDate", QL + setting.baseDate + QR);
+		sql = sql.replace("@baseTarget", QL + setting.baseTarget + QR);
+		sql = sql.replace("@baseFold", QL + setting.baseFold + QR);
+		sql = sql.replace("@baseTable", QL + setting.baseTable + QR);
+		sql = sql.replace("@targetDate", QL + setting.targetDate + QR);
+		sql = sql.replace("@targetColumn", QL + setting.targetColumn + QR);
+		sql = sql.replace("@targetTable", QL + setting.targetTable + QR);
+		sql = sql.replace("@inputSchema", QL + setting.inputSchema + QR);
+		sql = sql.replace("@outputSchema", QL + setting.outputSchema + QR);
+		sql = sql.replace("@outputTable", QL + outputTable + QR);
+
+		return sql;
+	}
 
 	// Subroutine 3.2: Replace & escape the entities from predictor fields
 	private static String escapeEntityPredictor(Setting setting, String sql, Predictor predictor) {
@@ -204,14 +203,6 @@ public final class SQL {
 		sql = sql.replace("@propagatedTable", QL + table.propagationTable + QR);
 		sql = sql.replace("@outputTable", QL + table.propagatedName + QR);
 		sql = sql.replace("@dateColumn", QL + table.constrainDate + QR);
-
-		// Escape ids
-		String idCommaSeparated = "";
-		for (String id : table.foreignConstraint.column) {
-			idCommaSeparated += QL + id + QR + ",";
-		}
-		idCommaSeparated = idCommaSeparated.substring(0, idCommaSeparated.length()-1);
-		sql = sql.replace("@idCommaSeparated", idCommaSeparated);
 
 		return sql;
 	}
@@ -315,8 +306,13 @@ public final class SQL {
 	// Returns true if the update was successful.
 	// THE INDEX NAME CAN BE TOO LONG -> ADD ABBREVIATION
 	public static boolean addIndex(Setting setting, String outputTable) {
-		String sql = "CREATE INDEX " + outputTable + "_idx ON @outputTable (@baseId, @baseDate)";
-		
+		String columns = "(@baseId)";
+		if (setting.targetDate != null) {
+			columns = "(@baseId, @baseDate)";
+		}
+
+		String sql = "CREATE INDEX " + outputTable + "_idx ON @outputTable " + columns;
+
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, outputTable);
 		
@@ -326,9 +322,13 @@ public final class SQL {
 	}
 	
 	// Set primary key for a table in the output schema.
-	public static boolean setPrimaryKey(Setting setting, String outputTable) {	
+	public static boolean setPrimaryKey(Setting setting, String outputTable) {
+		String columns = "(@baseId)";
+		if (setting.targetDate != null) {
+			columns = "(@baseId, @baseDate)";
+		}
 
-		String sql = "ALTER TABLE @outputTable ADD PRIMARY KEY (@baseId, @baseDate)";
+		String sql = "ALTER TABLE @outputTable ADD PRIMARY KEY " + columns;
 
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, outputTable);
@@ -395,20 +395,34 @@ public final class SQL {
 	// Note that we are working with the input tables -> alter commands are forbidden.
 	// It was difficult to write a version that would be more effective than sum(... having count(*)>1).
 	// If you decide to replace this query, test it with several database engines!
+	// IS NOT USING SYSTEM ESCAPING
 	public static boolean isIdUnique(Setting setting, MetaOutput.OutputTable table) {
 		String sql = "SELECT count(*) " +
 					 "FROM @inputTable " +
 					 "GROUP BY @idCommaSeparated " +
 					 "HAVING COUNT(*)>1";
-				
+
+		// Get escape characters
+		String QL = setting.quoteEntityOpen;
+		String QR = setting.quoteEntityClose;
+
+		// Escape ids
+		String idCommaSeparated = "";
+		for (String id : table.propagationForeignConstraint.fColumn) {
+			idCommaSeparated += QL + id + QR + ",";
+		}
+		idCommaSeparated = idCommaSeparated.substring(0, idCommaSeparated.length() - 1);
+		sql = sql.replace("@idCommaSeparated", idCommaSeparated);
+
+
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, "dummy");
 		sql = escapeEntityTable(setting, sql, table);
 		
 		boolean result = Network.isResultSetEmpty(setting.connection, sql);
 		
-		if (result) logger.trace("# Column " + table.foreignConstraint.column + " in " + table.originalName + " doesn't contain duplicates #");
-		else logger.trace("# Column " + table.foreignConstraint.column + " in " + table.originalName + " CONTAINS duplicates #");
+		if (result) logger.trace("# Column " + table.propagationForeignConstraint.fColumn + " in " + table.originalName + " doesn't contain duplicates #");
+		else logger.trace("# Column " + table.propagationForeignConstraint.fColumn + " in " + table.originalName + " CONTAINS duplicates #");
 		
 		return result;
 	}
@@ -423,16 +437,16 @@ public final class SQL {
 		// But it doesn't work in Oracle as Oracle requires "from dual" -> use the simplest possible query
 		// and retrieve only one row with JDBC.
 		String sql;
-		
+
 		if (useInputSchema) {
 			sql = "SELECT count(*) " +
 					 "FROM @targetTable " +
-					 "GROUP BY @idColumn, @targetDate " +
+					 "GROUP BY @idColumn" + (setting.targetDate==null ? " " : ", @targetDate ") +
 					 "HAVING COUNT(*)>1";
 		} else {
 			sql = "SELECT count(*) " +
 					 "FROM @outputTable " +
-					 "GROUP BY @baseId, @baseDate " +
+					 "GROUP BY @baseId" + (setting.targetDate==null ? " " : ", @baseDate ") +
 					 "HAVING COUNT(*)>1";
 		}
 		
@@ -553,6 +567,7 @@ public final class SQL {
 	}
 	
  	// Get Chi2.
+	// SHOULD BE EXTENDED TO SUPPORT BOOLEANS
  	public static double getChi2(Setting setting, String table, String column) {
  		// Initialization
  		String sql;
@@ -813,10 +828,11 @@ public final class SQL {
 				"candidate_date_list " + setting.typeVarchar + "(2024), " +
 				"candidate_date_count " + setting.typeInteger + ", " +
 				"propagation_path " + setting.typeVarchar + "(1024), " +
-				"join_on_list " + setting.typeVarchar + "(1024), " +
 				"propagation_depth " + setting.typeInteger + ", " +
+				"join_on_list " + setting.typeVarchar + "(1024), " +
 				"sql_code " + setting.typeVarchar + "(2024), " + // For example code for WoE is close to 1024 chars
 				"is_id_unique " + setting.typeInteger + ", " +
+				"is_unique " + setting.typeInteger + ", " +
 				"qc_rowCount " + setting.typeInteger + ", " +
 				"qc_successfullyExecuted " + setting.typeInteger + ", " +
 				"CONSTRAINT pk_journal_propagated PRIMARY KEY (table_id))";
@@ -832,6 +848,7 @@ public final class SQL {
 		// Convert bool to int
 		int isOk = table.isSuccessfullyExecuted ? 1 : 0;
 		int isIdUnique = table.isIdUnique ? 1 : 0;
+		int isUnique = table.isUnique ? 1 : 0;
 
 		// Convert date to query
 		String timestampDesigned = date2query(setting, table.timestampDesigned);
@@ -848,9 +865,10 @@ public final class SQL {
 				table.timeColumn.size() + ", " +
 				"'" + table.propagationPath.toString() + "', " +
 				table.propagationPath.size() + ", " +
-				table.foreignConstraint.column + ", " +
+				"'" + table.propagationForeignConstraint.fColumn + "', " +
 				"'" + table.sql.replaceAll("'", "''") + "', " +		// Escape single quotes
 				isIdUnique + ", " +
+				isUnique + ", " +
 				table.rowCount + ", " +
 				isOk + ")";
 
@@ -871,14 +889,25 @@ public final class SQL {
  		
 		String sql;
 		String id = "";
+		String dateAs = "";
+		String dateAsTable = "";
+		String dateCondition = "";
+		String dateAndCondition = "";
 
 		// Get escape characters
 		String QL = setting.quoteEntityOpen;
 		String QR = setting.quoteEntityClose;
-		
+
 		// Detect duplicates in the base table
 		boolean isUnique = isUnique(setting, setting.targetTable, true);
 
+		// Use date?
+		if (setting.targetDate != null) {
+			dateAs = " @targetDate AS " + escapeAlias(setting, setting.baseDate) + ",";
+			dateAsTable =  " t1.@targetDate AS " + escapeAlias(setting, setting.baseDate) + ",";
+			dateCondition = " WHERE @targetDate IS NOT NULL";
+			dateAndCondition = " AND t1.@targetDate is not null";
+		}
 
 		// Deduplicate the base table if necessary
 		if (!isUnique) {
@@ -893,12 +922,12 @@ public final class SQL {
 			}
 
 			// The query itself
-			sql = "SELECT" + id + " t1.@targetDate AS " + escapeAlias(setting, setting.baseDate) + ", t1.@targetColumn AS " + escapeAlias(setting, setting.baseTarget) + ", FLOOR(" + setting.randomCommand + " * 10) AS " + escapeAlias(setting, setting.baseFold) + " " +
+			sql = "SELECT" + id + dateAsTable + " t1.@targetColumn AS " + escapeAlias(setting, setting.baseTarget) + ", FLOOR(" + setting.randomCommand + " * 10) AS " + escapeAlias(setting, setting.baseFold) + " " +
 					"FROM @targetTable t1 LEFT JOIN (" +
-					"SELECT @idColumn FROM @targetTable GROUP BY @idColumn, @targetDate HAVING count(*)>1 " +
+					"SELECT @idColumn FROM @targetTable GROUP BY @idColumn" + " HAVING count(*)>1 " +
 					") t2 " +
 					"ON t1.@idColumn = t2.@idColumn " +
-					"WHERE t2.@idColumn is null AND t1.@targetDate is not null";
+					"WHERE t2.@idColumn is null" + dateAndCondition;
 		} else {
 			// Prepare aliases for idColumn
 			for (int i = 0; i < setting.baseIdList.size(); i++) {
@@ -906,7 +935,7 @@ public final class SQL {
 			}
 
 			// The query itself
-			sql = "SELECT " + id + " @targetDate AS " + escapeAlias(setting, setting.baseDate) + ", @targetColumn AS " + escapeAlias(setting, setting.baseTarget) + ", FLOOR(" + setting.randomCommand + " * 10) AS " + escapeAlias(setting, setting.baseFold) + " FROM @targetTable WHERE @targetDate IS NOT NULL";
+			sql = "SELECT " + id + dateAs + " @targetColumn AS " + escapeAlias(setting, setting.baseTarget) + ", FLOOR(" + setting.randomCommand + " * 10) AS " + escapeAlias(setting, setting.baseFold) + " FROM @targetTable" + dateCondition;
 		}
 		
 		// Assembly the query
@@ -1000,13 +1029,13 @@ public final class SQL {
 		}
 
 		// Escape the join part
-		String joinOn = "ON t1." + QL + table.foreignConstraint.column.get(0) + QR + " = t2." + QL + table.foreignConstraint.fColumn.get(0) + QR;
-		for (int i = 1; i < table.foreignConstraint.column.size(); i++) {
-			joinOn += " AND t1." + QL + table.foreignConstraint.column.get(i) + QR + " = t2." + QL + table.foreignConstraint.fColumn.get(i) + QR;
+		String joinOn = "ON t1." + QL + table.propagationForeignConstraint.column.get(0) + QR + " = t2." + QL + table.propagationForeignConstraint.fColumn.get(0) + QR;
+		for (int i = 1; i < table.propagationForeignConstraint.column.size(); i++) {
+			joinOn += " AND t1." + QL + table.propagationForeignConstraint.column.get(i) + QR + " = t2." + QL + table.propagationForeignConstraint.fColumn.get(i) + QR;
 		}
 
 		String sql = "SELECT " + baseId +
-				"t1.@baseDate, " +
+				(setting.targetDate == null ? "" : "t1.@baseDate, ") +
 				"t1.@baseTarget, " +
 				"t1.@baseFold, " +
 				"t2.* " + 
@@ -1042,9 +1071,11 @@ public final class SQL {
 	
 	// 4) Get predictor
 	public static String getPredictor(Setting setting, Predictor predictor){
-		String sql;
-		
-		sql = addCreateTableAs(setting, predictor.getSql());  // The patternCode could be modified by parameters -> use SQL
+		String sql = predictor.getSql();
+
+		sql = Parser.expandBase(setting, sql);
+
+		sql = addCreateTableAs(setting, sql);
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, predictor.outputTable);	
 		sql = escapeEntityPredictor(setting, sql, predictor);		
@@ -1072,7 +1103,7 @@ public final class SQL {
 		Collections.sort(predictorList, Predictor.GroupIdComparator);
 		
 		int lagGroupId = 0;
-		List<Predictor> predictorList2 = new ArrayList<Predictor>();
+		List<Predictor> predictorList2 = new ArrayList<>();
 		
 		for (Predictor predictor : predictorList) {
 			if (predictor.getGroupId() != lagGroupId) {	// For each groupId select top n predictors
@@ -1081,18 +1112,19 @@ public final class SQL {
 			lagGroupId = predictor.getGroupId();
 		}
 
-		// One again, resort the relevances in descending order
+		// Once again, resort the relevances in descending order
 		Collections.sort(predictorList2, Predictor.RelevanceComparator.reversed());
 
 		// Cap the amount of predictors by columnMax
 		// RESERVE 3 COLUMNS FOR ID, TARGET AND TIME
 		// THE COUNT OF COLUMNS IS ALSO LIMITED BY ROW SIZE. AND BIGINT COMPOSES OF 8 BYTES -> DIVIDE BY 8.
+		// BUT THIS IS JUST A ROUGH ESTIMATE - ID CAN BE COMPOSED OF MULTIPLE COLUMNS...
 		predictorList = predictorList2.subList(0, Math.min(setting.columnMax/8-3, predictorList2.size()));
 		
 		// Extract table and column names.
 		// ASSUMING THAT THE MATCH IS 1:1!
-		List<String> tableListAll = new ArrayList<String>();
-		List<String> columnListAll = new ArrayList<String>();
+		List<String> tableListAll = new ArrayList<>();
+		List<String> columnListAll = new ArrayList<>();
 		
 		for (Predictor predictor : predictorList) {
 				tableListAll.add(predictor.outputTable);
@@ -1115,6 +1147,12 @@ public final class SQL {
 		for (String id : setting.baseIdList) {
 			idList += "t1." + QL + id + QR + ", ";
 		}
+
+		// Date
+		String date = "";
+		if (setting.targetDate != null) {
+			date = "t1.@baseDate, ";
+		}
 		
 		// Create temporary tables
 		for (int i = 0; i < tableListSmall.size(); i++) {
@@ -1127,7 +1165,7 @@ public final class SQL {
 			List<String> columnList = columnListSmall.get(i);
 
 			// Select part 
-			stringBuffer.append("SELECT " + idList + "t1.@baseDate, t1.@baseTarget");
+			stringBuffer.append("SELECT " + idList + date + "t1.@baseTarget");
 			tableCount = 2;
 			for (String column : columnList) {
 				stringBuffer.append(", t" + tableCount + ".@"  + column);	// The column name will be escaped
@@ -1144,9 +1182,14 @@ public final class SQL {
 				for (String id : setting.baseIdList) {
 					joinCondition += "t1." + QL+ id + QR + " = t" + tableCount + "." + QL + id + QR + " AND ";
 				}
+				joinCondition = StringUtils.stripEnd(joinCondition, " AND ");
 
-				stringBuffer.append(" LEFT JOIN " + table + " t" + tableCount +
-						" ON " + joinCondition + " t1.@baseDate = t" + tableCount + ".@baseDate");
+				stringBuffer.append(" LEFT JOIN " + table + " t" + tableCount + " ON " + joinCondition);
+
+				if (setting.targetDate != null) {
+					stringBuffer.append(" AND t1.@baseDate = t" + tableCount + ".@baseDate");
+				}
+
 				tableCount++;
 			}
 			
@@ -1168,14 +1211,13 @@ public final class SQL {
 			
 			// Build index on BaseId in the temporary table for possibly faster final join
 			addIndex(setting, tempTable);
-			
 		}
 		
 		//// Combine the temporary tables into a single output table ////
 		StringBuilder stringBuffer = new StringBuilder(500);
 		
 		// Select part (like t1.column1)
-		stringBuffer.append("SELECT " + idList + "t1.@baseDate, t1.@baseTarget");
+		stringBuffer.append("SELECT " + idList + date + "t1.@baseTarget");
 		
 		for (int i = 0; i < tempTableList.size(); i++) {
 			for (String column : columnListSmall.get(i)) {
@@ -1195,9 +1237,13 @@ public final class SQL {
 			for (String id : setting.baseIdList) {
 				joinCondition += "t1." + QL+ id + QR + " = t" + tableCount + "." + QL + id + QR + " AND ";
 			}
+			joinCondition = StringUtils.stripEnd(joinCondition, " AND ");
 
-			stringBuffer.append(" INNER JOIN " + tempTable + " t" + tableCount +
-					" ON " + joinCondition + "t1.@baseDate = t" + tableCount + ".@baseDate");
+			stringBuffer.append(" INNER JOIN " + tempTable + " t" + tableCount + " ON " + joinCondition);
+
+			if (setting.targetDate != null) {
+				stringBuffer.append(" AND t1.@baseDate = t" + tableCount + ".@baseDate");
+			}
 		}
 		
 		// Make SQL from the pattern

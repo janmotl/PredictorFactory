@@ -75,9 +75,8 @@ public class Propagation{
 				SortedSet<String> timeSet = metaInput.get(table2).timeColumn;
 				
 				// Get relationships between table1 and table2
-				//List<ForeignConstraint> relationshipList = metaOutput.get(table1).foreignConstraintList.stream().filter(foreignConstraint -> table2.equals(foreignConstraint.fTable)).collect(Collectors.toList());
-				List<ForeignConstraint> relationshipList = metaInput.get(table2).foreignConstraintList.stream().filter(foreignConstraint -> table1.equals(foreignConstraint.fTable)).collect(Collectors.toList());
-				
+				List<ForeignConstraint> relationshipList = metaOutput.get(table1).foreignConstraintList.stream().filter(propagationForeignConstraint -> table2.equals(propagationForeignConstraint.fTable)).collect(Collectors.toList());
+
 				for (ForeignConstraint relationship : relationshipList) {
 					// Initialize
 					OutputTable table = new OutputTable();
@@ -92,7 +91,7 @@ public class Propagation{
 					table.originalName = table2;
 					table.propagationTable = table1;
 					table.propagationPath = getPropagationPath(metaOutput.get(table1));
-					table.foreignConstraint = relationship;
+					table.propagationForeignConstraint = relationship;
 					table.dateBottomBounded = false;
 
 					// If idColumn2 is distinct in table2, it is unnecessary to set time condition.
@@ -101,7 +100,7 @@ public class Propagation{
 					table.isIdUnique = SQL.isIdUnique(setting, table);
 					
 					// Attempt to use time constrain
-					if (!table.isIdUnique & !timeSet.isEmpty() & timeSet.size()<3) {
+					if (setting.targetDate != null & !table.isIdUnique & !timeSet.isEmpty() & timeSet.size()<3) {
 						// Initialize list of candidate tables
 						ArrayList<OutputTable> candidateList = new ArrayList<>();
 						

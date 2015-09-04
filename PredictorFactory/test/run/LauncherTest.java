@@ -207,25 +207,40 @@ public class LauncherTest {
 
     // Test VOC dataset
     @Test
-    public void test_composite_key_PostgreSQL() {
+    public void test_compositeKey_PostgreSQL() {
         String[] arguments = new String[]{"PostgreSQL", "voc_test_setting"};
         Launcher.main(arguments);
 
         Setting setting = new Setting("PostgreSQL", "voc_test_setting");
         Network.openConnection(setting);
         int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
-        String sql = "select column_name " +
-                "from information_schema.columns " +
-                "where table_schema = 'predictor_factory' " +
-                "and table_name = 'mainSample'";
-        List<String> columnList = Network.executeQuery(setting.connection, sql);
+        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
-        Assert.assertTrue(columnList.contains("total_death_during_voyage_directField_numericalColumn_100002"));
-        Assert.assertTrue(columnList.contains("voyages_master_directField_nominalColumn_100001"));
-        Assert.assertTrue(columnList.contains("voyages_cape_departure_timeSinceDirect_100006"));
+        Assert.assertTrue(columnList.containsKey("total_death_during_voyage_directField_numericalColumn_100002"));
+        Assert.assertTrue(columnList.containsKey("voyages_master_directField_nominalColumn_100001"));
+        Assert.assertTrue(columnList.containsKey("voyages_cape_departure_timeSinceDirect_100006"));
         Assert.assertEquals(637, rowCount);
         Assert.assertEquals(10, columnList.size());
+    }
+
+    // Test Mutagenesis dataset
+    @Test
+    public void test_noDate_PostgreSQL() {
+        String[] arguments = new String[]{"PostgreSQL", "mutagenesis_test_setting"};
+        Launcher.main(arguments);
+
+        Setting setting = new Setting("PostgreSQL", "mutagenesis_test_setting");
+        Network.openConnection(setting);
+        int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
+        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        Network.closeConnection(setting);
+
+        Assert.assertTrue(columnList.containsKey("bond_type_aggregate_max_100015"));
+        Assert.assertTrue(columnList.containsKey("molecule_logp_directField_numericalColumn_100023"));
+        Assert.assertTrue(columnList.containsKey("atom_charge_aggregate_sum_100017"));
+        Assert.assertEquals(188, rowCount);
+        Assert.assertEquals(26, columnList.size());
     }
 
 }

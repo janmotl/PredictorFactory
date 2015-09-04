@@ -29,13 +29,14 @@ public class Pattern {
 	public String description;
 	public String author;
 	public String cardinality;
+	public boolean requiresBaseDate;
 	@XmlJavaTypeAdapter(LocalDateAdapter.class) public LocalDate date;
-	private ArrayList<PatternCode> code = new ArrayList<PatternCode>();
+	private ArrayList<PatternCode> code = new ArrayList<>();
 	@XmlTransient public String dialectCode;	// For example std -> stddev_samp
-	private ArrayList<PatternParameter> parameter = new ArrayList<PatternParameter>();
-	@XmlTransient public SortedMap<String, String> dialectParameter = new TreeMap<String, String>();
-	private ArrayList<PatternOptimize> optimize = new ArrayList<PatternOptimize>();
-	@XmlTransient public ArrayList<OptimizeParameters> optimizeParameter  = new ArrayList<OptimizeParameters>();
+	private ArrayList<PatternParameter> parameter = new ArrayList<>();
+	@XmlTransient public SortedMap<String, String> dialectParameter = new TreeMap<>();
+	private ArrayList<PatternOptimize> optimize = new ArrayList<>();
+	@XmlTransient public ArrayList<OptimizeParameters> optimizeParameter  = new ArrayList<>();
 	
 	public class OptimizeParameters {
 		String key;
@@ -47,44 +48,14 @@ public class Pattern {
 	
 	// Constructor
 	public Pattern(){}
-	
-    // Convert the database agnostic SQL into vendor's specific SQL.
-	// This conversion is performed just once to safe CPU power.
-	// Do not enforce case sensitivity when we can't force the script designers to follow it (parameter "i").
-	// SHOULD BE DONE IN PREDICTOR, NOT IN PATTERN!
-	public void agnostic2dialectCode(Setting setting) {		
-		String rawCode = code.get(0).code;	// By default pick the first code 
-		
-		// Pick the correct code
-		for (PatternCode patternCode : code) {
-			if (patternCode.compatibility!=null && patternCode.compatibility.contains(setting.databaseVendor)) {
-				rawCode = patternCode.code;
-			}
-		}
-		
-		// Translate the code
-		dialectCode = getDialect(setting, rawCode);
-		
-		// Translate the parameters
-		for (PatternParameter patternParameter : parameter) {
-			dialectParameter.put(patternParameter.key, getDialect(setting, patternParameter.value));
-		}
-		
-		// Convert constants in "optimize" into numbers
-		for (PatternOptimize patternOptimize : optimize) {
-			OptimizeParameters op = new OptimizeParameters();
-			
-			op.min = variable2value(setting, patternOptimize.min);
-			op.max = variable2value(setting, patternOptimize.max);
-			op.integerValue = patternOptimize.integerValue;
-			op.iterationLimit = patternOptimize.iterationLimit;
-			op.key = patternOptimize.key;
-			
-			optimizeParameter.add(op);
-		}
 
+	// SHOULD BE MOVED INTO A CONSTRUCTOR OF PREDICTOR
+	public void initialize(Setting setting) {
+		agnostic2dialectCode(setting);
+		setRequiresBaseDate();
 	}
-	
+
+
 	  
 	// Load property list from XML
 	public static Pattern unmarshall(String path){
@@ -103,21 +74,55 @@ public class Pattern {
 	
 	
 	/////////// Subroutines ///////////
-	
+	// Convert the database agnostic SQL into vendor's specific SQL.
+	// This conversion is performed just once to safe CPU power.
+	// Do not enforce case sensitivity when we can't force the script designers to follow it (parameter "i").
+	private void agnostic2dialectCode(Setting setting) {
+		String rawCode = code.get(0).code;	// By default pick the first code
+
+		// Pick the correct code
+		for (PatternCode patternCode : code) {
+			if (patternCode.compatibility!=null && patternCode.compatibility.contains(setting.databaseVendor)) {
+				rawCode = patternCode.code;
+			}
+		}
+
+		// Translate the code
+		dialectCode = getDialectString(setting, rawCode);
+
+		// Translate the parameters
+		for (PatternParameter patternParameter : parameter) {
+			dialectParameter.put(patternParameter.key, getDialectString(setting, patternParameter.value));
+		}
+
+		// Convert constants in "optimize" into numbers
+		for (PatternOptimize patternOptimize : optimize) {
+			OptimizeParameters op = new OptimizeParameters();
+
+			op.min = variable2value(setting, patternOptimize.min);
+			op.max = variable2value(setting, patternOptimize.max);
+			op.integerValue = patternOptimize.integerValue;
+			op.iterationLimit = patternOptimize.iterationLimit;
+			op.key = patternOptimize.key;
+
+			optimizeParameter.add(op);
+		}
+
+	}
+
 	// Subroutine - replace constants with the actual values.
 	private double variable2value(Setting setting, String input) {
-		
+
 		if ("@lagMax".equals(input)) return setting.lag;
 		if ("@leadMin".equals(input)) return setting.lead;
-		
+
 		return Double.parseDouble(input);
 	}
-	
 
 	// Subroutine - get vendor's dialect. 
 	// For example std -> stddev_samp.
 	// Protected because of testing
-	protected String getDialect(Setting setting, String agnosticCode) {
+	protected String getDialectString(Setting setting, String agnosticCode) {
 		// Stddev_samp
 		String dialectCode = agnosticCode.replaceAll("(?i)stdDev_samp", setting.stdDevCommand);
 		
@@ -138,8 +143,8 @@ public class Pattern {
 		
 		return dialectCode;
 	}
-	
-	// Subroutine for getDialect
+
+	// Subroutine for getDialectString
 	private String nullIf(String dialectCode) {
 		java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(?is)(.*)(nullif\\()(.*?)(,+)(.*?)(\\))(.*)");
 		
@@ -163,5 +168,12 @@ public class Pattern {
 		
 		return dialectCode;
 	}
-	
+
+	private void setRequiresBaseDate() {
+		if (dialectCode.contains("@baseDate")) {
+			requiresBaseDate = true;
+		} else {
+			requiresBaseDate = false;
+		}
+	}
 }

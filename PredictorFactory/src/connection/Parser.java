@@ -37,9 +37,9 @@ public class Parser {
 	    }
 		
 	    // Return the result
-	    String substriString = sql.substring(0, pos);
-	    substriString = substriString + " INTO @outputTable";
-	    sql = substriString + sql.substring(pos);
+	    String substring = sql.substring(0, pos);
+	    substring = substring + " INTO @outputTable";
+	    sql = substring + sql.substring(pos);
 	    
 	    return sql;
 	}
@@ -113,6 +113,16 @@ public class Parser {
 			}
 		}
 	
+		return sql;
+	}
+
+	public static String expandBase(Setting setting, String sql) {
+		if (setting.targetDate == null) {
+			sql = sql.replaceAll("(\\w+\\.|)(@base\\b)", "$1@baseId, $1@baseTarget");
+		} else {
+			sql = sql.replaceAll("(\\w+\\.|)(@base\\b)", "$1@baseId, $1@baseDate, $1@baseTarget");
+		}
+
 		return sql;
 	}
 }
