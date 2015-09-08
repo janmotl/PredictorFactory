@@ -20,7 +20,8 @@ public class MetaOutput {
 		public Integer rowCount;				// Count of tuples in the table. Permit null.
 		public boolean dateBottomBounded;		// Related to time window
 		public boolean isIdUnique;				// Is the relation target_id:this_id in 1:1 or 1:n?
-		public boolean isSuccessfullyExecuted;
+		public boolean isSuccessfullyExecuted;	// NOT USED
+		public boolean isOk;
 		public final LocalDateTime timestampDesigned;
 		public LocalDateTime timestampDelivered;
 		public ForeignConstraint propagationForeignConstraint;	// This is the used FC from propagationTable

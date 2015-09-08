@@ -84,8 +84,8 @@ public class Aggregation {
 		
 
 		// 8) Execute the SQL & log the result
-		int maxRowLimit = SQL.getRowCount(setting, setting.outputSchema, setting.baseTable); // For QC purposes
-		
+		int maxRowLimit = SQL.getRowCount(setting, setting.outputSchema, setting.baseSampled); // For QC purposes.
+
 		for (Predictor predictor : predictorList7) {
 			materializePredictor(setting, journal, predictor, maxRowLimit); 
 			journal.addPredictor(setting, predictor);

@@ -147,9 +147,14 @@ public class Propagation{
 					// Add indexes
 					SQL.addIndex(setting, table.propagatedName);
 
+					// Is OK?
+					table.isOk = (table.rowCount > 0 ? true : false);
+
 					// Update the state
 					stillNotPropagated.remove(table2);
-					newlyPropagated.add(table.propagatedName);
+					if (table.isOk) {
+						newlyPropagated.add(table.propagatedName);
+					}
 
 					// Collect metadata
 					table.isUnique = SQL.isUnique(setting, table.propagatedName, false);

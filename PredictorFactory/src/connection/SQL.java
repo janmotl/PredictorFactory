@@ -77,10 +77,10 @@ public final class SQL {
 	private static String escapeEntity(Setting setting, String sql, String outputTable) {
 			// Test parameters
 		if (setting.targetIdList == null || setting.targetIdList.isEmpty()) {
-			throw new IllegalArgumentException("Id column is required");
+			throw new IllegalArgumentException("Target ID list is required");
 		}
 		if (StringUtils.isBlank(sql)) {
-			throw new IllegalArgumentException("Code is required");
+			throw new IllegalArgumentException("SQL code is required");
 		}
 		if (StringUtils.isBlank(outputTable)) {
 			throw new IllegalArgumentException("Output table is required");
@@ -129,12 +129,12 @@ public final class SQL {
 		escapedBaseId = escapedBaseId.substring(2);	// Remove the first two symbols
 
 		// Escape the entities
-		sql = sql.replaceAll("\\@idColumn\\b", escapedTargetId);	// Ignore numbered id columns used in joins (\b is a word boundary)
 		sql = sql.replace("@baseId", escapedBaseId);
 		sql = sql.replace("@baseDate", QL + setting.baseDate + QR);
 		sql = sql.replace("@baseTarget", QL + setting.baseTarget + QR);
 		sql = sql.replace("@baseFold", QL + setting.baseFold + QR);
 		sql = sql.replace("@baseTable", QL + setting.baseTable + QR);
+		sql = sql.replace("@targetId", escapedTargetId);
 		sql = sql.replace("@targetDate", QL + setting.targetDate + QR);
 		sql = sql.replace("@targetColumn", QL + setting.targetColumn + QR);
 		sql = sql.replace("@targetTable", QL + setting.targetTable + QR);
@@ -304,14 +304,21 @@ public final class SQL {
 	
 	// Create index on {baseId, baseDate}.
 	// Returns true if the update was successful.
-	// THE INDEX NAME CAN BE TOO LONG -> ADD ABBREVIATION
 	public static boolean addIndex(Setting setting, String outputTable) {
 		String columns = "(@baseId)";
 		if (setting.targetDate != null) {
 			columns = "(@baseId, @baseDate)";
 		}
 
-		String sql = "CREATE INDEX " + outputTable + "_idx ON @outputTable " + columns;
+		// We should be sure that the index name is not too long
+		String name = outputTable + "_idx";
+		if (outputTable.startsWith(setting.propagatedPrefix)) {
+			name = outputTable.substring(setting.propagatedPrefix.length(), outputTable.length()) + "_idx";
+		} else if (outputTable.startsWith(setting.mainTable)) {
+			name = outputTable.substring(setting.mainTable.length(), outputTable.length()) + "_idx";
+		}
+
+		String sql = "CREATE INDEX " + name + " ON @outputTable " + columns;
 
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, outputTable);
@@ -388,9 +395,9 @@ public final class SQL {
 		return (int)Double.parseDouble(resultList.get(0)); // SAS can return 682.0
 	}
 	
-	// Get the maximal cardinality of the table in respect to idColumn. If the cardinality is 1:1, 
+	// Get the maximal cardinality of the table in respect to targetId. If the cardinality is 1:1, 
 	// we may want to remove the bottom time constrain in base propagation.
-	// The map should contain @inputTable and @idColumn2.
+	// The map should contain @inputTable and @targetId2.
 	// The indexes start at two because it was convenient to reuse the parameters in Propagation function.
 	// Note that we are working with the input tables -> alter commands are forbidden.
 	// It was difficult to write a version that would be more effective than sum(... having count(*)>1).
@@ -441,7 +448,7 @@ public final class SQL {
 		if (useInputSchema) {
 			sql = "SELECT count(*) " +
 					 "FROM @targetTable " +
-					 "GROUP BY @idColumn" + (setting.targetDate==null ? " " : ", @targetDate ") +
+					 "GROUP BY @targetId" + (setting.targetDate==null ? " " : ", @targetDate ") +
 					 "HAVING COUNT(*)>1";
 		} else {
 			sql = "SELECT count(*) " +
@@ -579,10 +586,10 @@ public final class SQL {
  		// Hence use following syntax: (select col1 from table t1) t2. 
  		if ("nominal".equals(predictorType)) {
  			// Use categorical column directly
- 			sql = ""
-				+ "select sum(chi2) "
+ 			sql = "select sum(chi2)/count(distinct(bin)) " // Linearly regularized against columns with high cardinality
 				+ "from ( "
 				+ "	select (expected.expected-measured.count) * (expected.expected-measured.count) / expected.expected AS chi2 "
+				+ " expected.bin AS bin"
 				+ "	from ( "
 				+ "		select expected_bin.count*expected_target.prob AS expected "
 				+ "			 , bin "
@@ -616,8 +623,7 @@ public final class SQL {
  			// Group numerical/time values into 10 bins.
  			// If desirable you can optimize the optimal amount of bins with Sturge's rule 
  			// but syntax for log is different in each database. 
- 			sql = ""
-				+ "select sum(chi2) "
+ 			sql = "select sum(chi2)/10 " // To match regularization of nominal columns
 				+ "from ( "
 				+ "	select (expected.expected-measured.count) * (expected.expected-measured.count) / expected.expected AS chi2 "
 				+ "	from ( "
@@ -916,7 +922,7 @@ public final class SQL {
 					"The results will be incomplete and possibly biased. " +
 					"To get correct results create an artificial key / use time column with higher precision...");
 
-			// Prepare aliases for idColumn
+			// Prepare aliases for targetId
 			for (int i = 0; i < setting.baseIdList.size(); i++) {
 				id = id + " t1." + QL + setting.targetIdList.get(i) + QR + " AS " + escapeAlias(setting, setting.baseIdList.get(i)) + ",";
 			}
@@ -924,12 +930,12 @@ public final class SQL {
 			// The query itself
 			sql = "SELECT" + id + dateAsTable + " t1.@targetColumn AS " + escapeAlias(setting, setting.baseTarget) + ", FLOOR(" + setting.randomCommand + " * 10) AS " + escapeAlias(setting, setting.baseFold) + " " +
 					"FROM @targetTable t1 LEFT JOIN (" +
-					"SELECT @idColumn FROM @targetTable GROUP BY @idColumn" + " HAVING count(*)>1 " +
+					"SELECT @targetId FROM @targetTable GROUP BY @targetId" + " HAVING count(*)>1 " +
 					") t2 " +
-					"ON t1.@idColumn = t2.@idColumn " +
-					"WHERE t2.@idColumn is null" + dateAndCondition;
+					"ON t1.@targetId = t2.@targetId " +
+					"WHERE t2.@targetId is null" + dateAndCondition;
 		} else {
-			// Prepare aliases for idColumn
+			// Prepare aliases for targetId
 			for (int i = 0; i < setting.baseIdList.size(); i++) {
 				id = id + QL + setting.targetIdList.get(i) + QR + " AS " + escapeAlias(setting, setting.baseIdList.get(i)) + ", ";
 			}
@@ -1012,7 +1018,7 @@ public final class SQL {
 	}
 
  	
-	// 3) Propagate ID. The map should contain @outputTable, @propagatedTable, @inputTable and @idColumn[?].
+	// 3) Propagate ID. The map should contain @outputTable, @propagatedTable, @inputTable and @targetId[?].
 	// If the map contains @dateColumn, time condition is added.
 	// Technical note: We have to return SQL string, because these things are logged and exported for the user
  	// as the "scoring code" for predictors.
