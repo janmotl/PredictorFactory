@@ -296,8 +296,8 @@ public final class SQL {
 		for (String table : tableSet) {
 			if (table.startsWith(setting.mainTable)) dropMap.put(1 + table, table);			// Mainsample and it's temporary tables
 			if (table.startsWith(setting.predictorPrefix)) dropMap.put(2 + table, table);	// Predictors
-			if (table.startsWith(setting.propagatedPrefix)) dropMap.put(3 + table, table);	// Propagated tables
-			if (table.equals(setting.baseSampled)) dropMap.put(4 + table, table);			// Sampled base table
+//			if (table.startsWith(setting.propagatedPrefix)) dropMap.put(3 + table, table);	// Propagated tables
+//			if (table.equals(setting.baseSampled)) dropMap.put(4 + table, table);			// Sampled base table
 			if (table.equals(setting.journalTable)) dropMap.put(5 + table, table);			// Journal table
 			if (table.equals(setting.journalPropagationTable)) dropMap.put(6 + table, table);	// Journal propagated table
 		}
@@ -406,9 +406,8 @@ public final class SQL {
 	
 	// Get the maximal cardinality of the table in respect to targetId. If the cardinality is 1:1, 
 	// we may want to remove the bottom time constrain in base propagation.
-	// The map should contain @inputTable and @targetId2.
-	// The indexes start at two because it was convenient to reuse the parameters in Propagation function.
 	// Note that we are working with the input tables -> alter commands are forbidden.
+	// This query can be ridiculously slow (it can take minutes)!  
 	// It was difficult to write a version that would be more effective than sum(... having count(*)>1).
 	// If you decide to replace this query, test it with several database engines!
 	// IS NOT USING SYSTEM ESCAPING

@@ -124,17 +124,14 @@ public class Predictor implements Comparable<Predictor> {
 		return name;
 	}
 	
+	// SHOULD INTRODUCE A SHORTER VARIANT IF identifierLengthMax is small: column_pattern_parameter.
 	public String getNameOnce(Setting setting) {
 		int identifierLengthMax = setting.identifierLengthMax;
-		String name = "";
-
 		// 3 characters are reserved for underscores, 6 characters are for id. Divide into 3 parts (table, column, parameter)
 		int length = (int) Math.floor((identifierLengthMax-9)/3);
 		
-		// Add table name if enough space is available
-		if (length>=8) {
-			name = originalTable.substring(0, Math.min(originalTable.length(), length));
-		}
+		// Add table name
+		String name = originalTable.substring(0, Math.min(originalTable.length(), length));
 		
 		// Add column names
 		for (String columnName : columnMap.values()) {
@@ -159,14 +156,8 @@ public class Predictor implements Comparable<Predictor> {
 			name = name + "_" + parameterMap.get(parameter).replaceAll(" ", "").replaceAll("[^a-zA-Z0-9_]", "");
 		}
 
-		// Give back the saved length from omitted table name if applicable
-		if (length<=8) {
-			name = name.substring(0, Math.min(name.length(), 4 * length + 2));
-		} else {
-			name = name.substring(0, Math.min(name.length(), 3 * length + 2));
-		}
-
-		
+		name = name.substring(0, Math.min(name.length(), 3 * length + 2));
+				
 		// Add id with zero padding from left
 		name = name + "_" +id;
 			
@@ -275,10 +266,6 @@ public class Predictor implements Comparable<Predictor> {
 
 	public SortedMap<String, String> getParameterMap() {
 		return parameterMap;
-	}
-
-	public void setParameterMap(SortedMap<String, String> parameterMap) {
-		this.parameterMap = parameterMap;
 	}
 
 	public String getPatternCode() {

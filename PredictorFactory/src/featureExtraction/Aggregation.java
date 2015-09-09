@@ -423,7 +423,7 @@ public class Aggregation {
 	    for (String parameterName : predictor.getParameterMap().keySet()) {
 	    	// Only whole words! Otherwise "@column" would also match "@columnName".
 	    	String oldString = parameterName.substring(1); // remove the at-sign as it is not considered as a part of word in regex
-	    	String newString = predictor.getParameterMap().get(parameterName);			    	
+	    	String newString = predictor.getParameterMap().get(parameterName);
 	    	sql = sql.replaceAll("@\\b" + oldString + "\\b", newString);
 		}
 	    predictor.setSql(sql); 
