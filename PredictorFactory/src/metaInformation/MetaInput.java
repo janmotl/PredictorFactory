@@ -57,11 +57,11 @@ public class MetaInput {
 		}
 
 		// QC that targetDate doesn't contain nulls
-//		if (setting.targetDate != null) {
-//			if ((SQL.getRowCount(setting, setting.inputSchema, setting.targetTable) - SQL.getNotNullCount(setting, setting.inputSchema, setting.targetTable, setting.targetDate)) > 0) {
-//				logger.warn("Target date column '" + setting.targetDate + "' contains null. Rows with the null in target date column WILL BE IGNORED!");
-//			}
-//		}
+		if (setting.targetDate != null) {
+			if ((SQL.getRowCount(setting, setting.inputSchema, setting.targetTable) - SQL.getNotNullCount(setting, setting.inputSchema, setting.targetTable, setting.targetDate)) > 0) {
+				logger.warn("Target date column '" + setting.targetDate + "' contains null. Rows with the null in target date column WILL BE IGNORED!");
+			}
+		}
 
 		// Apply black/white lists
 		if (!whiteListTable.isEmpty()) {
@@ -127,9 +127,9 @@ public class MetaInput {
 
 			// Get distinct values for each nominal column. 
 			// The unique values will be used in patterns like "WoE" or "Existential count".
-//			for (String columnName : tableData.nominalColumn) {
-//				tableData.uniqueList.put(columnName, SQL.getUniqueRecords(setting, tableName, columnName, true));
-//			}		
+			for (String columnName : tableData.nominalColumn) {
+				tableData.uniqueList.put(columnName, SQL.getUniqueRecords(setting, tableName, columnName, true));
+			}
 		}
 		
 		// Get distinct values for the target iff we are performing classification AND target is a numerical column

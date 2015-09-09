@@ -10,6 +10,7 @@
                 <attribute type="string" name="description" use="optional"/>
                 <attribute type="string" name="inputSchema" use="required"/>
                 <attribute type="string" name="outputSchema" use="required"/>
+                <attribute type="string" name="targetSchema" use="optional"/>
                 <attribute type="string" name="targetTable" use="required"/>
                 <attribute type="string" name="targetId" use="required"/>
                 <attribute type="string" name="targetColumn" use="required"/>

@@ -21,6 +21,7 @@ public class DatabaseProperty {
 	@XmlAttribute public String description;
 	@XmlAttribute public String inputSchema;			
 	@XmlAttribute public String outputSchema;
+	@XmlAttribute public String targetSchema;
 	@XmlAttribute public String targetTable;
 	@XmlAttribute public String targetId;
 	@XmlAttribute public String targetDate;

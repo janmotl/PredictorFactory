@@ -30,25 +30,25 @@ public class Propagation{
 		// Initialize set of propagated tables and not-propagated samples
 		Set<String> notPropagated = inputMeta.keySet();	// Set of tables to propagate
 		Set<String> propagated = new HashSet<>(); 		// Set of propagated tables...
-		propagated.add(setting.baseTable);				// ...initialized with baseSampled.
+		propagated.add(setting.baseSampled);				// ...initialized with baseSampled.
 		
 		// Initialize MetaOutput
 		SortedMap<String, OutputTable> metaOutput = new TreeMap<>(); // The output list (based on the propagated name)
 		OutputTable base = new OutputTable();	// Temporarily add base table (used in propagationPath building)...
 		base.propagationPath = new ArrayList<String>();
 		base.originalName = setting.baseSampled;
-		base.idColumn.add(setting.baseId);
+		base.idColumn.addAll(setting.baseIdList);
 		base.timeColumn.add(setting.baseDate);
 		base.nominalColumn.add(setting.baseTarget);	// NOT ALWAYS, but do we care if we are removing the table at the end?
-		ForeignConstraint fc = new ForeignConstraint("FK_baseTable_targetTable",setting.baseTable, setting.targetTable, setting.baseIdList, setting.targetIdList);
+		ForeignConstraint fc = new ForeignConstraint("FK_baseTable_targetTable",setting.baseSampled, setting.targetTable, setting.baseIdList, setting.targetIdList);
 		base.foreignConstraintList.add(fc);
-		metaOutput.put(setting.baseTable, base);	//... into tableMetadata.
+		metaOutput.put(setting.baseSampled, base);	//... into tableMetadata.
 		
 		// Call BFS
 		metaOutput = bfs(setting, 1, propagated, notPropagated, inputMeta, metaOutput);
 		
 		// Remove base table (as we want a map of propagated tables)
-		metaOutput.remove(setting.baseTable);
+		metaOutput.remove(setting.baseSampled);
 		
 		// Output QC: If the count of propagated tables is low, complain about it.
 		if (metaOutput.size()<1) {

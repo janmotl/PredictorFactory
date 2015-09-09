@@ -51,10 +51,11 @@ public final class SQL {
 		// While MySQL doesn't implement "true" schemas, it implements information_schema
 		// and places it next to the database (instead of inside the database). 
 		// Hence purely based on the hierarchical structure we call MySQL's database as schema.
-		sql = sql.replace("@outputTable", "@outputSchema.@outputTable");
 		sql = sql.replace("@inputTable", "@inputSchema.@inputTable");
-		sql = sql.replace("@targetTable", "@inputSchema.@targetTable");
+		sql = sql.replace("@outputTable", "@outputSchema.@outputTable");
 		sql = sql.replace("@baseTable", "@outputSchema.@baseTable");
+		sql = sql.replace("@baseSampled", "@outputSchema.@baseSampled");
+		sql = sql.replace("@targetTable", "@targetSchema.@targetTable");
 		sql = sql.replace("@propagatedTable", "@outputSchema.@propagatedTable");
 	
 		return sql;
@@ -88,6 +89,9 @@ public final class SQL {
 		if (StringUtils.isBlank(setting.baseTable)) {
 			throw new IllegalArgumentException("Base table is required");
 		}
+		if (StringUtils.isBlank(setting.baseSampled)) {
+			throw new IllegalArgumentException("Base sampled is required");
+		}
 		if (StringUtils.isBlank(setting.targetColumn)) {
 			throw new IllegalArgumentException("Target column is required");
 		}
@@ -100,8 +104,11 @@ public final class SQL {
 		if (StringUtils.isBlank(setting.outputSchema)) {
 			throw new IllegalArgumentException("OutputSchema is required");
 		}
-		if (StringUtils.isBlank(setting.baseId)) {
-			throw new IllegalArgumentException("Base id is required");
+		if (StringUtils.isBlank(setting.targetSchema)) {
+			throw new IllegalArgumentException("TargetSchema is required");
+		}
+		if (setting.baseIdList == null || setting.baseIdList.isEmpty()) {
+			throw new IllegalArgumentException("Base id list is required");
 		}
 		if (StringUtils.isBlank(setting.baseDate)) {
 			throw new IllegalArgumentException("Base date is required");
@@ -134,12 +141,14 @@ public final class SQL {
 		sql = sql.replace("@baseTarget", QL + setting.baseTarget + QR);
 		sql = sql.replace("@baseFold", QL + setting.baseFold + QR);
 		sql = sql.replace("@baseTable", QL + setting.baseTable + QR);
+		sql = sql.replace("@baseSampled", QL + setting.baseSampled + QR);
 		sql = sql.replace("@targetId", escapedTargetId);
 		sql = sql.replace("@targetDate", QL + setting.targetDate + QR);
 		sql = sql.replace("@targetColumn", QL + setting.targetColumn + QR);
 		sql = sql.replace("@targetTable", QL + setting.targetTable + QR);
 		sql = sql.replace("@inputSchema", QL + setting.inputSchema + QR);
 		sql = sql.replace("@outputSchema", QL + setting.outputSchema + QR);
+		sql = sql.replace("@targetSchema", QL + setting.targetSchema + QR);
 		sql = sql.replace("@outputTable", QL + outputTable + QR);
 
 		return sql;
@@ -988,12 +997,9 @@ public final class SQL {
 		sql = escapeEntity(setting, sql, setting.baseSampled);
 		
 		Network.executeUpdate(setting.connection, sql);
-		
-		// Change setting for base table
-		setting.baseTable = setting.baseSampled;
-		
+
 		// Add indexes
-		addIndex(setting, setting.baseTable);
+		addIndex(setting, setting.baseSampled);
 	}
 
 	// Subsample base table.
@@ -1009,9 +1015,6 @@ public final class SQL {
 		sql = escapeEntity(setting, sql, setting.baseSampled);
 
 		Network.executeUpdate(setting.connection, sql);
-
-		// Change setting for base table
-		setting.baseTable = setting.baseSampled;
 
 		// Add indexes
 		addIndex(setting, setting.baseSampled);
@@ -1138,7 +1141,7 @@ public final class SQL {
 		}
 		
 		// MySQL can join maximally 61 tables in a single command. Hence split the task into several smaller joins.
-		List<List<String>> tableListSmall = Lists.partition(tableListAll, 60); // One table is reserved for baseTable. 
+		List<List<String>> tableListSmall = Lists.partition(tableListAll, 60); // One table is reserved for baseSampled.
 		List<List<String>> columnListSmall = Lists.partition(columnListAll, 60);
 		
 		// Prepare a list of the temporary table names
@@ -1179,7 +1182,7 @@ public final class SQL {
 			}
 			
 			// From part
-			stringBuffer.append(" FROM @baseTable t1");
+			stringBuffer.append(" FROM @baseSampled t1");
 			tableCount = 2;
 			for (String table : tableList) {
 
@@ -1232,7 +1235,7 @@ public final class SQL {
 		}
 		
 		// From part
-		stringBuffer.append(" FROM @baseTable t1");
+		stringBuffer.append(" FROM @baseSampled t1");
 
 		for (int i = 0; i < tempTableList.size(); i++) {
 			int tableCount = i+2;
