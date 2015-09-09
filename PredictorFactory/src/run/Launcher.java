@@ -80,12 +80,12 @@ public class Launcher{
 
 		
 		// Make base table
-		SQL.getBase(setting);
-		if ("classification".equals(setting.task)) {
-			SQL.getSubSampleClassification(setting, metaInput);
-		} else {
-			SQL.getSubSampleRegression(setting);
-		}
+//		SQL.getBase(setting);
+//		if ("classification".equals(setting.task)) {
+//			SQL.getSubSampleClassification(setting, metaInput);
+//		} else {
+//			SQL.getSubSampleRegression(setting);
+//		}
 		
 		// Propagate base table
 		SortedMap<String, OutputTable> outputMeta = Propagation.propagateBase(setting, metaInput);

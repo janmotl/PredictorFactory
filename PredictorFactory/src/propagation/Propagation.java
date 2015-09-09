@@ -40,8 +40,12 @@ public class Propagation{
 		base.idColumn.addAll(setting.baseIdList);
 		base.timeColumn.add(setting.baseDate);
 		base.nominalColumn.add(setting.baseTarget);	// NOT ALWAYS, but do we care if we are removing the table at the end?
-		ForeignConstraint fc = new ForeignConstraint("FK_baseTable_targetTable",setting.baseSampled, setting.targetTable, setting.baseIdList, setting.targetIdList);
+		ForeignConstraint fc = new ForeignConstraint("FK_baseTable_targetTable", setting.baseSampled, setting.targetTable, setting.baseIdList, setting.targetIdList);
 		base.foreignConstraintList.add(fc);
+		// CS SPECIFIC
+		ForeignConstraint fc2 = new ForeignConstraint("FK_unified_key", setting.baseSampled, "PARTIES", setting.targetIdList, setting.targetIdList);
+		base.foreignConstraintList.add(fc2);
+		// END CS SPECIFIC
 		metaOutput.put(setting.baseSampled, base);	//... into tableMetadata.
 		
 		// Call BFS

@@ -244,8 +244,11 @@ public class Meta {
 	public static List<ForeignConstraint> collectRelationships(Setting setting, String schema, String table) {
 		List<ForeignConstraint> relationshipList = Meta.downloadRelationships(setting, schema, table);
 		List<ForeignConstraint> result = new ArrayList<>();
+		
+		// Sort by {fTable, name, sequence}
+		Collections.sort(relationshipList);
 
-		// Assume that the elements in relationshipList are ordered by fTable (as we are guaranteed by JDBC).
+		// Assume that the elements in relationshipList are ordered by {fTable, sequence}
 		for (ForeignConstraint fc : relationshipList) {
 			if (result.contains(fc)) {
 				ForeignConstraint constrainReference = result.get(result.size()-1);
@@ -292,6 +295,7 @@ public class Meta {
 				relationship.fTable = rs.getString("PKTABLE_NAME");
 				relationship.column.add(rs.getString("FKCOLUMN_NAME"));
 				relationship.fColumn.add(rs.getString("PKCOLUMN_NAME"));
+				relationship.sequence = rs.getShort("KEY_SEQ");
 				relationshipList.add(relationship);
 			}
 			
@@ -305,6 +309,7 @@ public class Meta {
 				relationship.fTable = rs.getString("FKTABLE_NAME");
 				relationship.column.add(rs.getString("PKCOLUMN_NAME"));
 				relationship.fColumn.add(rs.getString("FKCOLUMN_NAME"));
+				relationship.sequence = rs.getShort("KEY_SEQ");
 				relationshipList.add(relationship);
 			}
 			
@@ -322,7 +327,7 @@ public class Meta {
 
 	// Subroutine: SAS JDBC driver doesn't return keys. Use dictionary tables instead.
 	// See: www2.sas.com/proceedings/sugi30/070-30.pdf
-	// HAVE TO CHANGE THE QUERY TO INCLUDE FK_NAME.
+	// HAVE TO CHANGE THE QUERY TO INCLUDE FK_NAME AND SEQUENCE.
 	private static List<ForeignConstraint> downloadRelationshipsSAS(Setting setting, String schema, String table) {
 		// Initialization
 		List<ForeignConstraint> relationshipList = new ArrayList<>();
