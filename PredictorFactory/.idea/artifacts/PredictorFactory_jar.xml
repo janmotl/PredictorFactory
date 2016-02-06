@@ -1,0 +1,36 @@
+<component name="ArtifactManager">
+  <artifact name="PredictorFactory:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/PredictorFactory_jar</output-path>
+    <root id="root">
+      <element id="archive" name="PredictorFactory.jar">
+        <element id="module-output" name="PredictorFactory" />
+      </element>
+      <element id="file-copy" path="$PROJECT_DIR$/lib/cloning/lib/objenesis-2.1.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/cloning/cloning-1.9.1.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/cloning/cloning-1.9.1-bundle.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/cloning/cloning-1.9.1-sources.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/javadoc/commons-lang3-3.3.2-javadoc.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/jdbc-pool/HikariCP-2.3.8.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/jdbc-pool/slf4j-api-1.7.12.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/jdbc-pool/javassist-3.20.0-GA.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/jdbc-pool/slf4j-log4j12-1.7.12.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/rapidminer/launcher.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/rapidminer/vldocking.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/rapidminer/rapidminer.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/jdbc-driver/sas/sas.core.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/jdbc-driver/sas/sas.intrnet.javatools.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/jdbc-driver/mssql/sqljdbc4.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/jdbc-driver/mysql/mysql-connector-java-5.1.34-bin.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/jdbc-driver/hsqldb/hsqldb.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/jdbc-driver/oracle/ojdbc7.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/jdbc-driver/monetdb/monetdb-jdbc-2.14.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/jdbc-driver/vertica/vertica-jdk5-6.0.1-0.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/jdbc-driver/postgresql/postgresql-9.4-1201.jdbc41.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/guava-18.0.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/log4j-1.2.17.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/jsqlparser-0.9.2.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/antlr-4.5-complete.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/lib/commons-lang3-3.3.2.jar" />
+    </root>
+  </artifact>
+</component>
