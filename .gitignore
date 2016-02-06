@@ -13,8 +13,8 @@ Desktop.ini		# Windows - folder personalisation
 
 # IDE related #
 ###############
-.gradle					# Gradle
-.idea					# Idea project directory
+.gradle/				# Gradle
+.idea/					# Idea project directory
 PredictorFactory.iml	# Idea project file
 /local.properties		# Local configuration file (sdk path, etc)
 .classpath				# Eclipse project file
