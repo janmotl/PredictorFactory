@@ -80,6 +80,10 @@ task deploy(dependsOn: 'jar') {
             into "$buildDir/output/pattern"
         }
         copy {
+            from 'pattern_bkp'
+            into "$buildDir/output/pattern"
+        }
+        copy {
             from 'config'
             into "$buildDir/output/config"
         }

@@ -23,9 +23,11 @@ public class PatternMap {
 		// Parse each file and convert them into a predictor
 		if (directoryListing != null) {
 			for (File path : directoryListing) {
-				Pattern pattern = Pattern.unmarshall(path.toString());		// Read a pattern
-				if (pattern != null) {                                      // If pattern was correctly read...
-					outputMap.put(pattern.name, pattern);                   // ... add it into the map of patterns.
+				if (!path.isHidden()) {											// Ignore hidden files
+					Pattern pattern = Pattern.unmarshall(path.toString());      // Read a pattern
+					if (pattern != null) {                                      // If pattern was correctly read...
+						outputMap.put(pattern.name, pattern);                   // ... add it into the map of patterns.
+					}
 				}
 			}
 		}

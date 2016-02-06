@@ -1,7 +1,6 @@
 package featureExtraction;
 
 
-import com.sun.istack.internal.NotNull;
 import org.apache.commons.lang3.text.WordUtils;
 import run.Setting;
 
@@ -171,7 +170,6 @@ public class Predictor implements Comparable<Predictor> {
 	
 	// Predictors are sorted by their id in collections like SortedSet
 	@Override
-	@NotNull
 	public int compareTo(Predictor anotherPredictor) {
 	    int anotherPredictorId = anotherPredictor.getId();  
 	    return id - anotherPredictorId;    

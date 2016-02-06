@@ -1,8 +1,6 @@
 package metaInformation;
 
 
-import com.sun.istack.internal.NotNull;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +27,6 @@ public class ForeignConstraint implements Comparable<ForeignConstraint> {
 
     // Required for assembling of composite keys (function collectRelationships)
     @Override
-    @NotNull
 	public int compareTo(ForeignConstraint that) {
     	final int BEFORE = -1;
 	    final int EQUAL = 0;
