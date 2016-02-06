@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Time diff</name>
+	<description>
+		Difference between two times.
+	</description>
+	<example>
+		Session length.
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-04-16</date>
+	<code>SELECT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , @aggregateFunction(DATEDIFF(@timeColumn1, @timeColumn2)) AS "@columnName"
+	      FROM @propagatedTable
+	      GROUP BY @baseId, @baseDate, @baseTarget
+	</code>
+	<parameter key="@aggregateFunction" value="min, max, avg, sum, stddev_samp"/>
+	<cardinality>n</cardinality>
+</pattern>

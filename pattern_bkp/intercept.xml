@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Intercept</name>
+	<description>Intercept
+		NOTE: Could calculate intercept of two numerical attributes. But it has to be done in a separate pattern
+		because of a cast.
+		
+		Note: Function "dateToNumber" is automatically translated to comply with the database.
+	</description>
+	<author>Jan Motl</author>
+	<date>2014-12-22</date>
+	<code compatibility="MySQL">SELECT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , ((sum(@timeColumn) * sum(@timeColumn * @numericalColumn)) - (sum(@numericalColumn) * sum(power(@timeColumn, 2)))) / (power(sum(@timeColumn), 2) - count(@numericalColumn) * sum(power(@timeColumn, 2))) AS "@columnName"
+	      FROM @propagatedTable
+	      GROUP BY @baseId, @baseDate, @baseTarget
+	</code>
+	<code compatibility="PostgreSQL,Oracle">SELECT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , regr_intercept(@numericalColumn, dateToNumber(@timeColumn)) AS "@columnName"
+	      FROM @propagatedTable
+	      GROUP BY @baseId, @baseDate, @baseTarget
+	</code>
+	<cardinality>n</cardinality>
+</pattern>

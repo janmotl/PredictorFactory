@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Time part direct</name>
+	<description>
+		The hour/day/month of the event.
+
+		Note: The default solution should use JDBC scalar functions:
+			http://documentation.progress.com/output/DataDirect/jdbcoschelp/index.html#page/jdbcosc/scalar-functions.html#
+
+		Note: Some parts of the date/datetime may not be supported by the database or the keywords can be different.
+		For example, day-of-week on PostgreSQL is "dow", but on MSSQL it's "weekday". 
+		
+		Note: It's not meaningful to attempt to extract hour from date column - it's reasonable to extract hour
+		only from datetime.
+		
+		Note: It's not truly useful to extract a year for predictions in the future, because years do not repeat
+		(if we omit tricks like considering years before Christ equal to years after Christ). Nevertheless, if we
+		are doing explanatory analysis, or if we want to predict outcomes that are not outside of the range of 
+		training data, year is a valid predictor.
+	</description>
+	<example>
+		Time of waking up.
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-04-16</date>
+	<code compatibility="PostgreSQL, MySQL">SELECT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , EXTRACT(@field from @timeColumn) AS "@columnName"
+	      FROM @propagatedTable
+	</code>
+	<code compatibility="Microsoft SQL Server">SELECT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , DATEPART(@field, @timeColumn) AS "@columnName"
+	      FROM @propagatedTable
+	</code>
+	<parameter key="@field" value="hour, day, dow, month"/>
+	<cardinality>1</cardinality>
+</pattern>

@@ -1,0 +1,47 @@
+<schema xmlns="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <element name="pattern">
+    <complexType>
+      <sequence>
+        <element type="string" name="name"/>
+        <element type="string" name="description"/>
+        <element type="string" name="example" minOccurs="0"/>
+        <element type="string" name="author"/>
+        <element type="date" name="date"/>
+        <element name="code" maxOccurs="unbounded" minOccurs="1">
+          <complexType>
+            <simpleContent>
+              <extension base="string">
+                <attribute type="string" name="compatibility" use="optional"/>
+              </extension>
+            </simpleContent>
+          </complexType>
+        </element>
+        <element name="parameter" maxOccurs="unbounded" minOccurs="0">
+          <complexType>
+            <simpleContent>
+              <extension base="string">
+                <attribute type="string" name="key" use="required"/>
+                <attribute type="string" name="value" use="required"/>
+              </extension>
+            </simpleContent>
+          </complexType>
+        </element> 
+         <element name="optimize" maxOccurs="unbounded" minOccurs="0">
+          <complexType>
+            <simpleContent>
+              <extension base="string">
+                <attribute type="string" name="key" use="required"/>
+                <attribute type="string" name="min"/>
+                <attribute type="string" name="max"/>
+                <attribute type="boolean" name="integerValue"/>
+                <attribute type="positiveInteger" name="iterationLimit"/>
+              </extension>
+            </simpleContent>
+          </complexType>
+        </element>
+        <element type="string" name="cardinality"/>
+      </sequence>
+       <attribute type="positiveInteger" name="topN"/>
+    </complexType>
+  </element>
+</schema>

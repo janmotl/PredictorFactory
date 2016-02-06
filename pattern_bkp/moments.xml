@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Moments</name>
+	<description>Skewness and kurtosis. 
+	
+	NOTE: Kurtosis will be added once support for multiple columns in the result will be implemented.
+	NOTE: Arithmetic overflow can happen.
+	NOTE: Division by zero can happen.
+	
+	The implementation is from: http://www.experts-exchange.com/Database/MS_Access/A_2529-Median-Mode-Skewness-and-Kurtosis-in-MS-Access.html
+	</description>
+	<author>Jan Motl</author>
+	<date>2014-12-22</date>
+	<code compatibility="MySQL,Microsoft SQL Server,Oracle,PostgreSQL">SELECT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , (Sum(power(t1.@numericalColumn-z."TheAvg", 3))/Count(t1.@numericalColumn)) / power(Sum(power(t1.@numericalColumn-z."TheAvg", 2))/Count(t1.@numericalColumn), 1.5) AS "@columnName"
+		   FROM @propagatedTable t1,
+		   (SELECT Avg(@numericalColumn) "TheAvg"
+			    FROM @propagatedTable) z
+		   GROUP BY @baseId, @baseDate, @baseTarget
+		   HAVING Count(t1.@numericalColumn) > 0
+	</code>
+	<cardinality>n</cardinality>
+</pattern>

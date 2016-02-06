@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Mode</name>
+	<description>Mode
+
+		This pattern is producing great predictors.
+
+		NOTE: Works also on id!
+	
+		Note: The implementation for PostgreSQL is supported from PostgreSQL 9.4.
+	
+		NOTE: THE VERSION FOR SAS CAN RETURN TOO MANY ROWS BECAUSE OF TIES.
+
+		This pattern is fast and produces good predictors.
+	</description>
+	<example>
+		The typical payment amount.
+		Example when mode fails: mode of ISBN is not meaningful because people commonly the same book just once. Hence "the most common" value doesn't exist.
+	</example>
+	<author>Jan Motl</author>
+	<date>2014-12-22</date>
+	<code compatibility="PostgreSQL">SELECT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , mode() WITHIN GROUP (ORDER BY @column) AS "@columnName"
+		   FROM @propagatedTable
+		   GROUP BY @baseId, @baseDate, @baseTarget
+	</code>
+	<code compatibility="Microsoft SQL Server">SELECT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , (
+	           		SELECT TOP 1 @column 
+					FROM @propagatedTable t2 
+					WHERE t.@baseId = t2.@baseId AND t.@baseDate = t2.@baseDate
+					GROUP BY @column 
+					ORDER BY count(*) desc
+				) AS "@columnName"
+			FROM  @propagatedTable  t
+			GROUP BY @baseId, @baseDate, @baseTarget
+	</code>
+	<code compatibility="SAS-errorenous">SELECT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , @column AS "@columnName" 
+			FROM (
+			        SELECT @baseId, @baseDate, @baseTarget, @column, count(*) AS count 
+			        FROM @propagatedTable 
+			        GROUP BY @baseId, @baseDate, @baseTarget, @column
+			      )
+			GROUP BY @baseId, @baseDate, @baseTarget
+			HAVING count=max(count)
+	</code>
+	<code compatibility="Oracle">SELECT @baseId
+	           , @baseDate
+	           , @baseTarget
+	           , STATS_MODE(@column) AS "@columnName"
+		   FROM @propagatedTable
+		   GROUP BY @baseId, @baseDate, @baseTarget
+	</code>
+	<parameter key="@column" value="@nominalColumn, @numericalColumn"/>
+	<cardinality>n</cardinality>
+</pattern>

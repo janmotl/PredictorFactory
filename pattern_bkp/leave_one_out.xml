@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Leave one out</name>
+	<description>
+		The pattern is from slide number 26 of:
+			http://www.slideshare.net/OwenZhang2/tips-for-data-science-competitions
+
+		It is for nominal attributes and numerical targets.
+
+		NOTE: IT SHOULD BE REWRITTEN TO ALSO SUPPORT BINOMIAL TARGETS (like in WoE).
+	</description>
+	<author>Jan Motl</author>
+	<date>2015-05-09</date>
+	<code>SELECT t1.@base
+			, coalesce((t2.suma-t1.@baseTarget)/(t2.counta-0.99) * ((random()-0.5) * 0.1 + 1), 0.5) AS "@columnName"
+		FROM @propagatedTable t1
+		JOIN (
+		SELECT @column
+			, sum(@baseTarget) AS suma
+			, count(@baseTarget) AS counta
+			FROM @propagatedTable
+			GROUP BY @column
+		) t2
+		ON t1.@column = t2.@column
+	</code>
+	<parameter key="@column" value="@nominalColumn,@idColumn"/>
+	<cardinality>1</cardinality>
+</pattern>

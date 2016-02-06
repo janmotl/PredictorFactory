@@ -1,0 +1,104 @@
+apply plugin: 'java'
+
+group 'PredictorFactory'
+version '3.0.0'
+sourceCompatibility = 1.8
+
+
+// Repository
+repositories {
+    mavenCentral()
+}
+
+
+// Dependencies
+dependencies {
+    compile 'org.antlr:antlr4:4.5.2-1'
+    compile 'uk.com.robust-it:cloning:1.9.2'
+    compile 'org.apache.commons:commons-lang3:3.4'
+    compile 'com.google.guava:guava:19.0'
+    compile 'com.zaxxer:HikariCP:2.4.3'
+    compile 'org.slf4j:slf4j-log4j12:1.7.14'
+    compile 'log4j:log4j:1.2.17'
+
+    runtime fileTree(dir: 'lib/jdbc-driver/hsqldb', include: '*.jar')
+    runtime fileTree(dir: 'lib/jdbc-driver/monetdb', include: '*.jar')
+    runtime fileTree(dir: 'lib/jdbc-driver/mssql', include: '*.jar')
+    runtime fileTree(dir: 'lib/jdbc-driver/mysql', include: '*.jar')
+    runtime fileTree(dir: 'lib/jdbc-driver/oracle', include: '*.jar')
+    runtime fileTree(dir: 'lib/jdbc-driver/postgresql', include: '*.jar')
+    runtime fileTree(dir: 'lib/jdbc-driver/sas', include: '*.jar')
+    runtime fileTree(dir: 'lib/jdbc-driver/vertica', include: '*.jar')
+
+    compile fileTree(dir: 'lib/rapidminer', include: '*.jar')       // Should not propagate into deployment -> move into testing
+    testCompile 'junit:junit:4.12'
+}
+
+
+// Directory structure
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src', 'antlr', 'gui']
+        }
+        resources {
+            srcDirs = ['src/resources', 'gui/resources']
+        }
+    }
+    test {
+        java {
+            srcDir 'test'
+        }
+    }
+}
+
+
+// Jar file
+jar {
+    manifest {
+        attributes(
+            'Class-Path': configurations.runtime.collect { "lib/$it.name" }.join(' '),  // Where to find .jars
+            'Main-Class': 'controller.MainApp' //  What to execute. For CLI: run.Launcher
+        )
+    }
+}
+
+
+// Deployment task
+task deploy(dependsOn: 'jar') {
+    doFirst {
+        copy {
+            from "$buildDir/$libsDirName"
+            into "$buildDir/output"
+        }
+        copy {
+            from configurations.runtime + configurations.compile
+            into "$buildDir/output/lib"
+        }
+        copy {
+            from 'pattern'
+            into "$buildDir/output/pattern"
+        }
+        copy {
+            from 'config'
+            into "$buildDir/output/config"
+        }
+        copy {
+            from 'config/log4j.properties'
+            into "$buildDir/output/config"
+            filter { String line -> line.replaceAll('log4j.rootLogger=DEBUG, CA, FA, XML', 'log4j.rootLogger=DEBUG, CA, FA, XML, GUI') }
+        }
+        copy {
+            from 'LICENSE.txt'
+            into "$buildDir/output"
+        }
+    }
+}
+
+// Make a zip file
+task zip(type: Zip, dependsOn: 'deploy') {
+    from "$buildDir/output"
+    version = null
+}
+
+

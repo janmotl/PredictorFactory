@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Child snapshot</name>
+	<description>
+		From the child entity with filter F select one record 
+		with predefined rank order K according to some sort ordering S 
+		and from that record take a predefined field X.
+		
+		Original MSSQL implementation using row_number
+		
+		select Relation.ParentKey
+		  , t.Field
+		from (select Relation.ParentKey
+		  , c.Field
+		  , K = row_number() over (
+		    partition by Relation.ParentKey
+		    order by SortExpression)
+		from Relation.Parent p
+		  left join Relation.Child c 
+		    on Relation.JoinCondition and Filter) t
+		where t.K = Rank
+		
+		is not feasible in mySQL, so I am trying the trick by Mosty Mostacho 
+		described in http://stackoverflow.com/questions/1895110/row-number-in-mysql
+	</description>
+	<author>Filip Trojan</author>
+	<date>2014-12-28</date>
+	<code>SELECT @baseId, @baseDate, @anyColumn "@columnName"
+	      FROM (
+	      	SELECT @baseId, @baseDate, count(@idColumn) as k, @anyColumn
+	      	FROM @outputTable INNER JOIN @outputTable 
+	      		ON @baseId = @baseId and @baseDate = @baseDate and @numericalColumn &lt;= @numericalColumn
+	      	)
+	      where k = 1
+	</code>
+	<cardinality>n</cardinality>
+</pattern>

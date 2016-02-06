@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Frequency</name>
+	<description>
+		Relative frequency of the given nominal value in the population.
+	</description>
+	<example>
+		Frequency of the client's name - which tells us, whether the client is a foreigner, or not. And based 
+		on that we can offer him/her different products.
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-03-15</date>
+	<code compatibility="PostgreSQL">WITH intermediate AS (
+			SELECT count(*) row_count
+			FROM @propagatedTable
+		  )
+		  SELECT t1.@baseId
+		  	   , t1.@baseDate
+			   , t1.@baseTarget
+			   , 1.0 * count(t1.@baseId) over (partition by t1.@nominalColumn)/t2.row_count AS "@columnName"
+		  FROM @propagatedTable t1, intermediate t2
+	</code>
+	<cardinality>1</cardinality>
+</pattern>
