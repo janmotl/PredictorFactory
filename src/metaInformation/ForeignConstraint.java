@@ -1,18 +1,24 @@
 package metaInformation;
 
 
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
+
+@XmlType(name="foreignConstraint")
 public class ForeignConstraint implements Comparable<ForeignConstraint> {
-    public String name;
+	@XmlAttribute public String name;		// Optional in the input XML. More like a comment.
     public String table;
     public String fTable;
     public List<String> column = new ArrayList<>();
     public List<String> fColumn = new ArrayList<>();
-    public int sequence;
+	@XmlTransient public int sequence;		// Composite keys in the input XML use multiple column and fColumn fields.
 
     ////////////////// Boring stuff //////////////
+
     // Constructor
     public ForeignConstraint() {
     }
@@ -85,6 +91,4 @@ public class ForeignConstraint implements Comparable<ForeignConstraint> {
                 "}";
     }
 
-    
-    
 }

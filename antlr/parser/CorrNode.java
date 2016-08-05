@@ -10,10 +10,11 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 
 // THIS IS A ROUGH IMPLEMENTATION - ONLY GETTEXT IS GUARANTEED TO WORK AS EXPECTED.
+@SuppressWarnings("CanBeFinal")
 public class CorrNode implements TerminalNode{
 
-	CorrContext ctx;
-	String text;
+	private final CorrContext ctx;
+	private final String text;
 
 	public CorrNode(CorrContext ctx2, String corrPattern) {
 		ctx = ctx2;

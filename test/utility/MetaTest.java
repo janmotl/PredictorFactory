@@ -8,7 +8,7 @@ import org.junit.Test;
 import run.Setting;
 
 import java.util.List;
-import java.util.SortedMap;
+import java.util.Set;
 import java.util.SortedSet;
 
 public class MetaTest {
@@ -19,7 +19,7 @@ public class MetaTest {
 	public void testCollectTables_Azure() {
 		Setting setting = new Setting("Azure", "financial");		
 		Network.openConnection(setting);
-		SortedSet<String> tableList = Meta.collectTables(setting, setting.database, setting.inputSchema);
+		Set<String> tableList = Meta.collectTables(setting, setting.database, setting.inputSchema).keySet();
 		Network.closeConnection(setting);
 
 		Assert.assertEquals("[account, card, client, disp, district, loan, order, trans]", tableList.toString());
@@ -29,7 +29,7 @@ public class MetaTest {
 	public void testCollectTables_MySQL() {
 		Setting setting = new Setting("MariaDB", "financial");		
 		Network.openConnection(setting);
-		SortedSet<String> tableList = Meta.collectTables(setting, setting.database, setting.inputSchema);
+		Set<String> tableList = Meta.collectTables(setting, setting.database, setting.inputSchema).keySet();
 		Network.closeConnection(setting);
 
 		Assert.assertEquals("[account, card, client, disp, district, loan, order, trans]", tableList.toString());
@@ -39,7 +39,7 @@ public class MetaTest {
 	public void testCollectTables_PostgreSQL() {
 		Setting setting = new Setting("PostgreSQL", "financial");
 		Network.openConnection(setting);
-		SortedSet<String> tableList = Meta.collectTables(setting, setting.database, setting.inputSchema);
+		Set<String> tableList = Meta.collectTables(setting, setting.database, setting.inputSchema).keySet();
 		Network.closeConnection(setting);
 
 		Assert.assertEquals("[account, card, client, disp, district, loan, order, trans]", tableList.toString());
@@ -49,7 +49,7 @@ public class MetaTest {
 	public void testCollectTables_SAS() {
 		Setting setting = new Setting("SAS", "SAS");		
 		Network.openConnection(setting);
-		SortedSet<String> tableList = Meta.collectTables(setting, setting.database, setting.inputSchema);
+		Set<String> tableList = Meta.collectTables(setting, setting.database, setting.inputSchema).keySet();
 		Network.closeConnection(setting);
 		String expected = "[account, card, client, disp, district, loan, order, trans]";
 
@@ -62,40 +62,40 @@ public class MetaTest {
 	public void testCollectColumns_Azure() {
 		Setting setting = new Setting("Azure", "financial");		
 		Network.openConnection(setting);
-		SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.inputSchema, "loan");
+		Set<String> columnList = Meta.collectColumns(setting, setting.database, setting.inputSchema, "loan").keySet();
 		Network.closeConnection(setting);
 
-		Assert.assertEquals("[account_id, amount, date, duration, loan_id, payments, status]", columnList.keySet().toString());
+		Assert.assertEquals("[account_id, amount, date, duration, loan_id, payments, status]", columnList.toString());
     }
 	
 	@Test
 	public void testCollectColumns_MySQL() {
 		Setting setting = new Setting("MariaDB", "financial");		
 		Network.openConnection(setting);
-		SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.inputSchema, "loan");
+		Set<String> columnList = Meta.collectColumns(setting, setting.database, setting.inputSchema, "loan").keySet();
 		Network.closeConnection(setting);
 
-		Assert.assertEquals("[account_id, amount, date, duration, loan_id, payments, status]", columnList.keySet().toString());
+		Assert.assertEquals("[account_id, amount, date, duration, loan_id, payments, status]", columnList.toString());
     }
 	
 	@Test
 	public void testCollectColumns_PostgreSQL() {
 		Setting setting = new Setting("PostgreSQL", "financial");		
 		Network.openConnection(setting);
-		SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.inputSchema, "loan");
+		Set<String> columnList = Meta.collectColumns(setting, setting.database, setting.inputSchema, "loan").keySet();
 		Network.closeConnection(setting);
 
-		Assert.assertEquals("[account_id, amount, date, duration, loan_id, payments, status]", columnList.keySet().toString());
+		Assert.assertEquals("[account_id, amount, date, duration, loan_id, payments, status]", columnList.toString());
     }
 	
 	@Test
 	public void testCollectColumns_SAS() {
 		Setting setting = new Setting("SAS", "SAS");		
 		Network.openConnection(setting);
-		SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.inputSchema, "LOAN");
+		Set<String> columnList = Meta.collectColumns(setting, setting.database, setting.inputSchema, "LOAN").keySet();
 		Network.closeConnection(setting);
 
-		Assert.assertEquals("[account_id, amount, date, duration, loan_id, payments, status]", columnList.keySet().toString());
+		Assert.assertEquals("[account_id, amount, date, duration, loan_id, payments, status]", columnList.toString());
     }
 	
 	/////////////// Schemas ///////////////
@@ -145,7 +145,7 @@ public class MetaTest {
     }
 
 	/////////////// Relations ///////////////
-	
+
 	@Test
 	public void testCollectRelations_Azure() {
 		Setting setting = new Setting("Azure", "financial");

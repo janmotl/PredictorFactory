@@ -4,28 +4,34 @@
 package run;
 
 import com.google.common.base.MoreObjects;
+import com.zaxxer.hikari.HikariDataSource;
 import connection.*;
+import utility.Text;
 
-import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-//  Builder Pattern would be nice to make the variables final
+//  Builder Pattern would be nice to make the variables final.
+//  Could make the variables static to be available from everywhere (and final, if possible).
+//	We should break the setting into individual classes. Or at least build a hierarchy.
 public final class Setting {
 
 	// Connection related
-	public Connection connection; 				// The connection to the readServer
+
+	public HikariDataSource dataSource;			// Pool of connections
 	public int identifierLengthMax;				// The maximal length of a column/table
-	public int columnMax;						// The maximal count of columns in a table
+	public Integer predictorMax;				// The maximal count of columns in a table
+	public int predictorMaxTheory = Integer.MAX_VALUE;	// The maximal count of columns in a table
 	public String username;
 	public String password;
 	public String host;
 	public String port;
 	public String urlPrefix;
+	public String urlSuffix;
 	public String dbNameSeparator;
 	public String driverClass;
 	public String testQuery;
+	public String url;							// Alternative to {host, port, database}. Allows specific commands.
 	public String database;						// The default database on the server
 	public String databaseVendor;				// MySQL, MS SQL, PostgreSQL...
 	public String quoteAliasOpen;				// column as "COLUMN"
@@ -77,8 +83,10 @@ public final class Setting {
 	public final String baseFold = "propagated_fold";		// The name for fold in x-fold cross-validation.
 	public final String baseSampled = "base_sampled";		// The name of the sampled base table.
 	public final String mainTable = "mainSample";			// The name of the result table with predictors.
-	public final String journalTable = "journal"; 			// The name of predictors' journal table.
-	public final String journalPropagationTable = "journal_table"; 		// The name of propagation journal table.
+	public final String journalPredictor = "journal"; 		// The name of predictors' journal table.
+	public final String journalTable = "journal_table"; 	// The name of propagation journal table.
+	public final String journalTemporal = "journal_temporal";// The name of temporal constraints' journal table.
+	public final String journalPattern = "journal_pattern";	// The name of the list of patterns.
 	public final String propagatedPrefix = "propagated_";	// For single schema databases.
 	public final String predictorPrefix = "PREDICTOR";  	// Tables with predictors have uniform prefix.
 	public final int predictorStart = 100000;  				// Convenience for "natural sorting".
@@ -92,11 +100,13 @@ public final class Setting {
 	public String task;								// Classification or regression?
 	public String whiteListPattern;					// Namely select the patterns to use. Should be a list.
 	public String blackListPattern;					// Ignore some of the patterns. Should be a list.
-	public boolean isTargetNominal = false;			// If the target is nominal, we have to escape the values
+	public boolean isTargetString = false;			// If the target is a String, we have to escape the values
+	public List<String> baseDateRange = new ArrayList<>(); // The range of baseDate (for time constraint estimation).
 	//public boolean sample = true;					// If true, sample during propagation  
-	public final int valueCount = 20;				// Count of discrete values to consider in existential quantifier.
+	public final int valueCount = 20;				// Count of discrete values to consider in feature functions.
 	// missingValues (had to be implemented)
 	public String targetSchema;						// Target table can be either in the input schema or output schema.
+	public boolean useIdAttributes;					// Use id attributes in feature creation?
 	public boolean skipBaseGeneration = false;		// This is for iterative bug fixing...
 	public boolean skipPropagation = false;
 	public boolean skipAggregation = false;
@@ -121,12 +131,14 @@ public final class Setting {
 		password = connectionProperty.password;
 		host = connectionProperty.host;
 		port = connectionProperty.port;
+		url = connectionProperty.url;
 		databaseVendor = connectionProperty.driver;
 
 		// Load driver properties
 		driverClass = driverProperty.driverClass;
 		dbNameSeparator = driverProperty.dbNameSeparator;
 		urlPrefix = driverProperty.urlPrefix;
+		urlSuffix = driverProperty.urlSuffix;
 		testQuery = driverProperty.testQuery;
 		dateToNumber = driverProperty.dateToNumber;
 		charLengthCommand = driverProperty.charLengthCommand;
@@ -135,10 +147,11 @@ public final class Setting {
 		// Load database properties
 		inputSchema = databaseProperty.inputSchema;
 		outputSchema = databaseProperty.outputSchema;
-		targetIdList = Arrays.asList(databaseProperty.targetId.split(","));	// Permit composite id
+		targetIdList = Text.string2list(databaseProperty.targetId);	// Permits composite id
 		targetDate = databaseProperty.targetDate;
 		targetColumn = databaseProperty.targetColumn;
 		targetTable = databaseProperty.targetTable;
+		predictorMax = databaseProperty.predictorMax;
 
         // Load optional (null-able) properties. Always set appropriate default values.  
  	   	quoteAliasOpen = MoreObjects.firstNonNull(driverProperty.quoteAliasOpen, "\"");
@@ -162,9 +175,9 @@ public final class Setting {
 		// Note: the correct correlation is: select ((Avg(column1 * column2) - Avg(column1) * Avg(column2)) / (stdDev_samp(column1) * stdDev_samp(column2))), ((sum(column1 * column2) - count(*) * Avg(column1) * Avg(column2)) / (stdDev_samp(column1) * stdDev_samp(column2) * (count(*)-1))), stdDev_samp(column1), stdDev_samp(column2) FROM `predictor_factory`.`PREDICTOR100004` WHERE column2 is not null and column1 is not null
 		corrSyntax = MoreObjects.firstNonNull(driverProperty.corrSyntax, "((Sum(@column1 * @column2) - count(*) * Avg(@column1) * Avg(@column2)) / ((count(*) - 1) * (stdDev_samp(@column1) * stdDev_samp(@column2))))");
 		
-		unit = MoreObjects.firstNonNull(databaseProperty.unit, "day");
-		lag = MoreObjects.firstNonNull(databaseProperty.lag, 60);
-		lead = MoreObjects.firstNonNull(databaseProperty.lead, 30);
+		unit = MoreObjects.firstNonNull(databaseProperty.unit, "year");
+		lag = MoreObjects.firstNonNull(databaseProperty.lag, 100);
+		lead = MoreObjects.firstNonNull(databaseProperty.lead, 0);
 		task = MoreObjects.firstNonNull(databaseProperty.task, "classification");
 		sampleCount = MoreObjects.firstNonNull(databaseProperty.sampleCount, Integer.MAX_VALUE);
 		blackListPattern = MoreObjects.firstNonNull(databaseProperty.blackListPattern, "");
@@ -174,6 +187,7 @@ public final class Setting {
 		whiteListColumn = MoreObjects.firstNonNull(databaseProperty.whiteListColumn, "");
 		blackListColumn = MoreObjects.firstNonNull(databaseProperty.blackListColumn, "");
 		targetSchema = MoreObjects.firstNonNull(databaseProperty.targetSchema, inputSchema);
+		useIdAttributes = databaseProperty.useIdAttributes;	// The default is set in xsd
 
 		// Initialize baseIdList based on the count of columns in targetIdList
 		for (int i = 0; i < targetIdList.size(); i++) {
@@ -183,6 +197,6 @@ public final class Setting {
 	
  	// Provide brief description. Useful for documentation.
 	public String toString() {
-		return "Setting configuration: [[Lag: " + lag + "], [Lead: " + lead + "], [Sample count: " + sampleCount + "]]";
+		return "Setting configuration: [[Lag: " + lag + "], [Lead: " + lead + "], [Sample count: " + sampleCount + "], [Use ids: " + useIdAttributes + "], [Predictor count limit: " + predictorMax + "]]";
 	}
 }

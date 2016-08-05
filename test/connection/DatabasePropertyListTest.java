@@ -21,4 +21,16 @@ public class DatabasePropertyListTest {
 	  Assert.assertEquals(expected, retrieved);
 	  Assert.assertEquals(expected, retrieved2);  
   }
+
+	@Test
+	public void testAttributeDefault() {
+		DatabasePropertyList databaseList = DatabasePropertyList.unmarshall();
+		DatabaseProperty databaseProperty = databaseList.getDatabaseProperties("financial");
+
+		// Assumes that the property is not set and the default kicked in
+		Assert.assertTrue(databaseProperty.useIdAttributes);
+	}
+
+
+
 }

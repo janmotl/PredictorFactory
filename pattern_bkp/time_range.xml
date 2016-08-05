@@ -6,12 +6,10 @@
 	</description>
 	<author>Jan Motl</author>
 	<date>2015-01-25</date>
-	<code>SELECT @baseId
-	           , @baseDate
-	           , @baseTarget
-	           , DATEDIFF(max(@timeColumn), min(@timeColumn)) AS "@columnName"
+	<code>SELECT @base
+	           , DATEDIFF(max(@timeColumn), min(@timeColumn)) AS @columnName
 	      FROM @propagatedTable
-	      GROUP BY @baseId, @baseDate, @baseTarget
+	      GROUP BY @base
 	</code>
 	<cardinality>n</cardinality>
 </pattern>

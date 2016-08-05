@@ -51,7 +51,7 @@
 	<author>Jan Motl</author>
 	<date>2014-10-14</date>
 	<code>SELECT @base
-			   , @aggregateFunction(@numericalColumn) AS "@columnName"
+			   , @aggregateFunction(@numericalColumn) AS @columnName
 	      FROM @propagatedTable
 	      GROUP BY @base
 	</code>

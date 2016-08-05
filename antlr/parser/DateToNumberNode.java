@@ -12,8 +12,8 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 // THIS IS A ROUGH IMPLEMENTATION - ONLY CONSTRUCTOR AND GETTEXT IS GUARANTEED TO WORK AS EXPECTED.
 public class DateToNumberNode implements TerminalNode{
 
-	SQLParser.DatetonumberContext ctx;
-	String text;
+	private final SQLParser.DatetonumberContext ctx;
+	private final String text;
 
 	public DateToNumberNode(SQLParser.DatetonumberContext ctx2, String pattern) {
 		ctx = ctx2;

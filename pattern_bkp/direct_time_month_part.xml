@@ -7,14 +7,10 @@
 	</description>
 	<author>Jan Motl</author>
 	<date>2015-06-01</date>
-	<code compatibility="PostgreSQL">SELECT @baseId
-			     , @baseDate
-			     , @baseTarget
-			     , CEIL(day/days_in_month*3) AS "@columnName"
+	<code compatibility="PostgreSQL">SELECT @base
+			     , CEIL(day/days_in_month*3) AS @columnName
 			FROM (
-				SELECT @baseId
-			     	, @baseDate
-			     	, @baseTarget
+				SELECT @base
 					, EXTRACT(DAY FROM @timeColumn) AS day 
 					, DATE_PART('day', 
 				        DATE_TRUNC('MONTH', @timeColumn) 

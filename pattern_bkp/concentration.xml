@@ -18,31 +18,29 @@
 	</example>
 	<author>Jan Motl</author>
 	<date>2014-12-22</date>
-	<code compatibility="PostgreSQL">SELECT a.@baseId
-	           	, a.@baseDate
-	           	, a.@baseTarget
-  			   	, 100.0 * count(CASE WHEN m."mode"=@column THEN 1 ELSE null END) / nullif(count(@column), 0) AS "@columnName"
+	<code compatibility="PostgreSQL">SELECT a.@base
+  			   	, 100.0 * count(CASE WHEN m."mode"=@column THEN 1 ELSE null END) / nullif(count(@column), 0) AS @columnName
 			FROM @propagatedTable a
   			JOIN (select @baseId , @baseDate
         		, mode() within group (order by @column) AS "mode"
       			FROM @propagatedTable
-        		GROUP BY @baseId, @baseDate
+        		GROUP BY @base
         	) m
         	ON a.@baseId = m.@baseId AND a.@baseDate = m.@baseDate
-        	GROUP BY a.@baseId, a.@baseDate, a.@baseTarget
+        	GROUP BY a.@base
 	</code>
 	<code compatibility="Oracle">SELECT a.@baseId
 	           	, a.@baseDate
 	           	, a.@baseTarget
-  			   	, 100.0 * count(CASE WHEN m."mode"=@column THEN 1 ELSE null END) / nullif(count(@column), 0) AS "@columnName"
+  			   	, 100.0 * count(CASE WHEN m."mode"=@column THEN 1 ELSE null END) / nullif(count(@column), 0) AS @columnName
 			FROM @propagatedTable a
   			JOIN (select @baseId , @baseDate
         		, stats_mode(@column) AS "mode"
       			FROM @propagatedTable
-        		GROUP BY @baseId, @baseDate
+        		GROUP BY @base
         	) m
         	ON a.@baseId = m.@baseId AND a.@baseDate = m.@baseDate
-        	GROUP BY a.@baseId, a.@baseDate, a.@baseTarget
+        	GROUP BY a.@base
 	</code>
 	<parameter key="@column" value="@nominalColumn, @numericalColumn, @timeColumn"/>
 	<cardinality>n</cardinality>

@@ -4,11 +4,12 @@ package propagation;
 import com.rits.cloning.Cloner;
 import connection.Network;
 import connection.SQL;
+import metaInformation.Column;
 import metaInformation.ForeignConstraint;
 import metaInformation.MetaOutput.OutputTable;
 import org.apache.log4j.Logger;
 import run.Setting;
-import utility.Meta.Table;
+import metaInformation.Table;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -37,12 +38,28 @@ public class Propagation{
 		OutputTable base = new OutputTable();	// Temporarily add base table (used in propagationPath building)...
 		base.propagationPath = new ArrayList<>();
 		base.originalName = setting.baseSampled;
-		base.idColumn.addAll(setting.baseIdList);
-		base.timeColumn.add(setting.baseDate);
-		base.nominalColumn.add(setting.baseTarget);	// NOT ALWAYS, but do we care if we are removing the table at the end?
+
+		for (String columnName : setting.baseIdList) {	// Can be a composite Id
+			Column column = new Column(columnName);
+			base.columnMap.put(columnName, column);
+		}
+
+		Column temporalColumn = new Column(setting.baseDate);
+		temporalColumn.isTemporal = true;
+		base.columnMap.put(setting.baseDate, temporalColumn);
+
+		Column targetColumn = new Column(setting.baseTarget);
+		base.columnMap.put(setting.baseTarget, targetColumn);
+
 		ForeignConstraint fc = new ForeignConstraint("FK_baseTable_targetTable", setting.baseSampled, setting.targetTable, setting.baseIdList, setting.targetIdList);
 		base.foreignConstraintList.add(fc);
 		metaOutput.put(setting.baseSampled, base);	//... into tableMetadata.
+
+
+		// Get an estimate of range of targetDate
+		if (setting.targetDate != null) {
+			setting.baseDateRange = SQL.getDateRange(setting, setting.baseTable, setting.baseDate);
+		}
 		
 		// Call BFS
 		metaOutput = bfs(setting, 1, propagated, notPropagated, inputMeta, metaOutput);
@@ -71,107 +88,74 @@ public class Propagation{
 		for (String table1 : propagated) {
 			for (String table2 : notPropagated) {
 
-				// Get time columns (from table2)
-				SortedSet<String> timeSet = metaInput.get(table2).timeColumn;
-				
 				// Get relationships between table1 and table2
 				List<ForeignConstraint> relationshipList = metaOutput.get(table1).foreignConstraintList.stream().filter(propagationForeignConstraint -> table2.equals(propagationForeignConstraint.fTable)).collect(Collectors.toList());
 
+				// Loop over all relationships between the tables
 				for (ForeignConstraint relationship : relationshipList) {
 					// Initialize
-					OutputTable table = new OutputTable();
-					table.timeColumn = metaInput.get(table2).timeColumn;
-					table.nominalColumn = metaInput.get(table2).nominalColumn;
-					table.numericalColumn = metaInput.get(table2).numericalColumn;
-					table.idColumn = metaInput.get(table2).idColumn;
-					table.foreignConstraintList = metaInput.get(table2).foreignConstraintList;
-					table.uniqueList = metaInput.get(table2).uniqueList;
-
-					table.propagatedName = trim(setting, table2, metaOutput.size()); // We have to make sure that outputTable name is short enough but unique (we add id)
-					table.originalName = table2;
+					OutputTable table = new OutputTable(metaInput.get(table2));
+					table.name = trim(setting, table2, metaOutput.size()); // We have to make sure that outputTable name is short enough but unique (we add id)
+					table.dateBottomBounded = true;    // NOT PROPERLY USED - is a constant
+					table.propagationForeignConstraint = relationship;
 					table.propagationTable = table1;
 					table.propagationPath = getPropagationPath(metaOutput.get(table1));
-					table.propagationForeignConstraint = relationship;
-					table.dateBottomBounded = false;
 
-					// If idColumn2 is distinct in table2, it is unnecessary to set time condition.
-					// For example, in Customer table, which contains only static information, like Birth_date,
-					// it is not necessary to set the time constrain.
-					table.isIdUnique = SQL.isIdUnique(setting, table);
-					
-					// Attempt to use time constrain
-					if (setting.targetDate != null & !table.isIdUnique & !timeSet.isEmpty() & timeSet.size()<3) {
-						// Initialize list of candidate tables
-						ArrayList<OutputTable> candidateList = new ArrayList<>();
-						
-						// Generate a table for each date
-						for (String date : timeSet) {
-							// Redefine parameters
-							table.propagatedName = trim(setting, table2, metaOutput.size() + candidateList.size());
-							table.constrainDate = date;
-							table.dateBottomBounded = true;
-							
-							// Make a new table
-							table.sql = SQL.propagateID(setting, table);
-							Network.executeUpdate(setting.connection, table.sql);
+					// Identify time constraint
+					table = TemporalConstraint.find(setting, table);
 
-							// Get the row count
-							table.rowCount = SQL.getRowCount(setting, setting.outputSchema, table.propagatedName);
+					// Make a new table
+					table.sql = SQL.propagateID(setting, table);
+					table.isSuccessfullyExecuted = Network.executeUpdate(setting.dataSource, table.sql);
 
-							// If the row count is 0, drop the table
-							if  (table.rowCount == 0) {
-								SQL.dropTable(setting, table.propagatedName);
-							} else {
-								candidateList.add(cloner.deepClone(table));
-							}
-						}
+					// Get the row count
+					// NOTE: Should be conditional on isSuccessfullyPropagated (also below).
+					table.rowCount = SQL.getRowCount(setting, setting.outputSchema, table.name);
+					logger.debug("Table \"" + table.originalName + "\" with \"" + table.temporalConstraint + "\" time constraint has " + table.rowCount + " rows.");
 
-						// If all attempts failed, do not use any time constrain
-						if (candidateList.isEmpty()) {
-							table.propagatedName = trim(setting, table2, metaOutput.size());
-							table.constrainDate = null;
-							table.dateBottomBounded = false;
-							table.sql =  SQL.propagateID(setting, table);
-							Network.executeUpdate(setting.connection, table.sql);
-							table.rowCount = SQL.getRowCount(setting, setting.outputSchema, table.propagatedName);
-						} else {
-							table = candidateList.get(0);	// Just pick the first suitable table
-						}
+					// If the produced table has 0 rows and time constrain was used, repeat without any time constraint.
+					if (table.rowCount == 0 && table.temporalConstraint != null) {
+						SQL.dropTable(setting, table.name);
+						table.temporalConstraint = null;
+						table.temporalConstraintJustification = "The attempt to use time constrain failed - no row satisfies the time frame defined in the initial setting of Predictor Factory.";
 
-					} else {	// Propagate without the date constrain
-						table.sql =  SQL.propagateID(setting, table);
-						Network.executeUpdate(setting.connection, table.sql);
-						table.rowCount = SQL.getRowCount(setting, setting.outputSchema, table.propagatedName);
-					} 
+						// Make a new table
+						table.sql = SQL.propagateID(setting, table);
+						table.isSuccessfullyExecuted = Network.executeUpdate(setting.dataSource, table.sql);
+
+						// Get the row count
+						table.rowCount = SQL.getRowCount(setting, setting.outputSchema, table.name);
+						logger.debug("Table \"" + table.originalName + "\" with \"" + table.temporalConstraint + "\" time constraint has " + table.rowCount + " rows.");
+					}
 
 					// Add indexes
-					SQL.addIndex(setting, table.propagatedName);
+					SQL.addIndex(setting, table.name);
 
 					// Is OK?
-					table.isOk = (table.rowCount > 0);
+					table.isOk = (table.isSuccessfullyExecuted && table.rowCount > 0);
 
 					// Update the state
 					stillNotPropagated.remove(table2);
 					if (table.isOk) {
-						newlyPropagated.add(table.propagatedName);
+						newlyPropagated.add(table.name);
 					}
 
 					// Collect metadata
-					table.isUnique = SQL.isUnique(setting, table.propagatedName, false);
+					table.isTargetIdUnique = SQL.isTargetIdUnique(setting, table.name);
 					table.propagationOrder = metaOutput.size();
 					table.timestampDelivered = LocalDateTime.now();
 
 					// Add the table into tableMetadata list
-					metaOutput.put(table.propagatedName, table);
+					metaOutput.put(table.name, table);
 
 					// Log it
-					SQL.addToJournalPropagation(setting, table);
+					SQL.addToJournalTable(setting, table);
 				}
 			}
 		}
 		
-		// If we didn't propagated ANY new table (i.e. tables are truly independent of each other) or we have 
-		// propagated all the tables or we have reached the maximal propagation depth, return the conversionMap.
+		// If we didn't propagate ANY new table (i.e. tables are truly independent of each other) or we
+		// propagated all the tables or we reached the maximal propagation depth, return the conversionMap.
 		if (newlyPropagated.isEmpty() || stillNotPropagated.isEmpty() || depth>=setting.propagationDepthMax) {	
 			// Output quality control
 			if (!stillNotPropagated.isEmpty()) {
@@ -183,7 +167,7 @@ public class Propagation{
 		}
 		
 		// Otherwise go a level deeper.
-		logger.info("#### Finished propagation at depth: " + depth + " ####");
+		logger.info("#### Propagated the base table to depth: " + depth + " ####");
 		return bfs(setting, ++depth, newlyPropagated, stillNotPropagated, metaInput, metaOutput);
 	}
 

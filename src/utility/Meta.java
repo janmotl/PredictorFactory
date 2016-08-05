@@ -1,13 +1,13 @@
 package utility;
 
+import metaInformation.Column;
 import metaInformation.ForeignConstraint;
+import metaInformation.ForeignConstraintList;
+import metaInformation.Table;
 import org.apache.log4j.Logger;
 import run.Setting;
 
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.*;
 
 public class Meta {
@@ -15,47 +15,19 @@ public class Meta {
 	// Logging
 	private static final Logger logger = Logger.getLogger(Meta.class.getName());
 
-	// Define struct. 
-	// Always create collections to avoid null pointer exception and need to create collections at many places.
-	// SortedSet is used to make selection of a single element easy to write.
-	public static class Table {
-		public SortedSet<String> idColumn = new TreeSet<>();			// Foreign and primary keys
-		public SortedSet<String> nominalColumn = new TreeSet<>();		// Categorical columns
-		public SortedSet<String> numericalColumn = new TreeSet<>();		// Additive columns
-		public SortedSet<String> timeColumn = new TreeSet<>();			// Time, date, datetime, timestamp...
-		public List<ForeignConstraint> foreignConstraintList = new ArrayList<>();
-		public boolean isUnique;										// Does combination {baseId, baseDate} repeat?
-		public Map<String, List<String>> uniqueList = new TreeMap<>(); 	// Map of {columnName, unique value list}
-		
-		@Override 
-		public String toString() {
-		    StringBuilder result = new StringBuilder();
-		    String NEW_LINE = System.getProperty("line.separator");
-
-		    result.append("Table {" + NEW_LINE);
-		    result.append(" idColumn: " + idColumn + NEW_LINE);
-		    result.append(" nominalColumn: " + nominalColumn + NEW_LINE);
-		    result.append(" numericalColumn: " + numericalColumn + NEW_LINE );
-		    result.append(" timeColumn: " + timeColumn + NEW_LINE);
-		    result.append("}");
-
-		    return result.toString();
-		 }
-	}
-
-	
-	
-	// 0) Get list of all schemas.
+	// 1) Get list of all schemas.
 	// POSSIBLY I COULD ASSUME THAT: database = setting.database
 	// HENCE ELIMINATE ONE OF THE PARAMETERS (and we are already passing setting...)
 	public static SortedSet<String> collectSchemas(Setting setting, String database) {
 
 		// Initialization
-		SortedSet<String> schemaSet = new TreeSet<>();
+		SortedSet<String> schemaSet = new TreeSet<>(new NaturalOrderComparator());
 		
 		// If supports only catalogs (MySQL) -> get all catalogs
 		if (setting.supportsCatalogs && !setting.supportsSchemas) {
-			try (ResultSet rs = setting.connection.getMetaData().getCatalogs()) {
+			try (Connection connection = setting.dataSource.getConnection();
+				 ResultSet rs = connection.getMetaData().getCatalogs()) {
+
 				while (rs.next()) {
 					String schemaName = rs.getString("TABLE_CAT");
 					schemaSet.add(schemaName);
@@ -65,7 +37,9 @@ public class Meta {
 		
 		// If supports only schemas (SAS) -> get all schemas
 		if (!setting.supportsCatalogs && setting.supportsSchemas) {
-			try (ResultSet rs = setting.connection.getMetaData().getSchemas()) {
+			try (Connection connection = setting.dataSource.getConnection();
+				 ResultSet rs = connection.getMetaData().getSchemas()) {
+
 				while (rs.next()) {
 					String schemaName = rs.getString("TABLE_SCHEM");
 					
@@ -80,7 +54,9 @@ public class Meta {
 		
 		// If supports catalogs and schemas -> get all schemas in the specified catalog
 		if (setting.supportsCatalogs && setting.supportsSchemas) {
-			try (ResultSet rs = setting.connection.getMetaData().getSchemas(database, "%")) {
+			try (Connection connection = setting.dataSource.getConnection();
+				 ResultSet rs = connection.getMetaData().getSchemas(database, "%")) {
+
 				while (rs.next()) {
 					String schemaName = rs.getString("TABLE_SCHEM");
 					schemaSet.add(schemaName);
@@ -96,8 +72,8 @@ public class Meta {
 		return schemaSet;
 	}
 	
-	// 1) Get all tables and views in the schema.
-	public static SortedSet<String> collectTables(Setting setting, String database, String schema) {
+	// 2) Get all tables and views in the schema.
+	public static SortedMap<String, Table> collectTables(Setting setting, String database, String schema) {
 		// Deal with different combinations of catalog/schema support
 		// MySQL type
 		if (setting.supportsCatalogs && !setting.supportsSchemas) {
@@ -111,33 +87,35 @@ public class Meta {
 		}
 				
 		// Initialization
-		SortedSet<String> tableSet = new TreeSet<>();
-		String[] tableType = {"TABLE", "VIEW", "MATERIALIZED VIEW"};
+		SortedMap<String, Table> tableMap = new TreeMap<>(new NaturalOrderComparator());
+		String[] tableType = {"TABLE", "VIEW", "MATERIALIZED VIEW"};	// Ignore system tables...
 		
-		// Get all the columns in the table using try-with-resources.
-		try (ResultSet rs = setting.connection.getMetaData().getTables(database, schema, "%", tableType)) {
+		// Get all the tables using try-with-resources.
+		try (Connection connection = setting.dataSource.getConnection();
+			 ResultSet rs = connection.getMetaData().getTables(database, schema, "%", tableType)) {
 
 			while (rs.next()) {
-				String tableName = rs.getString("TABLE_NAME");
+				Table table = new Table();
+				table.name = rs.getString("TABLE_NAME");
 				
 				if ("SAS".equals(setting.databaseVendor)) {
-					tableName = tableName.replace(" ", "");	// Remove space padding
+					table.name = table.name.replace(" ", "");	// Remove space padding
 				}
 				
-				tableSet.add(tableName);
+				tableMap.put(table.name, table);
 			}
 		} catch (SQLException ignored) {}
 		
 		// QC table count
-		if (tableSet.isEmpty()) {
+		if (tableMap.isEmpty()) {
 			logger.warn("The count of available tables in " + database + "." + schema + " is 0.");
 		}
 		
-		return tableSet;
+		return tableMap;
 	}
 	
-	// 2) Get all columns in the table. Return <ColumnName, DataType>.
-	public static SortedMap<String, Integer> collectColumns(Setting setting, String database, String schema, String table) {
+	// 3) Get all columns in the table. Return <ColumnName, DataType>.
+	public static SortedMap<String, Column> collectColumns(Setting setting, String database, String schema, String table) {
 		// Deal with different combinations of catalog/schema support
 		// MySQL type
 		if (setting.supportsCatalogs && !setting.supportsSchemas) {
@@ -151,93 +129,42 @@ public class Meta {
 		}
 		
 		// Initialization
-		SortedMap<String, Integer> columnMap = new TreeMap<>();
+		SortedMap<String, Column> columnMap = new TreeMap<>(new NaturalOrderComparator());
 		
 		// Get all the columns in the table using try-with-resources.
-		try (ResultSet rs = setting.connection.getMetaData().getColumns(database, schema, table, null)) {
+		try (Connection connection = setting.dataSource.getConnection();
+			 ResultSet rs = connection.getMetaData().getColumns(database, schema, table, null)) {
 
 			while (rs.next()) {
-				// Note: "Type Name" column contains vendor specific name -> the
-				// strings are changing.
-				// Hence "Data Type" column is used. It has the advantage that
-				// there is a finite set of these numbers.
-				int dataType = rs.getInt("DATA_TYPE");
-				String columnName = rs.getString("COLUMN_NAME");
-				
+				Column column = new Column(rs.getString("COLUMN_NAME"));
+				column.dataType = rs.getInt("DATA_TYPE");
+				column.dataTypeName = rs.getString("TYPE_NAME");
+				column.isNullable = "YES".equals(rs.getString("IS_NULLABLE"));		// WHAT IF INDIFFERENT?
+
 				// SAS stores entity names in chars instead of in varchars
 				if ("SAS".equals(setting.databaseVendor)) {
-					columnName = columnName.replace(" ", "");	// Remove space padding
+					column.name = column.name.replace(" ", "");	// Remove space padding
 				}
 				
 				// Oracle decided that NVARCHAR2 should be classified as "other" type (1111)
 				// even though it can be casted to String. Hence do the work that Oracle
 				// should have done.
-				if (dataType == 1111 && rs.getString("TYPE_NAME").toUpperCase().contains("CHAR")) {
-					dataType = 12; // Treat it as VARCHAR2
+				if (column.dataType == 1111 && rs.getString("TYPE_NAME").toUpperCase().contains("CHAR")) {
+					column.dataType = 12; // Treat it as VARCHAR2
 				}
 				
 				// PostgreSQL classifies interval as "other" type (1111). Change the classification to time data type.
-				if (dataType == 1111 && rs.getString("TYPE_NAME").toUpperCase().contains("INTERVAL")) {
-					dataType = 93; // Treat it as timestamp
+				if (column.dataType == 1111 && rs.getString("TYPE_NAME").toUpperCase().contains("INTERVAL")) {
+					column.dataType = 93; // Treat it as timestamp
 				}
 				
-				columnMap.put(columnName, dataType);
+				columnMap.put(column.name, column);
 			}
 		} catch (SQLException e) {
 			logger.warn(e.getMessage());
 		}
 		
 		return columnMap;
-	}
-	
-	// 3) Get numerical, nominal and time columns.
-	public static Table categorizeColumns(Table table, Map<String, Integer> column, String tableName) {
-		// Parameter control
-		if (column == null || column.isEmpty()) {
-			logger.info("Table: " + tableName + " doesn't contain any column beside ids.");
-			return table;
-		}
-		
-		// Initialization
-		SortedSet<String> string = new TreeSet<>();
-		SortedSet<String> numerical = new TreeSet<>();
-		SortedSet<String> time = new TreeSet<>();
-		int columnCounter = 0;
-		
-		// Categorize the dataTypes. If the data type is not recognized, the column is ignored.
-		// This is intentional because we do not know how to deal with blobs (dataType = 2004)...
-		// And we don't want them to slow down the mining process -> do not propagate them.
-		// Doc: https://docs.oracle.com/cd/A97337_01/ias102_otn/buslog.102/bc4j/bc_abcdatatypes.htm
-		// Doc: http://alvinalexander.com/java/edu/pj/jdbc/recipes/ResultSet-ColumnType.shtml
-		// Doc: http://docs.oracle.com/javase/8/docs/api/constant-values.html#java.sql.Types.ARRAY
-		for (String columnName : column.keySet()) {
-			int dataType = column.get(columnName); // THIS COULD POTENTIONALLY RESULT IN NULL POINTER EXCEPTION
-			
-			if (dataType == -16 || dataType == -15 || dataType == -9 || dataType == -1 || dataType == 1 || dataType == 12) {
-				string.add(columnName);
-			} else if ((dataType >= -7 && dataType <= -5) || (dataType >= 2 && dataType <= 8) || dataType == 16) {
-				numerical.add(columnName);
-			} else if (dataType == 91 || dataType == 92 || dataType == 93 || dataType == 2013 || dataType == 2014) {
-				time.add(columnName);
-			} else {
-				columnCounter++;
-				logger.debug("Ignoring column: " + tableName + "." + columnName 
-						+ " because it is of an unsupported data type (" + dataType + ")");
-			}
-		}
-		
-		// Output quality control
-		if (columnCounter > 0) {
-			logger.warn("In total " + columnCounter + " columns were ignored in " + tableName + " because of unsopperted data type.");
-		}
-
-		// Setters
-		// THE ASSIGNMENT IS NOT EXACT AS SOME NUMERICAL COLUMNS CAN BE NOMINAL...
-		table.numericalColumn = numerical;
-		table.nominalColumn = string;
-		table.timeColumn = time;
-		
-		return table;
 	}
 
 	// 4) Get all relationships related to the table.
@@ -259,9 +186,67 @@ public class Meta {
 			}
 		}
 
+		// Add relevant relationships from an XML file, if available.
+		// It is ugly that we read and parse the XML repeatedly. But should not be a bottleneck.
+		List<ForeignConstraint> relationshipXML = ForeignConstraintList.unmarshall("foreignConstraint.xml").getForeignConstraintList(table);
+		if (!relationshipXML.isEmpty()) {
+			// NOTE: Could replace list with a LinkedHasSet to avoid duplicates (use: Refactor | Type Migration)
+			result.addAll(relationshipXML);
+			logger.info("Table " + table + " has " + relationshipXML.size() + " relationships defined in the XML file.");
+		}
+
 		return result;
 	}
 
+	// 5) Get the single primary key (It would be the best if only artificial keys were returned. At least
+	// we are excluding the composite keys).
+	public static String getPrimaryKey(Setting setting, String database, String schema, String table) {
+		// Deal with different combinations of catalog/schema support
+		// MySQL type
+		if (setting.supportsCatalogs && !setting.supportsSchemas) {
+			database = schema;
+			schema = null;
+		}
+
+		// SAS type
+		if (!setting.supportsCatalogs && setting.supportsSchemas) {
+			database = null;
+		}
+
+		// Initialization
+		List<String> primaryKeyList = new ArrayList<>();
+
+		// Get all columns making the primary key
+		try (Connection connection = setting.dataSource.getConnection();
+			 ResultSet rs = connection.getMetaData().getPrimaryKeys(database, schema, table)){
+
+			 while (rs.next()) {
+				 String primaryKey = rs.getString("COLUMN_NAME");
+
+				 // SAS stores entity names in chars instead of in varchars
+				 if ("SAS".equals(setting.databaseVendor)) {
+					 primaryKey = primaryKey.replace(" ", "");    // Remove space padding (should remove just leading/trailing spaces if enough)
+				 }
+
+				 primaryKeyList.add(primaryKey);
+			 }
+		} catch (SQLException e) {
+			logger.error(e.getMessage());
+		}
+
+		// If the table contains a PK composed of exactly one column, return the name of the column
+		if (primaryKeyList.size() == 1) {
+			return primaryKeyList.get(0);
+		}
+
+		// Otherwise return null;
+		return null;
+	}
+
+
+
+	// Subroutine: Get all relationships for the table.
+	// Composite relationships are represented by multiple records with the same "name".
 	private static List<ForeignConstraint> downloadRelationships(Setting setting, String schema, String table) {
 		String database;
 
@@ -284,42 +269,41 @@ public class Meta {
 		List<ForeignConstraint> relationshipList = new ArrayList<>();
 		
 		// Get all relations coming from this table
-		try {
-			DatabaseMetaData meta = setting.connection.getMetaData();
-			ResultSet rs = meta.getImportedKeys(database, schema, table);
+		try  (Connection connection = setting.dataSource.getConnection();
+			  ResultSet rs_imported = connection.getMetaData().getImportedKeys(database, schema, table);
+			  ResultSet rs_exported = connection.getMetaData().getExportedKeys(database, schema, table)) {
 
-			while (rs.next()) {
-				ForeignConstraint relationship = new ForeignConstraint();
-				relationship.name = rs.getString("FK_NAME");
-				relationship.table = table;
-				relationship.fTable = rs.getString("PKTABLE_NAME");
-				relationship.column.add(rs.getString("FKCOLUMN_NAME"));
-				relationship.fColumn.add(rs.getString("PKCOLUMN_NAME"));
-				relationship.sequence = rs.getShort("KEY_SEQ");
-				relationshipList.add(relationship);
-			}
-			
-			// And now Exported keys
-			rs = meta.getExportedKeys(database, schema, table);
+				// Imported keys
+				while (rs_imported.next()) {
+					ForeignConstraint relationship = new ForeignConstraint();
+					relationship.name = rs_imported.getString("FK_NAME");
+					relationship.table = table;
+					relationship.fTable = rs_imported.getString("PKTABLE_NAME");
+					relationship.column.add(rs_imported.getString("FKCOLUMN_NAME"));
+					relationship.fColumn.add(rs_imported.getString("PKCOLUMN_NAME"));
+					relationship.sequence = rs_imported.getShort("KEY_SEQ");
+					relationshipList.add(relationship);
+				}
 
-			while (rs.next()) {
-				ForeignConstraint relationship = new ForeignConstraint();
-				relationship.name = rs.getString("FK_NAME");
-				relationship.table = table;
-				relationship.fTable = rs.getString("FKTABLE_NAME");
-				relationship.column.add(rs.getString("PKCOLUMN_NAME"));
-				relationship.fColumn.add(rs.getString("FKCOLUMN_NAME"));
-				relationship.sequence = rs.getShort("KEY_SEQ");
-				relationshipList.add(relationship);
-			}
-			
+				// And now Exported keys
+				while (rs_exported.next()) {
+					ForeignConstraint relationship = new ForeignConstraint();
+					relationship.name = rs_exported.getString("FK_NAME");
+					relationship.table = table;
+					relationship.fTable = rs_exported.getString("FKTABLE_NAME");
+					relationship.column.add(rs_exported.getString("PKCOLUMN_NAME"));
+					relationship.fColumn.add(rs_exported.getString("FKCOLUMN_NAME"));
+					relationship.sequence = rs_exported.getShort("KEY_SEQ");
+					relationshipList.add(relationship);
+				}
+
 		} catch (SQLException e) {
 			logger.error(e.getMessage());
 		}
 		
 		// Output Quality Control
 		if (relationshipList.isEmpty()) {
-			logger.info("Table " + table + " doesn't have any predefined relationship.");
+			logger.info("Table " + table + " doesn't have any predefined relationship in the database.");
 		}
 		
 		return relationshipList;
@@ -347,7 +331,8 @@ public class Meta {
 						
 		
 		// Get all relations coming from this table
-		try (Statement stmt = setting.connection.createStatement()) {
+		try (Connection connection = setting.dataSource.getConnection();
+			 Statement stmt = connection.createStatement()) {
 
 			String condition = "where t1.libname = '" + schema + "' and t1.memname = '" + table + "'";
 			ResultSet rs = stmt.executeQuery(sql + condition);
@@ -383,49 +368,5 @@ public class Meta {
 		return relationshipList;
 	}
 
-	// 5) Get the single primary key (It would be the best if only artificial keys were returned. At least 
-	// we are excluding the composite keys).
-	public static String getPrimaryKey(Setting setting, String database, String schema, String table) {
-		// Deal with different combinations of catalog/schema support
-		// MySQL type
-		if (setting.supportsCatalogs && !setting.supportsSchemas) {
-			database = schema;
-			schema = null;
-		}
-		
-		// SAS type
-		if (!setting.supportsCatalogs && setting.supportsSchemas) {
-			database = null;
-		}
-		
-		// Initialization
-		List<String> primaryKeyList = new ArrayList<>();
-		
-		// Get all columns making the primary key
-		try {
-			DatabaseMetaData meta = setting.connection.getMetaData();
-			ResultSet rs = meta.getPrimaryKeys(database, schema, table);
 
-			while (rs.next()) {
-				String primaryKey = rs.getString("COLUMN_NAME");
-				
-				// SAS stores entity names in chars instead of in varchars
-				if ("SAS".equals(setting.databaseVendor)) {
-					primaryKey = primaryKey.replace(" ", "");	// Remove space padding
-				}
-				
-				primaryKeyList.add(primaryKey);
-			}
-		} catch (SQLException e) {
-			logger.error(e.getMessage());
-		}
-		
-		// If the table contains a PK composed of exactly one column, return the name of the column 
-		if (primaryKeyList.size() == 1) {
-			return primaryKeyList.get(0);
-		}
-		
-		// Otherwise return null;
-		return null;
-	}
 }

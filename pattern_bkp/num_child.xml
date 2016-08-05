@@ -3,13 +3,14 @@
 <pattern>
 	<name>Number of children</name>
 	<description>
-		Number of observations of the child entity with child filter F			
+		Number of observations of the child entity with child filter F.
 	</description>
 	<author>Filip Trojan</author>
 	<date>2014-12-25</date>
-	<code>SELECT @baseId, @baseDate, @baseTarget, coalesce(count(*), 0) AS "@columnName"
+	<code>SELECT @base
+				, coalesce(count(*), 0) AS @columnName
 	      FROM @propagatedTable
-	      GROUP BY @baseId, @baseDate, @baseTarget
+	      GROUP BY @base
 	</code>
 	<cardinality>n</cardinality>
 </pattern>

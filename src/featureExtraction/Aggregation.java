@@ -4,11 +4,14 @@ import com.rits.cloning.Cloner;
 import connection.Network;
 import connection.SQL;
 import featureExtraction.Pattern.OptimizeParameters;
+import metaInformation.Column;
 import metaInformation.MetaOutput.OutputTable;
+import metaInformation.StatisticalType;
 import org.apache.log4j.Logger;
-import run.Journal;
 import run.Setting;
+import utility.BlackWhiteList;
 import utility.PatternMap;
+import utility.Text;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -21,25 +24,30 @@ public class Aggregation {
 	private static final Logger logger = Logger.getLogger(Aggregation.class.getName());
 
 	// Deep cloning
-	private static Cloner cloner = new Cloner(); 
+	private static final Cloner cloner = new Cloner();
 	
 	
 	
 	// Do it
-	public static void aggregate(Setting setting, Journal journal, SortedMap<String, OutputTable> tableMetadata ) {
+	public static Journal aggregate(Setting setting, SortedMap<String, OutputTable> tableMetadata ) {
 		
 		// Initialization
-		int groupId = 1;
+		Journal journal;	// Log of all predictors
+		int groupId = 1;	// To group different refinements together
+
 		
 		// 1) Get predictors
 		List<Predictor> predictorList = loopPatterns(setting);
+		// Log patterns
+		SQL.getJournalPattern(setting);
+		SQL.addToJournalPattern(setting, predictorList);
 		
 		// 2) Set @targetValue
 			// First, get the cached list of unique values in the target column
-			List<String> uniqueList = new ArrayList<>();
+			Set<String> uniqueValueSet = new HashSet<>();
 			for (OutputTable table : tableMetadata.values()) {
 				if (setting.targetTable.equals(table.originalName)) {
-					uniqueList = table.uniqueList.get(setting.targetColumn);
+					uniqueValueSet = table.getColumn(setting.targetColumn).uniqueValueSet;
 					break; // No need to continue
 				}
 			}
@@ -47,7 +55,7 @@ public class Aggregation {
 			// Second, Loop over all the predictors
 			List<Predictor> predictorList2 = new ArrayList<>();
 			for (Predictor predictor : predictorList) {
-				predictorList2.addAll(addTargetValue(setting, predictor, uniqueList));
+				predictorList2.addAll(addTargetValue(setting, predictor, uniqueValueSet));
 			}
 
 		
@@ -66,7 +74,7 @@ public class Aggregation {
 		// 5) Loop over columns
 		List<Predictor> predictorList5 = new ArrayList<>();
 		for (Predictor predictor : predictorList4) {
-			predictorList5.addAll(loopColumns(predictor, tableMetadata));
+			predictorList5.addAll(loopColumns(setting, predictor, tableMetadata));
 		}
 		
 		// 6) Loop over @value
@@ -86,11 +94,15 @@ public class Aggregation {
 		// 8) Execute the SQL & log the result
 		int maxRowLimit = SQL.getRowCount(setting, setting.outputSchema, setting.baseSampled); // For QC purposes.
 
+		journal = new Journal(setting, predictorList7.size());
+		logger.debug(journal.getExpectedPredictorCount() + " predictors are scheduled for calculation.");
+
 		for (Predictor predictor : predictorList7) {
 			materializePredictor(setting, journal, predictor, maxRowLimit); 
 			journal.addPredictor(setting, predictor);
 		}
-		
+
+		return journal;
 	}
 	
 	
@@ -101,14 +113,10 @@ public class Aggregation {
 		List<Predictor> outputList = new ArrayList<>();
 		SortedMap<String, Pattern> patternMap = PatternMap.getPatternMap();
 
-		// If whitelist is not empty, perform intersect
-		if (!setting.whiteListPattern.isEmpty()) {
-			patternMap.keySet().retainAll(Arrays.asList(setting.whiteListPattern.split(",")));
-		}
-		
-		// Skip blacklisted patterns
-		String[] blackList = setting.blackListPattern.split(",");
-		patternMap.keySet().removeAll(Arrays.asList(blackList));
+		// Apply black/white lists
+		List blackList = Text.string2list(setting.blackListPattern);
+		List whiteList = Text.string2list(setting.whiteListPattern);
+		patternMap = BlackWhiteList.filter(patternMap, blackList, whiteList);
 
 		// Get the dialect code
 		for (Pattern pattern : patternMap.values()) {
@@ -134,7 +142,7 @@ public class Aggregation {
 	// Subroutine 2: Populate @targetValue (based on unique values in the target column in the target window) and set SQL.
 	// If we are performing regression, remove patterns that are using target value, as these patterns are not applicable.
 	// CURRENTLY IMPLEMENTED ONLY FOR THE FIRST VALUE -> IT RETURNS JUST A SINGLE PREDICTOR
-	protected static List<Predictor> addTargetValue(Setting setting, Predictor predictor, List<String> uniqueList){
+	protected static List<Predictor> addTargetValue(Setting setting, Predictor predictor, Set<String> uniqueValueSet){
 
 		boolean isClassification = "classification".equals(setting.task);
 		boolean containsTargetValue = predictor.getPatternCode().contains("@targetValue");
@@ -142,7 +150,7 @@ public class Aggregation {
 		// If the pattern uses target value...
 		if (containsTargetValue) {
 			if (isClassification) {
-				predictor.setParameter("@targetValue", uniqueList.get(0));
+				predictor.setParameter("@targetValue", uniqueValueSet.iterator().next()); // Just some random item
 			} else {
 				return new ArrayList<>();
 			}
@@ -206,7 +214,7 @@ public class Aggregation {
 
 			// Skip tables with wrong cardinality
 			String cardinality = predictor.getPatternCardinality();
-			if (("1".equals(cardinality) && !workingTable.isUnique) || ("n".equals(cardinality) && workingTable.isUnique)) {
+			if (("1".equals(cardinality) && !workingTable.isTargetIdUnique) || ("n".equals(cardinality) && workingTable.isTargetIdUnique)) {
 				continue;	
 			}
 			
@@ -214,9 +222,9 @@ public class Aggregation {
 			Predictor cloned = cloner.deepClone(predictor);
 		
 			// Store the necessary data into the clone
-			cloned.propagatedTable = workingTable.propagatedName;
+			cloned.propagatedTable = workingTable.name;
 			cloned.originalTable = workingTable.originalName;
-			cloned.propagationDate = workingTable.constrainDate;
+			cloned.propagationDate = workingTable.temporalConstraint;
 			cloned.propagationPath = workingTable.propagationPath;
 			
 			// Store the clone
@@ -230,7 +238,8 @@ public class Aggregation {
 	// Subroutine 5: Recursively generate each possible combination of the columns.
 	// NO GUARANTIES ABOUT COLUMN1 != COLUMN2 IF THEY ARE OF THE SAME TYPE!
 	// NEITHER THAT {COLUMN1, COLUMN2} WILL BE REPEATED AS {COLUMN2, COLUMN1}!
-	protected static List<Predictor> loopColumns(Predictor predictor, SortedMap<String, OutputTable> tableMetadata) {
+	// CHECK HOW DO I TREAT COLUMNS THAT ARE BOTH, NUMERICAL AND NOMINAL...
+	protected static List<Predictor> loopColumns(Setting setting, Predictor predictor, SortedMap<String, OutputTable> tableMetadata) {
 		
 		// Initialize the output
 		List<Predictor> predictorList = new ArrayList<>();
@@ -245,31 +254,31 @@ public class Aggregation {
 		
 		// Loop over each column in the predictor
 		for (Entry<String, String> parameter : predictor.columnMap.entrySet()) {
-			predictorList = expandColumn(predictorList, parameter.getKey(), tableMetadata.get(predictor.propagatedTable));
+			predictorList = expandColumn(setting, predictorList, parameter.getKey(), tableMetadata.get(predictor.propagatedTable));
 		}
 		
 		return predictorList;
 	}
 	
-	private static List<Predictor> expandColumn(List<Predictor> predictorList, String columnKey, OutputTable table) {
+	private static List<Predictor> expandColumn(Setting setting, List<Predictor> predictorList, String columnKey, OutputTable table) {
 		
 		List<Predictor> outputList = new ArrayList<>();
 		
 		for (Predictor predictor : predictorList) {
 			// Select columns from the table with the correct data type. 	
-			SortedSet<String> columnValueSet = new TreeSet<>();
+			SortedSet<Column> columnValueSet = new TreeSet<>();
 			
 			// Matches: Case insensitive plus suffix with any number of digits
-			if (columnKey.matches("(?i)@NUMERICALCOLUMN\\d*")) columnValueSet = table.numericalColumn;	
-			else if (columnKey.matches("(?i)@NOMINALCOLUMN\\d*")) columnValueSet = table.nominalColumn;	
-			else if (columnKey.matches("(?i)@TIMECOLUMN\\d*")) columnValueSet = table.timeColumn; 
-			else if (columnKey.matches("(?i)@IDCOLUMN\\d*")) columnValueSet = table.idColumn;
+			if (columnKey.matches("(?i)@NUMERICALCOLUMN\\d*")) columnValueSet = table.getColumns(setting, StatisticalType.NUMERICAL);
+			else if (columnKey.matches("(?i)@NOMINALCOLUMN\\d*")) columnValueSet = table.getColumns(setting, StatisticalType.NOMINAL);
+			else if (columnKey.matches("(?i)@TIMECOLUMN\\d*")) columnValueSet = table.getColumns(setting, StatisticalType.TEMPORAL);
+			else if (columnKey.matches("(?i)@IDCOLUMN\\d*")) columnValueSet = table.getColumns(setting, StatisticalType.ID);
 			else logger.warn("The term: " + columnKey +  " in pattern: " + predictor.getPatternName() + " is not recognized as a valid column identifier. Expected terms are: {numericalColumn, nominalColumn, timeColumn, idColumn}.");
 			
 			// Bind the columnKey to the actual columnValue.  		
-			for (String columnValue : columnValueSet) {
+			for (Column columnValue : columnValueSet) {
 				Predictor cloned = cloner.deepClone(predictor);
-				cloned.columnMap.put(columnKey, columnValue);
+				cloned.columnMap.put(columnKey, columnValue.name);
 				outputList.add(cloned);
 			}
 		}
@@ -292,10 +301,7 @@ public class Aggregation {
 				if (column.getKey().toUpperCase().matches("@NOMINALCOLUMN\\d*")) {
 					
 					// Get list of unique values
-					List<String> valueList = tableMetadata.get(predictor.propagatedTable).uniqueList.get(column.getValue());
-					
-					// Limit the count to a manageable value
-					valueList = valueList.subList(0, Math.min(setting.valueCount, valueList.size())); 
+					Set<String> valueList = tableMetadata.get(predictor.propagatedTable).getColumn(column.getValue()).uniqueValueSet;
 
 					for (String value : valueList) {
 						Predictor cloned = cloner.deepClone(predictor);
@@ -348,7 +354,7 @@ public class Aggregation {
 		List<Predictor> outputList = new ArrayList<>();
 		
 		for (Predictor predictor : predictorList) {
-			// CURRENTLY JUST SWEEP OVER THE VALUES. USE A REAL OPTIMALISATION TOOLBOX.
+			// CURRENTLY JUST SWEEP OVER THE VALUES. USE A REAL OPTIMISATION TOOLBOX.
 			for (int i = 0; i < parameter.iterationLimit; i++) {
 				double value = parameter.min + i * (parameter.max-parameter.min)/(parameter.iterationLimit-1);
 				Predictor clonedPredictor = cloner.deepClone(predictor);
@@ -382,7 +388,7 @@ public class Aggregation {
 		predictor.setTimestampBuilt(LocalDateTime.now());
 		
 		// Execute the SQL
-		predictor.setOk(Network.executeUpdate(setting.connection, predictor.getSql()));
+		predictor.setOk(Network.executeUpdate(setting.dataSource, predictor.getSql()));
 		
 		// If the execution failed, stop.
 		if (!predictor.isOk()) return;
@@ -421,7 +427,7 @@ public class Aggregation {
 	protected static Predictor addSQL(Predictor predictor, String sql) {
 		
 	    for (String parameterName : predictor.getParameterMap().keySet()) {
-	    	// Only whole words! Otherwise "@column" would also match "@columnName".
+	    	// Only whole words! Otherwise "@column" would also match "@name".
 	    	String oldString = parameterName.substring(1); // remove the at-sign as it is not considered as a part of word in regex
 	    	String newString = predictor.getParameterMap().get(parameterName);
 	    	sql = sql.replaceAll("@\\b" + oldString + "\\b", newString);

@@ -7,19 +7,15 @@
 	</description>
 	<author>Jan Motl</author>
 	<date>2015-06-01</date>
-	<code compatibility="PostgreSQL">SELECT @baseId
-			     , @baseDate
-			     , @baseTarget
+	<code compatibility="PostgreSQL">SELECT @base
 			     , CASE WHEN hour &lt; 5 THEN 'night' 
 						WHEN hour &lt; 9 THEN 'morning' 
 						WHEN hour &lt; 18 THEN 'working' 
 						WHEN hour &lt; 21 THEN 'evening'
 						ELSE 'night'
-					END AS "@columnName"
+					END AS @columnName
 			FROM (
-				SELECT @baseId
-			     	, @baseDate
-			     	, @baseTarget
+				SELECT @base
 					, EXTRACT(HOUR FROM @timeColumn) AS hour
 				FROM @propagatedTable
 			) t

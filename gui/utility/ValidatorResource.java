@@ -1,4 +1,4 @@
-package controller;
+package utility;
 
 import java.io.File;
 import java.net.URL;
@@ -9,6 +9,7 @@ public class ValidatorResource {
 	
 	// Sanity check that all the resources are at the places where they are expected
 	// UGLY COPY&PASTE
+	// SIMILAR TO SystemQualityControl, InputQualityControl. REMOVE THE DUPLICITY!
 	public static boolean isResourceAvailable() {
 		File dir = new File("pattern");
 		
@@ -35,13 +36,12 @@ public class ValidatorResource {
 			return false;
 		}
 		
-		location = ValidatorResource.class.getResource("/fxml/main.fxml");
+		location = ValidatorResource.class.getResource("/fxml/Main.fxml");
 		if (location == null) {
-			System.out.println("Fxml.main.fxml resource is missing.");
+			System.out.println("Fxml.Main.fxml resource is missing.");
 			return false;
 		}
-		
-		
+
 		return true;
 	}
 }

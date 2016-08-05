@@ -1,7 +1,6 @@
 package connection;
 
 
-
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
@@ -26,6 +25,9 @@ public class DatabaseProperty {
 	@XmlAttribute public String targetId;
 	@XmlAttribute public String targetDate;
 	@XmlAttribute public String targetColumn;
+	@XmlAttribute public String task;
+	@XmlAttribute public String whiteListPattern;
+	@XmlAttribute public String blackListPattern;
 	@XmlAttribute public String whiteListTable;
 	@XmlAttribute public String blackListTable;
 	@XmlAttribute public String whiteListColumn;
@@ -34,7 +36,6 @@ public class DatabaseProperty {
 	@XmlAttribute public Integer lag;
 	@XmlAttribute public Integer lead;
 	@XmlAttribute public Integer sampleCount;
-	@XmlAttribute public String task;
-	@XmlAttribute public String whiteListPattern;
-	@XmlAttribute public String blackListPattern;
+	@XmlAttribute public Integer predictorMax;
+	@XmlAttribute public Boolean useIdAttributes;
 }

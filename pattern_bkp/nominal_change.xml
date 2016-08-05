@@ -8,19 +8,15 @@
 	<author>Jan Motl</author>
 	<date>2015-03-14</date>
 	<code compatibility="PostgreSQL">WITH intermediate AS (
-			SELECT @baseId
-			     , @baseDate
-			     , @baseTarget
+			SELECT @base
 				 , @nominalColumn AS nowValue
-				 , LAG(@nominalColumn) OVER (PARTITION BY @baseId, @baseDate ORDER BY @timeColumn) AS lagValue
+				 , LAG(@nominalColumn) OVER (PARTITION BY @basePartitionBy ORDER BY @timeColumn) AS lagValue
 			FROM @propagatedTable
 		  )
-		  SELECT @baseId
-		  	   , @baseDate
-			   , @baseTarget
-			   , sum(CASE WHEN nowValue &lt;&gt; lagValue THEN 1 ELSE 0 END) AS "@columnName"
+		  SELECT @base
+			   , sum(CASE WHEN nowValue &lt;&gt; lagValue THEN 1 ELSE 0 END) AS @columnName
 		  FROM intermediate
-		  GROUP BY @baseId, @baseDate, @baseTarget
+		  GROUP BY @base
 	</code>
 	<cardinality>n</cardinality>
 </pattern>

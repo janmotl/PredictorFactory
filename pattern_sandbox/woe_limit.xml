@@ -7,7 +7,13 @@
 	Considers only cases with at least 10 samples.
 	
 	The implementation is from: https://qizeresearch.wordpress.com/2014/05/21/utilize-woe-to-replace-dummy-variables/
-	
+
+	Laplacean regularization is from: http://shigglesblog.blogspot.com/2013/07/weight-of-evidence.html
+
+	Target value is always treated as a string because databases automatically cast numbers to strings, if necessary.
+	But databases do not automatically cast strings to numbers. Hence, treating the target value as a string works
+	for both, numerical and string targets.
+
 	NOTE: Training and testing data are getting mixed -> expect overly optimistic estimates.
 	
 	NOTE: WORKS ONLY ON BINARY TARGETS! -> produce a column for each target class
@@ -38,8 +44,8 @@
 				 / (sum(case when propagated_target &lt;&gt; '@targetValue' then 1.0 else 0 end)+0.5)/avg(total.total_nondefault))*100
 				 as woe
 				 FROM @propagatedTable
-					  , (SELECT sum(case when propagated_target='@targetValue' then 1.0 else 0 end) as total_default
-					          , sum(case when propagated_target &lt;&gt; '@targetValue' then 1.0 else 0 end) as total_nondefault 
+					  , (SELECT sum(case when propagated_target='@targetValue' then 1.0 else 0 end)+0.5 as total_default
+					          , sum(case when propagated_target &lt;&gt; '@targetValue' then 1.0 else 0 end)+0.5 as total_nondefault
 					  FROM @propagatedTable) total
 				 GROUP BY @nominalColumn
 				 HAVING count(*) &gt;= 10

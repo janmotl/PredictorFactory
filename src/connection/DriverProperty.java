@@ -12,6 +12,7 @@ public class DriverProperty {
 	@XmlAttribute public String driverClass;
 	@XmlAttribute public String defaultPort;
 	@XmlAttribute public String urlPrefix;
+	@XmlAttribute public String urlSuffix;
 	@XmlAttribute public String dbNameSeparator;
 	@XmlAttribute public String quoteAliasOpen;
 	@XmlAttribute public String quoteAliasClose;

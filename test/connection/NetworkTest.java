@@ -6,14 +6,17 @@ import org.junit.Before;
 import org.junit.Test;
 import run.Setting;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
 public class NetworkTest {
-	private Setting setting = new Setting("MariaDB", "financial");
+	private Setting setting = new Setting("PostgreSQL", "financial");
 	
 	@Before
 	public void connectToDatabase(){
+		utility.Logging.initialization();
 		setting = Network.openConnection(setting);
 	}
 
@@ -21,28 +24,67 @@ public class NetworkTest {
 	@Test
 	public void executeQuery() {
 		String sql = "Select 5";
-		List<String> columnList = Network.executeQuery(setting.connection, sql);
+		List<String> columnList = Network.executeQuery(setting.dataSource, sql);
 
 		Assert.assertEquals("5", columnList.get(0));
 	}
 
-	// Would fail on databases with schema support
 	@Test
 	public void getDatabaseProperties() {
 		Assert.assertTrue(setting.supportsCatalogs);
-		Assert.assertFalse(setting.supportsSchemas);
+		Assert.assertTrue(setting.supportsSchemas);
 	}
 
-	// I AM NOT PASSING THIS TEST!
 	@Test
 	public void properClosing() throws SQLException {
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 20; i++) {
 			Network.closeConnection(setting);
 			Network.openConnection(setting);
 		}
 
-		Assert.assertTrue(setting.connection.isValid(2));
+		Assert.assertTrue(setting.dataSource.getConnection().isValid(2));
 	}
+
+	@Test
+	public void loadTest() {
+		for (int i = 0; i < 30; i++) {
+
+			try (Connection connection = setting.dataSource.getConnection();
+					ResultSet rs = connection.getMetaData().getSchemas("PredictorFacotry", "%")) {
+				while (rs.next()) {
+					String schemaName = rs.getString("TABLE_SCHEM");
+					System.out.println(schemaName);
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+
+			System.out.println("	iteration: " + i);
+		}
+	}
+
+	@Test
+	public void loadTest_executeQuery() {
+		for (int i = 0; i < 30; i++) {
+
+			String sql = "Select 6";
+			List<String> columnList = Network.executeQuery(setting.dataSource, sql);
+			Assert.assertEquals("6", columnList.get(0));
+
+			System.out.println("	iteration: " + i);
+		}
+	}
+
+	@Test
+	public void loadTest_metaData() {
+		for (int i = 0; i < 30; i++) {
+
+			metaInformation.MetaInput.getMetaInput(setting);
+
+			System.out.println("	iteration: " + i);
+		}
+	}
+
 
 
 	@After

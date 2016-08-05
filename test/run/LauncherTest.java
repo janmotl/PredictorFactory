@@ -3,10 +3,9 @@ package run;
 
 import connection.Network;
 import connection.SQL;
-
+import metaInformation.Column;
 import org.junit.Assert;
 import org.junit.Test;
-
 import utility.Meta;
 
 import java.util.List;
@@ -21,7 +20,7 @@ public class LauncherTest {
 
         Setting setting = new Setting("Azure", "financial_test_setting");
         Network.openConnection(setting);
-        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
         int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
@@ -38,7 +37,7 @@ public class LauncherTest {
 
         Setting setting = new Setting("HSQLDB", "financial_test_setting");
         Network.openConnection(setting);
-        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
         int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
@@ -55,7 +54,7 @@ public class LauncherTest {
 
         Setting setting = new Setting("MonetDB", "financial_test_setting");
         Network.openConnection(setting);
-        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
         int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
@@ -72,7 +71,7 @@ public class LauncherTest {
 
         Setting setting = new Setting("MariaDB", "financial_test_setting");
         Network.openConnection(setting);
-        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
         int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
@@ -89,7 +88,7 @@ public class LauncherTest {
 
         Setting setting = new Setting("Oracle", "financial_xe_test_setting");
         Network.openConnection(setting);
-        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
         int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
@@ -111,11 +110,11 @@ public class LauncherTest {
                 "from information_schema.columns " +
                 "where table_schema = 'predictor_factory' " +
                 "and table_name = 'mainSample'";
-        List<String> columnList = Network.executeQuery(setting.connection, sql);
+        List<String> columnList = Network.executeQuery(setting.dataSource, sql);
         sql = "select date_constrain " +
                 "from predictor_factory.journal_table " +
                 "where original_name = 'trans'";
-        List<String> constrainColumn = Network.executeQuery(setting.connection, sql);
+        List<String> constrainColumn = Network.executeQuery(setting.dataSource, sql);
         Network.closeConnection(setting);
 
         Assert.assertTrue(columnList.contains("trans_amount_aggregate_avg_100002"));
@@ -137,7 +136,7 @@ public class LauncherTest {
 
         Setting setting = new Setting("Azure", "financial_test_setting_regression");
         Network.openConnection(setting);
-        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
         int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
@@ -154,7 +153,7 @@ public class LauncherTest {
 
         Setting setting = new Setting("MariaDB", "financial_test_setting_regression");
         Network.openConnection(setting);
-        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
         int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
@@ -171,7 +170,7 @@ public class LauncherTest {
 
         Setting setting = new Setting("Oracle", "financial_xe_test_setting_regression");
         Network.openConnection(setting);
-        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
         int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
@@ -193,7 +192,7 @@ public class LauncherTest {
                 "from information_schema.columns " +
                 "where table_schema = 'predictor_factory' " +
                 "and table_name = 'mainSample'";
-        List<String> columnList = Network.executeQuery(setting.connection, sql);
+        List<String> columnList = Network.executeQuery(setting.dataSource, sql);
         Network.closeConnection(setting);
 
         Assert.assertTrue(columnList.contains("trans_amount_aggregate_avg_100002"));
@@ -214,7 +213,7 @@ public class LauncherTest {
         Setting setting = new Setting("PostgreSQL", "voc_test_setting");
         Network.openConnection(setting);
         int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
-        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
         Assert.assertTrue(columnList.containsKey("total_death_during_voyage_directField_numericalColumn_100002"));
@@ -233,7 +232,7 @@ public class LauncherTest {
         Setting setting = new Setting("PostgreSQL", "mutagenesis_test_setting");
         Network.openConnection(setting);
         int rowCount = SQL.getRowCount(setting, setting.outputSchema, setting.mainTable);
-        SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
         Network.closeConnection(setting);
 
         Assert.assertTrue(columnList.containsKey("bond_type_aggregate_max_100015"));

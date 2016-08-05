@@ -12,7 +12,11 @@
 		  - The inner table should be calculated just once per table.
 		  - Multiple columns could be returned.		
 		  - Weighting: weight=(count(*))^0.5; score=sum(t2.b*t2.weight)/sum(t2.a*t2.weight); doesn't improve Chi2 
-		  
+
+		Empirical comparison of WoE and affinity is in: http://papers.ssrn.com/sol3/papers.cfm?abstract_id=1918410
+		The conclusion of the article is that WoE is preferable for logistic regression by 4% on AUC.
+		For decision tree based algorithms the difference is on average equal zero.
+
 		NOTE: CURRENTLY WORKS ONLY FOR NOMINAL TARGETS (VALUES ARE IN SINGLE QUOTES).
 		
 		NOTE: Laplace regularization by 1 should not be applied on average, but sum!  

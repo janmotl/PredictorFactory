@@ -125,4 +125,20 @@ public class Parser {
 
 		return sql;
 	}
+
+	public static String expandBasePartitionBy(Setting setting, String sql) {
+		if (setting.targetDate == null) {
+			sql = sql.replaceAll("(\\w+\\.|)(@basePartitionBy\\b)", "$1@baseId");
+		} else {
+			sql = sql.replaceAll("(\\w+\\.|)(@basePartitionBy\\b)", "$1@baseId, $1@baseDate");
+		}
+
+		return sql;
+	}
+
+	public static String escape(Setting setting, String sql) {
+		sql = sql.replace("@targetValue", setting.quoteAliasOpen + "@targetValue" + setting.quoteAliasClose);
+
+		return sql;
+	}
 }

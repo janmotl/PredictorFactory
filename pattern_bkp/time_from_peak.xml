@@ -10,20 +10,16 @@
 	</description>
 	<author>Jan Motl</author>
 	<date>2015-05-10</date>
-	<code compatibility="PostgreSQL">SELECT @baseId
-			     , @baseDate
-			     , @baseTarget
-			     , DATEDIFF(@baseDate, max(@timeColumn)) AS "@columnName"
-			FROM (SELECT @baseId
-			           , @baseDate
-			           , @baseTarget
+	<code compatibility="PostgreSQL">SELECT @base
+			     , DATEDIFF(@baseDate, max(@timeColumn)) AS @columnName
+			FROM (SELECT @base
 			           , @timeColumn
-		               , RANK() OVER (PARTITION BY @baseId, @baseDate ORDER BY @numericalColumn @sortOrder) AS rk 
+		               , RANK() OVER (PARTITION BY @basePartitionBy ORDER BY @numericalColumn @sortOrder) AS rk
 		          FROM @propagatedTable
 		          WHERE @numericalColumn IS NOT NULL
 		          ) t
 			WHERE  rk = 1
-			GROUP BY @baseId, @baseDate, @baseTarget
+			GROUP BY @base
 	</code>
 	<parameter key="@sortOrder" value="DESC,ASC"/>
 	<cardinality>n</cardinality>

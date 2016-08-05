@@ -13,19 +13,15 @@
 	</example>
 	<author>Jan Motl</author>
 	<date>2014-10-14</date>
-	<code>SELECT @baseId
-			   , @baseDate
-			   , @baseTarget
-			   , stddev_samp(@numericalColumn)/nullif(avg(@numericalColumn), 0) AS "@columnName"
+	<code>SELECT @base
+			   , stddev_samp(@numericalColumn)/nullif(avg(@numericalColumn), 0) AS @columnName
 	      FROM @propagatedTable
-	      GROUP BY @baseId, @baseDate, @baseTarget
+	      GROUP BY @base
 	</code>
-	<code compatibility="SAS">SELECT @baseId
-			   , @baseDate
-			   , @baseTarget
-			   , stddev_samp(@numericalColumn)/avg(@numericalColumn) AS "@columnName"
+	<code compatibility="SAS">SELECT @base
+			   , stddev_samp(@numericalColumn)/avg(@numericalColumn) AS @columnName
 	      FROM @propagatedTable
-	      GROUP BY @baseId, @baseDate, @baseTarget
+	      GROUP BY @base
 	</code>
 	<cardinality>n</cardinality>
 </pattern>

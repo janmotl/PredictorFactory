@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Direct WOE LOO</name>
+	<description>Weight of evidence with leave-one-out.
+
+		In comparison to the textbook formulation this implementation takes care of:
+			1) Missing values (they are treated as a separate category)
+			2) Zero probabilities (with Laplace correction)
+			3) Polynomial target
+			4) Leaking target values (by using leave one out trick)
+			5) Accounts for evidence confidence (with square root of the "i" size)
+
+
+		1) Missing values in the @nominalColumn and @baseTarget are treated as a special category.
+			See: http://multithreaded.stitchfix.com/blog/2015/08/13/weight-of-evidence/
+
+		2) Laplacean regularization is from:
+			http://shigglesblog.blogspot.com/2013/07/weight-of-evidence.html
+		Note that I am not performing normalization based on the count of unique values in @nominalValue multiplied by the count of classes.
+		The empirical evidence suggests that Laplacean correction improves AUC by 5 percent points.
+			See: http://papers.ssrn.com/sol3/papers.cfm?abstract_id=1918410
+
+		3) NOTE: WORKS ONLY ON BINARY TARGETS! -> produce a column for each (non-NULL) target class
+			See: http://dspace.library.uu.nl/bitstream/handle/1874/11641/c4.pdf
+
+		4) NOTE: Training and testing data are getting mixed -> expect overly optimistic estimates.
+
+		5) WoE ignores confidence of the estimates. For example, if we have 2 positive samples and
+		5 negative samples, we get the same WoE as if we had 2000 positive samples and 5000 negative samples.
+		Intuitively, the second scenario should result into a value further from zero.
+
+		Technical:
+		The implementation is from: https://qizeresearch.wordpress.com/2014/05/21/utilize-woe-to-replace-dummy-variables/
+
+		Target value is always treated as a string because databases automatically cast numbers to strings, if necessary.
+		But databases do not automatically cast strings to numbers. Hence, treating the target value as a string works
+		for both, numerical and string targets.
+
+
+		NOTE: ALSO WORKS ON CARDINALITY 1!
+
+		NOTE: Interestingly enough, average of woe works better than sum of woe.
+
+		NOTE: Oracle may require specifying logarithm base.
+
+
+		Could theoretically update woe estimates based on already estimated samples from testing set (iterative learning).
+
+		Some other predictors are mentioned in ACORA (Provost).
+
+	</description>
+	<author>Jan Motl</author>
+	<date>2016-06-17</date>
+	<code> SELECT @baseId
+	           	, @baseDate
+	           	, @baseTarget
+				, log( (pos_i_loo/pos_all_loo) / (neg_i_loo/neg_all_loo) )*100 as "@columnName"
+				FROM (
+					SELECT t1.@baseId
+						, t1.@baseDate 
+						, t1.@baseTarget
+						, t1.@nominalColumn
+						, pos_i - (case when @baseTarget  = '@targetValue' then 1.0 else 0 end) as pos_i_loo
+						, neg_i - (case when @baseTarget &lt;&gt; '@targetValue' then 1.0 else 0 end) as neg_i_loo
+						, pos_all - (case when @baseTarget  = '@targetValue' then 1.0 else 0 end) as pos_all_loo
+						, neg_all - (case when @baseTarget &lt;&gt; '@targetValue' then 1.0 else 0 end) as neg_all_loo
+						, pos_i
+						, neg_i
+						, pos_all
+						, neg_all
+					FROM @propagatedTable t1
+					JOIN (
+						SELECT @nominalColumn
+							, pos_all
+							, neg_all
+							, (sum(case when @baseTarget  = '@targetValue' then 1.0 else 0 end)+1) as pos_i
+							, (sum(case when @baseTarget &lt;&gt; '@targetValue' then 1.0 else 0 end)+1) as neg_i
+						FROM @propagatedTable
+							, (
+								SELECT sum(case when @baseTarget ='@targetValue' then 1.0 else 0 end)+2 as pos_all
+									, sum(case when @baseTarget &lt;&gt; '@targetValue' then 1.0 else 0 end)+2 as neg_all
+								FROM @propagatedTable
+							) total
+						GROUP BY @nominalColumn, pos_all, neg_all
+					) raw
+					ON raw.@nominalColumn = t1.@nominalColumn
+				) leave_one_out
+	</code>
+	<cardinality>1</cardinality>
+</pattern>

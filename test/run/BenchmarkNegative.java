@@ -1,4 +1,4 @@
-package benchmark;
+package run;
 
 import com.rapidminer.Process;
 import com.rapidminer.RapidMiner;
@@ -28,7 +28,7 @@ public class BenchmarkNegative {
 		// Get metadata
 		Setting setting = new Setting("PostgreSQL", "mutagenesis");
 		setting = Network.openConnection(setting);
-		List<String> journalList = Network.executeQuery(setting.connection, "select table_name from information_schema.tables where table_schema = 'predictor_factory' and left(table_name, 2) = 'j_' and table_name > 'j_imdb_ijs' ORDER BY 1 ");
+		List<String> journalList = Network.executeQuery(setting.dataSource, "select table_name from information_schema.tables where table_schema = 'predictor_factory' and left(table_name, 2) = 'j_' and table_name > 'j_imdb_ijs' ORDER BY 1 ");
 
 		// Loop over journals and patterns
 		for (String journal : journalList) {
@@ -39,20 +39,20 @@ public class BenchmarkNegative {
 			for (String pattern : patternList) {
 				
 				// Get list of predictors
-				List<String> predictorList = Network.executeQuery(setting.connection, "select predictor_name from (select *  from predictor_factory.\"" + journal + "\" where relevance is not null and relevance > 0 order by relevance DESC limit 197) t where pattern_name <> '" + pattern + "'");
+				List<String> predictorList = Network.executeQuery(setting.dataSource, "select predictor_name from (select *  from predictor_factory.\"" + journal + "\" where relevance is not null and relevance > 0 order by relevance DESC limit 197) t where pattern_name <> '" + pattern + "'");
 				
 				// Drop mainSample
 				SQL.dropTable(setting, "mainSample");
 				
 				// Create new mainSample
 				String sql = "create table predictor_factory.\"mainSample\" as select propagated_target, propagated_id, \"" + String.join("\", \"", predictorList) + "\" from predictor_factory.\"" + mainSample + "\"";
-				Network.executeUpdate(setting.connection, sql);
+				Network.executeUpdate(setting.dataSource, sql);
 			
 				// Execute RapidMiner - evaluate predictive power with cross-validation.
 				double accuracy = executeRapidMiner();
 				
 				// Write the accuracy into the database
-				Network.executeUpdate(setting.connection, "insert into predictor_factory.log_pattern (schema_name, missing_pattern, accuracy, timestamp) values ('" + mainSample.substring(3, mainSample.length()) + "', '" + pattern + "', " + accuracy + ", now())");
+				Network.executeUpdate(setting.dataSource, "insert into predictor_factory.log_pattern (schema_name, missing_pattern, accuracy, timestamp) values ('" + mainSample.substring(3, mainSample.length()) + "', '" + pattern + "', " + accuracy + ", now())");
 				System.out.println(mainSample.substring(3, mainSample.length()) + " " + pattern + ": " + accuracy);
 				
 			}

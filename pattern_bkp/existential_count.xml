@@ -9,8 +9,12 @@
 		
 		NOTE: THE SINGLE QUOTES ARE GOING TO CAUSE PROBLEMS -> ESCAPE IN PF.
 
-		Note: We could ignore values that appear in less than 5% of samples. Currently we use top 20 frequent values.
-		The difference is evident if non-uniform distribution of the values is assumed.
+		Note: Currently we use top 20 frequent values. This limit is set by a parameter of Predictor Factory, not of the
+		pattern. The parameter is named "valueCount" and sets the cap on the size of @value vector.
+		We could also ignore values that appear in less than 5% of samples. The difference is evident if non-uniform
+		distribution of the values is assumed. The implemented variant is an algorithm of "Monte-Carlo" type, while the
+		alternative is "Las Vegas" algorithm type, where you can't predict the runtime, but you can state guaranties
+		about the quality of the output.
 		
 		Literature reference: This pattern is similar to TF as used in Wordification. See:
 			http://www.ipcsit.com/vol47/009-ICCTS2012-T049.pdf
@@ -31,12 +35,10 @@
 	</example>
 	<author>Jan Motl</author>
 	<date>2015-05-07</date>
-	<code>SELECT @baseId
-			   , @baseDate
-			   , @baseTarget
-			   , sum(CASE @nominalColumn WHEN '@value' THEN 1 ELSE 0 END) AS "@columnName"
+	<code>SELECT @base
+			   , sum(CASE @nominalColumn WHEN '@value' THEN 1 ELSE 0 END) AS @columnName
 	      FROM @propagatedTable
-	      GROUP BY @baseId, @baseDate, @baseTarget      
+	      GROUP BY @base
 	</code>
 	<cardinality>n</cardinality>
 </pattern>

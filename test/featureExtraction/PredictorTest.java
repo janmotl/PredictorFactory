@@ -21,6 +21,7 @@ public class PredictorTest {
 		pattern.name = "patternName";
 		pattern.dialectCode = "select 3";
 		pattern.author = "Thorough Tester";
+		pattern.description = "Once upon a time...";
 		pattern.cardinality = "1";		
 	}
 	
@@ -50,7 +51,7 @@ public class PredictorTest {
 		predictorList.add(predictor2);
 		
 		// Sort the relevances in descending order
-		Collections.sort(predictorList, Predictor.RelevanceComparator.reversed());
+		Collections.sort(predictorList, Predictor.RelevanceComparator);
 		
 		Assert.assertEquals(2, predictorList.get(0).getId());
 		Assert.assertEquals(1, predictorList.get(1).getId());
@@ -102,7 +103,8 @@ public class PredictorTest {
 		pattern.name = "pattern89_123456789_123456789_123456789_123456789_123456789";
 		pattern.dialectCode = "select 3";
 		pattern.author = "Thorough Tester";
-		pattern.cardinality = "1";	
+		pattern.cardinality = "1";
+		pattern.description = "Once upon a time...";
 		
 		predictor = new Predictor(pattern);
 		predictor.setId(1);
@@ -166,7 +168,8 @@ public class PredictorTest {
 		pattern.name = "pattern89_123456789_123456789_123456789_123456789_123456789";
 		pattern.dialectCode = "select 3";
 		pattern.author = "Thorough Tester";
-		pattern.cardinality = "1";	
+		pattern.cardinality = "1";
+		pattern.description = "Once upon a time...";
 		
 		predictor = new Predictor(pattern);
 		predictor.setId(1);

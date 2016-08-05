@@ -2,26 +2,34 @@ package connection;
 
 import com.google.common.collect.Lists;
 import featureExtraction.Predictor;
+import metaInformation.Column;
 import metaInformation.MetaOutput;
+import metaInformation.StatisticalType;
+import metaInformation.Table;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 import parser.ANTLR;
 import run.Setting;
 import utility.Meta;
-import utility.Meta.Table;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.regex.Matcher;
 
 public final class SQL {
 	// Logging
 	private static final Logger logger = Logger.getLogger(SQL.class.getName());
 
 	// Subroutine 1: Add "Create table as" sequence into the pattern. Moved from private -> protected for unit testing.
-	protected static String addCreateTableAs(Setting setting, String sql) {
+	private static String addCreateTableAs(Setting setting, String sql) {
 
 		// MSSQL syntax?
 		if (!setting.supportsCreateTableAs) {
@@ -39,7 +47,7 @@ public final class SQL {
 	}
 
 	// Subroutine 1.1: Add "Create table as" sequence into the pattern. Moved from private -> protected for unit testing.
-	protected static String addCreateViewAs(Setting setting, String sql) {
+	private static String addCreateViewAs(Setting setting, String sql) {
 
 		sql = "CREATE VIEW @outputTable AS " + sql;
 
@@ -110,7 +118,7 @@ public final class SQL {
 		if (setting.baseIdList == null || setting.baseIdList.isEmpty()) {
 			throw new IllegalArgumentException("Base id list is required");
 		}
-		if (StringUtils.isBlank(setting.baseDate)) {
+			if (StringUtils.isBlank(setting.baseDate)) {
 			throw new IllegalArgumentException("Base date is required");
 		}
 		if (StringUtils.isBlank(setting.baseTarget)) {
@@ -173,7 +181,7 @@ public final class SQL {
 
 	    // Escape the entities
 	    sql = sql.replace("@propagatedTable", QL + predictor.propagatedTable + QR);
-	    sql = sql.replace("@columnName",  predictor.getName());
+	    sql = sql.replace("@columnName", escapeAlias(setting, predictor.getName()));
 	    
 	    for (String columnName : predictor.columnMap.keySet()) {
 	    	sql = sql.replace(columnName, QL + predictor.columnMap.get(columnName) + QR);
@@ -210,8 +218,8 @@ public final class SQL {
 		// Escape primitive entities
 		sql = sql.replace("@inputTable", QL + table.originalName + QR);
 		sql = sql.replace("@propagatedTable", QL + table.propagationTable + QR);
-		sql = sql.replace("@outputTable", QL + table.propagatedName + QR);
-		sql = sql.replace("@dateColumn", QL + table.constrainDate + QR);
+		sql = sql.replace("@outputTable", QL + table.name + QR);
+		sql = sql.replace("@dateColumn", QL + table.temporalConstraint + QR);
 
 		return sql;
 	}
@@ -234,23 +242,20 @@ public final class SQL {
 	// Subroutine: Is the predictor a string or a number? Just ask the database.
 	// Note: The data type could be predicted from the pattern and pattern parameters. But the implemented 
 	// method is foolproof, though slow.
-	private static String getPredictorType(Setting setting, String table, String column) {
-				
-		SortedMap<String, Integer> allColumns = Meta.collectColumns(setting, setting.database, setting.outputSchema, table);
-		SortedMap<String, Integer> columnMap = new TreeMap<>();
-		if (allColumns.containsKey(column)) { // Take care of scenario, when there isn't the column
-			columnMap.put(column, allColumns.get(column));
-		}
-		Table tableStruct = new Table(); 
-		tableStruct = Meta.categorizeColumns(tableStruct, columnMap, table);
-		
-		if (tableStruct.nominalColumn.contains(column)) {
-			return "nominal";
-		} else if (tableStruct.timeColumn.contains(column)) {
-			return "time";
+	private static String getPredictorType(Setting setting, String tableName, String columnName) {
+
+		Table table = new Table();
+		table.columnMap = Meta.collectColumns(setting, setting.database, setting.outputSchema, tableName);
+		table.categorizeColumns(setting);
+
+		// NOTE: WE DO NOT WANT STATISTICAL TYPE, WE WANT RAW TYPE!
+		if (table.getColumn(columnName).isTemporal) {
+			return "temporal";
+		} else if (table.getColumn(columnName).isNumerical) {
+			return "numerical";
 		} 
 			
-		return "numerical"; 
+		return "nominal";
 	}
 	
 	
@@ -266,7 +271,7 @@ public final class SQL {
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, outputTable);
 		
-		return Network.executeUpdate(setting.connection, sql);
+		return Network.executeUpdate(setting.dataSource, sql);
 	}
 
 	// Drop command
@@ -281,7 +286,7 @@ public final class SQL {
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, outputTable);
 
-		return Network.executeUpdate(setting.connection, sql);
+		return Network.executeUpdate(setting.dataSource, sql);
 	}
 
 
@@ -299,17 +304,18 @@ public final class SQL {
 	// are used.
 	public static void tidyUp(Setting setting) {
 		// Initialization
-		SortedSet<String> tableSet = utility.Meta.collectTables(setting, setting.database, setting.outputSchema);
+		Map<String, Table> tableMap = utility.Meta.collectTables(setting, setting.database, setting.outputSchema);
 		SortedMap<String, String> dropMap = new TreeMap<>();
 		
 		// Select tables for dropping
-		for (String table : tableSet) {
+		for (String table : tableMap.keySet()) {
 			if (table.startsWith(setting.mainTable)) dropMap.put(1 + table, table);			// Mainsample and it's temporary tables
 			if (table.startsWith(setting.predictorPrefix)) dropMap.put(2 + table, table);	// Predictors
 			if (table.startsWith(setting.propagatedPrefix)) dropMap.put(3 + table, table);	// Propagated tables
 			if (table.equals(setting.baseSampled)) dropMap.put(4 + table, table);			// Sampled base table
-			if (table.equals(setting.journalTable)) dropMap.put(5 + table, table);			// Journal table
-			if (table.equals(setting.journalPropagationTable)) dropMap.put(6 + table, table);	// Journal propagated table
+			if (table.equals(setting.journalPredictor)) dropMap.put(5 + table, table);		// Journal table
+			if (table.equals(setting.journalPattern)) dropMap.put(6 + table, table);		// Journal patterns
+			if (table.equals(setting.journalTable)) dropMap.put(7 + table, table);			// Journal propagated table
 		}
 
 		// Drop the tables
@@ -329,12 +335,13 @@ public final class SQL {
 			columns = "(@baseId, @baseDate)";
 		}
 
-		// We should be sure that the index name is not too long
-		String name = outputTable + "_idx";
+		// We should be sure that the index name is not too long (because Oracle has a limit of 30 char).
+		// Hence, strip away known names: ix_mainSample_temp100 -> ix_temp100.
+		String name = "ix_" + outputTable;
 		if (outputTable.startsWith(setting.propagatedPrefix)) {
-			name = outputTable.substring(setting.propagatedPrefix.length(), outputTable.length()) + "_idx";
+			name =  "ix" + outputTable.substring(setting.propagatedPrefix.length(), outputTable.length());
 		} else if (outputTable.startsWith(setting.mainTable)) {
-			name = outputTable.substring(setting.mainTable.length(), outputTable.length()) + "_idx";
+			name = "ix" + outputTable.substring(setting.mainTable.length(), outputTable.length());
 		}
 
 		String sql = "CREATE INDEX " + name + " ON @outputTable " + columns;
@@ -342,7 +349,7 @@ public final class SQL {
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, outputTable);
 		
-		boolean isOK = Network.executeUpdate(setting.connection, sql);
+		boolean isOK = Network.executeUpdate(setting.dataSource, sql);
 		
 		return isOK;
 	}
@@ -359,12 +366,12 @@ public final class SQL {
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, outputTable);
 
-		boolean isOK = Network.executeUpdate(setting.connection, sql);
+		boolean isOK = Network.executeUpdate(setting.dataSource, sql);
 
 		return isOK;
 	}
 
-	// Get rowCount for a table in the output schema
+	// Get rowCount for a table in the output schema.
 	// SHOULD BE IN META OR USE BOOLEAN useInputSchema
 	// IS NOT USING SYSTEM ESCAPING
 	public static int getRowCount(Setting setting, String schema, String table) {
@@ -378,7 +385,7 @@ public final class SQL {
 		// Note also, that JDBC 'metadata' method may indeed be slower than plain count(*) as it has to collect
 		// and return more information than just the rowCount. This seems to be the problem with Teradata. 	
 		
-		List<String> resultList = Network.executeQuery(setting.connection, sql);
+		List<String> resultList = Network.executeQuery(setting.dataSource, sql);
 		
 		// If the table doesn't exist, the resultSet is empty. Return 0.
 		if (resultList.isEmpty()) return 0;
@@ -386,7 +393,29 @@ public final class SQL {
 		// Otherwise return the actual row count
 		return (int)Double.parseDouble(resultList.get(0)); // SAS can return 682.0. SHOULD IMPLEMENT LIST<INTEGERS>.
 	}
-	
+
+	// Returns the minimum and maximum date a column in a form of a number stored as string.
+	// It may be ugly, but by converting the dates into a number we don't have to deal with timestamps, datetimes...
+	// NOTE: It is intended for collection of time values. Maybe it would be better to create a table in the database?
+	public static List<String> getDateRange(Setting setting, String table, String column) {
+
+		// Sometimes databases return t/f sometimes 1/0...
+		String sql = "SELECT dateToNumber(min(@column)) FROM @outputTable UNION ALL SELECT dateToNumber(max(@column)) FROM @outputTable";
+
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, table);
+		sql = ANTLR.parseSQL(setting, sql);
+
+		Map<String, String> fieldMap = new HashMap<>();
+		fieldMap.put("@column", column);
+		fieldMap.put("@outputTable", table);
+		sql = escapeEntityMap(setting, sql, fieldMap);
+
+		List<String> resultList = Network.executeQuery(setting.dataSource, sql);
+		return resultList;
+	}
+
+
 	// Get count of non-null records
 	// Useful for QC of the predictors
 	// SHOULD BE IN META OR USE BOOLEAN useInputSchema
@@ -405,15 +434,95 @@ public final class SQL {
 		fieldMap.put("@column", column);
 		sql = escapeEntityMap(setting, sql, fieldMap);
 		
-		List<String> resultList = Network.executeQuery(setting.connection, sql);
+		List<String> resultList = Network.executeQuery(setting.dataSource, sql);
 		
 		// If the table doesn't exist, the resultSet is empty. Return 0.
 		if (resultList.isEmpty()) return 0;
 		
 		return (int)Double.parseDouble(resultList.get(0)); // SAS can return 682.0
 	}
-	
-	// Get the maximal cardinality of the table in respect to targetId. If the cardinality is 1:1, 
+
+	// Returns true if the column contains null.
+	// NOTE: May not work with Oracle. Necessary to test.
+	public static boolean containsNull(Setting setting, String table, String column) {
+
+		// Sometimes databases return t/f sometimes 1/0...
+		String sql = "SELECT case when exists(SELECT 1 FROM @inputTable WHERE @column is null) then 1 else 0 end";
+
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, table);
+
+		Map<String, String> fieldMap = new HashMap<>();
+		fieldMap.put("@column", column);
+		fieldMap.put("@inputTable", table);
+		sql = escapeEntityMap(setting, sql, fieldMap);
+
+		List<String> resultList = Network.executeQuery(setting.dataSource, sql);
+		return resultList.get(0).equals("1");
+	}
+
+	// Returns true if the date column contains a date from the future.
+	// NOTE: May fail on a timestamp or different database dialect.
+	public static boolean containsFutureDate(Setting setting, String table, String column) {
+
+		// Sometimes databases return t/f sometimes 1/0...
+		// The good thing on "current_date" is that it is a standard. The bad thing is that it does not work in MSSQL.
+		// Hence we use ODBC standard of "{fn NOW()}", which should be automatically replaced in the JDBC driver to the
+		// database specific command. The ODBC command works in PostgreSQL.
+		// Plus the comparison works with: date, timestamp and datetime.
+		// Comparison with time fails.
+		String sql = "SELECT case when exists(SELECT 1 FROM @inputTable WHERE {fn NOW()} < @column) then 1 else 0 end";
+
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, table);
+
+		Map<String, String> fieldMap = new HashMap<>();
+		fieldMap.put("@column", column);
+		fieldMap.put("@inputTable", table);
+		sql = escapeEntityMap(setting, sql, fieldMap);
+
+		sql = ANTLR.parseSQL(setting, sql);
+
+		List<String> resultList = Network.executeQuery(setting.dataSource, sql);
+		return (resultList.isEmpty() || resultList.get(0).equals("1"));  // If the comparison fails, return 1
+	}
+
+	// Get count of tuples fulfilling the time constraint.
+	// This is an optimistic estimate based on max(targetDate) and min(targetDate).
+	public static int countUsableDates(Setting setting, String table, String column) {
+
+		// First the upper bound (lead)
+		String timeConstraint = " dateToNumber(" + setting.dateAddSyntax + ") <= " + setting.baseDateRange.get(1);
+		timeConstraint = timeConstraint.replaceAll("@amount",  setting.lead.toString());
+
+		// Then the lower bound (lag)
+		timeConstraint = timeConstraint + " AND dateToNumber(" + setting.dateAddSyntax + ") >= " + setting.baseDateRange.get(0);
+		Integer leadLag = setting.lead + setting.lag;
+		timeConstraint = timeConstraint.replaceAll("@amount", leadLag.toString());
+
+		// We do not work with the @baseDate but @column (it must be correctly escaped, hence, it is still a macro variable)
+		timeConstraint = timeConstraint.replaceAll("@baseDate", "@column");
+
+		String sql = "SELECT count(*) FROM @inputTable WHERE " + timeConstraint;
+
+		// Set correct units
+		sql = sql.replaceAll("@datePart", setting.unit);
+
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, table);
+		sql = ANTLR.parseSQL(setting, sql);
+
+		Map<String, String> fieldMap = new HashMap<>();
+		fieldMap.put("@column", column);
+		fieldMap.put("@inputTable", table);
+		sql = escapeEntityMap(setting, sql, fieldMap);
+
+		List<String> resultList = Network.executeQuery(setting.dataSource, sql);
+		return (int)Double.parseDouble(resultList.get(0)); // SAS can return 682.0
+	}
+
+
+	// Get the maximal cardinality of the table in respect to targetId. If the cardinality is 1:1,
 	// we may want to remove the bottom time constrain in base propagation.
 	// Note that we are working with the input tables -> alter commands are forbidden.
 	// This query can be ridiculously slow (it can take minutes)!  
@@ -443,7 +552,7 @@ public final class SQL {
 		sql = escapeEntity(setting, sql, "dummy");
 		sql = escapeEntityTable(setting, sql, table);
 		
-		boolean result = Network.isResultSetEmpty(setting.connection, sql);
+		boolean result = Network.isResultSetEmpty(setting.dataSource, sql);
 		
 		if (result) logger.trace("# Column " + table.propagationForeignConstraint.fColumn + " in " + table.originalName + " doesn't contain duplicates #");
 		else logger.trace("# Column " + table.propagationForeignConstraint.fColumn + " in " + table.originalName + " CONTAINS duplicates #");
@@ -451,110 +560,87 @@ public final class SQL {
 		return result;
 	}
 
-	// Check whether the columns {baseId, baseDate} are unique in the table.
-	// If the columns are unique, we may avoid of aggregation and copy the values immediately. 
-	// Note that in comparison to getIdCardinality we can modify the tables as we are working with outputSchema. 
-	public static boolean isUnique(Setting setting, String table, boolean useInputSchema) {
+	// Check whether the columns {baseId, baseDate} are unique in the table in the inputSchema.
+	public static boolean isTargetTupleUnique(Setting setting, String table) {
 		// We could have used possibly faster: "ALTER TABLE @outputTable ADD UNIQUE (@baseId, @baseDate)".
 		// But it would not work in Netezza as Netezza doesn't support constraint checking and referential integrity.
-		// I also tested "SELECT (CASE WHEN EXISTS(SELECT 1 FROM @outputTable GROUP BY @baseId, @baseDate HAVING COUNT(*)>1) THEN 1 ELSE 0 END)"
-		// But it doesn't work in Oracle as Oracle requires "from dual" -> use the simplest possible query
-		// and retrieve only one row with JDBC.
-		String sql;
+		String sql = "SELECT CASE WHEN EXISTS(" +
+						"SELECT @targetId " +
+						"FROM @targetTable " +
+						"GROUP BY @targetId" + (setting.targetDate==null ? " " : ", @targetDate ") +
+						"HAVING COUNT(*)>1" +
+				      ") THEN 0 ELSE 1 END";
 
-		if (useInputSchema) {
-			sql = "SELECT count(*) " +
-					 "FROM @targetTable " +
-					 "GROUP BY @targetId" + (setting.targetDate==null ? " " : ", @targetDate ") +
-					 "HAVING COUNT(*)>1";
-		} else {
-			sql = "SELECT count(*) " +
-					 "FROM @outputTable " +
-					 "GROUP BY @baseId" + (setting.targetDate==null ? " " : ", @baseDate ") +
-					 "HAVING COUNT(*)>1";
-		}
-		
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, table);
-		
-		boolean result = Network.isResultSetEmpty(setting.connection, sql);
-		return result;	// If the result set is empty, all values are unique. 
+
+		List<String> resultList = Network.executeQuery(setting.dataSource, sql);
+		return resultList.get(0).equals("1");
 	}
 
-	
+	// Returns 1 if the baseId in the table in the outputSchema is unique.
+	// MUST BE TESTED ON ORACLE
+	public static boolean isTargetIdUnique(Setting setting, String table) {
+		String sql = "SELECT CASE WHEN EXISTS(" +
+					 "SELECT @baseId FROM @outputTable GROUP BY @baseId HAVING COUNT(*)>1) THEN 0 ELSE 1 END";
+
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, table);
+
+		List<String> resultList = Network.executeQuery(setting.dataSource, sql);
+		return resultList.get(0).equals("1");
+	}
+
+
 	// Return (unsorted) list of unique records.
 	// This function is useful for example for dummy coding of nominal attributes.
 	// NOTE: IT WOULD BE NICE IF THE COUNT OF RETURNED SAMPLES WAS SORTED AND LIMITED -> a subquery?
-	// NOTE: It would be nice, if a vector of occurrences was also returned (to skip rare configurations). 
+	// NOTE: It would be nice, if a vector of occurrences was also returned (to skip rare configurations).
 	public static List<String> getUniqueRecords(Setting setting, String tableName, String columnName, boolean useInputSchema) {
 		String table = "@outputTable";
 		if (useInputSchema) {
 			table = "@inputTable";
 		}
-		
+
 		String sql = "SELECT DISTINCT @columnName " +
-					 "FROM " + table + " " + 
-					 "WHERE @columnName is not null";
-		
+				"FROM " + table + " " +
+				"WHERE @columnName is not null";
+
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, tableName);
 		HashMap<String, String> map = new HashMap<>();
 		map.put("@columnName", columnName);
 		map.put("@inputTable", tableName); // To cover the scenario that it's in the input schema 
 		sql = escapeEntityMap(setting, sql, map);
-		
-		return Network.executeQuery(setting.connection, sql);
+
+		return Network.executeQuery(setting.dataSource, sql);
 	}
 
 
-	// Return list of candidate dateConstrains.
-	// The algorithm goes like: count(timeFrameBeginning <= date <= timeFrameEnd) for each date/time/timestamp column.
-	// Pick the biggest count. If the count equals 0, return an empty list. Otherwise, return all the columns
-	// with the maximal count.
-	// Note: Distrust command "between" in SQL as different vendors use different comparisons (< OR <=).
-	public static List<String> getDateColumns(Setting setting, String table, List<String> dateList) {
-		List<String> result = new ArrayList<>();
-		StringBuilder builder = new StringBuilder();
+	// Return top N unique records sorted by the frequency in the descending order.
+	// The N is given by setting.valueCount (if necessary, could become a parameter).
+	// This function is useful for example for dummy coding of nominal attributes.
+	// NOTE: It would be nice, if a vector of frequencies was also returned (to skip rare values
+	// in absolute measure, not only relative - handy when the attribute's cardinality is small).
+	// NOTE: Maybe I should consider null values as a legit category.
+	public static List<String> getTopUniqueRecords(Setting setting, String tableName, String columnName) {
+		String table = "@inputTable";
 
-		for (String dateColumn : dateList) {
-			builder.append("SELECT count(" + escapeEntity(setting, dateColumn) + ") FROM @inputTable ");
-			builder.append("WHERE " + escapeEntity(setting, dateColumn) + " <= " + setting.dateAddSyntax);
-			builder.append(" AND " + setting.dateAddSyntax + " <= " + escapeEntity(setting, dateColumn));
-			builder.append(" UNION ALL ");
-		}
+		String sql = "SELECT @columnName " +
+				"FROM " + table + " " +
+				"WHERE @columnName is not null " +
+				"GROUP BY @columnName " +
+				"ORDER BY COUNT(*) DESC";
 
-		String sql = builder.toString();
-
+		sql = Parser.limitResultSet(setting, sql, setting.valueCount);
 		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, "dummy");
+		sql = escapeEntity(setting, sql, tableName);
+		HashMap<String, String> map = new HashMap<>();
+		map.put("@columnName", columnName);
+		map.put("@inputTable", tableName); // To cover the scenario that it's in the input schema
+		sql = escapeEntityMap(setting, sql, map);
 
-		sql = sql.substring(0, sql.length()-10); // Remove the last "union all"
-		sql = sql.replace("@amount", "-" + setting.lead); // Negative lead
-		Integer leadLag = setting.lead + setting.lag;
-		sql = sql.replace("@amount", "-" + leadLag); // Negative lead+lag
-		sql = sql.replace("@datePart", "-" + setting.unit);
-		sql = sql.replace("@inputTable", escapeEntity(setting, table));
-
-		System.out.println(sql);
-
-		List<String> response = Network.executeQuery(setting.connection, sql);
-
-		List<Integer> lengthList = response.stream().map(Integer::valueOf).collect(Collectors.toList());
-		int maximum = lengthList.stream().max(Integer::compare).get();
-
-		if (maximum > 0) {
-			for (int i = 0; i < lengthList.size(); i++) {
-				if (maximum == lengthList.get(i)) {
-					result.add(dateList.get(i));
-				}
-			}
-		}
-
-
-
-
-		return result;
-
+		return Network.executeQuery(setting.dataSource, sql);
 	}
 
 	// Could the two columns in the table describe a symmetric relation (like in borderLength(c1, c2))?
@@ -575,7 +661,7 @@ public final class SQL {
 		sql = escapeEntity(setting, sql, "dummy");
 		sql = escapeEntityMap(setting, sql, map);
 
-		List<String> result = Network.executeQuery(setting.connection, sql);
+		List<String> result = Network.executeQuery(setting.dataSource, sql);
 		
 		return "yes".equals(result.get(0));
 	}
@@ -594,7 +680,7 @@ public final class SQL {
 					"from @outputTable t1 " +
 					"join ( " +
 						"select @column " + 
-							", cast(avg(@baseTarget) as decimal(38, 10)) as average " +	// NOT NICE: Solves frequent arithmetic errors on MSSQL.
+							", cast(avg(@baseTarget) as decimal(38, 10)) as average " +	// NOT NICE, but solves frequent arithmetic errors on MSSQL.
 						"from @outputTable " +
 						"group by @column " +
 					") t2 " +
@@ -626,7 +712,7 @@ public final class SQL {
 		sql = escapeEntityMap(setting, sql, fieldMap);
 		
 		// Execute the SQL
-		List<String> response = Network.executeQuery(setting.connection, sql);
+		List<String> response = Network.executeQuery(setting.dataSource, sql);
 		
 		// Parse the response
 		double correlation;
@@ -735,7 +821,7 @@ public final class SQL {
 				+ ") chi2";
  			
  			// For time columns just cast time to number.
- 			if ("time".equals(predictorType)) {
+ 			if ("temporal".equals(predictorType)) {
  				sql = sql.replace("@column", setting.dateToNumber);
  			}
  		} 
@@ -750,7 +836,7 @@ public final class SQL {
 		sql = escapeEntityMap(setting, sql, fieldMap);
 
 		// Execute the SQL
-		List<String> response = Network.executeQuery(setting.connection, sql);
+		List<String> response = Network.executeQuery(setting.dataSource, sql);
 		
 		// Parse the response. 
 		double chi2;
@@ -771,11 +857,11 @@ public final class SQL {
  		String sql = "select pattern_name " +
 					 "from @outputTable " +
 					 "group by pattern_name " +
-					 "having avg(is_ok) = 0";	
+					 "having avg(is_ok + 0.0) = 0";	// We have to cast int to double before averaging
  		
  		sql = expandName(sql);
- 		sql = escapeEntity(setting, sql, setting.journalTable);
- 		List<String> badPatterns = Network.executeQuery(setting.connection, sql);
+ 		sql = escapeEntity(setting, sql, setting.journalPredictor);
+ 		List<String> badPatterns = Network.executeQuery(setting.dataSource, sql);
  		
  		return badPatterns;
  	}
@@ -795,7 +881,7 @@ public final class SQL {
 		HashMap<String, String> fieldMap = new HashMap<>();
 		fieldMap.put("@ms", "ms_" + setting.inputSchema);
 		sql = escapeEntityMap(setting, sql, fieldMap);
-		Network.executeUpdate(setting.connection, sql);
+		Network.executeUpdate(setting.dataSource, sql);
  		
 		// Drop the previous version
  		dropTable(setting, "j_" + setting.inputSchema);
@@ -803,17 +889,21 @@ public final class SQL {
  		// Copy the current journal
  		sql = "create table @outputSchema.@j as select * from @outputTable";
  		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, setting.journalTable);
+		sql = escapeEntity(setting, sql, setting.journalPredictor);
 		fieldMap = new HashMap<>();
 		fieldMap.put("@j", "j_" + setting.inputSchema);
 		sql = escapeEntityMap(setting, sql, fieldMap);
-		Network.executeUpdate(setting.connection, sql);
+		Network.executeUpdate(setting.dataSource, sql);
 		
-		// Log time
+		// Log time in the database
 		sql = "insert into @outputTable (schema_name, runtime) values ('" + setting.inputSchema + "', " + elapsedTime + ")";
  		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, "log");
-		Network.executeUpdate(setting.connection, sql);
+		Network.executeUpdate(setting.dataSource, sql);
+
+		// Log the time into the local log in a nice-to-read format
+		logger.debug("Time of finishing: " + LocalDate.now() + " " + LocalTime.now());
+		logger.debug("Run time: " + DurationFormatUtils.formatDurationWords(elapsedTime, true, true));
  	}
  	
 
@@ -824,11 +914,12 @@ public final class SQL {
 		logger.debug("# Setting up journal table #");
 		
 		String sql = "CREATE TABLE @outputTable ("+
-	      "predictor_id " + setting.typeInteger + ", " +
+	      "predictor_id " + setting.typeInteger + " NOT NULL PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
 	      "group_id " + setting.typeInteger + ", " +
 	      "start_time " + setting.typeTimestamp + ", " +
 	      "run_time " + setting.typeDecimal + "(18,3), " +  // Old MySQL and SQL92 do not have/require support for fractions of a second. 
 	      "predictor_name " + setting.typeVarchar + "(255), " +	// In MySQL pure char is limited to 255 bytes -> stick to this value if possible
+		  "predictor_long_name " + setting.typeVarchar + "(512), " +
 	      "table_name " + setting.typeVarchar + "(1024), " +	// Table is a reserved keyword -> use table_name
 	      "column_list " + setting.typeVarchar + "(1024), " +
 	      "propagation_path " + setting.typeVarchar + "(1024), " +
@@ -844,12 +935,13 @@ public final class SQL {
 	      "qc_rowCount " + setting.typeInteger + ", " +
 	      "qc_nullCount " + setting.typeInteger + ", " +
 	      "is_ok " + setting.typeInteger + ", " +
-	      "CONSTRAINT pk_journal PRIMARY KEY (predictor_id))";
+		  "is_duplicate " + setting.typeInteger + ", " +
+		  "duplicate_name " + setting.typeVarchar + "(255))";
 		
 		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, setting.journalTable);
+		sql = escapeEntity(setting, sql, setting.journalPredictor);
 		
-		return Network.executeUpdate(setting.connection, sql);
+		return Network.executeUpdate(setting.dataSource, sql);
 	}
 	 
 	// 1b) Add record into the journal_predictor
@@ -858,6 +950,7 @@ public final class SQL {
 
 		// Convert bool to int
 		int isOk = predictor.isOk()? 1 : 0;
+		int isInferiorDuplicate = predictor.isInferiorDuplicate()? 1 : 0;
 		
 		// Insert timestamp subquery
 		String timestampBuild = date2query(setting, predictor.getTimestampBuilt());
@@ -867,93 +960,237 @@ public final class SQL {
 	        predictor.getId() + ", " +
 	        predictor.getGroupId() + ", " +
 	              timestampBuild + ", " +
-	              predictor.getTimestampBuilt().until(predictor.getTimestampDelivered(), ChronoUnit.MILLIS)/1000.0 + ", " +
+	              predictor.getRuntime()+ ", " +
 	        "'" + predictor.getName() + "', " +
+			"'" + predictor.getLongName() + "', " +
 	        "'" + predictor.originalTable + "', " + 			
 	        "'" + predictor.columnMap.toString() + "', " + 		// Should be a list...
 	        "'" + predictor.propagationPath.toString() + "', " + 
 	              predictor.propagationPath.size() + ", " + 
 	        "'" + predictor.propagationDate + "', " + 
 	        "'" + predictor.getParameterMap().toString() + "', " +  // Violates the 1st norm...
-	        "'" + predictor.getPatternName() + "', " + 
-	        "'" + predictor.getPatternAuthor() + "', " + 
+	        "'" + predictor.getPatternName() + "', " +
+			"'" + predictor.getPatternAuthor() + "', " +
 	        "'" + predictor.getPatternCode().replaceAll("'", "''") + "', " +	// Escape single quotes
 	        "'" + predictor.getSql().replaceAll("'", "''") + "', " +		// Escape single quotes
 			"'" + setting.targetColumn + "', " + 
 			      predictor.getRelevance(setting.baseTarget) + ", " + // Chi2
 	              predictor.getRowCount() + ", " + 
-	              predictor.getNullCount() + ", " + 
-	              isOk + ")";
+	              predictor.getNullCount() + ", " +
+				  isOk + ", " +
+				  isInferiorDuplicate + ", " +
+			"'" + predictor.getDuplicateName() + "')";
 		
 		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, setting.journalTable);
+		sql = escapeEntity(setting, sql, setting.journalPredictor);
 
-		return Network.executeUpdate(setting.connection, sql);
+		return Network.executeUpdate(setting.dataSource, sql);
 	}
 
-	public static boolean getJournalPropagation(Setting setting) {
+	public static boolean getJournalTable(Setting setting) {
 		logger.debug("# Setting up journal table for propagated tables #");
 
+		// An important limitation: Oracle limits name length of an identifier to 30 characters
 		String sql = "CREATE TABLE @outputTable ("+
-				"table_id " + setting.typeInteger + ", " +
+				"table_id " + setting.typeInteger + " NOT NULL PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
 				"start_time " + setting.typeTimestamp + ", " +
 				"run_time " + setting.typeDecimal + "(18,3), " +
 				"table_name " + setting.typeVarchar + "(255), " +
 				"original_name " + setting.typeVarchar + "(255), " +
-				"date_constrain " + setting.typeVarchar + "(255), " +
-				"candidate_date_list " + setting.typeVarchar + "(2024), " +
-				"candidate_date_count " + setting.typeInteger + ", " +
+				"temporal_constraint " + setting.typeVarchar + "(255), " +
+				"temporal_constraint_justification " + setting.typeVarchar + "(1024), " +
+				"candidate_temporal_list " + setting.typeVarchar + "(2024), " +
+				"candidate_temporal_count " + setting.typeInteger + ", " +
+				"row_count_optimistic " + setting.typeInteger + ", " +
 				"propagation_path " + setting.typeVarchar + "(1024), " +
 				"propagation_depth " + setting.typeInteger + ", " +
-				"join_on_list " + setting.typeVarchar + "(1024), " +
+				"propagation_id " + setting.typeVarchar + "(1024), " +
 				"sql_code " + setting.typeVarchar + "(2024), " + // For example code for WoE is close to 1024 chars
 				"is_id_unique " + setting.typeInteger + ", " +
-				"is_unique " + setting.typeInteger + ", " +
-				"qc_rowCount " + setting.typeInteger + ", " +
-				"qc_successfullyExecuted " + setting.typeInteger + ", " +
-				"CONSTRAINT pk_journal_propagated PRIMARY KEY (table_id))";
+				"is_target_id_unique " + setting.typeInteger + ", " +
+				"qc_successfully_executed " + setting.typeInteger + ", " +
+				"qc_row_count " + setting.typeInteger + ", " +
+				"is_ok " + setting.typeInteger + ")";
 
 		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, setting.journalPropagationTable);
+		sql = escapeEntity(setting, sql, setting.journalTable);
 
-		return Network.executeUpdate(setting.connection, sql);
+		return Network.executeUpdate(setting.dataSource, sql);
 	}
 
-	public static boolean addToJournalPropagation(Setting setting, MetaOutput.OutputTable table) {
+	public static boolean addToJournalTable(Setting setting, MetaOutput.OutputTable table) {
 
 		// Convert bool to int
-		int isOk = table.isSuccessfullyExecuted ? 1 : 0;
+		int isSuccessfullyExecuted = table.isSuccessfullyExecuted ? 1 : 0;
+		int isOk = table.isOk ? 1 : 0;
 		int isIdUnique = table.isIdUnique ? 1 : 0;
-		int isUnique = table.isUnique ? 1 : 0;
+		int isUnique = table.isTargetIdUnique ? 1 : 0;
 
 		// Convert date to query
 		String timestampDesigned = date2query(setting, table.timestampDesigned);
+
+		// Leave null unquoted. Otherwise quote.
+		String temporalConstraint = table.temporalConstraint==null ? "NULL" : "'" + table.temporalConstraint + "'";
 
 		// Assembly the insert
 		String sql = "INSERT INTO @outputTable VALUES (" +
 				table.propagationOrder + ", " +
 				timestampDesigned + ", " +
 				table.timestampDesigned.until(table.timestampDelivered, ChronoUnit.MILLIS)/1000.0 + ", " +
-				"'" + table.propagatedName + "', " +
+				"'" + table.name + "', " +
 				"'" + table.originalName + "', " +
-				"'" + table.constrainDate + "', " +
-				"'" + table.timeColumn + "', " +
-				table.timeColumn.size() + ", " +
+				temporalConstraint + ", " +
+				"'" + table.temporalConstraintJustification + "', " +
+				"'" + table.getColumns(setting, StatisticalType.TEMPORAL) + "', " +
+				table.getColumns(setting, StatisticalType.TEMPORAL).size() + ", " +
+				table.temporalConstraintRowCountOptimistic + ", " +
 				"'" + table.propagationPath.toString() + "', " +
 				table.propagationPath.size() + ", " +
 				"'" + table.propagationForeignConstraint.fColumn + "', " +
 				"'" + table.sql.replaceAll("'", "''") + "', " +		// Escape single quotes
 				isIdUnique + ", " +
 				isUnique + ", " +
+				isSuccessfullyExecuted + ", " +
 				table.rowCount + ", " +
 				isOk + ")";
 
 		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, setting.journalPropagationTable);
+		sql = escapeEntity(setting, sql, setting.journalTable);
 
-		return Network.executeUpdate(setting.connection, sql);
+		return Network.executeUpdate(setting.dataSource, sql);
 	}
 
+
+	public static boolean getJournalPattern(Setting setting) {
+		String sql = "CREATE TABLE @outputTable (" +
+				"name varchar(255) NOT NULL, " +
+				"author varchar(255), " +
+				"is_aggregate integer, " +
+				"is_multivariate integer, " +
+				"is_nominal integer, " +
+				"is_numerical integer, " +
+				"is_temporal integer, " +
+				"uses_base_target integer, " +
+				"uses_base_date integer, " +
+				"description text, " +
+				"PRIMARY KEY (name))";
+
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, setting.journalPattern);
+
+		return Network.executeUpdate(setting.dataSource, sql);
+	}
+
+	// NOT NICE TO OPEN A CONNECTION HERE
+	public static boolean addToJournalPattern(Setting setting, Collection<Predictor> predictorCollection) {
+
+		// Initialization
+		String sql = "insert into @outputTable " +
+				"(name, author, is_aggregate, is_multivariate, is_nominal, is_numerical, is_temporal, uses_base_target, uses_base_date, description) " +
+				"values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, setting.journalPattern);
+
+		String regexPattern = "@\\w+Column\\w*";
+		java.util.regex.Pattern compiledPattern = java.util.regex.Pattern.compile(regexPattern);
+
+		// Batch insert
+		try (Connection connection = setting.dataSource.getConnection();
+			 PreparedStatement ps = connection.prepareStatement(sql)) {
+
+			for (Predictor predictor : predictorCollection) {
+
+				Set<String> columnSet = new HashSet<>();
+				Matcher m = compiledPattern.matcher(predictor.getPatternCode());
+				while (m.find()) {
+					columnSet.add(m.group());
+				}
+
+				ps.setString(1, predictor.getPatternName());
+				ps.setString(2, predictor.getPatternAuthor());
+				ps.setInt(3, predictor.getPatternCardinality().equals("n")?1:0);
+				ps.setInt(4, columnSet.size()>1?1:0);
+				ps.setInt(5, contains(predictor, "@nominalColumn"));
+				ps.setInt(6, contains(predictor, "@numericalColumn"));
+				ps.setInt(7, contains(predictor, "@timeColumn"));
+				ps.setInt(8, contains(predictor, "@baseTarget"));
+				ps.setInt(9, contains(predictor, "@baseDate"));
+				ps.setString(10, predictor.getPatternDescription().replaceAll(" +", " ").replaceAll("\\t", "").trim());
+				ps.addBatch();
+			}
+
+			ps.executeBatch();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+
+		return true;
+	}
+
+	// Does the substring appear in the code or parameter of the pattern?
+	private static int contains(Predictor predictor, String substring) {
+		boolean result = predictor.getPatternCode().contains(substring);
+		if (result) return 1;
+
+		for (String parameter : predictor.getParameterMap().values()) {
+			if (parameter.contains(substring)) return 1;
+		}
+
+		return 0;
+	}
+
+
+	// NOTE: IN PROGRESS OF CONSTRUCTION
+	public static boolean getJournalTemporal(Setting setting) {
+		logger.debug("# Setting up journal table for temporal constraints #");
+
+		// An important limitation: Oracle limits name length of an identifier to 30 characters
+		String sql = "CREATE TABLE @outputTable ("+
+				"temporal_constraint_id " + setting.typeInteger + " NOT NULL PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
+				"table_name " + setting.typeVarchar + "(255), " +
+				"column_name " + setting.typeVarchar + "(255), " +
+				"data_type " + setting.typeVarchar + "(255), " +
+				"is_target_date_defined " + setting.typeInteger + ", " +
+				"is_target_id_distinct " + setting.typeInteger + ", " +
+				"contains_null " + setting.typeInteger + ", " +
+				"contains_future_date " + setting.typeInteger + ", " +
+				"is_nullable " + setting.typeInteger + ", " +
+				"optimistic_row_count " + setting.typeInteger + ", " +
+				"is_temporal_constraint " + setting.typeInteger + ")";
+
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, setting.journalTemporal);
+
+		return Network.executeUpdate(setting.dataSource, sql);
+	}
+
+	// NOTE: IN PROGRESS OF CONSTRUCTION
+	public static boolean addToJournalTemporal(Setting setting, MetaOutput.OutputTable table) {
+
+
+		Column column = table.getColumn("");
+
+		// Assembly the insert
+		// NOTE: batch or multiple inserts.
+		String sql = "INSERT INTO @outputTable VALUES (" +
+				table.name + ", " +
+				column.name + ", " +
+				column.dataTypeName + ", " +
+				(setting.targetDate == null) + ", " +
+				table.isIdUnique + ", " +
+				column.containsNull(setting, table.name) + ", " +
+				column.containsFutureDate(setting, table.name) + ", " +
+				column.isNullable + ", " +
+				0 + ", " +
+				table.temporalConstraint + ")";
+
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, setting.journalTemporal);
+
+		return Network.executeUpdate(setting.dataSource, sql);
+	}
 
 
 	// 2) Get base table (a table with id, targets and horizon dates).
@@ -968,25 +1205,31 @@ public final class SQL {
 		String dateAs = "";
 		String dateAsTable = "";
 		String dateCondition = "";
-		String dateAndCondition = "";
 
 		// Get escape characters
 		String QL = setting.quoteEntityOpen;
 		String QR = setting.quoteEntityClose;
 
 		// Detect duplicates in the base table
-		boolean isUnique = isUnique(setting, setting.targetTable, true);
+		boolean isTargetTupleUnique = isTargetTupleUnique(setting, setting.targetTable);
 
 		// Use date?
 		if (setting.targetDate != null) {
 			dateAs = " @targetDate AS " + escapeAlias(setting, setting.baseDate) + ",";
 			dateAsTable =  " t1.@targetDate AS " + escapeAlias(setting, setting.baseDate) + ",";
 			dateCondition = " WHERE @targetDate IS NOT NULL";
-			dateAndCondition = " AND t1.@targetDate is not null";
 		}
 
 		// Deduplicate the base table if necessary
-		if (!isUnique) {
+		if (isTargetTupleUnique) {
+			// Prepare aliases for targetId
+			for (int i = 0; i < setting.baseIdList.size(); i++) {
+				id = id + QL + setting.targetIdList.get(i) + QR + " AS " + escapeAlias(setting, setting.baseIdList.get(i)) + ", ";
+			}
+
+			// The query itself
+			sql = "SELECT " + id + dateAs + " @targetColumn AS " + escapeAlias(setting, setting.baseTarget) + ", FLOOR(" + setting.randomCommand + " * 10) AS " + escapeAlias(setting, setting.baseFold) + " FROM @targetTable" + dateCondition;
+		} else {
 			logger.warn("The base table contains duplicate values in {BaseID, BaseDate}. " +
 					"Continuing without ALL duplicate values. " +
 					"The results will be incomplete and possibly biased. " +
@@ -997,21 +1240,22 @@ public final class SQL {
 				id = id + " t1." + QL + setting.targetIdList.get(i) + QR + " AS " + escapeAlias(setting, setting.baseIdList.get(i)) + ",";
 			}
 
-			// The query itself
-			sql = "SELECT" + id + dateAsTable + " t1.@targetColumn AS " + escapeAlias(setting, setting.baseTarget) + ", FLOOR(" + setting.randomCommand + " * 10) AS " + escapeAlias(setting, setting.baseFold) + " " +
-					"FROM @targetTable t1 LEFT JOIN (" +
-					"SELECT @targetId FROM @targetTable GROUP BY @targetId" + " HAVING count(*)>1 " +
-					") t2 " +
-					"ON t1.@targetId = t2.@targetId " +
-					"WHERE t2.@targetId is null" + dateAndCondition;
-		} else {
-			// Prepare aliases for targetId
-			for (int i = 0; i < setting.baseIdList.size(); i++) {
-				id = id + QL + setting.targetIdList.get(i) + QR + " AS " + escapeAlias(setting, setting.baseIdList.get(i)) + ", ";
+			// The query itself (two scenarios to avoid putting everything like a puzzle)
+			if (setting.targetDate == null) {
+				sql = "SELECT" + id + " t1.@targetColumn AS " + escapeAlias(setting, setting.baseTarget) + ", FLOOR(" + setting.randomCommand + " * 10) AS " + escapeAlias(setting, setting.baseFold) + " " +
+						"FROM @targetTable t1 LEFT JOIN (" +
+						"SELECT @targetId FROM @targetTable GROUP BY @targetId HAVING count(*)>1 " +
+						") t2 " +
+						"ON t1.@targetId = t2.@targetId " +
+						"WHERE t2.@targetId is null";
+			} else {
+				sql = "SELECT" + id + dateAsTable + " t1.@targetColumn AS " + escapeAlias(setting, setting.baseTarget) + ", FLOOR(" + setting.randomCommand + " * 10) AS " + escapeAlias(setting, setting.baseFold) + " " +
+						"FROM @targetTable t1 LEFT JOIN (" +
+						"SELECT @targetId, @targetDate FROM @targetTable GROUP BY @targetId, @targetDate HAVING count(*)>1 " +
+						") t2 " +
+						"ON t1.@targetId = t2.@targetId AND t1.@targetDate = t2.@targetDate" +
+						"WHERE t2.@targetId is null AND t1.@targetDate is not null"; // TargetDate should never be null
 			}
-
-			// The query itself
-			sql = "SELECT " + id + dateAs + " @targetColumn AS " + escapeAlias(setting, setting.baseTarget) + ", FLOOR(" + setting.randomCommand + " * 10) AS " + escapeAlias(setting, setting.baseFold) + " FROM @targetTable" + dateCondition;
 		}
 		
 		// Assembly the query
@@ -1020,13 +1264,13 @@ public final class SQL {
 		sql = escapeEntity(setting, sql, setting.baseTable);
 		
 		// Execute the query
-		boolean isCreated = Network.executeUpdate(setting.connection, sql);
+		boolean isCreated = Network.executeUpdate(setting.dataSource, sql);
 		
 		if (!isCreated) {
 			logger.warn("The base table was not successfully created.");
 		}
 
-		return (isUnique && isCreated);
+		return (isTargetTupleUnique && isCreated);
 	}
 	
 
@@ -1036,11 +1280,11 @@ public final class SQL {
 		
 		// Initialization
 		String sql = "";
-		List<String> targetValueList = metaInput.get(setting.targetTable).uniqueList.get(setting.targetColumn);
+		Set<String> targetValueList = metaInput.get(setting.targetTable).getColumn(setting.targetColumn).uniqueValueSet;
 		String quote = "";
 		
 		// Iff the target is nominal, quote the values with single quotes.
-		if (setting.isTargetNominal) {
+		if (setting.isTargetString) {
 			quote = "'";
 		}
 		
@@ -1057,7 +1301,7 @@ public final class SQL {
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, setting.baseSampled);
 		
-		Network.executeUpdate(setting.connection, sql);
+		Network.executeUpdate(setting.dataSource, sql);
 
 		// Add indexes
 		addIndex(setting, setting.baseSampled);
@@ -1075,7 +1319,7 @@ public final class SQL {
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, setting.baseSampled);
 
-		Network.executeUpdate(setting.connection, sql);
+		Network.executeUpdate(setting.dataSource, sql);
 
 		// Add indexes
 		addIndex(setting, setting.baseSampled);
@@ -1115,16 +1359,16 @@ public final class SQL {
 		// Add time condition if dateColumn is present
 		// The comparison "t2.@dateColumn <= t1.@baseDate" has to use <= to get 
 		// the data from "the current date" when lead is 0.
-		if (table.constrainDate!=null) {
+		if (table.temporalConstraint !=null) {
 			// First the upper bound (lead)
 			sql = sql + " WHERE t2.@dateColumn <= " + setting.dateAddSyntax;
-			sql = sql.replaceAll("@amount", "-" + setting.lead.toString()); // Negative lead		
+			sql = sql.replaceAll("@amount", "-" + setting.lead); // Negative lead
 			
 			// Then, if required, add the lower bound (lag)
 			if (table.dateBottomBounded) {
 				sql = sql + " AND " + setting.dateAddSyntax + " <= t2.@dateColumn";
 				Integer leadLag = setting.lead + setting.lag;
-				sql = sql.replaceAll("@amount", "-" + leadLag.toString()); // Negative lead+lag
+				sql = sql.replaceAll("@amount", "-" + leadLag); // Negative lead+lag
 			}
 
 			sql = sql.replaceAll("@datePart", setting.unit);
@@ -1133,7 +1377,7 @@ public final class SQL {
 		// Pattern_code to SQL conversion
 		sql = addCreateTableAs(setting, sql);
 		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, table.propagatedName);
+		sql = escapeEntity(setting, sql, table.name);
 		sql = escapeEntityTable(setting, sql, table);
 					
 		return sql;
@@ -1144,6 +1388,7 @@ public final class SQL {
 		String sql = predictor.getSql();
 
 		sql = Parser.expandBase(setting, sql);
+		sql = Parser.expandBasePartitionBy(setting, sql);
 
 		sql = addCreateTableAs(setting, sql);
 		sql = expandName(sql);
@@ -1161,36 +1406,8 @@ public final class SQL {
 	// Note: The current implementation stores only up to ~3600 predictors. So far the limit is acceptable as column 
 	// count in a table is commonly limited (1600 columns in PostgreSQL and 1000 columns in Oracle).
 	// UNSYSTEMATIC ESCAPING
-	public static void getMainSample(Setting setting, List<Predictor> journal) {
-		
-		// Consider only good predictors 
-		List<Predictor> predictorList = journal.stream().filter(p -> p.isOk()).collect(Collectors.toList());
-				
-		// Sort the relevances in descending order
-		Collections.sort(predictorList, Predictor.RelevanceComparator.reversed());
-		
-		// Keep top N predictors per groupId
-		Collections.sort(predictorList, Predictor.GroupIdComparator);
-		
-		int lagGroupId = 0;
-		List<Predictor> predictorList2 = new ArrayList<>();
-		
-		for (Predictor predictor : predictorList) {
-			if (predictor.getGroupId() != lagGroupId) {	// For each groupId select top n predictors
-				predictorList2.addAll(getTopN(predictorList, predictor));
-			}
-			lagGroupId = predictor.getGroupId();
-		}
+	public static void getMainSample(Setting setting, Collection<Predictor> predictorList) {
 
-		// Once again, resort the relevances in descending order
-		Collections.sort(predictorList2, Predictor.RelevanceComparator.reversed());
-
-		// Cap the amount of predictors by columnMax
-		// RESERVE 3 COLUMNS FOR ID, TARGET AND TIME
-		// THE COUNT OF COLUMNS IS ALSO LIMITED BY ROW SIZE. AND BIGINT COMPOSES OF 8 BYTES -> DIVIDE BY 8.
-		// BUT THIS IS JUST A ROUGH ESTIMATE - ID CAN BE COMPOSED OF MULTIPLE COLUMNS...
-		predictorList = predictorList2.subList(0, Math.min(setting.columnMax/8-3, predictorList2.size()));
-		
 		// Extract table and column names.
 		// ASSUMING THAT THE MATCH IS 1:1!
 		List<String> tableListAll = new ArrayList<>();
@@ -1277,7 +1494,7 @@ public final class SQL {
 			String sql = escapeEntityMap(setting, pattern_code, map);
 			
 			// Execute the query
-			Network.executeUpdate(setting.connection, sql);
+			Network.executeUpdate(setting.dataSource, sql);
 			
 			// Build index on BaseId in the temporary table for possibly faster final join
 			addIndex(setting, tempTable);
@@ -1330,7 +1547,7 @@ public final class SQL {
 		String sql = escapeEntityMap(setting, pattern_code, map);
 		
 		// Execute the query
-		Network.executeUpdate(setting.connection, sql);
+		Network.executeUpdate(setting.dataSource, sql);
 		
 		
 		//// Perform output Quality Control ////
@@ -1340,7 +1557,7 @@ public final class SQL {
 		}
 		
 		int columnCount = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable).size();
-		logger.debug("MainSample table contains: " + columnCount + " columns (the limit is: " + (setting.columnMax/8) + ")");
+		logger.debug("MainSample table contains: " + columnCount + " columns");
 	}
 
 	// Subroutine - transform java date to SQL date
@@ -1354,14 +1571,6 @@ public final class SQL {
 		return timestamp;
 	}
 
-	// Subroutine - return top n predictors from the list. Assumes that the predictors are sorted by relevance in
-	// descending order.
-	// The "n" is defined in the predictor. Also the groupId is defined in the predictor.
-	private static List<Predictor> getTopN(List<Predictor> predictorList, Predictor predictor) {
-		List<Predictor> output = predictorList.stream().filter(p -> p.getGroupId()==predictor.getGroupId()).collect(Collectors.toList());
-		
-		return output.subList(0, Math.min(predictor.getPatternTopN(), output.size()));
-	}
 }
 
 	

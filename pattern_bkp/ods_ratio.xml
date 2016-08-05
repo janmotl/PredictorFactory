@@ -13,7 +13,7 @@
 	<author>Jan Motl</author>
 	<date>2015-07-09</date>
 	<code>SELECT t1.@base
-			, oddsRatio AS "@columnName"
+			, oddsRatio AS @columnName
 		FROM @propagatedTable t1
 		JOIN (
 			SELECT COALESCE(tp.@column, fp.@column) as @column, (tp*(negative-fp)*1.0)/(fp*(positive-tp)) as oddsRatio

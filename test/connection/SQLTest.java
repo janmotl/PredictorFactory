@@ -8,7 +8,6 @@ import org.junit.Test;
 import run.Setting;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class SQLTest {
 
@@ -18,7 +17,7 @@ public class SQLTest {
     public void initialization() {
         table = new MetaOutput.OutputTable();
         table.originalName = "trans";
-        table.propagatedName = "propagated_trans";
+        table.name = "propagated_trans";
         table.propagationTable = "propagated_account";
         table.propagationForeignConstraint = new ForeignConstraint();
     }
@@ -162,7 +161,7 @@ public class SQLTest {
     }
 
     @Test
-    public void timeConstrain() {
+    public void containsNull() {
         // Setting
         Setting setting = new Setting("PostgreSQL", "financial");
         Network.openConnection(setting);
@@ -170,12 +169,15 @@ public class SQLTest {
         setting.lead = 0;
         setting.unit = "month";
 
-        String table = "trans";
-        List<String> dateColumns = new ArrayList<>();
-        dateColumns.add("date");
+		// No missing values
+        boolean result = SQL.containsNull(setting, "trans", "date");
+        boolean expected = false;
+        Assert.assertEquals(expected, result);
 
-        List<String> result = SQL.getDateColumns(setting, table, dateColumns);
-        String expected = "(SELECT c1 INTO @outputTable FROM t1) UNION ALL (SELECT c1 FROM t2)";
-        Assert.assertEquals(expected, result.get(0));
+		// Missing values
+		boolean result2 = SQL.containsNull(setting, "trans", "k_symbol");
+		boolean expected2 = true;
+		Assert.assertEquals(expected2, result2);
     }
+
 }

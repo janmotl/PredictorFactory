@@ -2,7 +2,9 @@
 
 <pattern>
 	<name>Intercept</name>
-	<description>Intercept
+	<description>
+		Time, when the attribute crosses zero, as estimated with a regression line.
+
 		NOTE: Could calculate intercept of two numerical attributes. But it has to be done in a separate pattern
 		because of a cast.
 		
@@ -10,19 +12,15 @@
 	</description>
 	<author>Jan Motl</author>
 	<date>2014-12-22</date>
-	<code compatibility="MySQL">SELECT @baseId
-	           , @baseDate
-	           , @baseTarget
-	           , ((sum(@timeColumn) * sum(@timeColumn * @numericalColumn)) - (sum(@numericalColumn) * sum(power(@timeColumn, 2)))) / (power(sum(@timeColumn), 2) - count(@numericalColumn) * sum(power(@timeColumn, 2))) AS "@columnName"
+	<code compatibility="MySQL">SELECT @base
+	           , ((sum(@timeColumn) * sum(@timeColumn * @numericalColumn)) - (sum(@numericalColumn) * sum(power(@timeColumn, 2)))) / (power(sum(@timeColumn), 2) - count(@numericalColumn) * sum(power(@timeColumn, 2))) AS @columnName
 	      FROM @propagatedTable
-	      GROUP BY @baseId, @baseDate, @baseTarget
+	      GROUP BY @base
 	</code>
-	<code compatibility="PostgreSQL,Oracle">SELECT @baseId
-	           , @baseDate
-	           , @baseTarget
-	           , regr_intercept(@numericalColumn, dateToNumber(@timeColumn)) AS "@columnName"
+	<code compatibility="PostgreSQL,Oracle">SELECT @base
+	           , regr_intercept(@numericalColumn, dateToNumber(@timeColumn)) AS @columnName
 	      FROM @propagatedTable
-	      GROUP BY @baseId, @baseDate, @baseTarget
+	      GROUP BY @base
 	</code>
 	<cardinality>n</cardinality>
 </pattern>

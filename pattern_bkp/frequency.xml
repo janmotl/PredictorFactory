@@ -15,10 +15,8 @@
 			SELECT count(*) row_count
 			FROM @propagatedTable
 		  )
-		  SELECT t1.@baseId
-		  	   , t1.@baseDate
-			   , t1.@baseTarget
-			   , 1.0 * count(t1.@baseId) over (partition by t1.@nominalColumn)/t2.row_count AS "@columnName"
+		  SELECT t1.@base
+			   , 1.0 * count(t1.@baseId) over (partition by t1.@nominalColumn)/t2.row_count AS @columnName
 		  FROM @propagatedTable t1, intermediate t2
 	</code>
 	<cardinality>1</cardinality>

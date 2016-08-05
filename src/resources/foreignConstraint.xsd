@@ -1,0 +1,22 @@
+
+<schema xmlns="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <element name="foreignConstraints">
+    <complexType>
+      <sequence>
+        <element name="foreignConstraint" minOccurs="1" maxOccurs="unbounded">
+          <complexType>
+            <sequence>
+              <element type="string" name="table" minOccurs="1" maxOccurs="1"/>
+              <element type="string" name="fTable" minOccurs="1" maxOccurs="1"/>
+              <element type="string" name="column" minOccurs="1" maxOccurs="unbounded"/>
+              <element type="string" name="fColumn" minOccurs="1" maxOccurs="unbounded"/>
+            </sequence>
+            <attribute type="string" name="name" use="optional"/>
+          </complexType>
+        </element>
+      </sequence>
+	  <attribute type="string" name="database" use="optional"/>
+	  <attribute type="string" name="schema" use="optional"/>
+    </complexType>
+  </element>
+</schema>

@@ -19,6 +19,7 @@ public class InputQualityControl {
 		qcConnection();
 		qcDatabase();
 		qcDriver();
+		qcForeignConstraint();
 	}
 	
 
@@ -59,6 +60,17 @@ public class InputQualityControl {
 		boolean isValid = XML.isXMLValid("/driver.xsd", "config/driver.xml");
 		if (!isValid) {
 			logger.warn("Invalid /config/driver.xml");
+		}
+	}
+
+	// Subroutine: Validate foreignConstraint XML - useful when you can't touch the database
+	public static void qcForeignConstraint() {
+		// This is not a required input -> raise warning only if the file is present and invalid.
+		if (new File("config/foreignConstraint.xml").isFile()) {
+			boolean isValid = XML.isXMLValid("/foreignConstraint.xsd", "config/foreignConstraint.xml");
+			if (!isValid) {
+				logger.warn("Invalid /config/foreignConstraint.xml");
+			}
 		}
 	}
 }

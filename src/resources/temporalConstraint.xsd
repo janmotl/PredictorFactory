@@ -1,0 +1,18 @@
+<schema xmlns="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <element name="temporalConstraints">
+    <complexType>
+      <sequence>
+        <element name="temporalConstraint" minOccurs="1" maxOccurs="unbounded">
+          <complexType>
+            <sequence>
+              <element type="string" name="table" minOccurs="1" maxOccurs="1"/>
+              <element type="string" name="column" minOccurs="1" maxOccurs="1"/>
+            </sequence>
+          </complexType>
+        </element>
+      </sequence>
+	  <attribute type="string" name="database" use="optional"/>
+	  <attribute type="string" name="schema" use="optional"/>
+    </complexType>
+  </element>
+</schema>

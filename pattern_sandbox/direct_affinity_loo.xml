@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 
 <pattern>
-	<name>Leave one out</name>
+	<name>Direct affinity LOO</name>
 	<description>
+		A regularized version of WoE.
+
 		The pattern is from slide number 26 of:
 			http://www.slideshare.net/OwenZhang2/tips-for-data-science-competitions
 

@@ -3,7 +3,9 @@
 <pattern>
 	<name>Time part direct</name>
 	<description>
-		The hour/day/month of the event.
+		The hour/day/day-of-week/month of the event.
+
+		Note: Should add day in a month and day in a year.
 
 		Note: The default solution should use JDBC scalar functions:
 			http://documentation.progress.com/output/DataDirect/jdbcoschelp/index.html#page/jdbcosc/scalar-functions.html#
@@ -18,22 +20,20 @@
 		(if we omit tricks like considering years before Christ equal to years after Christ). Nevertheless, if we
 		are doing explanatory analysis, or if we want to predict outcomes that are not outside of the range of 
 		training data, year is a valid predictor.
+
+		Day-of-week is sometimes highly predictive.
 	</description>
 	<example>
 		Time of waking up.
 	</example>
 	<author>Jan Motl</author>
 	<date>2015-04-16</date>
-	<code compatibility="PostgreSQL, MySQL">SELECT @baseId
-	           , @baseDate
-	           , @baseTarget
-	           , EXTRACT(@field from @timeColumn) AS "@columnName"
+	<code compatibility="PostgreSQL, MySQL">SELECT @base
+	           , EXTRACT(@field from @timeColumn) AS @columnName
 	      FROM @propagatedTable
 	</code>
-	<code compatibility="Microsoft SQL Server">SELECT @baseId
-	           , @baseDate
-	           , @baseTarget
-	           , DATEPART(@field, @timeColumn) AS "@columnName"
+	<code compatibility="Microsoft SQL Server">SELECT @base
+	           , DATEPART(@field, @timeColumn) AS @columnName
 	      FROM @propagatedTable
 	</code>
 	<parameter key="@field" value="hour, day, dow, month"/>

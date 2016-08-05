@@ -1,4 +1,4 @@
-package controller;
+package utility;
 
 import javafx.application.Platform;
 import javafx.scene.control.TextArea;
@@ -16,7 +16,7 @@ import java.util.List;
 public class TextAreaAppender extends WriterAppender {
  
     private static TextArea textArea = null;			// The text area
-    private static final int messageCountLimit = 100;		// Maximum lines allowed in the text area. Must be bigger than 1.
+    private static final int messageCountLimit = 100;	// Maximum lines allowed in the text area. Must be bigger than 1.
     private static String text = "...The log window is limited to the last " + messageCountLimit + " messages. The whole log is in the 'log' directory.\n";
     private static List<Integer> messageLengthList = new LinkedList<>(); // Lengths of messages within the text area
  

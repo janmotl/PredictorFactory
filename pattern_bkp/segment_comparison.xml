@@ -27,14 +27,12 @@
 	</example>
 	<author>Filip Trojan</author>
 	<date>2014-12-31</date>
-	<code>SELECT @baseId
-			, @baseDate
-			, @baseTarget
+	<code>SELECT @base
 			, CASE 
 				WHEN Y IS NULL THEN NULL 
 				WHEN Y=0 THEN -9999 
 				ELSE @numericalColumn/Y 
-			  END AS "@columnName"
+			  END AS @columnName
 	      FROM @propagatedTable a 
 	      LEFT JOIN (
 	      	SELECT @nominalColumn, avg(@numericalColumn) AS Y 

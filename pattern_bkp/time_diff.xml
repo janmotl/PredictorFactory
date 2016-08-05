@@ -10,12 +10,10 @@
 	</example>
 	<author>Jan Motl</author>
 	<date>2015-04-16</date>
-	<code>SELECT @baseId
-	           , @baseDate
-	           , @baseTarget
-	           , @aggregateFunction(DATEDIFF(@timeColumn1, @timeColumn2)) AS "@columnName"
+	<code>SELECT @base
+	           , @aggregateFunction(DATEDIFF(@timeColumn1, @timeColumn2)) AS @columnName
 	      FROM @propagatedTable
-	      GROUP BY @baseId, @baseDate, @baseTarget
+	      GROUP BY @base
 	</code>
 	<parameter key="@aggregateFunction" value="min, max, avg, sum, stddev_samp"/>
 	<cardinality>n</cardinality>

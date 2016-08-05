@@ -1,15 +1,13 @@
 package featureExtraction;
 
+import metaInformation.Column;
 import metaInformation.MetaOutput.OutputTable;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import run.Setting;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 
 public class AggregationTest {
 	private Setting setting = new Setting("PostgreSQL", "financial");
@@ -29,6 +27,7 @@ public class AggregationTest {
 		pattern.dialectCode = "select @nominalColumn from t1 where col1 = '@value' and col2 = '@targetValue'";
 		pattern.author = "Majestic Tester";
 		pattern.cardinality = "1";
+		pattern.description = "Once upon a time...";
 		
 		// Initialize predictor
 		predictor = new Predictor(pattern);
@@ -39,20 +38,24 @@ public class AggregationTest {
 		
 		// Initialize tableMetadata
 		OutputTable outputTable = new OutputTable();
-		outputTable.propagatedName = "propagatedName1"; 
-		SortedMap<String, List<String>> uniqueList = new TreeMap<>();
-		ArrayList<String> unique = new ArrayList<>();
+		outputTable.name = "propagatedName1";
+		Column column = new Column("column1");
+		Set<String> unique = new HashSet<>();
 		unique.add("unique1");
 		unique.add("unique2");
-		uniqueList.put("column1", unique);
-		outputTable.uniqueList = uniqueList;
-		outputTable.nominalColumn.add("nominalColumn1");
-		outputTable.nominalColumn.add("nominalColumn2");
-		outputTable.isUnique = true;
+		column.uniqueValueSet = unique;
+		outputTable.columnMap.put("column1", column);
+		Column nominalColumn1 = new Column("nominalColumn1");
+		nominalColumn1.isNominal = true;
+		Column nominalColumn2 = new Column("nominalColumn2");
+		nominalColumn2.isNominal = true;
+		outputTable.columnMap.put("nominalColumn1", nominalColumn1);
+		outputTable.columnMap.put("nominalColumn2", nominalColumn2);
+		outputTable.isTargetIdUnique = true;
 		tableMetadata.put("propagatedTable1", outputTable);
 		OutputTable outputTable2 = new OutputTable();
-		outputTable2.isUnique = true;
-		outputTable2.propagatedName = "propagatedName2"; 
+		outputTable2.isTargetIdUnique = true;
+		outputTable2.name = "propagatedName2";
 		tableMetadata.put("propagatedTable2", outputTable2);
 		
 
@@ -68,9 +71,9 @@ public class AggregationTest {
 		
 	@Test
 	public void addTargetValue() {
-		ArrayList<String> uniqueList = new ArrayList<>();
-		uniqueList.add("value55");
-		List<Predictor> list = Aggregation.addTargetValue(setting, predictor, uniqueList);
+		Set<String> uniqueSet = new HashSet<>();
+		uniqueSet.add("value55");
+		List<Predictor> list = Aggregation.addTargetValue(setting, predictor, uniqueSet);
 
 		Assert.assertTrue(list.get(0).getParameterMap().containsKey("@targetValue"));
 		Assert.assertTrue(list.get(0).getParameterMap().containsValue("value55"));
@@ -102,7 +105,7 @@ public class AggregationTest {
 	
 	@Test
 	public void loopColumns() {
-		List<Predictor> list = Aggregation.loopColumns(predictor, tableMetadata);
+		List<Predictor> list = Aggregation.loopColumns(setting, predictor, tableMetadata);
 		
 		Assert.assertEquals(2, list.size());
 		Assert.assertEquals("nominalColumn1", list.get(0).columnMap.get("@nominalColumn"));

@@ -1,29 +1,25 @@
 package controller;
 
-import connection.ConnectionProperty;
-import connection.ConnectionPropertyList;
-import connection.DatabaseProperty;
-import connection.DatabasePropertyList;
+import connection.*;
 import featureExtraction.Pattern;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.CheckBoxTreeCell;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
+import metaInformation.Column;
+import metaInformation.Table;
 import org.apache.commons.lang3.StringUtils;
 import run.Setting;
-import utility.Meta;
+import utility.*;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.net.URL;
-import java.sql.SQLException;
 import java.util.*;
 
+import static utility.ParseInteger.parseInteger;
 
 
 public class Events implements Initializable {
@@ -33,6 +29,7 @@ public class Events implements Initializable {
 	private List<CheckBoxTreeItem<String>> itemListTable = new ArrayList<>();
 	private List<CheckBoxTreeItem<String>> itemListColumn = new ArrayList<>();
 	private List<CheckBoxTreeItem<String>> itemListPattern = new ArrayList<>();
+	RunService runService = new RunService();
 	
 	// Define GUI elements. The values are automatically initialized by FXMLLoader.
     @FXML private Button buttonConnect;
@@ -51,92 +48,71 @@ public class Events implements Initializable {
 	@FXML private ComboBox<String> comboBoxTargetTimestamp;
 	@FXML private ComboBox<String> comboBoxTask;
 	@FXML private ComboBox<String> comboBoxUnit;
+	@FXML private CheckBox checkBoxUseId;
 	@FXML private Label labelPredictorCountText;
 	@FXML private Label labelPredictorCount;
+	@FXML private ProgressIndicator progressWhirl;
 	@FXML private TextField textLag;
 	@FXML private TextField textLead;
 	@FXML private TextField textSampleCount;
+	@FXML private TextField textPredictorMax;
 	@FXML private TextArea textAreaConsole;
 	@FXML private TextArea textAreaDescription;
 	@FXML private TreeView<String> treeViewSelect;
 	@FXML private TreeView<String> treeViewPattern;
-	
+	@FXML private TabPane tabPane;
+
 	
 	// Event handlers
 	@FXML private void connectAction() {
-		
-		 // 0) Disconnect command?
-		if ("Disconnect".equals(buttonConnect.getText())) {
-			try {
-				setting.connection.close();
-			} catch (SQLException e) {
-				e.getMessage();
-			}
-			
+
+		// Close the connection, if appropriate
+		if (buttonConnect.getText().equals("Disconnect")) {
+			Network.closeConnection(setting);
 			buttonConnect.setText("Connect");
-			
+			textPredictorMax.setPromptText("database bounded");
 			return;
 		}
+
+		// 1) Read current connections from the XML
+		ConnectionPropertyList connectionList = connection.ConnectionPropertyList.unmarshall();
 		 
-		 // 1) Read current connections 
-		 ConnectionPropertyList connectionList = connection.ConnectionPropertyList.unmarshall();
-		 
-		 // 2) Create a new connection
-		 ConnectionProperty connectionProperty = new ConnectionProperty();
-		 connectionProperty.name = "GUI";
-		 connectionProperty.driver = comboBoxVendor.getValue();
-		 connectionProperty.database = textDatabase.getText();
-		 connectionProperty.host = textHost.getText();
-		 connectionProperty.port = textPort.getText();
-		 connectionProperty.username = textUsername.getText();
-		 connectionProperty.password = textPassword.getText();	// WE SHOULD NOT WRITE THE PASSWORD INTO THE XML
+		// 2) Create a new connection from the GUI
+		ConnectionProperty connectionProperty = new ConnectionProperty();
+		connectionProperty.name = "GUI";
+		connectionProperty.driver = comboBoxVendor.getValue();
+		connectionProperty.database = textDatabase.getText();
+		connectionProperty.host = textHost.getText();
+		connectionProperty.port = textPort.getText();
+		connectionProperty.username = textUsername.getText();
+		connectionProperty.password = textPassword.getText();	// WE SHOULD NOT WRITE THE PASSWORD INTO THE XML
 		 	 
-		 // 3) Add (replace) the new connection into the list of connections
-		 connectionList.setConnectionProperties(connectionProperty);
+		// 3) Put the new connection into the list of connections
+		connectionList.setConnectionProperties(connectionProperty);
 		 
-		 // 4) Write it into the XML
-		 connection.ConnectionPropertyList.marshall(connectionList);
+		// 4) Write the list into the XML
+		connection.ConnectionPropertyList.marshall(connectionList);
+
+		// 5) Create a setting from the XMLs
+		setting = new Setting("GUI", "GUI");
 		 
-		 
-		 ///// Connect to the server /////
-		 setting = connection.Network.openConnection(setting);
-		 
-		//exceptionDialog();	SHOULD PASS THE CONNECTION ERRORS
-		 
-		 // Change the button text
-		 if (setting.connection != null) {
-			 buttonConnect.setText("Disconnect");
-		 }
-		 
-        ////// Read past setting for the database tab ///////
-        DatabasePropertyList databaseList = connection.DatabasePropertyList.unmarshall();
-        DatabaseProperty databaseProperty = databaseList.getDatabaseProperties("GUI");
-        
-        if (databaseProperty != null) {
-        	comboBoxInputSchema.setValue(databaseProperty.inputSchema);
-        	comboBoxOutputSchema.setValue(databaseProperty.outputSchema);
-        	comboBoxTargetTable.setValue(databaseProperty.targetTable);
-        	comboBoxTargetColumn.setValue(databaseProperty.targetColumn);
-        	comboBoxTargetId.setValue(databaseProperty.targetId);
-        	comboBoxTargetTimestamp.setValue(databaseProperty.targetDate);
-        	comboBoxTask.setValue(databaseProperty.task);
-        }
-		 
-		 ///// Populate setting in the database tab //////
-		 SortedSet<String> schemaList = Meta.collectSchemas(setting, setting.database);
-		 comboBoxInputSchema.getItems().addAll(schemaList);
-		 comboBoxOutputSchema.getItems().addAll(schemaList);
+		// 6) Asynchronously connect to the database and collect metadata (tables and columns)
+		getMetaData(setting);
 	}
 
 	@FXML private void inputSchemaAction() {
+
+		// Initialization
+		SortedMap<String, Table> tableMap;		// From metadata
+		SortedMap<String, Column> columnMap;	// From metadata
+		Map<String, SortedMap<String, Column>> tableColumnMap = new HashMap<>();	// Cached results
 		
 		// Store the new value
 		setting.inputSchema = comboBoxInputSchema.getValue();
 		
 		// Target tab
-		SortedSet<String> tableList = Meta.collectTables(setting, setting.database, setting.inputSchema);
-		comboBoxTargetTable.getItems().clear();
-		comboBoxTargetTable.getItems().addAll(tableList);
+		tableMap = Meta.collectTables(setting, setting.database, setting.inputSchema);
+		comboBoxTargetTable.getItems().setAll(tableMap.keySet());
 				
 		// Select tab
 		CheckBoxTreeItem<String> rootItem = new CheckBoxTreeItem<>("Tables and their columns");
@@ -144,28 +120,28 @@ public class Events implements Initializable {
 		itemListTable.clear();
 		itemListColumn.clear();
 		
-		for (String table : tableList) {
+		for (String table : tableMap.keySet()) {
 			final CheckBoxTreeItem<String> itemTable = new CheckBoxTreeItem<>(table);
 			itemListTable.add(itemTable);
 			
 			// Add columns
 			List<CheckBoxTreeItem<String>> localItemListColumn = new ArrayList<>();
-			SortedMap<String, Integer> columnList = Meta.collectColumns(setting, setting.database, setting.inputSchema, table);
-			for (String column : columnList.keySet()) {
+			columnMap = Meta.collectColumns(setting, setting.database, setting.inputSchema, table);
+			tableColumnMap.put(table, columnMap);
+			for (String column : columnMap.keySet()) {
 				final CheckBoxTreeItem<String> itemColumn = new CheckBoxTreeItem<>(column);
 				localItemListColumn.add(itemColumn);
 			}
-			itemTable.getChildren().addAll(localItemListColumn);
+			itemTable.getChildren().setAll(localItemListColumn);
 			itemListColumn.addAll(localItemListColumn);
 		}
-		
-		
-		
-		
-		rootItem.getChildren().addAll(itemListTable);
+
+		rootItem.getChildren().setAll(itemListTable);
 		treeViewSelect.setRoot(rootItem);
-		treeViewSelect.setCellFactory(CheckBoxTreeCell.<String>forTreeView());
-		
+		treeViewSelect.setCellFactory(CheckBoxTreeCell.forTreeView());
+
+		checkTableColumn(tableMap, tableColumnMap); 	// Check checkboxes based on XML
+
 	}
 	
 	@FXML private void targetTableAction() {
@@ -174,17 +150,19 @@ public class Events implements Initializable {
 		setting.targetTable = comboBoxTargetTable.getValue();
 		
 		// Target tab
-		SortedMap<String, Integer> columnListType = Meta.collectColumns(setting, setting.database, setting.inputSchema, setting.targetTable);
-		Set<String> columnList = columnListType.keySet();
-		comboBoxTargetColumn.getItems().clear();
-		comboBoxTargetId.getItems().clear();
-		comboBoxTargetTimestamp.getItems().clear();
-		comboBoxTargetColumn.getItems().addAll(columnList);
-		comboBoxTargetId.getItems().addAll(columnList);
-		comboBoxTargetTimestamp.getItems().addAll(columnList);
+		Set<String> columnList = Meta.collectColumns(setting, setting.database, setting.inputSchema, setting.targetTable).keySet();
+		comboBoxTargetColumn.getItems().setAll(columnList);
+		comboBoxTargetId.getItems().setAll(columnList);
+		comboBoxTargetTimestamp.getItems().setAll(columnList);
 	}
 			
 	@FXML private void runAction() {
+
+		// Terminate the current execution, if appropriate
+		if (buttonRun.getText().equals("Stop")) {
+			runService.cancel();
+			return;
+		}
 
 		// 1) Read current database list
 		DatabasePropertyList databaseList = connection.DatabasePropertyList.unmarshall();
@@ -199,34 +177,41 @@ public class Events implements Initializable {
 		databaseProperty.targetId = comboBoxTargetId.getValue();
 		databaseProperty.targetDate = comboBoxTargetTimestamp.getValue();
 		databaseProperty.unit = comboBoxUnit.getValue();
-		databaseProperty.lag = Integer.valueOf(textLag.getText());
-		databaseProperty.lead = Integer.valueOf(textLead.getText());
-		databaseProperty.sampleCount = Integer.valueOf(textSampleCount.getText());
+		databaseProperty.lag = parseInteger(textLag.getText());
+		databaseProperty.lead = parseInteger(textLead.getText());
 		databaseProperty.task = comboBoxTask.getValue();
+		databaseProperty.useIdAttributes = checkBoxUseId.isSelected();
+		databaseProperty.sampleCount = parseInteger(textSampleCount.getText());
+		databaseProperty.predictorMax = parseInteger(textPredictorMax.getText());
 
 		// BlackList tables
 		List<String> blackListTable = new ArrayList<>();
 		
 		for (CheckBoxTreeItem<String> treeItem : itemListTable) {
-			if (!treeItem.isSelected()) {
+			if (!treeItem.isSelected() && !treeItem.isIndeterminate()) {  // Only if the whole table is disabled
 				blackListTable.add(treeItem.getValue());
 			}
 		}
 
 		databaseProperty.blackListTable = StringUtils.join(blackListTable, ',');
-		
+		if (databaseProperty.blackListTable.isEmpty()) {
+			databaseProperty.blackListTable = null; // If empty, do not write the attribute
+		}
 		
 		// BlackList columns
 		List<String> blackListColumn = new ArrayList<>();
 		
 		for (CheckBoxTreeItem<String> treeItem : itemListColumn) {
-			if (!treeItem.isSelected()) {
+			CheckBoxTreeItem parent = (CheckBoxTreeItem) treeItem.getParent();
+			if (!treeItem.isSelected() && parent.isIndeterminate()) {	// If table is indeterminate and column is disabled
 				blackListColumn.add(treeItem.getParent().getValue() + "." + treeItem.getValue());
 			}
 		}
 
 		databaseProperty.blackListColumn = StringUtils.join(blackListColumn, ',');
-		
+		if (databaseProperty.blackListColumn.isEmpty()) {
+			databaseProperty.blackListColumn = null; // If empty, do not write the attribute
+		}
 		// BlackList patterns
 		List<String> blackListPattern = new ArrayList<>();
 		
@@ -247,22 +232,34 @@ public class Events implements Initializable {
 
 		// 5) Clear the log window
 		textAreaConsole.clear();
-		
-		// Execute Predictor Factory in a thread (to keep GUI responsive)
-		Thread t1 = new Thread(new Runnable() {
-			public void run() {
-				String[] arguments = { "GUI", "GUI" };
-				run.Launcher.main(arguments);
-			}
-		}, "Core of Predictor Factory");
-		t1.setPriority(java.lang.Thread.MIN_PRIORITY);
-		t1.start();
-		
-	}
-	
 
-	
-	
+		// 6) Start the odyssey
+		runService.restart();
+
+		// Provide feedback to the user to wait
+		runService.setOnRunning(event -> {
+			buttonRun.setText("Stop");
+			progressWhirl.setVisible(true);
+		});
+
+		// There are three plausible exit states. Cover them all.
+		runService.setOnCancelled(event -> {
+			buttonRun.setText("Start");
+			progressWhirl.setVisible(false);
+		});
+		runService.setOnFailed(event -> {
+			buttonRun.setText("Start");
+			progressWhirl.setVisible(false);
+		});
+		runService.setOnSucceeded(event -> {
+			buttonRun.setText("Start");
+			progressWhirl.setVisible(false);
+		});
+
+
+	}
+
+
 	// The initialize() method is automatically called after the FXML file has been loaded.
 	// By this time, all the FXML fields are already initialized.
 	// rb localize the root object. null if the root object was not localized.
@@ -270,12 +267,13 @@ public class Events implements Initializable {
     	
 		// Setup logging into textArea (before any attempt to log anything)
     	//PropertyConfigurator.configure("/config/log4j.properties");
-		controller.TextAreaAppender textAreaHandler = new TextAreaAppender();
+		TextAreaAppender textAreaHandler = new TextAreaAppender();
 		textAreaHandler.setTextArea(textAreaConsole);
 		
-		// HIDE CURRENTLY UNCONNECTED COUNTER
+		// Hide progress indicators as nothing is running so far
 		labelPredictorCountText.setVisible(false);
 		labelPredictorCount.setVisible(false);
+		progressWhirl.setVisible(false);
 		
     	// Populate comboBoxes
 		// VENDOR COMBOBOX SHOULD BE POPULATED BASED ON DRIVER.XML
@@ -284,7 +282,7 @@ public class Events implements Initializable {
         comboBoxUnit.getItems().addAll("second", "hour", "day", "month", "year");
         
         // Read past setting. If no past setting is available, leave it unfilled.
- 		// NOTE: IF SOME ATTRIBUTE IS MISSING, IT WILL FAIL
+ 		// NOTE: IF SOME ATTRIBUTE IS MISSING, IT WILL FAIL -> just use try-catch
          ConnectionPropertyList connectionList = connection.ConnectionPropertyList.unmarshall();
          ConnectionProperty connectionProperty = connectionList.getConnectionProperties("GUI");
          
@@ -299,37 +297,53 @@ public class Events implements Initializable {
          
          DatabasePropertyList databaseList = connection.DatabasePropertyList.unmarshall();
          DatabaseProperty databaseProperty = databaseList.getDatabaseProperties("GUI");
-         List<String> blackListPattern  = new ArrayList<>();	// Blacklisted patterns
+         List<String> blackListPattern  = new ArrayList<>();
+		 List<String> whiteListPattern  = new ArrayList<>();
       
-         if (databaseProperty != null) {
-         	comboBoxUnit.setValue(databaseProperty.unit);
-         	textLag.setText(databaseProperty.lag.toString());
-         	textLead.setText(databaseProperty.lead.toString());
-         	textSampleCount.setText(databaseProperty.sampleCount.toString());
-         	comboBoxTask.setValue(databaseProperty.task);
-         	
-         	blackListPattern = Arrays.asList(databaseProperty.blackListPattern.split(","));	
-         }
-        
+         // Database properties
+		 try {comboBoxUnit.setValue(databaseProperty.unit);} catch (NullPointerException ignored) {}
+		 try {textLag.setText(databaseProperty.lag.toString());} catch (NullPointerException ignored) {}
+		 try {textLead.setText(databaseProperty.lead.toString());} catch (NullPointerException ignored) {}
+		 try {textSampleCount.setText(databaseProperty.sampleCount.toString());} catch (NullPointerException ignored) {}
+		 try {comboBoxTask.setValue(databaseProperty.task);} catch (NullPointerException ignored) {}
+		 try {textPredictorMax.setText(databaseProperty.predictorMax.toString());} catch (NullPointerException ignored) {}
+		 try {checkBoxUseId.setSelected(databaseProperty.useIdAttributes);} catch (NullPointerException ignored) {}
+		 try {blackListPattern = Text.string2list(databaseProperty.blackListPattern);} catch (NullPointerException ignored) {}
+		 try {whiteListPattern = Text.string2list(databaseProperty.whiteListPattern);} catch (NullPointerException ignored) {}
+
+
+		// Add ability to select an item in a combobox with a key stroke
+		PrefixSelectionCustomizer.customize(comboBoxInputSchema);
+		PrefixSelectionCustomizer.customize(comboBoxOutputSchema);
+		PrefixSelectionCustomizer.customize(comboBoxTargetColumn);
+		PrefixSelectionCustomizer.customize(comboBoxTargetId);
+		PrefixSelectionCustomizer.customize(comboBoxTargetTable);
+		PrefixSelectionCustomizer.customize(comboBoxTargetTimestamp);
+		PrefixSelectionCustomizer.customize(comboBoxTask);
+		PrefixSelectionCustomizer.customize(comboBoxUnit);
+		PrefixSelectionCustomizer.customize(comboBoxVendor);
+
         // Connection tab
-        ValidatorText.addNumericValidation(textPort);
+        ValidatorText.addNumericValidation(textPort, Integer.MAX_VALUE);
                 
 		// Pattern tab - populate list of patterns
-		SortedMap<String, Pattern> patternList = utility.PatternMap.getPatternMap();	// Get patternList
+		SortedMap<String, Pattern> patternMap = utility.PatternMap.getPatternMap();	// Get patternMap
 		CheckBoxTreeItem<String> rootItem = new CheckBoxTreeItem<>("Patterns");
 		rootItem.setExpanded(true);
 		
-		for (Pattern pattern : patternList.values()) {
+		for (Pattern pattern : patternMap.values()) {
 			final CheckBoxTreeItem<String> itemPattern = new CheckBoxTreeItem<>(pattern.name);	// Add checkboxes
 			itemListPattern.add(itemPattern);
 		}
 		
 		rootItem.getChildren().addAll(itemListPattern);
 		treeViewPattern.setRoot(rootItem);
-		treeViewPattern.setCellFactory(CheckBoxTreeCell.<String>forTreeView());
+		treeViewPattern.setCellFactory(CheckBoxTreeCell.forTreeView());
+
+		SortedMap selectedPattern = BlackWhiteList.filter(patternMap, blackListPattern, whiteListPattern); // White/black list
 
 		for (CheckBoxTreeItem<String> item : itemListPattern) {
-			if (!blackListPattern.contains(item.getValue())) item.setSelected(true);	// Check checkboxes from the last run 
+			if (selectedPattern.containsKey(item.getValue())) item.setSelected(true);	// Check checkboxes from the last run
 		}
 	
 		// Pattern tab - description field. The text changes based on the currently selected pattern.
@@ -341,7 +355,7 @@ public class Events implements Initializable {
             	if (new_val.getParent() == null) {
             		textAreaDescription.setText("");	// This is the parent node
             	} else {
-            		String text = patternList.get(new_val.getValue()).description;
+            		String text = patternMap.get(new_val.getValue()).description;
             		text = text.trim().replaceAll(" +", " ");	// Remove unnecessary spaces
             		text = text.replace("\t", "");	// Remove tabs
             		textAreaDescription.setText(text);
@@ -354,47 +368,145 @@ public class Events implements Initializable {
 		ValidatorText.addNumericValidation(textLag);
 		ValidatorText.addNumericValidation(textLead);
 		ValidatorText.addNumericValidation(textSampleCount);
-		
-        
+		ValidatorText.addNumericValidation(textPredictorMax, setting.predictorMaxTheory);
+
     }
 
-    
-    // Subroutine: Exception dialog
-    // SHOULD BE IN A SEPARATE CLASS
-    protected void exceptionDialog(Exception ex) {
-	    Alert alert = new Alert(AlertType.ERROR);
-	    alert.setTitle("Predictor Factory");
-	    alert.setHeaderText(null);
-	    alert.setContentText("Could not connect to the database");
-	
-	    // Create expandable Exception.
-	    StringWriter sw = new StringWriter();
-	    PrintWriter pw = new PrintWriter(sw);
-	    ex.printStackTrace(pw);
-	    String exceptionText = sw.toString();
-	
-	    Label label = new Label("The exception stacktrace was:");
-	
-	    TextArea textArea = new TextArea(exceptionText);
-	    textArea.setEditable(false);
-	    textArea.setWrapText(true);
-	
-	    textArea.setMaxWidth(Double.MAX_VALUE);
-	    textArea.setMaxHeight(Double.MAX_VALUE);
-	    GridPane.setVgrow(textArea, Priority.ALWAYS);
-	    GridPane.setHgrow(textArea, Priority.ALWAYS);
-	
-	    GridPane expContent = new GridPane();
-	    expContent.setMaxWidth(Double.MAX_VALUE);
-	    expContent.add(label, 0, 0);
-	    expContent.add(textArea, 0, 1);
-	
-	    // Set expandable Exception into the dialog pane.
-	    alert.getDialogPane().setExpandableContent(expContent);
-	
-	    alert.showAndWait();
-    }
 
-   
-	
+
+	// Set checkboxes in select tab based on the XML
+	// Input (a simplified explanation):
+	// 	list of tables
+	//	map of {table, columnList}
+	private void checkTableColumn(SortedMap<String, Table> tableMap, Map<String, SortedMap<String, Column>> tableColumnMap) {
+		// Read from XML
+		DatabasePropertyList databaseList = connection.DatabasePropertyList.unmarshall();
+		DatabaseProperty databaseProperty = databaseList.getDatabaseProperties("GUI");
+
+		// Parse from XML (the data are stored in SQL-like syntax, not in XML-like syntax)
+		final List<String> whiteListTable = Text.string2list(databaseProperty.whiteListTable); // Parsed values
+		final List<String> blackListTable = Text.string2list(databaseProperty.blackListTable); // Parsed values
+		final Map<String,List<String>> whiteMapColumn = Text.list2map(Text.string2list(databaseProperty.whiteListColumn)); // Parsed values
+		final Map<String,List<String>> blackMapColumn = Text.list2map(Text.string2list(databaseProperty.blackListColumn)); // Parsed values
+
+
+		// The logic (a hierarchical extension of BlackWhiteList) is following:
+		//	1) whiteTable, whiteColumn -> check
+		//	2) if (whiteTable.isEmpty() && whiteColumn.isEmpty()) -> check all
+		//	3) blackTable, blackColumn -> uncheck
+
+
+		// 1) If whiteTableList contains the tableName, check it
+		for (CheckBoxTreeItem<String> table : itemListTable) {
+			if (whiteListTable.contains(table.getValue())) {
+				table.setSelected(true);    // Check the table
+			}
+		}
+
+		for (CheckBoxTreeItem<String> column : itemListColumn) {
+			String tableName = column.getParent().getValue();
+			List<String> whiteListColumn = whiteMapColumn.getOrDefault(tableName, new ArrayList<>());
+
+			if (whiteListColumn.contains(column.getValue())) {
+				column.setSelected(true);	// Check the column
+			}
+		}
+
+		// 2) If both, whiteTableList and whiteColumnList are empty, check all
+		if (whiteListTable.isEmpty() && whiteMapColumn.isEmpty()) {
+			CheckBoxTreeItem root = (CheckBoxTreeItem)treeViewSelect.getRoot();
+			root.setSelected(true);
+		}
+
+		// 3) If blackTableList contains the tableName, uncheck it
+		for (CheckBoxTreeItem<String> table : itemListTable) {
+			if (blackListTable.contains(table.getValue())) {
+				table.setSelected(false);    // Uncheck the table
+			}
+		}
+
+		for (CheckBoxTreeItem<String> column : itemListColumn) {
+			String tableName = column.getParent().getValue();
+			List<String> blackListColumn = blackMapColumn.getOrDefault(tableName, new ArrayList<>());
+
+			if (blackListColumn.contains(column.getValue())) {
+				column.setSelected(false);	// Uncheck the column
+			}
+		}
+
+	}
+
+	// Get connection and metadata without blocking the GUI
+	private void getMetaData(Setting setting) {
+
+		// Show progress dialog
+		Dialog dialog = ConnectionDialog.progressDialog();
+
+		// Start terminable connection attempt
+		ConnectionService task = new ConnectionService();
+		task.start();
+
+		// If connection succeeded...
+		task.setOnSucceeded(event -> {
+			dialog.close();
+			buttonConnect.setText("Disconnect");
+			tabPane.getSelectionModel().selectNext();
+			this.setting = task.getValue();		// Store the setting with the open connection
+
+			// Populate the database tab (based on the database content)
+			SortedSet<String> schemaList = Meta.collectSchemas(setting, setting.database);
+			comboBoxInputSchema.getItems().setAll(schemaList);
+			comboBoxOutputSchema.getItems().setAll(schemaList);
+
+			// Populate the database tab (based on the past setting)
+			comboBoxInputSchema.setValue(setting.inputSchema);
+			comboBoxOutputSchema.setValue(setting.outputSchema);
+			comboBoxTargetTable.setValue(setting.targetTable);
+			comboBoxTargetColumn.setValue(setting.targetColumn);
+			comboBoxTargetId.setValue(setting.targetIdList.get(0));
+			comboBoxTargetTimestamp.setValue(setting.targetDate);
+			comboBoxTask.setValue(setting.task);
+
+			// Update the text in the setting tab
+			textPredictorMax.setPromptText("database limit ≈" + setting.predictorMaxTheory);
+		});
+
+		// If failed...
+		task.setOnFailed(event -> {
+			dialog.close();
+
+			Exception exception = (Exception) task.getException();
+			ConnectionDialog.exceptionDialog(exception);
+		});
+	}
+
+	// Takes a setting, makes a connection, returns the setting
+	private class ConnectionService extends Service<Setting> {
+		@Override
+		protected Task<Setting> createTask() {
+			return new Task<Setting>() {
+				@Override
+				protected Setting call() throws Exception {
+					return  Network.openConnection(setting);
+				}
+			};
+		}
+	}
+
+	// Execute Predictor Factory
+	private class RunService extends Service<Void> {
+
+		@Override
+		protected Task<Void> createTask() {
+			return new Task<Void>() {
+				@Override
+				protected Void call() throws Exception {
+					String[] arguments = { "GUI", "GUI" };
+					run.Launcher.main(arguments);
+					return null;
+				}
+			};
+		}
+	}
+
 }

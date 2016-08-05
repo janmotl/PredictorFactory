@@ -25,30 +25,26 @@
 	</description>
 	<author>Jan Motl</author>
 	<date>2015-06-01</date>
-	<code> SELECT a.@baseId
-	           	, a.@baseDate
-	           	, a.@baseTarget
-				, avg(woe.woe) "@columnName"
+	<code> SELECT a.@base
+				, avg(woe.woe) @columnName
 			FROM (
-				SELECT @baseId
-		           	 , @baseDate
-		           	 , @baseTarget
+				SELECT @base
 		           	 , EXTRACT(@datePart FROM @timeColumn) AS day
 				FROM @propagatedTable
 				) a
 			JOIN (
 				 SELECT EXTRACT(@datePart FROM @timeColumn) AS day
-				 	  , log((sum(case when propagated_target='@targetValue' then 1.0 else 0 end)+0.5)/avg(total.total_default)
-				 / (sum(case when propagated_target &lt;&gt; '@targetValue' then 1.0 else 0 end)+0.5)/avg(total.total_nondefault))*100
+				 	  , log(((sum(case when @baseTarget='@targetValue' then 1.0 else 0 end)+1)/avg(total.total_default))
+				 / ((sum(case when @baseTarget &lt;&gt; '@targetValue' then 1.0 else 0 end)+1)/avg(total.total_nondefault)))*100
 				 as woe
 				 FROM @propagatedTable
-					  , (SELECT sum(case when propagated_target='@targetValue' then 1.0 else 0 end) as total_default
-					          , sum(case when propagated_target &lt;&gt; '@targetValue' then 1.0 else 0 end) as total_nondefault 
+					  , (SELECT sum(case when @baseTarget='@targetValue' then 1.0 else 0 end)+2 as total_default
+					          , sum(case when @baseTarget &lt;&gt; '@targetValue' then 1.0 else 0 end)+2 as total_nondefault
 					  FROM @propagatedTable) total
 				 GROUP BY EXTRACT(@datePart FROM @timeColumn)
 				 ) woe
 			on a.day = woe.day
-			GROUP BY a.@baseId, a.@baseDate, a.@baseTarget
+			GROUP BY a.@base
 	</code>
 	<parameter key="@datePart" value="hour, day, month, year"/>
 	<cardinality>n</cardinality>

@@ -30,12 +30,10 @@
 	</example>
 	<author>Jan Motl</author>
 	<date>2014-12-30</date>
-	<code>SELECT @baseId
-			   , @baseDate
-			   , @baseTarget
-			   , (count(*) - count(@column)) / count(*) AS "@columnName"
+	<code>SELECT @base
+			   , (count(*) - count(@column)) / count(*) AS @columnName
 	      FROM @propagatedTable
-	      GROUP BY @baseId, @baseDate, @baseTarget
+	      GROUP BY @base
 	</code>
 	<parameter key="@column" value="@nominalColumn, @numericalColumn, @timeColumn"/>
 	<cardinality>n</cardinality>

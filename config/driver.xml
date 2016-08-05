@@ -3,10 +3,12 @@
 <!--
 Description of the fields:
 	THERE ARE TOO MANY FIELDS -> DECREASE THE COUNT
+	MANY FUNCTIONS COULD BE REPLACED WITH ODBC CALLS LIKE: {fn NOW()}
 	Name: Unique (but arbitrary) name identifying the database.
 	DriverClass: A reference to the JDBC driver as provided by the documentation for the driver.
 	DefaultPort: The default port of the database.
-	UrlPrefix: The beginning of the connection string.  
+	UrlPrefix: The beginning of the connection string.
+	UrlSuffix: The end of the connection string.
 	DbNameSeparator: The separator between urlPrefix and database name.
 	QuoteEntityOpen: By default we are using the character(s) that we are told by the database driver...  
 	QuoteEntityClose: ...but users may have their own opinion about the right sequence. Also, the driver may not be well implemented. Or the driver can be outdated.  
@@ -17,14 +19,14 @@ Description of the fields:
 	SupportsCreateTableAs: By default true. False in MS SQL...
 	SupportsWithData: By default false. Has to be true for MonetDB... (SHOULD BE NAMED LIKE "DEFAULT_IS_WITHOUT_DATA")
 	corrSyntax: Optional. Define the command for correlation if the database provides such command.
-	DateAddSyntax: Because we want to be able to express time ranges. This syntax doesn't deal with leap years.
+	DateAddSyntax: Because we want to be able to express time ranges. This syntax doesn't deal with leap years. Replaceable with {fn TIMESTAMPADD}.
 	DateAddMonth: Because we want to be able to express time ranges. This syntax correctly deals with leap years. CURRENTLY NOT USED.
-	DateDiffSyntax: Not all databases support conversion of time to number. Hence just use a diff against a constant.
+	DateDiffSyntax: Not all databases support conversion of time to number. Hence just use a diff against a constant. Replaceable with {fn TIMESTAMPDIFF}.
 	DateToNumber: EXPERIMENTAL. SHOULD BE SUBSTITUTED WITH DATEDIFF SYNTAX AND CONSTANT
-		But then we would have to support: dateDiff(date, date) and dateDiff(date, constant as string)
+		But then we would have to support: dateDiff(date, date) and dateDiff(date, constant as string). Replaceable with {fn CONVERT SQL_INTEGER}
 	InsertTimestampSyntax: Syntax for timestamp (it's used for creation of journal table). Because of SAS it generally has to be in single quotes.
 	StdDevCommand: The command for calculation of sample standard deviation.
-	CharLengthCommand: The command for calculation of string length.
+	CharLengthCommand: The command for calculation of string length. Replaceable with {fn LENGTH(string)}.
 -->
 
 
@@ -69,6 +71,22 @@ Description of the fields:
 		limitSyntax="top"
 		randomCommand="RAND(CONVERT(varbinary, NEWID()))"
 	/>
+
+	<!-- Identical to Microsoft SQL Server, but with an open version of the driver. -->
+	<driver
+			name="jTDS SQL Server"
+			driverClass="net.sourceforge.jtds.jdbc.Driver"
+			defaultPort="1433"
+			urlPrefix="jdbc:jtds:sqlserver://"
+			dbNameSeparator=";databaseName="
+			supportsCreateTableAs="false"
+			dateToNumber="cast(datediff(hour,'1990-1-1', @column) as decimal(38, 10))"
+			stdDevCommand="stdev"
+			charLengthCommand="len"
+			typeTimestamp="DATETIME"
+			limitSyntax="top"
+			randomCommand="RAND(CONVERT(varbinary, NEWID()))"
+	/>
 	
 	<driver
 		name="MonetDB"
@@ -88,6 +106,7 @@ Description of the fields:
 		driverClass="com.mysql.jdbc.Driver"
 		defaultPort="3306"
 		urlPrefix="jdbc:mysql://"
+		urlSuffix="?prepStmtCacheSqlLimit=2048&amp;cachePrepStmts=true&amp;useServerPrepStmts=true"
 		dbNameSeparator="/"
 		quoteAliasOpen="'"
 		quoteAliasClose="'"
@@ -142,6 +161,7 @@ Description of the fields:
 		driverClass="org.postgresql.Driver"
 		defaultPort="5432"
 		urlPrefix="jdbc:postgresql://"
+		urlSuffix="?ApplicationName=PredictorFactory"
 		dbNameSeparator="/"
 		corrSyntax="corr(@column1, @column2)"
 		dateAddSyntax="(@baseDate + INTERVAL '@amount @datePart')"
@@ -150,6 +170,22 @@ Description of the fields:
 		dateToNumber="extract(epoch from @column)"
 		charLengthCommand="char_length"
 		randomCommand="random()"
+	/>
+
+	<!-- The same thing as PostgreSQL, but with a driver that promises JDBC4.1 functionality like IS_GENERATEDCOLUMN. -->
+	<driver
+			name="PostgreSQL_pgjdbc-ng"
+			driverClass="com.impossibl.postgres.jdbc.PGDriver"
+			defaultPort="5432"
+			urlPrefix="jdbc:pgsql://"
+			dbNameSeparator="/"
+			corrSyntax="corr(@column1, @column2)"
+			dateAddSyntax="(@baseDate + INTERVAL '@amount @datePart')"
+			dateAddMonth="(@baseDate + INTERVAL '@amount month')"
+			dateDiffSyntax="(@dateTo - @dateFrom)"
+			dateToNumber="extract(epoch from @column)"
+			charLengthCommand="char_length"
+			randomCommand="random()"
 	/>
 	
 	<!-- Draft. Changed: {dateAddMonth, stdDevCommand, randomCommand, charLengthCommand, dateDiff} -->

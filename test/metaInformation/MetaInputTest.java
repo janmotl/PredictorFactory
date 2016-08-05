@@ -7,16 +7,16 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import run.Setting;
-import utility.Meta;
 
 import java.util.SortedMap;
 
 public class MetaInputTest {
 
-    Setting setting;
+    private Setting setting;
 
     @Before
     public void initialization() {
+        utility.Logging.initialization();
         setting = new Setting("PostgreSQL", "financial_test_setting");
         setting = Network.openConnection(setting);
     }
@@ -25,7 +25,7 @@ public class MetaInputTest {
     public void tableList_noFilter() {
         setting.whiteListTable = "";
         setting.blackListTable = "";
-        SortedMap<String, Meta.Table> metaInput = MetaInput.getMetaInput(setting);
+        SortedMap<String, Table> metaInput = MetaInput.getMetaInput(setting);
 
         Assert.assertEquals(8, metaInput.size());
         Assert.assertTrue(metaInput.containsKey("order"));
@@ -35,7 +35,7 @@ public class MetaInputTest {
     public void tableList_whiteFilter() {
         setting.whiteListTable = "loan,order";
         setting.blackListTable = "";
-        SortedMap<String, Meta.Table> metaInput = MetaInput.getMetaInput(setting);
+        SortedMap<String, Table> metaInput = MetaInput.getMetaInput(setting);
 
         Assert.assertEquals(2, metaInput.size());
         Assert.assertTrue(metaInput.containsKey("loan"));
@@ -45,7 +45,7 @@ public class MetaInputTest {
     public void tableList_blackFilter() {
         setting.whiteListTable = "";
         setting.blackListTable = "order";
-        SortedMap<String, Meta.Table> metaInput = MetaInput.getMetaInput(setting);
+        SortedMap<String, Table> metaInput = MetaInput.getMetaInput(setting);
 
         Assert.assertEquals(7, metaInput.size());
         Assert.assertFalse(metaInput.containsKey("order"));
@@ -55,7 +55,7 @@ public class MetaInputTest {
     public void tableList_whiteBlackFilter() {
         setting.whiteListTable = "loan,order";
         setting.blackListTable = "order";
-        SortedMap<String, Meta.Table> metaInput = MetaInput.getMetaInput(setting);
+        SortedMap<String, Table> metaInput = MetaInput.getMetaInput(setting);
 
         Assert.assertEquals(1, metaInput.size());
         Assert.assertTrue(metaInput.containsKey("loan"));
@@ -67,27 +67,26 @@ public class MetaInputTest {
         setting.blackListTable = "";
         setting.whiteListColumn = "";
         setting.blackListColumn = "";
-        SortedMap<String, Meta.Table> metaInput = MetaInput.getMetaInput(setting);
+        SortedMap<String, Table> metaInput = MetaInput.getMetaInput(setting);
 
-        //Assert.assertEquals(1, metaInput.get("loan").nominalColumn.size()); // TARGET IS NOT CURRENTLY INCLUDED
-        Assert.assertEquals(3, metaInput.get("loan").numericalColumn.size());
-        Assert.assertEquals(1, metaInput.get("loan").timeColumn.size());
-        Assert.assertEquals(2, metaInput.get("loan").idColumn.size());
-        Assert.assertTrue(metaInput.get("loan").numericalColumn.contains("duration"));
+        Assert.assertEquals(5, metaInput.get("loan").getColumns(setting, StatisticalType.NUMERICAL).size());
+        Assert.assertEquals(1, metaInput.get("loan").getColumns(setting, StatisticalType.TEMPORAL).size());
+        Assert.assertEquals(1, metaInput.get("loan").getColumns(setting, StatisticalType.NOMINAL).size());
+        Assert.assertTrue(metaInput.get("loan").getColumn("duration") != null);
     }
 
     @Test
     public void columnList_whiteFilter() {
         setting.whiteListTable = "loan";
         setting.blackListTable = "";
-        setting.whiteListColumn = "loan.duration";
+        setting.whiteListColumn = "loan.duration,loan.date,loan.status";
         setting.blackListColumn = "";
-        SortedMap<String, Meta.Table> metaInput = MetaInput.getMetaInput(setting);
+        SortedMap<String, Table> metaInput = MetaInput.getMetaInput(setting);
 
-        Assert.assertEquals(1, metaInput.get("loan").numericalColumn.size());
-        Assert.assertEquals(0, metaInput.get("loan").timeColumn.size());
-        //Assert.assertEquals(0, metaInput.get("loan").idColumn.size());    // IDS ARE WRONGFULLY IGNORED FROM THE LIST
-        Assert.assertTrue(metaInput.get("loan").numericalColumn.contains("duration"));
+        Assert.assertEquals(1, metaInput.get("loan").getColumns(setting, StatisticalType.NUMERICAL).size());
+        Assert.assertEquals(1, metaInput.get("loan").getColumns(setting, StatisticalType.TEMPORAL).size());
+        Assert.assertEquals(0, metaInput.get("loan").getColumns(setting, StatisticalType.ID).size());
+        Assert.assertTrue(metaInput.get("loan").getColumn("duration") != null);
     }
 
     @Test
@@ -96,26 +95,25 @@ public class MetaInputTest {
         setting.blackListTable = "";
         setting.whiteListColumn = "";
         setting.blackListColumn = "loan.duration";
-        SortedMap<String, Meta.Table> metaInput = MetaInput.getMetaInput(setting);
+        SortedMap<String, Table> metaInput = MetaInput.getMetaInput(setting);
 
-        Assert.assertEquals(2, metaInput.get("loan").numericalColumn.size());
-        Assert.assertEquals(1, metaInput.get("loan").timeColumn.size());
-        Assert.assertEquals(2, metaInput.get("loan").idColumn.size());
-        Assert.assertFalse(metaInput.get("loan").numericalColumn.contains("duration"));
+        // Assumes ids are permitted for feature generation
+        Assert.assertEquals(4, metaInput.get("loan").getColumns(setting, StatisticalType.NUMERICAL).size());
+        Assert.assertEquals(1, metaInput.get("loan").getColumns(setting, StatisticalType.TEMPORAL).size());
+        Assert.assertEquals(2, metaInput.get("loan").getColumns(setting, StatisticalType.ID).size());
     }
 
     @Test
     public void columnList_whiteBlackFilter() {
         setting.whiteListTable = "loan";
         setting.blackListTable = "";
-        setting.whiteListColumn = "loan.duration,loan.status,loan.amount";
+        setting.whiteListColumn = "loan.duration,loan.status,loan.amount,loan.date";
         setting.blackListColumn = "loan.duration";
-        SortedMap<String, Meta.Table> metaInput = MetaInput.getMetaInput(setting);
+        SortedMap<String, Table> metaInput = MetaInput.getMetaInput(setting);
 
-        Assert.assertEquals(1, metaInput.get("loan").numericalColumn.size());
-        Assert.assertEquals(0, metaInput.get("loan").timeColumn.size());
-        Assert.assertFalse(metaInput.get("loan").numericalColumn.contains("duration"));
-        Assert.assertTrue(metaInput.get("loan").numericalColumn.contains("amount"));
+        Assert.assertEquals(1, metaInput.get("loan").getColumns(setting, StatisticalType.NUMERICAL).size());
+        Assert.assertEquals(1, metaInput.get("loan").getColumns(setting, StatisticalType.TEMPORAL).size());
+        Assert.assertTrue(metaInput.get("loan").getColumn("amount") != null);
     }
 
     @After

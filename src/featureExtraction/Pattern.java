@@ -24,7 +24,7 @@ public class Pattern {
 	private static final Logger logger = Logger.getLogger(Pattern.class.getName());
 		
 	// Fields
-	@XmlAttribute public int topN = 1; // The default value is to return a single best predictor per predictor.groupId.
+	@XmlAttribute public int topN = 1; // The default value is to return the single best predictor per predictor.groupId.
 	public String name;
 	public String description;
 	public String author;

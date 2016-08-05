@@ -12,7 +12,11 @@
 		Note: Sometimes we may want to count only transitions from negative to positive numbers (or reversely).
 		However, in this implementation both directions are counted.
 		
-		Note: The inequality signs "less than" and "greater than" have to be escaped in XML. 
+		Note: The inequality signs "less than" and "greater than" have to be escaped in XML.
+
+		Note: The pattern would have a better runtime, if PARTITION By was over {@baseId, @baseDate} and not over
+		{@base}, which commonly expands into {@baseId, @baseDate, @baseTarget}. However, if @baseDate is not defined,
+		@base is automatically expanded into
 	</description>
 	<example>
 		If balance at the account often crosses zero, the customer could be interested into a better credit card.
@@ -20,19 +24,15 @@
 	<author>Jan Motl</author>
 	<date>2015-03-14</date>
 	<code compatibility="PostgreSQL">WITH intermediate AS (
-			SELECT @baseId
-			     , @baseDate
-			     , @baseTarget
+			SELECT @base
 				 , @numericalColumn nowValue
 				 , LAG(@numericalColumn) OVER (PARTITION BY @baseId, @baseDate ORDER BY @timeColumn) AS lagValue
 			FROM @propagatedTable
 		  )
-		  SELECT @baseId
-		  	   , @baseDate
-			   , @baseTarget
-			   , sum(CASE WHEN SIGN(nowValue) &lt;&gt; SIGN(lagValue) THEN 1 ELSE 0 END) AS "@columnName"
+		  SELECT @base
+			   , sum(CASE WHEN SIGN(nowValue) &lt;&gt; SIGN(lagValue) THEN 1 ELSE 0 END) AS @columnName
 		  FROM intermediate
-		  GROUP BY @baseId, @baseDate, @baseTarget
+		  GROUP BY @base
 	</code>
 	<cardinality>n</cardinality>
 </pattern>

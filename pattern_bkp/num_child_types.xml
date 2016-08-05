@@ -12,9 +12,10 @@
 	</example>
 	<author>Filip Trojan</author>
 	<date>2014-12-25</date>
-	<code>SELECT @baseId, @baseDate, @baseTarget, count(distinct @nominalColumn) AS "@columnName"
+	<code>SELECT @base
+		       , count(distinct @nominalColumn) AS @columnName
 	      FROM @propagatedTable
-	      GROUP BY @baseId, @baseDate, @baseTarget
+	      GROUP BY @base
 	</code>
 	<cardinality>n</cardinality>
 </pattern>

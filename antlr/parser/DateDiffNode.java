@@ -13,8 +13,8 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 // THIS IS A ROUGH IMPLEMENTATION - ONLY GETTEXT IS GUARANTEED TO WORK AS EXPECTED.
 public class DateDiffNode implements TerminalNode{
 
-	SQLParser.DatediffContext ctx;
-	String text;
+	private final SQLParser.DatediffContext ctx;
+	private final String text;
 
 	public DateDiffNode(DatediffContext ctx2, String pattern) {
 		ctx = ctx2;

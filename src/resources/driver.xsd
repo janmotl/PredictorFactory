@@ -10,6 +10,7 @@
                 <attribute type="string" name="driverClass" use="required"/>
                 <attribute type="unsignedShort" name="defaultPort" use="required"/>
                 <attribute type="string" name="urlPrefix" use="required"/>
+                <attribute type="string" name="urlSuffix" use="optional"/>
                 <attribute type="string" name="dbNameSeparator" use="required"/>
                 <attribute type="string" name="quoteAliasOpen" use="optional"/>
                 <attribute type="string" name="quoteAliasClose" use="optional"/>

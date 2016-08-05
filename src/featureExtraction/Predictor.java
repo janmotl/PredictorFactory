@@ -5,12 +5,14 @@ import org.apache.commons.lang3.text.WordUtils;
 import run.Setting;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 
 public class Predictor implements Comparable<Predictor> {
 
-	// SHOULD UNIFY - PUBLIC AND PRIVATE looks ugly
+	// SHOULD UNIFY - PUBLIC AND PRIVATE looks ugly.
+	// Should be a composite of {pattern, table, column} and provide relevant functionality of these classes.
 	// Struct for predictor's metadata. Make sure that each collection is initialized to something and doesn't return null!
 	public String outputTable;			// The name of the constructed predictor table.
 	public String propagatedTable;		// The input table name after propagation.
@@ -21,7 +23,8 @@ public class Predictor implements Comparable<Predictor> {
 	
 	
 	// Relevance of the predictor for classification
-	// SHOULD CONTAIN: Target, MeasureType, Value
+	// SHOULD BE AN OBJECT AND CONTAIN: Target, MeasureType, Value
+	// FOR INSPIRATION HOW TO DEAL WITH A MIXTURE OF MEASURES WHERE WE MAXIMIZE AND MINIMIZE A VALUE SEE RAPIDMINER
 	private SortedMap<String, Double> relevance = new TreeMap<>();
 	
 		
@@ -29,7 +32,7 @@ public class Predictor implements Comparable<Predictor> {
 	private int id; 								// Unique number. SHOULD BE FINAL.
 	private int groupId;							// Id of the optimisation group
 	private String sql;								// SQL code
-	private boolean isOk;							// Flag 
+	private boolean isOk;							// Summary flag for quality control
 	private int rowCount;							// Count of rows in the predictor's table
 	private int nullCount;							// Count of null rows in the predictor's table
 	private final int patternTopN;					// Inherited from the pattern
@@ -37,6 +40,7 @@ public class Predictor implements Comparable<Predictor> {
 	private final String patternAuthor;				// Adds an element of gamification
 	private final String patternCode;				// Inherited from the pattern
 	private final String patternCardinality;		// Inherited from the pattern
+	private final String patternDescription;		// Inherited from the pattern
 	private final Boolean patternRequiresBaseDate;	// Inherited from the pattern
 	private final SortedMap<String, String> patternParameterMap;	// Inherited from the pattern
 	private final List<Pattern.OptimizeParameters> patternOptimizeList;	// Inherited from the pattern
@@ -46,6 +50,9 @@ public class Predictor implements Comparable<Predictor> {
 	private LocalDateTime timestampBuilt; 			// When the predictor was translated to SQL
 	private LocalDateTime timestampDelivered; 		// When the predictor was calculated by the database
 	private SortedMap<String, String> parameterMap = new TreeMap<>();	// Map of values used in SQL generation
+	private boolean isInferiorDuplicate = false;	// Decided based on the predictor's values
+	private String duplicateName;					// The name of the duplicate predictor
+	private int candidateState = 1;					// The states are: {1=candidate, 0=dropped, -1=toDrop}
 	
 	
 	// Constructor
@@ -71,6 +78,9 @@ public class Predictor implements Comparable<Predictor> {
   		if (pattern.optimizeParameter == null) {
   			throw new NullPointerException("OptimizeParameter in the pattern is null");
   	    }
+		if (pattern.description == null) {
+			throw new NullPointerException("Description in the pattern is null");
+		}
   		
 		timestampDesigned = LocalDateTime.now();
 		patternName = pattern.name;
@@ -81,6 +91,7 @@ public class Predictor implements Comparable<Predictor> {
 		patternParameterMap = pattern.dialectParameter;
 		patternOptimizeList = pattern.optimizeParameter;
 		patternTopN = pattern.topN;
+		patternDescription = pattern.description;
 	}
   	
 	// Get column name.
@@ -94,15 +105,16 @@ public class Predictor implements Comparable<Predictor> {
 		// Path
 		String name = "";
 		for (int i = 1; i < propagationPath.size(); i++) {	// Ignore the first table, base table, as it is fixed.
-			name = name + propagationPath.get(i) + "_";
+			name = name + propagationPath.get(i) + "__"; // Use doubled separators to deal with already underscored entities.
 		}
 		
 		// Add table name
 		name = name + originalTable;
 		
 		// Add column names
+		name = name + "_"; 	// Three separators to separate tables from columns
 		for (String columnName : columnMap.values()) {
-			name = name + "_" + columnName;
+			name = name + "__" + columnName;
 		}
 
 		// Replace special characters with spaces
@@ -114,11 +126,11 @@ public class Predictor implements Comparable<Predictor> {
 		// We would like to have camelCase, not CamelCase
 		pattern = Character.toLowerCase(pattern.charAt(0)) + pattern.substring(1);
 		
-		name = name + "_" + pattern;
+		name = name + "___" + pattern;
 		
 		// Add parameters. Ignore all special symbols (particularly "@" from "@column" parameters)
 		for (String parameter : parameterMap.keySet()) {
-			name = name + "_" + parameterMap.get(parameter).replaceAll(" ", "").replaceAll("[^a-zA-Z0-9_]", "");
+			name = name + "__" + parameterMap.get(parameter).replaceAll(" ", "").replaceAll("[^a-zA-Z0-9_]", "");
 		}
 					
 		return name;
@@ -167,46 +179,59 @@ public class Predictor implements Comparable<Predictor> {
 	
 	
 	////////////// Comparators ////////////////
-	
+
 	// Predictors are sorted by their id in collections like SortedSet
 	@Override
 	public int compareTo(Predictor anotherPredictor) {
-	    int anotherPredictorId = anotherPredictor.getId();  
-	    return id - anotherPredictorId;    
+	    int anotherPredictorId = anotherPredictor.getId();
+	    return id - anotherPredictorId;
 	}
-	  
-    // Sometimes we may want to sort based on maximal relevance (for example when exporting the computed predictors)
-	// HAVE TO DEAL WITH NULLS AND EMPTY RELEVANCE MAPS
-    public static final Comparator<Predictor> RelevanceComparator = new Comparator<Predictor>(){
-        @Override
-        public int compare(Predictor o1, Predictor o2) {       	
-            return Collections.max(o1.getRelevanceMap().values()).compareTo(Collections.max(o2.getRelevanceMap().values()));
-        }
-    };
-    
-    // For completeness also comparison by Id. Although I don't use it anywhere.
-	
-    public static final Comparator<Predictor> IdComparator = new Comparator<Predictor>(){
-        @Override
-        public int compare(Predictor o1, Predictor o2) {
-            return o1.getId() - o2.getId();
-        }
-    };
-    
-    public static final Comparator<Predictor> GroupIdComparator = new Comparator<Predictor>(){
-        @Override
-        public int compare(Predictor o1, Predictor o2) {
-            return o1.getGroupId() - o2.getGroupId();
-        }
-    };
-    
-		
-    
-    
+
+	// Sort first by candidateState in descending order.
+	// Then sort by relevance in descending order (higher values are better).
+	// If relevance is calculated for multiple targets, compare based on the maximum relevance.
+	// NOTE: This is not ideal - what if prediction of some target is tougher than prediction of another target?
+	// NOTE: I should have journalTopN for each target and produce mainSample for each target!
+	// In case of tie, sort by runtime in ascending order (smaller values are better).
+	// NOTE: HAVE TO TEST ON NULLS AND EMPTY RELEVANCE MAPS
+	public static final Comparator<Predictor> RelevanceComparator = new Comparator<Predictor>(){
+		@Override
+		public int compare(Predictor o1, Predictor o2) {
+
+			// Candidate states (predictors that are not OK or are duplicate have candidateState<1)
+			if (o1.getCandidateState() > o2.getCandidateState()) {
+				return -1;
+			} else if (o1.getCandidateState() < o2.getCandidateState()) {
+				return 1;
+			}
+
+			// Get maximum relevance, if necessary
+			Double relevance1 = Collections.max(o1.getRelevanceMap().values());
+			Double relevance2 = Collections.max(o2.getRelevanceMap().values());
+
+			// Compare based on the maximum relevance
+			if (relevance1.compareTo(relevance2) > 0) {
+				return -1;
+			} else if (relevance1.compareTo(relevance2) < 0) {
+				return 1;
+			}
+
+			// Compare based on the runtime, if necessary
+			if (o1.getRuntime() < o2.getRuntime()) {
+				return -1;
+			} else if (o1.getRuntime() > o2.getRuntime()) {
+				return 1;
+			}
+			return 0;
+		}
+	};
+
+
+
     /////////// To string ///////////
     @Override
 	public String toString() {
-		return getLongNameOnce();
+		return getLongNameOnce() + " " + Collections.max(relevance.values()) + " " + candidateState;
 	}
     
     
@@ -223,10 +248,16 @@ public class Predictor implements Comparable<Predictor> {
 	public void setRelevance(String target, Double value) {
 		relevance.put(target, value);
 	}
-    
+
+	public double getRuntime() {
+		// Runtime in seconds with three decimal values. Assumes that start time and end time are available.
+		return timestampBuilt.until(timestampDelivered, ChronoUnit.MILLIS)/1000.0;
+	}
+
+
 
 	/////////// Generic setters and getters /////////////
-	// Too many of them. Consider lombok OR VALJOGen OR Scala OR Groovy OR use global parameters
+	// Too many of them. Consider lombok OR VALJOGen OR Scala OR Groovy OR AutoValue OR Immutables OR use global parameters
 	public int getId() {
 		return id;
 	}
@@ -235,7 +266,6 @@ public class Predictor implements Comparable<Predictor> {
 		this.id = id;
 	}
 
-	
 	public int getGroupId() {
 		return groupId;
 	}
@@ -296,6 +326,10 @@ public class Predictor implements Comparable<Predictor> {
 		return patternTopN;
 	}
 
+	public String getPatternDescription() {
+		return patternDescription;
+	}
+
 	public String getName() {
 		return name;
 	}
@@ -352,7 +386,27 @@ public class Predictor implements Comparable<Predictor> {
 		return relevance;
 	}
 
-	
+	public boolean isInferiorDuplicate() {
+		return isInferiorDuplicate;
+	}
 
+	public void setInferiorDuplicate(boolean inferiorDuplicate) {
+		isInferiorDuplicate = inferiorDuplicate;
+	}
 
+	public String getDuplicateName() {
+		return duplicateName;
+	}
+
+	public void setDuplicateName(String duplicateName) {
+		this.duplicateName = duplicateName;
+	}
+
+	public int getCandidateState() {
+		return candidateState;
+	}
+
+	public void setCandidateState(int candidateState) {
+		this.candidateState = candidateState;
+	}
 }

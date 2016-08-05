@@ -9,28 +9,24 @@
 	</description>
 	<author>Jan Motl</author>
 	<date>2015-03-04</date>
-	<code>SELECT t1.@baseId
-			   , t1.@baseDate
-			   , t1.@baseTarget
-		       , COALESCE(Sum(t2.nrow)/t1.nrow, 0) AS "@columnName"
+	<code>SELECT t1.@base
+		       , COALESCE(Sum(t2.nrow)/t1.nrow, 0) AS @columnName
 		  FROM (
-		  		SELECT @baseId
-					 , @baseDate
-					 , @baseTarget
+		  		SELECT @base
 		       		 , Count(*) AS nrow
 			    FROM @propagatedTable
-			    GROUP BY @baseId, @baseDate, @baseTarget
+			    GROUP BY @base
 			    ) t1
 		  LEFT JOIN (
 		  		SELECT @baseId
 					 , @baseDate
 	  				 , Count(*) AS nrow
 		        FROM @propagatedTable
-		        GROUP BY @baseId, @baseDate, @baseTarget, @column
+		        GROUP BY @base, @column
 		        HAVING Count(*) >= 2
 		        ) t2
 		  ON t1.@baseId = t2.@baseId AND t1.@baseDate = t2.@baseDate
-		  GROUP BY t1.@baseId, t1.@baseDate, t1.@baseTarget, t1.nrow
+		  GROUP BY t1.@base, t1.nrow
 	</code>
     <parameter key="@column" value="@nominalColumn, @numericalColumn"/>
 	<cardinality>n</cardinality>

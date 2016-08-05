@@ -10,10 +10,8 @@
 	</description>
 	<author>Jan Motl</author>
 	<date>2015-01-25</date>
-	<code>SELECT @baseId
-	           , @baseDate
-	           , @baseTarget
-	           , CHAR_LENGTH(@nominalColumn) AS "@columnName"
+	<code>SELECT @base
+	           , CHAR_LENGTH(@nominalColumn) AS @columnName
 	      FROM @propagatedTable
 	</code>
 	<cardinality>1</cardinality>

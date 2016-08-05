@@ -2,11 +2,12 @@ package run;
 
 import connection.Network;
 import connection.SQL;
+import metaInformation.Table;
 import org.apache.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.SortedSet;
+import java.util.SortedMap;
 
 // Evaluate symmetry...
 public class CopyOfLauncher{
@@ -33,9 +34,9 @@ public class CopyOfLauncher{
 		setting = Network.openConnection(setting);
 		
 		// Get tables
-		SortedSet<String> tableSet = utility.Meta.collectTables(setting, setting.database, setting.inputSchema);
+		SortedMap<String, Table> tableSet = utility.Meta.collectTables(setting, setting.database, setting.inputSchema);
 		
-		for (String table : tableSet) {
+		for (String table : tableSet.keySet()) {
 			// Get relationships 
 			List<List<String>> relationshipList = null; // OBSOLETE code...
 			System.out.println(relationshipList);
@@ -54,7 +55,7 @@ public class CopyOfLauncher{
 					System.out.println("bingo " + table);
 					
 					// Validate the symmetry
-					HashMap<String, String> map = new HashMap<String, String>();
+					HashMap<String, String> map = new HashMap<>();
 					map.put("@column", column);
 					map.put("@lagColumn", lagColumn);
 					map.put("@inputTable", table);

@@ -23,10 +23,8 @@
 	</example>
 	<author>Jan Motl</author>
 	<date>2014-12-22</date>
-	<code>SELECT @baseId
-	           , @baseDate
-	           , @baseTarget
-	           , 100*@numericalColumn1/nullif(@numericalColumn2, 0) AS "@columnName"
+	<code>SELECT @base
+	           , 100*@numericalColumn1/nullif(@numericalColumn2, 0) AS @columnName
 		   FROM @propagatedTable
 	</code>
 	<cardinality>1</cardinality>

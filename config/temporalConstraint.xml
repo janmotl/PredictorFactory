@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<temporalConstraints schemaName="mutagenesis_no_fc">
+    <temporalConstraint name="FK_molecule_atom">
+        <table>molecule</table>
+        <column>molecule_id</column>
+    </temporalConstraint>
+    <temporalConstraint name="FK_atom1_bond">
+        <table>atom</table>
+        <column>atom_id</column>
+    </temporalConstraint>
+    <temporalConstraint name="FK_atom2_bond">
+        <table>atom</table>
+        <column>atom_id</column>
+    </temporalConstraint>
+</temporalConstraints>
