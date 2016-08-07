@@ -9,6 +9,7 @@ calls and memoized.
 */
 
 import connection.SQL;
+import org.jetbrains.annotations.NotNull;
 import run.Setting;
 
 import java.util.LinkedHashSet;
@@ -71,7 +72,7 @@ public class Column implements Comparable<Column> {
 	}
 
 	@Override
-	public int compareTo(Column other) {
+	public int compareTo(@NotNull Column other) {
 		return this.name.compareToIgnoreCase(other.name);
 	}
 

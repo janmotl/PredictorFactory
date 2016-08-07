@@ -23,14 +23,14 @@ public class DriverPropertyList {
 	
 	// Get property by name
 	public DriverProperty getDriverProperties(String name) {
-		for (DriverProperty properties : driver) {
-			if (properties.name.equals(name)) {
-				return properties;
+		for (DriverProperty property : driver) {
+			if (property.name.equals(name)) {
+				return property;
 			}
 		}
 		
 		logger.warn("There isn't a driver setting for: " + name);
-		return null;
+		return new DriverProperty();
 	}
 	
 	// Load property list from XML

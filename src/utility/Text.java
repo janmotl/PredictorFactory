@@ -1,9 +1,13 @@
 package utility;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.*;
+
 
 public class Text {
 	// Convert comma delimited string to list
+	@NotNull
 	public static List<String> string2list(String string) {
 		// Initialization
 		List<String> result = new ArrayList<>();
@@ -22,7 +26,8 @@ public class Text {
 
 	// Convert dot delimited list to map
 	// Example: table.column -> key=table, value=column
-	public static Map<String, List<String>> list2map(List<String> list) {
+	@NotNull
+	public static Map<String, List<String>> list2map(@NotNull List<String> list) {
 		Map<String, List<String>> result = new HashMap<>();
 
 		for (String tuple : list) {

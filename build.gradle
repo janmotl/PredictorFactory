@@ -22,6 +22,8 @@ dependencies {
     compile 'log4j:log4j:1.2.17'
 //    compile 'org.sql2o:sql2o:1.5.4'                     // Experimental, could work
 //    compile 'org.codejargon:fluentjdbc:1.3.5'    // Experimental
+    compile 'com.intellij:annotations:12.0'
+
 
     runtime fileTree(dir: 'lib/jdbc-driver/hsqldb', include: '*.jar')   // The search is not recursive -> list all directories
     runtime fileTree(dir: 'lib/jdbc-driver/jtds', include: '*.jar')

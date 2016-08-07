@@ -29,7 +29,7 @@ public class Events implements Initializable {
 	private List<CheckBoxTreeItem<String>> itemListTable = new ArrayList<>();
 	private List<CheckBoxTreeItem<String>> itemListColumn = new ArrayList<>();
 	private List<CheckBoxTreeItem<String>> itemListPattern = new ArrayList<>();
-	RunService runService = new RunService();
+	private RunService runService = new RunService();
 	
 	// Define GUI elements. The values are automatically initialized by FXMLLoader.
     @FXML private Button buttonConnect;
@@ -85,7 +85,7 @@ public class Events implements Initializable {
 		connectionProperty.host = textHost.getText();
 		connectionProperty.port = textPort.getText();
 		connectionProperty.username = textUsername.getText();
-		connectionProperty.password = textPassword.getText();	// WE SHOULD NOT WRITE THE PASSWORD INTO THE XML
+		connectionProperty.password = textPassword.getText();	// WE SHOULD NOT WRITE THE PASSWORD INTO THE XML. PASS IT AS A PARAMETER TO Launcher?
 		 	 
 		// 3) Put the new connection into the list of connections
 		connectionList.setConnectionProperties(connectionProperty);
@@ -195,7 +195,7 @@ public class Events implements Initializable {
 
 		databaseProperty.blackListTable = StringUtils.join(blackListTable, ',');
 		if (databaseProperty.blackListTable.isEmpty()) {
-			databaseProperty.blackListTable = null; // If empty, do not write the attribute
+			databaseProperty.blackListTable = null; // If empty, do not write the attribute into the XML
 		}
 		
 		// BlackList columns
@@ -210,7 +210,7 @@ public class Events implements Initializable {
 
 		databaseProperty.blackListColumn = StringUtils.join(blackListColumn, ',');
 		if (databaseProperty.blackListColumn.isEmpty()) {
-			databaseProperty.blackListColumn = null; // If empty, do not write the attribute
+			databaseProperty.blackListColumn = null; // If empty, do not write the attribute into the XML
 		}
 		// BlackList patterns
 		List<String> blackListPattern = new ArrayList<>();

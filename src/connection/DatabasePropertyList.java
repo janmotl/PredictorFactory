@@ -35,14 +35,14 @@ public class DatabasePropertyList {
 	
 	// Get property by name
 	public DatabaseProperty getDatabaseProperties(String name) {
-		for (DatabaseProperty properties : database) {
-			if (properties.name.equals(name)) {
-				return properties;
+		for (DatabaseProperty property : database) {
+			if (property.name.equals(name)) {
+				return property;
 			}
 		}
 		
 		logger.warn("There isn't a database setting for: " + name);
-		return null;
+		return new DatabaseProperty();
 	}
 	
 	// Set property by name

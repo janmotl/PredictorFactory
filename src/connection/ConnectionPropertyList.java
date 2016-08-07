@@ -25,14 +25,14 @@ public class ConnectionPropertyList {
 	
 	// Get property by name
 	public ConnectionProperty getConnectionProperties(String name) {
-		for (ConnectionProperty properties : connection) {
-			if (name.equals(properties.name)) {
-				return properties;
+		for (ConnectionProperty property : connection) {
+			if (name.equals(property.name)) {
+				return property;
 			}
 		}
 		
 		logger.warn("There isn't a connection setting for: " + name);
-		return null;
+		return new ConnectionProperty();
 	}
 	
 	// Set property by name

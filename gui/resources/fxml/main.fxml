@@ -5,420 +5,414 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-   <TabPane prefHeight="470.0" prefWidth="800.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.Events">
-  <tabs>
-      <Tab text="Connect">
-         <content>
-            <BorderPane>
-               <center>
-                  <TilePane orientation="VERTICAL" prefColumns="1" prefTileHeight="57.0" prefTileWidth="170.0" BorderPane.alignment="CENTER">
-                     <children>
-                        <VBox>
-                           <children>
-                              <Label text="Database vendor">
-                                 <padding>
-                                    <Insets bottom="3.0" />
-                                 </padding></Label>
-                              <ComboBox fx:id="comboBoxVendor" prefWidth="170.0" />
-                           </children>
-                        </VBox>
-                        <VBox>
-                           <children>
-                              <Label text="Host name/IP address">
-                                 <padding>
-                                    <Insets bottom="3.0" />
-                                 </padding></Label>
-                              <TextField fx:id="textHost" />
-                           </children>
-                        </VBox>
-                        <VBox>
-                           <children>
-                              <Label text="Port">
-                                 <padding>
-                                    <Insets bottom="3.0" />
-                                 </padding></Label>
-                              <TextField fx:id="textPort" />
-                           </children>
-                        </VBox>
-                        <VBox>
-                           <children>
-                              <Label text="Default database">
-                                 <padding>
-                                    <Insets bottom="3.0" />
-                                 </padding></Label>
-                              <TextField fx:id="textDatabase" />
-                           </children>
-                        </VBox>
-                        <VBox>
-                           <children>
-                              <Label text="User name">
-                                 <padding>
-                                    <Insets bottom="3.0" />
-                                 </padding></Label>
-                              <TextField fx:id="textUsername" />
-                           </children>
-                        </VBox>
-                        <VBox>
-                           <children>
-                              <Label text="Password">
-                                 <padding>
-                                    <Insets bottom="3.0" />
-                                 </padding></Label>
-                              <PasswordField fx:id="textPassword" />
-                           </children>
-                        </VBox>
-                     </children>
+<TabPane fx:id="tabPane" prefHeight="470.0" prefWidth="800.0" tabClosingPolicy="UNAVAILABLE"
+         xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.Events">
+   <Tab text="Connect">
+      <graphic>
+         <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
+            <Image url="@../img/connect-24.png"/>
+         </ImageView>
+      </graphic>
+      <BorderPane>
+         <center>
+            <TilePane orientation="VERTICAL" prefColumns="1" prefTileHeight="57.0" prefTileWidth="170.0"
+                      BorderPane.alignment="CENTER">
+               <padding>
+                  <Insets left="14.0" top="10.0"/>
+               </padding>
+               <VBox>
+                  <Label text="Database vendor">
                      <padding>
-                        <Insets left="14.0" top="10.0" />
+                        <Insets bottom="3.0"/>
                      </padding>
-                  </TilePane>
-               </center>
-               <bottom>
-                  <BorderPane BorderPane.alignment="CENTER_RIGHT">
-                     <top>
-                        <Pane prefHeight="1.0" prefWidth="20000.0" style="-fx-background-color: b5b5b5;" BorderPane.alignment="CENTER" />
-                     </top>
-                     <center>
-                        <BorderPane prefHeight="50.0" style="-fx-background-color: DDD;" BorderPane.alignment="CENTER">
-                           <right>
-                              <Button fx:id="buttonConnect" onAction="#connectAction" text="Connect" BorderPane.alignment="CENTER">
-                                 <BorderPane.margin>
-                                    <Insets right="14.0" />
-                                 </BorderPane.margin>
-                              </Button>
-                           </right>
-                        </BorderPane>
-                     </center>
-                  </BorderPane>
-               </bottom>
-            </BorderPane>
-         </content>
-         <graphic>
-            <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
-               <image>
-                  <Image url="@../img/connect-24-000000.png" />
-               </image>
-            </ImageView>
-         </graphic>
-      </Tab>
-      
-      <Tab text="Target">
-         <content>
-            <BorderPane>
-               <center>
-                  <TilePane orientation="VERTICAL" prefColumns="1" prefTileHeight="57.0" prefTileWidth="170.0" BorderPane.alignment="CENTER">
-                     <children>
-                        <VBox>
-                           <children>
-                           	  <Label text="Input schema">
-                                 <tooltip>
-                                    <Tooltip text="The single table with {target column, target ID, target timestamp}. If this table doesn't exist, it has to be manually created." />
-                                 </tooltip>
-                                 <padding>
-                                    <Insets bottom="3.0" />
-                                 </padding>
-                              </Label>
-                              <ComboBox fx:id="comboBoxInputSchema" onAction="#inputSchemaAction" prefWidth="170.0">
-                                 <tooltip>
-                                    <Tooltip text="The schema, in which data resides. Note that if your database doesn't support schemas (like MySQL), databases are listed." />
-                                 </tooltip></ComboBox>
-                           </children>
-                        </VBox>
-                        <VBox>
-                           <children>
-                              <Label text="Output schema">
-                                 <padding>
-                                    <Insets bottom="3.0" />
-                                 </padding>
-                              </Label>
-                              <ComboBox fx:id="comboBoxOutputSchema" prefWidth="170.0">
-                                 <tooltip>
-                                    <Tooltip text="Place for temporary tables and the output table with the calculated predictors (features)." />
-                                 </tooltip>
-                              </ComboBox>
-                           </children>
-                        </VBox>
-                        <VBox>
-                           <children>
-                              <Label text="Target Table">
-                                 <padding>
-                                    <Insets bottom="3.0" />
-                                 </padding>
-                              </Label>
-                              <ComboBox fx:id="comboBoxTargetTable" onAction="#targetTableAction" prefWidth="170.0">
-                                 <tooltip>
-                                    <Tooltip text="The single table, which contains {target column, target ID, target timestamp}. If this table doesn't exist, you have to make it in SQL." />
-                                 </tooltip>
-                              </ComboBox>
-                           </children>
-                        </VBox>
-                        <VBox>
-                           <children>
-                              <Label text="Target column">
-                                 <padding>
-                                    <Insets bottom="3.0" />
-                                 </padding>
-                              </Label>
-                              <ComboBox fx:id="comboBoxTargetColumn" prefWidth="170.0">
-                                 <tooltip>
-                                    <Tooltip text="Which column to predict. The column can be nominal or continuous." />
-                                 </tooltip>
-                              </ComboBox>
-                           </children>
-                        </VBox>
-                        <VBox>
-                           <children>
-                              <Label text="Target ID">
-                                 <padding>
-                                    <Insets bottom="3.0" />
-                                 </padding>
-                              </Label>
-                              <ComboBox fx:id="comboBoxTargetId" prefWidth="170.0">
-                                 <tooltip>
-                                    <Tooltip text="This column identifies subject, for which to make the prediction. Note that target ID doesn't have to be unique - for example, a customer may want to buy the product several times." />
-                                 </tooltip>
-                              </ComboBox>
-                           </children>
-                        </VBox>
-                        <VBox>
-                           <children>
-                              <Label text="Target timestamp">
-                                 <padding>
-                                    <Insets bottom="3.0" />
-                                 </padding>
-                              </Label>
-                              <ComboBox fx:id="comboBoxTargetTimestamp" prefWidth="170.0">
-                                 <tooltip>
-                                    <Tooltip text="When to make the prediction. For example, we may want to predict customer churn 3 months before the actual churn." />
-                                 </tooltip>
-                              </ComboBox>
-                           </children>
-                        </VBox>
-                        <VBox minHeight="57.0">
-                           <children>
-                              <Label text="Task">
-                                 <padding>
-                                    <Insets bottom="3.0" />
-                                 </padding>
-                              </Label>
-                              <ComboBox fx:id="comboBoxTask" prefWidth="170.0">
-                                 <tooltip>
-                                    <Tooltip text="Determines the metric for evaluation of predictors (Chi2/R2)" />
-                                 </tooltip>
-                              </ComboBox>
-                           </children>
-                        </VBox>
-                     </children>
-                     <padding>
-                        <Insets left="14.0" top="10.0" />
-                     </padding>
-                  </TilePane>
-               </center>
-            </BorderPane>
-         </content>
-         <graphic>
-            <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
-               <image>
-                  <Image url="@../img/target-24-000000.png" />
-               </image>
-            </ImageView>
-         </graphic>
-      </Tab>
-      
-      <Tab text="Select">
-         <graphic>
-            <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
-               <image>
-                  <Image url="@../img/1435244192_check-box-outline.png" />
-               </image>
-            </ImageView>
-         </graphic>
-         <content>
-            <VBox>
-               <children>
-                  <Label text="Select tables and their columns to traverse.">
-                     <VBox.margin>
-                        <Insets bottom="3.0" />
-                     </VBox.margin>
                   </Label>
-                  <TreeView fx:id="treeViewSelect" VBox.vgrow="ALWAYS" />
-               </children>
-               <padding>
-                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-               </padding>
-            </VBox>
-         </content>
-      </Tab>
-      
-      <Tab text="Pattern">
-         <content>
-            <SplitPane dividerPositions="0.5" orientation="VERTICAL">
-              <items>
-                  <VBox prefHeight="200.0" prefWidth="100.0">
-                     <children>
-                        <TreeView fx:id="treeViewPattern" />
-                     </children>
+                  <ComboBox fx:id="comboBoxVendor" prefWidth="170.0"/>
+               </VBox>
+               <VBox>
+                  <Label text="Host name/IP address">
                      <padding>
-                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                        <Insets bottom="3.0"/>
                      </padding>
-                  </VBox>
-                  <AnchorPane>
-                     <children>
-                        <TextArea fx:id="textAreaDescription" editable="false" promptText="Pattern description" wrapText="true" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
-                           <opaqueInsets>
-                              <Insets />
-                           </opaqueInsets>
-                        </TextArea>
-                     </children>
-                  </AnchorPane>
-              </items>
-            </SplitPane>
-         </content>
-         <graphic>
-            <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
-               <image>
-                  <Image url="@../img/cell-function-24-000000.png" />
-               </image>
-            </ImageView>
-         </graphic>
-      </Tab>
-      
-      <Tab text="Setting">
-         <graphic>
-            <ImageView fitHeight="15.0" fitWidth="15.0" pickOnBounds="true" preserveRatio="true">
-               <image>
-                  <Image url="@../img/1435964924_settings.png" />
-               </image>
-            </ImageView>
-         </graphic>
-         <content>
-            <VBox>
-               <children>
-                  <VBox minHeight="57.0">
-                     <children>
-                        <Label text="Unit">
-                           <padding>
-                              <Insets bottom="3.0" />
-                           </padding>
-                        </Label>
-                        <ComboBox fx:id="comboBoxUnit" prefWidth="170.0">
-                           <tooltip>
-                              <Tooltip text="Units in which to lag and lead are defined" />
-                           </tooltip></ComboBox>
-                     </children>
-                     <VBox.margin>
-                        <Insets left="4.0" />
-                     </VBox.margin>
-                  </VBox>
-                  <VBox minHeight="57.0">
-                     <children>
-                        <Label text="Lag">
-                           <padding>
-                              <Insets bottom="3.0" />
-                           </padding>
-                        </Label>
-                        <TextField fx:id="textLag" maxWidth="170.0">
-                           <tooltip>
-                              <Tooltip text="Length of history that is used for creation of the patterns" />
-                           </tooltip></TextField>
-                     </children>
-                     <VBox.margin>
-                        <Insets left="4.0" />
-                     </VBox.margin>
-                  </VBox>
-                  <VBox minHeight="57.0">
-                     <children>
-                        <Label text="Lead">
-                           <padding>
-                              <Insets bottom="3.0" />
-                           </padding>
-                        </Label>
-                        <TextField fx:id="textLead" maxWidth="170.0">
-                           <tooltip>
-                              <Tooltip text="Black out" />
-                           </tooltip></TextField>
-                     </children>
-                     <VBox.margin>
-                        <Insets left="4.0" />
-                     </VBox.margin>
-                  </VBox>
-                  <Separator maxWidth="180.0">
+                  </Label>
+                  <TextField fx:id="textHost"/>
+               </VBox>
+               <VBox>
+                  <Label text="Port">
                      <padding>
-                        <Insets bottom="8.0" top="3.0" />
+                        <Insets bottom="3.0"/>
                      </padding>
-                  </Separator>
-                  <VBox minHeight="57.0">
-                     <children>
-                        <Label text="Sample count">
-                           <VBox.margin>
-                              <Insets />
-                           </VBox.margin>
-                           <padding>
-                              <Insets bottom="3.0" />
-                           </padding>
-                        </Label>
-                        <TextField fx:id="textSampleCount" maxWidth="170.0">
-                           <tooltip>
-                              <Tooltip text="Sample count per class label (including missing values)" />
-                           </tooltip></TextField>
-                     </children>
-                     <VBox.margin>
-                        <Insets left="4.0" />
-                     </VBox.margin>
-                  </VBox>
-               </children>
-               <padding>
-                  <Insets bottom="10.0" left="10.0" right="14.0" top="10.0" />
-               </padding>
-               <opaqueInsets>
-                  <Insets />
-               </opaqueInsets>
-            </VBox>
-         </content>
-      </Tab>
-      
-      <Tab text="Run">
-         <content>
-            <BorderPane>
+                  </Label>
+                  <TextField fx:id="textPort"/>
+               </VBox>
+               <VBox>
+                  <Label text="Database name">
+                     <padding>
+                        <Insets bottom="3.0"/>
+                     </padding>
+                  </Label>
+                  <TextField fx:id="textDatabase"/>
+               </VBox>
+               <VBox>
+                  <Label text="User name">
+                     <padding>
+                        <Insets bottom="3.0"/>
+                     </padding>
+                  </Label>
+                  <TextField fx:id="textUsername"/>
+               </VBox>
+               <VBox>
+                  <Label text="Password">
+                     <padding>
+                        <Insets bottom="3.0"/>
+                     </padding>
+                  </Label>
+                  <PasswordField fx:id="textPassword"/>
+               </VBox>
+            </TilePane>
+         </center>
+         <bottom>
+            <BorderPane BorderPane.alignment="CENTER_RIGHT">
+               <top>
+                  <Pane prefHeight="1.0" prefWidth="20000.0" style="-fx-background-color: b5b5b5;"
+                        BorderPane.alignment="CENTER"/>
+               </top>
                <center>
-                  <TextArea fx:id="textAreaConsole" editable="false" promptText="Log of events" BorderPane.alignment="CENTER">
-                     <BorderPane.margin>
-                        <Insets />
-                     </BorderPane.margin>
-                  </TextArea>
-               </center>
-               <bottom>
-                  <BorderPane prefHeight="50.0" BorderPane.alignment="BOTTOM_CENTER">
+                  <BorderPane prefHeight="50.0" style="-fx-background-color: DDD;" BorderPane.alignment="CENTER">
                      <right>
-                        <Button fx:id="buttonRun" mnemonicParsing="false" onAction="#runAction" text="Run" BorderPane.alignment="CENTER">
+                        <Button fx:id="buttonConnect" onAction="#connectAction" text="Connect"
+                                BorderPane.alignment="CENTER">
                            <BorderPane.margin>
-                              <Insets right="14.0" />
+                              <Insets right="14.0"/>
                            </BorderPane.margin>
                         </Button>
                      </right>
-                     <left>
-                        <HBox alignment="CENTER_LEFT" BorderPane.alignment="CENTER">
-                           <children>
-                              <Label fx:id="labelPredictorCountText" text="# Calculated predictors: ">
-                                 <padding>
-                                    <Insets left="10.0" />
-                                 </padding>
-                              </Label>
-                              <Label fx:id="labelPredictorCount" text="0" />
-                           </children>
-                        </HBox>
-                     </left>
                   </BorderPane>
-               </bottom>
+               </center>
             </BorderPane>
-         </content>
-         <graphic>
-            <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
-               <image>
-                  <Image url="@../img/android-play-circle-outline-24-000000.png" />
-               </image>
-            </ImageView>
-         </graphic>
-      </Tab>
-  </tabs>
+         </bottom>
+      </BorderPane>
+   </Tab>
+
+   <Tab text="Target">
+      <graphic>
+         <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
+            <Image url="@../img/target-24.png"/>
+         </ImageView>
+      </graphic>
+      <BorderPane>
+         <center>
+            <TilePane orientation="VERTICAL" prefColumns="1" prefTileHeight="57.0" prefTileWidth="170.0"
+                      BorderPane.alignment="CENTER">
+               <padding>
+                  <Insets left="14.0" top="10.0"/>
+               </padding>
+               <VBox>
+                  <Label text="Input schema">
+                     <tooltip>
+                        <Tooltip
+                                text="The single table with {target column, target ID, target timestamp}. If this table doesn't exist, it has to be manually created."/>
+                     </tooltip>
+                     <padding>
+                        <Insets bottom="3.0"/>
+                     </padding>
+                  </Label>
+                  <ComboBox fx:id="comboBoxInputSchema" onAction="#inputSchemaAction" prefWidth="170.0"
+                            visibleRowCount="12">
+                     <tooltip>
+                        <Tooltip
+                                text="The schema, in which data resides. Note that if your database doesn't support schemas (like MySQL), databases are listed."/>
+                     </tooltip>
+                  </ComboBox>
+               </VBox>
+               <VBox>
+                  <Label text="Output schema">
+                     <padding>
+                        <Insets bottom="3.0"/>
+                     </padding>
+                  </Label>
+                  <ComboBox fx:id="comboBoxOutputSchema" prefWidth="170.0" visibleRowCount="12">
+                     <tooltip>
+                        <Tooltip
+                                text="Place for temporary tables and the output table with the calculated predictors (features)."/>
+                     </tooltip>
+                  </ComboBox>
+               </VBox>
+               <VBox>
+                  <Label text="Target Table">
+                     <padding>
+                        <Insets bottom="3.0"/>
+                     </padding>
+                  </Label>
+                  <ComboBox fx:id="comboBoxTargetTable" onAction="#targetTableAction" prefWidth="170.0"
+                            visibleRowCount="12">
+                     <tooltip>
+                        <Tooltip
+                                text="The single table, which contains {target column, target ID, target timestamp}. If this table doesn't exist, you have to make it in SQL."/>
+                     </tooltip>
+                  </ComboBox>
+               </VBox>
+               <VBox>
+                  <Label text="Target column">
+                     <padding>
+                        <Insets bottom="3.0"/>
+                     </padding>
+                  </Label>
+                  <ComboBox fx:id="comboBoxTargetColumn" prefWidth="170.0" visibleRowCount="12">
+                     <tooltip>
+                        <Tooltip text="Which column to predict. The column can be nominal or continuous."/>
+                     </tooltip>
+                  </ComboBox>
+               </VBox>
+               <VBox>
+                  <Label text="Target ID">
+                     <padding>
+                        <Insets bottom="3.0"/>
+                     </padding>
+                  </Label>
+                  <ComboBox fx:id="comboBoxTargetId" prefWidth="170.0" visibleRowCount="12">
+                     <tooltip>
+                        <Tooltip
+                                text="This column identifies subject, for which to make the prediction. Note that target ID doesn't have to be unique - for example, a customer may want to buy the product several times."/>
+                     </tooltip>
+                  </ComboBox>
+               </VBox>
+               <VBox>
+                  <Label text="Target timestamp">
+                     <padding>
+                        <Insets bottom="3.0"/>
+                     </padding>
+                  </Label>
+                  <ComboBox fx:id="comboBoxTargetTimestamp" prefWidth="170.0" visibleRowCount="12">
+                     <tooltip>
+                        <Tooltip
+                                text="When to make the prediction. For example, we may want to predict customer churn 3 months before the actual churn."/>
+                     </tooltip>
+                  </ComboBox>
+               </VBox>
+               <VBox minHeight="57.0">
+                  <Label text="Task">
+                     <padding>
+                        <Insets bottom="3.0"/>
+                     </padding>
+                  </Label>
+                  <ComboBox fx:id="comboBoxTask" prefWidth="170.0">
+                     <tooltip>
+                        <Tooltip text="Determines the metric for evaluation of predictors (Chi2/R2)"/>
+                     </tooltip>
+                  </ComboBox>
+               </VBox>
+            </TilePane>
+         </center>
+      </BorderPane>
+   </Tab>
+
+   <Tab text="Select">
+      <graphic>
+         <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
+            <Image url="@../img/check-box-outline.png"/>
+         </ImageView>
+      </graphic>
+      <VBox>
+         <padding>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+         </padding>
+         <Label text="Select tables and their columns to traverse.">
+            <VBox.margin>
+               <Insets bottom="3.0"/>
+            </VBox.margin>
+         </Label>
+         <TreeView fx:id="treeViewSelect" VBox.vgrow="ALWAYS"/>
+      </VBox>
+   </Tab>
+
+   <Tab text="Pattern">
+      <graphic>
+         <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
+            <Image url="@../img/cell-function-24.png"/>
+         </ImageView>
+      </graphic>
+      <SplitPane dividerPositions="0.5" orientation="VERTICAL">
+         <VBox prefHeight="200.0" prefWidth="100.0">
+            <padding>
+               <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+            </padding>
+            <TreeView fx:id="treeViewPattern"/>
+         </VBox>
+         <AnchorPane>
+            <TextArea fx:id="textAreaDescription" editable="false" promptText="Pattern description"
+                      wrapText="true" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0"
+                      AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+               <opaqueInsets>
+                  <Insets/>
+               </opaqueInsets>
+            </TextArea>
+         </AnchorPane>
+      </SplitPane>
+   </Tab>
+
+   <Tab text="Setting">
+      <graphic>
+         <ImageView fitHeight="15.0" fitWidth="15.0" pickOnBounds="true" preserveRatio="true">
+            <Image url="@../img/settings.png"/>
+         </ImageView>
+      </graphic>
+      <VBox>
+         <padding>
+            <Insets bottom="10.0" left="10.0" right="14.0" top="10.0"/>
+         </padding>
+         <opaqueInsets>
+            <Insets/>
+         </opaqueInsets>
+         <VBox minHeight="57.0">
+            <VBox.margin>
+               <Insets left="4.0"/>
+            </VBox.margin>
+            <Label text="Unit">
+               <padding>
+                  <Insets bottom="3.0"/>
+               </padding>
+            </Label>
+            <ComboBox fx:id="comboBoxUnit" prefWidth="170.0">
+               <tooltip>
+                  <Tooltip text="Units in which to lag and lead are defined"/>
+               </tooltip>
+            </ComboBox>
+         </VBox>
+         <VBox minHeight="57.0">
+            <VBox.margin>
+               <Insets left="4.0"/>
+            </VBox.margin>
+            <Label text="Lag">
+               <padding>
+                  <Insets bottom="3.0"/>
+               </padding>
+            </Label>
+            <TextField fx:id="textLag" maxWidth="170.0" promptText="use all past data">
+               <tooltip>
+                  <Tooltip text="Length of history that is used for creation of the patterns"/>
+               </tooltip>
+            </TextField>
+         </VBox>
+         <VBox minHeight="57.0">
+            <VBox.margin>
+               <Insets left="4.0"/>
+            </VBox.margin>
+            <Label text="Lead">
+               <padding>
+                  <Insets bottom="3.0"/>
+               </padding>
+            </Label>
+            <TextField fx:id="textLead" maxWidth="170.0" promptText="0">
+               <tooltip>
+                  <Tooltip text="Blackout length"/>
+               </tooltip>
+            </TextField>
+         </VBox>
+         <Separator maxWidth="180.0">
+            <padding>
+               <Insets bottom="8.0" top="3.0"/>
+            </padding>
+         </Separator>
+         <VBox minHeight="57.0">
+            <VBox.margin>
+               <Insets left="4.0"/>
+            </VBox.margin>
+            <Label text="Sample count">
+               <VBox.margin>
+                  <Insets/>
+               </VBox.margin>
+               <padding>
+                  <Insets bottom="3.0"/>
+               </padding>
+            </Label>
+            <TextField fx:id="textSampleCount" maxWidth="170.0" promptText="use all samples">
+               <tooltip>
+                  <Tooltip
+                          text="Sample count per target class (missing values are treated as another class).&#10;Must be smaller 2 147 483 647."/>
+               </tooltip>
+            </TextField>
+         </VBox>
+         <VBox minHeight="57.0">
+            <VBox.margin>
+               <Insets left="4.0"/>
+            </VBox.margin>
+            <Label text="Maximal count of returned predictors">
+               <VBox.margin>
+                  <Insets/>
+               </VBox.margin>
+               <padding>
+                  <Insets bottom="3.0"/>
+               </padding>
+            </Label>
+            <TextField fx:id="textPredictorMax" maxWidth="170.0" promptText="database bounded">
+               <tooltip>
+                  <Tooltip
+                          text="Don't produce more predictors than is the sample count.&#10;Don't cross the limit of the database on the count of columns in a table.&#10;Don't cross the byte limit of the database on the row size."/>
+               </tooltip>
+            </TextField>
+         </VBox>
+         <Separator maxWidth="180.0">
+            <padding>
+               <Insets bottom="8.0" top="3.0"/>
+            </padding>
+         </Separator>
+         <VBox minHeight="57.0">
+            <CheckBox fx:id="checkBoxUseId" mnemonicParsing="false"
+                      text="Calculate predictors from identifiers">
+               <tooltip>
+                  <Tooltip
+                          text="IDs may contain leaking data. That is good in challenges. But bad in deployment."/>
+               </tooltip>
+               <VBox.margin>
+                  <Insets left="4.0"/>
+               </VBox.margin>
+            </CheckBox>
+         </VBox>
+      </VBox>
+   </Tab>
+
+   <Tab text="Run">
+      <graphic>
+         <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
+            <Image url="@../img/android-play-circle-outline-24.png"/>
+         </ImageView>
+      </graphic>
+      <BorderPane>
+         <center>
+            <TextArea fx:id="textAreaConsole" editable="false" promptText="Log of events"
+                      BorderPane.alignment="CENTER">
+               <BorderPane.margin>
+                  <Insets/>
+               </BorderPane.margin>
+            </TextArea>
+         </center>
+         <bottom>
+            <BorderPane prefHeight="50.0" BorderPane.alignment="BOTTOM_CENTER">
+               <right>
+                  <Button fx:id="buttonRun" mnemonicParsing="false" onAction="#runAction" text="Run"
+                          BorderPane.alignment="CENTER">
+                     <BorderPane.margin>
+                        <Insets right="14.0"/>
+                     </BorderPane.margin>
+                  </Button>
+               </right>
+               <left>
+                  <HBox alignment="CENTER_LEFT" BorderPane.alignment="CENTER">
+                     <ProgressIndicator fx:id="progressWhirl" prefHeight="50.0" prefWidth="24.0">
+                        <HBox.margin>
+                           <Insets left="14.0"/>
+                        </HBox.margin>
+                     </ProgressIndicator>
+                     <Label fx:id="labelPredictorCountText" text="# Calculated predictors: ">
+                        <padding>
+                           <Insets left="10.0"/>
+                        </padding>
+                     </Label>
+                     <Label fx:id="labelPredictorCount" text="0"/>
+                  </HBox>
+               </left>
+            </BorderPane>
+         </bottom>
+      </BorderPane>
+   </Tab>
 </TabPane>
