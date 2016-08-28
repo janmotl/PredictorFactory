@@ -16,16 +16,16 @@ public class ANTLR {
 
 	public static String parseSQL(Setting setting, String text) {
 		
-		// Create a CharStream that reads from standard input
+		// Create a CharStream that reads from the String.
 		ANTLRInputStream input = new ANTLRInputStream(text);
-		
-		// Create a lexer that feeds off of input CharStream
+
+		// Create a lexer that feeds off of input CharStream, lexer splits input into tokens.
 		SQLLexer lexer = new SQLLexer(input);
-		
-		// Create a buffer of tokens pulled from the lexer
+
+		// Create a buffer of tokens pulled from the lexer. Reads tokens only from one channel + hidden tokens.
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
-		
-		// Create a parser that feeds off the tokens buffer
+
+		// Create a parser that feeds off the tokens buffer, parser generates abstract syntax tree.
 		SQLParser parser = new SQLParser(tokens);
 		ParseTree tree = parser.expression(); 				// Begin parsing at rule 'expression'
 			  
@@ -43,6 +43,10 @@ public class ANTLR {
 		// Walk over the tree and replace corr blocks with new corr blocks
 		CorrListener corrListener = new CorrListener(setting.corrSyntax) ;
 		walker.walk(corrListener, tree);
+
+		// Walk over the tree and replace using blocks with on blocks
+		FromListener fromListener = new FromListener(setting.supportsJoinUsing) ;
+		walker.walk(fromListener, tree);
 
 	    // Return the result
 	    return tree.getText();

@@ -1,7 +1,6 @@
 package utility;
 
 import org.apache.log4j.Logger;
-import run.Launcher;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -11,7 +10,7 @@ import java.text.NumberFormat;
 public class Memory {
 
 	// Logging
-	private static final Logger logger = Logger.getLogger(Launcher.class.getName());
+	private static final Logger logger = Logger.getLogger(Memory.class.getName());
 
 	/**
 	 * Returns used memory in MB

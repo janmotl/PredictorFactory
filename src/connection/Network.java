@@ -278,6 +278,7 @@ public final class Network {
 		// To stop worrying about the limit on Postgre, let's just set a safe value of 250 columns
 		// (https://www.postgresql.org/about/) - the maximal count of columns that we are (more or less) guaranteed
 		// to be creatable.
+		// NOTE: This value should be in driver.xml, not here.
 		if ("PostgreSQL".equals(setting.databaseVendor)) {
 			result = 250 - reserved;
 		}

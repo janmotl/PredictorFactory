@@ -118,7 +118,7 @@ public final class SQL {
 		if (setting.baseIdList == null || setting.baseIdList.isEmpty()) {
 			throw new IllegalArgumentException("Base id list is required");
 		}
-			if (StringUtils.isBlank(setting.baseDate)) {
+		if (StringUtils.isBlank(setting.baseDate)) {
 			throw new IllegalArgumentException("Base date is required");
 		}
 		if (StringUtils.isBlank(setting.baseTarget)) {
@@ -325,10 +325,10 @@ public final class SQL {
 		}
 	}
 	
-	// Create unique index on {baseId, baseDate}.
+	// Create index on {baseId, baseDate}.
 	// Returns true if the update was successful.
-	//
-	// Design note: There are troubles with (obligatory - they can not be ommited) index names:
+	// Note: The index can not be unique because we are creating it on propagated tables (like table of transactions...).
+	// Design note: There are troubles with (obligatory - they can not be omitted) index names:
 	//	1) The created index name can be already taken (e.g.: a user may have backed up the table from a previous run).
 	//	2) The created index name can be too long. We could have truncated the index names, but then we could end up with duplicates.
 	//  3) Naming conventions differ database from database. E.g. in SAS:
@@ -337,9 +337,9 @@ public final class SQL {
 	//	   But PostgreSQL requires a unique index name per schema -> collisions could then happen.
 	public static boolean addIndex(Setting setting, String outputTable) {
 
-		// With SAS opt for a primary key to avoid the need to comply with their naming convention
+		// With SAS skip the indexing to avoid the need to comply with their naming convention
 		if ("SAS".equals(setting.databaseVendor)) {
-			return setPrimaryKey(setting, outputTable);
+			return true;
 		}
 
 		// Otherwise just set the index
@@ -357,7 +357,7 @@ public final class SQL {
 			name = "ix" + outputTable.substring(setting.mainTable.length(), outputTable.length());
 		}
 
-		String sql = "CREATE UNIQUE INDEX " + name + " ON @outputTable " + columns;
+		String sql = "CREATE INDEX " + name + " ON @outputTable " + columns;
 
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, outputTable);
@@ -549,15 +549,14 @@ public final class SQL {
 	// Get the maximal cardinality of the table in respect to targetId. If the cardinality is 1:1,
 	// we may want to remove the bottom time constrain in base propagation.
 	// Note that we are working with the input tables -> alter commands are forbidden.
-	// This query can be ridiculously slow (it can take minutes)!  
-	// It was difficult to write a version that would be more effective than sum(... having count(*)>1).
-	// If you decide to replace this query, test it with several database engines!
 	// IS NOT USING SYSTEM ESCAPING
 	public static boolean isIdUnique(Setting setting, MetaOutput.OutputTable table) {
-		String sql = "SELECT count(*) " +
-					 "FROM @inputTable " +
-					 "GROUP BY @idCommaSeparated " +
-					 "HAVING COUNT(*)>1";
+		String sql = "SELECT exists(" +
+						 "SELECT count(*) " +
+						 "FROM @inputTable " +
+						 "GROUP BY @idCommaSeparated " +
+						 "HAVING COUNT(*)>1" +
+					 ")";
 
 		// Get escape characters
 		String QL = setting.quoteEntityOpen;
@@ -572,6 +571,7 @@ public final class SQL {
 		sql = sql.replace("@idCommaSeparated", idCommaSeparated);
 
 
+		sql = Parser.replaceExists(setting, sql);
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, "dummy");
 		sql = escapeEntityTable(setting, sql, table);
@@ -756,6 +756,8 @@ public final class SQL {
  	// Get Chi2.
 	// Note: For maintenance purpose, the query should be decomposed into subqueries
 	// that are put together with String concatenation (necessary for databases without "with" clause support).
+	// The calculation could be streamlined as described in:
+	//	Study of feature selection algorithms for text-categorization.
 	// SHOULD BE EXTENDED TO SUPPORT BOOLEANS
  	public static double getChi2(Setting setting, String table, String column) {
  		// Initialization
@@ -848,17 +850,17 @@ public final class SQL {
 				+ "	and expected.target = measured.target "
 				+ ") chi2";
 
-			// For databases that suffer from overflow whenever calculating an average, cast to DECIMAL.
-			// Note that SAS does not support anything like DECIMAL/NUMERIC... Hence, code bifurcation is necessary.
-			if ("Microsoft SQL Server".equals(setting.databaseVendor)) {
-				sql = sql.replace("count(*)", "cast(count(*) as DECIMAL)");
-			}
-
  			// For time columns just cast time to number.
  			if ("temporal".equals(predictorType)) {
  				sql = sql.replace("@column", setting.dateToNumber);
  			}
- 		} 
+ 		}
+
+		// For databases that suffer from overflow whenever calculating an average, cast to DECIMAL.
+		// Note that SAS does not support anything like DECIMAL/NUMERIC... Hence, code bifurcation is necessary.
+		if (!"SAS".equals(setting.databaseVendor)) {
+			sql = sql.replace("count(*)", "cast(count(*) as DECIMAL)");
+		}
 
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, table);	/* outputTable, outputSchema, output.Database */

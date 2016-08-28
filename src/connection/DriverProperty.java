@@ -22,6 +22,7 @@ public class DriverProperty {
 	@XmlAttribute public Boolean supportsSchemas;	
 	@XmlAttribute public Boolean supportsCreateTableAs;
 	@XmlAttribute public Boolean supportsWithData;
+	@XmlAttribute public Boolean supportsJoinUsing;
 	@XmlAttribute public String corrSyntax;
 	@XmlAttribute public String dateAddSyntax;
 	@XmlAttribute public String dateAddMonth;

@@ -21,7 +21,7 @@ public class Table {
 
 	public String name;											// To make Table self-sufficient even outside the map
 	public SortedMap<String, Column> columnMap = new TreeMap<>();	// All columns (but eventually blacklisted)
-	public List<ForeignConstraint> foreignConstraintList = new ArrayList<>();
+	public List<ForeignConstraint> foreignConstraintList = new ArrayList<>();	// NOTE: Should we create a single ForeignConstraintList?
 	public boolean isTargetIdUnique;                           		// Does combination {baseId, baseDate} repeat?
 
 

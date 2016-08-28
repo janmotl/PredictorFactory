@@ -21,25 +21,23 @@
 	<code compatibility="PostgreSQL">SELECT a.@base
   			   	, 100.0 * count(CASE WHEN m."mode"=@column THEN 1 ELSE null END) / nullif(count(@column), 0) AS @columnName
 			FROM @propagatedTable a
-  			JOIN (select @baseId , @baseDate
+  			JOIN (select @basePartitionBy
         		, mode() within group (order by @column) AS "mode"
       			FROM @propagatedTable
-        		GROUP BY @base
+        		GROUP BY @basePartitionBy
         	) m
-        	ON a.@baseId = m.@baseId AND a.@baseDate = m.@baseDate
+			USING (@basePartitionBy)
         	GROUP BY a.@base
 	</code>
-	<code compatibility="Oracle">SELECT a.@baseId
-	           	, a.@baseDate
-	           	, a.@baseTarget
+	<code compatibility="Oracle">SELECT a.@base
   			   	, 100.0 * count(CASE WHEN m."mode"=@column THEN 1 ELSE null END) / nullif(count(@column), 0) AS @columnName
 			FROM @propagatedTable a
-  			JOIN (select @baseId , @baseDate
+  			JOIN (select @basePartitionBy
         		, stats_mode(@column) AS "mode"
       			FROM @propagatedTable
-        		GROUP BY @base
+        		GROUP BY @basePartitionBy
         	) m
-        	ON a.@baseId = m.@baseId AND a.@baseDate = m.@baseDate
+			USING (@basePartitionBy)
         	GROUP BY a.@base
 	</code>
 	<parameter key="@column" value="@nominalColumn, @numericalColumn, @timeColumn"/>

@@ -111,7 +111,7 @@ public class Pattern {
 	}
 
 	// Subroutine - replace constants with the actual values.
-	private double variable2value(Setting setting, String input) {
+	private static double variable2value(Setting setting, String input) {
 
 		if ("@lagMax".equals(input)) return setting.lag;
 		if ("@leadMin".equals(input)) return setting.lead;
@@ -122,7 +122,7 @@ public class Pattern {
 	// Subroutine - get vendor's dialect. 
 	// For example std -> stddev_samp.
 	// Protected because of testing
-	protected String getDialectString(Setting setting, String agnosticCode) {
+	protected static String getDialectString(Setting setting, String agnosticCode) {
 		// Stddev_samp
 		String dialectCode = agnosticCode.replaceAll("(?i)stdDev_samp", setting.stdDevCommand);
 		
@@ -145,7 +145,7 @@ public class Pattern {
 	}
 
 	// Subroutine for getDialectString
-	private String nullIf(String dialectCode) {
+	private static String nullIf(String dialectCode) {
 		java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(?is)(.*)(nullif\\()(.*?)(,+)(.*?)(\\))(.*)");
 		
 		do {

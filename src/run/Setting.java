@@ -40,6 +40,7 @@ public final class Setting {
 	public String quoteEntityClose;				// Characters for entity escaping
 	public boolean supportsCreateTableAs;		// Use "create table as" syntax?
 	public boolean supportsWithData;			// MonetDB syntax: "create table t2 as select * from t1 WITH DATA"
+	public boolean supportsJoinUsing;			// Does the database support "join using" clause?
 	public boolean supportsCatalogs;			// Use "database.schema.table" or "schema.table"?
 	public boolean supportsSchemas;				// Use "database.schema.table" or "database.table"?
 	public String corrSyntax;					// Syntax for correlation
@@ -161,6 +162,7 @@ public final class Setting {
 		supportsSchemas = MoreObjects.firstNonNull(driverProperty.supportsSchemas, true); 
 		supportsCreateTableAs = MoreObjects.firstNonNull(driverProperty.supportsCreateTableAs, true); 
 		supportsWithData = MoreObjects.firstNonNull(driverProperty.supportsWithData, false);
+		supportsJoinUsing = MoreObjects.firstNonNull(driverProperty.supportsJoinUsing, false);
 		insertTimestampSyntax = MoreObjects.firstNonNull(driverProperty.insertTimestampSyntax, "'@timestamp'");
 		stdDevCommand = MoreObjects.firstNonNull(driverProperty.stdDevCommand, "stddev_samp");
 		limitSyntax = MoreObjects.firstNonNull(driverProperty.limitSyntax, "limit");

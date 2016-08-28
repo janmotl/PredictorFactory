@@ -7,8 +7,9 @@
 
 		Note: Should add day in a month and day in a year.
 
-		Note: The default solution should use JDBC scalar functions:
-			http://documentation.progress.com/output/DataDirect/jdbcoschelp/index.html#page/jdbcosc/scalar-functions.html#
+		Note: The default solution should use JDBC scalar functions (an inheritance from ODBC):
+			http://documentation.progress.com/output/DataDirect/jdbcoschelp/index.html#page/jdbcosc/scalar-functions.html
+		Example: {fn DAYNAME(date-expression)}
 
 		Note: Some parts of the date/datetime may not be supported by the database or the keywords can be different.
 		For example, day-of-week on PostgreSQL is "dow", but on MSSQL it's "weekday". 

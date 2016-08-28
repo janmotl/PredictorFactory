@@ -6,7 +6,7 @@ import org.apache.log4j.Logger;
 public class SystemQualityControl {
 
 	// Logging
-	private static final Logger logger = Logger.getLogger(Launcher.class.getName());
+	private static final Logger logger = Logger.getLogger(SystemQualityControl.class.getName());
 
 	// A set of system variables that are useful for debugging of client's problems.
 	protected static void validateSystem(){
