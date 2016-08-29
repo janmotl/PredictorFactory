@@ -144,6 +144,8 @@ public final class Setting {
 		dateToNumber = driverProperty.dateToNumber;
 		charLengthCommand = driverProperty.charLengthCommand;
 		randomCommand = driverProperty.randomCommand;
+		quoteEntityOpen = driverProperty.quoteEntityOpen;
+		quoteEntityClose = driverProperty.quoteEntityClose;
 
 		// Load database properties
 		inputSchema = databaseProperty.inputSchema;

@@ -147,7 +147,7 @@ public class MetaInput {
 			relationshipCount += table.foreignConstraintList.size();
 		}
 		if (relationshipCount == 0) {
-			logger.warn("No relationships were detected.");
+			logger.warn("No relationships were detected. You may either define Foreign Key Constrains in the database. Or you may create and put foreignConstraint.xml into config directory (note: entity names in the xml must exactly match the entity names in the database, EVEN if the database is case insensitive, because comparisons are performed locally, not at the server).");
 		}
 		
 		return tableMap;

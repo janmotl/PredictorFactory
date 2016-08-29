@@ -992,9 +992,13 @@ public final class SQL {
 		// Insert timestamp subquery
 		String timestampBuild = date2query(setting, predictor.getTimestampBuilt());
 		
-		// Assembly the insert
-		String sql = "INSERT INTO @outputTable VALUES (" +
-	        predictor.getId() + ", " +
+		// Assembly the head of the insert command
+        String sql = "INSERT INTO @outputTable VALUES (";
+        sql = expandName(sql);
+        sql = escapeEntity(setting, sql, setting.journalPredictor);
+
+        // Add the payload (which should not be transformed)
+        sql += predictor.getId() + ", " +
 	        predictor.getGroupId() + ", " +
 	              timestampBuild + ", " +
 	              predictor.getRuntime()+ ", " +
@@ -1017,9 +1021,6 @@ public final class SQL {
 				  isOk + ", " +
 				  isInferiorDuplicate + ", " +
 			"'" + predictor.getDuplicateName() + "')";
-		
-		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, setting.journalPredictor);
 
 		return Network.executeUpdate(setting.dataSource, sql);
 	}
@@ -1069,9 +1070,14 @@ public final class SQL {
 		// Leave null unquoted. Otherwise quote.
 		String temporalConstraint = table.temporalConstraint==null ? "NULL" : "'" + table.temporalConstraint + "'";
 
-		// Assembly the insert
-		String sql = "INSERT INTO @outputTable VALUES (" +
-				table.propagationOrder + ", " +
+
+        // Assembly the head of the insert command
+        String sql = "INSERT INTO @outputTable VALUES (";
+        sql = expandName(sql);
+        sql = escapeEntity(setting, sql, setting.journalTable);
+
+        // Add the payload (which should not be transformed)
+        sql +=  table.propagationOrder + ", " +
 				timestampDesigned + ", " +
 				table.timestampDesigned.until(table.timestampDelivered, ChronoUnit.MILLIS)/1000.0 + ", " +
 				"'" + table.name + "', " +
@@ -1090,9 +1096,6 @@ public final class SQL {
 				isSuccessfullyExecuted + ", " +
 				table.rowCount + ", " +
 				isOk + ")";
-
-		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, setting.journalTable);
 
 		return Network.executeUpdate(setting.dataSource, sql);
 	}

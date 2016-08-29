@@ -194,9 +194,12 @@ Description of the fields:
 		randomCommand="random()"
 	/>
 	
-	<!-- Draft. Changed: {dateAddMonth, stdDevCommand, randomCommand, charLengthCommand, dateDiff} -->
-	<!-- quoteEntityClose="'n" -->
-	<!-- appname can be up to 8 characters long -->
+	<!-- In progress. Changed so far: {dateAddMonth, dateToNumber, stdDevCommand, randomCommand, charLengthCommand, dateDiff} -->
+	<!-- Entity quoting: https://communities.sas.com/t5/SAS-Enterprise-Guide/dealing-with-space-in-variable/td-p/136173 -->
+	<!-- Alias quoting can be done similarly (or do not escape - SAS driver offers a not usable space): "example alias with a space"n  -->
+	<!-- Appname can be up to 8 characters long. -->
+	<!-- SAS only has 2 data types, character and numeric (dates are numeric). -->
+    <!-- INTNX function needs optional alignment parameter 'SAME'-->
 	<driver
 		name="SAS"
 		driverClass="com.sas.net.sharenet.ShareNetDriver"
@@ -204,15 +207,15 @@ Description of the fields:
 		urlPrefix="jdbc:sharenet://"
 		urlSuffix="?appname=PF"
 		dbNameSeparator=""
-		quoteEntityOpen=""
-		quoteEntityClose=""
+		quoteEntityOpen="'"
+		quoteEntityClose="'n"
 		quoteAliasOpen=""
 		quoteAliasClose=""
 		supportsCatalogs="false"
-		dateAddSyntax="(intnx('@datePart', @baseDate, @amount))"
-		dateAddMonth="intnx('month', @baseDate, @amount)"
+		dateAddSyntax="(intnx('@datePart', @baseDate, @amount, 'SAME'))"
+		dateAddMonth="intnx('month', @baseDate, @amount, 'SAME')"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
-		dateToNumber="extract(epoch from @column)"
+		dateToNumber="@column"
 		insertTimestampSyntax="%sysfunc(inputn(@timestamp, ymddttm20.3))"
 		stdDevCommand="std"
 		charLengthCommand="length"
