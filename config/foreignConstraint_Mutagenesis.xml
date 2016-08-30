@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<foreignConstraints schemaName="mutagenesis_no_fc">
+    <foreignConstraint name="FK_molecule_atom">
+        <table>molecule</table>
+        <fTable>atom</fTable>
+        <column>molecule_id</column>
+        <fColumn>molecule_id</fColumn>
+    </foreignConstraint>
+    <foreignConstraint name="FK_atom1_bond">
+        <table>atom</table>
+        <fTable>bond</fTable>
+        <column>atom_id</column>
+        <fColumn>atom1_id</fColumn>
+    </foreignConstraint>
+    <foreignConstraint name="FK_atom2_bond">
+        <table>atom</table>
+        <fTable>bond</fTable>
+        <column>atom_id</column>
+        <fColumn>atom2_id</fColumn>
+    </foreignConstraint>
+</foreignConstraints>

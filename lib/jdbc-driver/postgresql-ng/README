@@ -1,0 +1,10 @@
+PostgreSQL pgjdbc-ng Driver
+------------------------
+Version:    0.6
+Files:      pgjdbc-ng-0.6.jar
+Reference:  https://github.com/impossibl/pgjdbc-ng
+Note:       As of version 0.3 (February, 2014), it claims to be JDBC 4.1 feature complete.
+            That is good because the official 9.4 PostgreSQL driver is not JDBC 4.1 feature complete.
+            Also, this driver is able to detect and report unclosed resources.
+            However, this driver can consume over 250MB of memmory and is by 10% slower than
+            the official version of the driver. 
