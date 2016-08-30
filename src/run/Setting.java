@@ -76,6 +76,8 @@ public final class Setting {
 	public String outputSchema;
 	
 	// Names for entities created by Predictor Factory
+	// Note: SAS metadata functions expect schema nad table names in capitals, since it is using case-sensitive like operator.
+	// If we create tables with small letters, SAS metadata functions will ignore these tables.
 	public final String baseTable = "base";					// The name of the base table.
 	public final String baseId = "propagated_id";			// The name of the Id column. This name should be new & unique in input schema to avoid name colisions.
 	public final List<String> baseIdList = new ArrayList<>();// BaseId, but parsed.
@@ -83,7 +85,7 @@ public final class Setting {
 	public final String baseTarget = "propagated_target";	// The name of the target column. This name should be new & unique in input schema.
 	public final String baseFold = "propagated_fold";		// The name for fold in x-fold cross-validation.
 	public final String baseSampled = "base_sampled";		// The name of the sampled base table.
-	public final String mainTable = "mainSample";			// The name of the result table with predictors.
+	public final String mainTable = "MAINSAMPLE";			// The name of the result table with predictors.
 	public final String journalPredictor = "journal"; 		// The name of predictors' journal table.
 	public final String journalTable = "journal_table"; 	// The name of propagation journal table.
 	public final String journalTemporal = "journal_temporal";// The name of temporal constraints' journal table.

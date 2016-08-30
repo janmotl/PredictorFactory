@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <foreignConstraints>
     <foreignConstraint>
-        <table>ACCOUNT</table>
-        <fTable>LOAN</fTable>
+        <table>LOAN</table>
+        <fTable>ACCOUNT</fTable>
         <column>account_id</column>
         <fColumn>account_id</fColumn>
     </foreignConstraint>
@@ -25,14 +25,14 @@
         <fColumn>account_id</fColumn>
     </foreignConstraint>
     <foreignConstraint>
-        <table>DISTRICT</table>
-        <fTable>ACCOUNT</fTable>
+        <table>ACCOUNT</table>
+        <fTable>DISTRICT</fTable>
         <column>district_id</column>
         <fColumn>district_id</fColumn>
     </foreignConstraint>
     <foreignConstraint>
-        <table>DISTRICT</table>
-        <fTable>CLIENT</fTable>
+        <table>CLIENT</table>
+        <fTable>DISTRICT</fTable>
         <column>district_id</column>
         <fColumn>district_id</fColumn>
     </foreignConstraint>
@@ -43,8 +43,8 @@
         <fColumn>disp_id</fColumn>
     </foreignConstraint>
     <foreignConstraint>
-        <table>CLIENT</table>
-        <fTable>DISP</fTable>
+        <table>DISP</table>
+        <fTable>CLIENT</fTable>
         <column>client_id</column>
         <fColumn>client_id</fColumn>
     </foreignConstraint>

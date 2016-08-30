@@ -208,7 +208,7 @@ public final class Network {
 
 			// Transfer tuples from database in batches. 100 seems to be a reasonable default: http://guyharrison.squarespace.com/blog/2014/4/30/best-practices-for-accessing-oracle-from-scala-using-jdbc.html
 			// Note: It is ugly that we can't use setting.fetchSize from here.
-			stmt.setFetchSize(100);
+			stmt.setFetchSize(Math.min(100, maxRows)); // We have to limit it because of SAS driver
 
 			while (rs.next()) {
 				result.add(rs.getString(1)); // Columns in ResultSets are indexed from 1

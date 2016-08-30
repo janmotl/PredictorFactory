@@ -469,10 +469,13 @@ public final class SQL {
 
 	// Returns true if the column contains null.
 	// NOTE: May not work with Oracle. Necessary to test.
-	// NOTE: Should be simplified to: SELECT exists(...)
+
 	public static boolean containsNull(Setting setting, String table, String column) {
 
-		String sql = "SELECT exists(SELECT 1 FROM @inputTable WHERE @column is null)";
+		// NOTE: MSSQL allows EXISTS clause only in CASE WHEN EXISTS or WHERE EXISTS.
+		//		 MSSQL does not support SELECT EXISTS.
+		//       Reference: http://stackoverflow.com/questions/2759756/is-it-possible-to-select-exists-directly-as-a-bit
+		String sql = "SELECT CASE WHEN exists(SELECT 1 FROM @inputTable WHERE @column is null) THEN 1 ELSE 0 END";
 
 		sql = Parser.replaceExists(setting, sql);
 		sql = expandName(sql);
@@ -1595,7 +1598,7 @@ public final class SQL {
 		}
 		
 		int columnCount = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable).size();
-		logger.debug("MainSample table contains: " + columnCount + " columns");
+		logger.debug("Table " + setting.mainTable + " contains: " + columnCount + " columns");
 	}
 
 	// Subroutine - transform java date to SQL date
