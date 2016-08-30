@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<foreignConstraints databaseName="database" schemaName="schema">
+    <foreignConstraint>
+        <table>table</table>
+        <fTable>fTable</fTable>
+        <column>col1_1</column>
+        <column>col1_2</column>
+        <fColumn>col1_1</fColumn>
+        <fColumn>col1_2</fColumn>
+    </foreignConstraint>
+    <foreignConstraint>
+        <table>table2</table>
+        <fTable>fTable2</fTable>
+        <column>col2_1</column>
+        <column>col2_2</column>
+        <fColumn>col2_1</fColumn>
+        <fColumn>col2_2</fColumn>
+    </foreignConstraint>
+</foreignConstraints>
