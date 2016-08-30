@@ -21,6 +21,7 @@
                 <attribute type="boolean" name="supportsCreateTableAs" use="optional"/>
                 <attribute type="boolean" name="supportsWithData" use="optional"/>
                 <attribute type="boolean" name="supportsJoinUsing" use="optional"/>
+                <attribute type="boolean" name="supportsSelectExists" use="optional"/>
                 <attribute type="string" name="corrSyntax" use="optional"/>
                 <attribute type="string" name="dateAddSyntax" use="optional"/>
                 <attribute type="string" name="dateAddMonth" use="optional"/>

@@ -144,14 +144,28 @@ public class Parser {
 	// 		CASE EXISTS (...)
 	// with:
 	//		SELECT COUNT(*)>1 FROM (...)
-	// This replacement is for SAS, because SAS does not support "generation" of data from subqueries.
+	//
+	// SAS:   SAS does not support "generation" of data from subqueries.
+	//        SAS supports only WHERE EXISTS and HAVING EXISTS.
+	//        Reference: http://support.sas.com/documentation/cdl/en/sqlproc/63043/HTML/default/viewer.htm#p1st65qbmqdks3n1mch4yfcctexi.htm
+	// MSSQL: MSSQL does not support SELECT EXISTS.
+	//        MSSQL allows EXISTS clause only in CASE WHEN EXISTS or WHERE EXISTS.
+	//        Reference: http://stackoverflow.com/questions/2759756/is-it-possible-to-select-exists-directly-as-a-bit
+	// PostgreSQL and MariaDB are ok.
 	public static String replaceExists(Setting setting, String sql) {
-		// Currently, this is only for SAS
-		if (!"SAS".equals(setting.databaseVendor)) return sql;
+		if (setting.supportsSelectExists) return sql;
 
 		Pattern pattern = Pattern.compile("(?i)SELECT\\s*EXISTS([\\S\\s]*)");
 		Matcher matcher = pattern.matcher(sql);
 
+		if ("Microsoft SQL Server".equals(setting.databaseVendor)) {
+			if (matcher.find()) {
+				sql =  "SELECT CASE WHEN (EXISTS " + matcher.group(1) + ") THEN 1 ELSE 0 END";
+			}
+			return sql.trim();
+		}
+
+		// SAS and the rest
 		if (matcher.find()) {
 			sql =  "SELECT COUNT(*)>0 FROM " + matcher.group(1);
 		}

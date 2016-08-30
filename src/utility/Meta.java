@@ -267,36 +267,37 @@ public class Meta {
 		
 		// Initialization
 		List<ForeignConstraint> relationshipList = new ArrayList<>();
-		
-		// Get all relations coming from this table
+
+		// Get imported keys
 		try  (Connection connection = setting.dataSource.getConnection();
-			  ResultSet rs_imported = connection.getMetaData().getImportedKeys(database, schema, table);
-			  ResultSet rs_exported = connection.getMetaData().getExportedKeys(database, schema, table)) {
+			  ResultSet resultSet = connection.getMetaData().getImportedKeys(database, schema, table)) {
+			while (resultSet.next()) {
+				ForeignConstraint relationship = new ForeignConstraint();
+				relationship.name = resultSet.getString("FK_NAME");
+				relationship.table = table;
+				relationship.fTable = resultSet.getString("PKTABLE_NAME");
+				relationship.column.add(resultSet.getString("FKCOLUMN_NAME"));
+				relationship.fColumn.add(resultSet.getString("PKCOLUMN_NAME"));
+				relationship.sequence = resultSet.getShort("KEY_SEQ");
+				relationshipList.add(relationship);
+			}
+		} catch (SQLException e) {
+			logger.error(e.getMessage());
+		}
 
-				// Imported keys
-				while (rs_imported.next()) {
-					ForeignConstraint relationship = new ForeignConstraint();
-					relationship.name = rs_imported.getString("FK_NAME");
-					relationship.table = table;
-					relationship.fTable = rs_imported.getString("PKTABLE_NAME");
-					relationship.column.add(rs_imported.getString("FKCOLUMN_NAME"));
-					relationship.fColumn.add(rs_imported.getString("PKCOLUMN_NAME"));
-					relationship.sequence = rs_imported.getShort("KEY_SEQ");
-					relationshipList.add(relationship);
-				}
-
-				// And now Exported keys
-				while (rs_exported.next()) {
-					ForeignConstraint relationship = new ForeignConstraint();
-					relationship.name = rs_exported.getString("FK_NAME");
-					relationship.table = table;
-					relationship.fTable = rs_exported.getString("FKTABLE_NAME");
-					relationship.column.add(rs_exported.getString("PKCOLUMN_NAME"));
-					relationship.fColumn.add(rs_exported.getString("FKCOLUMN_NAME"));
-					relationship.sequence = rs_exported.getShort("KEY_SEQ");
-					relationshipList.add(relationship);
-				}
-
+		// And exported keys
+		try  (Connection connection = setting.dataSource.getConnection();
+			  ResultSet resultSet = connection.getMetaData().getExportedKeys(database, schema, table)) {
+			while (resultSet.next()) {
+				ForeignConstraint relationship = new ForeignConstraint();
+				relationship.name = resultSet.getString("FK_NAME");
+				relationship.table = table;
+				relationship.fTable = resultSet.getString("FKTABLE_NAME");
+				relationship.column.add(resultSet.getString("PKCOLUMN_NAME"));
+				relationship.fColumn.add(resultSet.getString("FKCOLUMN_NAME"));
+				relationship.sequence = resultSet.getShort("KEY_SEQ");
+				relationshipList.add(relationship);
+			}
 		} catch (SQLException e) {
 			logger.error(e.getMessage());
 		}

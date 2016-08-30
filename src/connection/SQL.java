@@ -387,6 +387,8 @@ public final class SQL {
 		sql = escapeEntity(setting, sql, outputTable);
 		Network.executeUpdate(setting.dataSource, sql);
 
+		// Azure also requires Not-Null constraint. But to set the constraint we have to repeat the data type...
+
 		// Primary key at the end
 		sql = "ALTER TABLE @outputTable ADD PRIMARY KEY " + columns;
 		sql = expandName(sql);
@@ -468,14 +470,9 @@ public final class SQL {
 	}
 
 	// Returns true if the column contains null.
-	// NOTE: May not work with Oracle. Necessary to test.
-
 	public static boolean containsNull(Setting setting, String table, String column) {
 
-		// NOTE: MSSQL allows EXISTS clause only in CASE WHEN EXISTS or WHERE EXISTS.
-		//		 MSSQL does not support SELECT EXISTS.
-		//       Reference: http://stackoverflow.com/questions/2759756/is-it-possible-to-select-exists-directly-as-a-bit
-		String sql = "SELECT CASE WHEN exists(SELECT 1 FROM @inputTable WHERE @column is null) THEN 1 ELSE 0 END";
+		String sql = "SELECT exists(SELECT 1 FROM @inputTable WHERE @column is null)";
 
 		sql = Parser.replaceExists(setting, sql);
 		sql = expandName(sql);

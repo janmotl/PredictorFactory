@@ -18,6 +18,7 @@ Description of the fields:
 	SupportsSchemas: By default true. False in MySQL... (COULD BE DETECTED WITH JDBC DRIVER)
 	SupportsCreateTableAs: By default true. False in MS SQL...
 	SupportsWithData: By default false. Has to be true for MonetDB... (SHOULD BE NAMED LIKE "DEFAULT_IS_WITHOUT_DATA")
+	SupportsSelectExists: By default false. Useful for PostgreSQL and MySQL.
 	corrSyntax: Optional. Define the command for correlation if the database provides such command.
 	DateAddSyntax: Because we want to be able to express time ranges. This syntax doesn't deal with leap years. Replaceable with {fn TIMESTAMPADD}.
 	DateAddMonth: Because we want to be able to express time ranges. This syntax correctly deals with leap years. CURRENTLY NOT USED.
@@ -114,6 +115,7 @@ Description of the fields:
 		supportsCatalogs="true"
 		supportsSchemas="false"
 		supportsJoinUsing="true"
+		supportsSelectExists="true"
 		dateAddSyntax="DATE_ADD(@baseDate, INTERVAL @amount @datePart)"
 		dateAddMonth="DATE_ADD(@baseDate, INTERVAL @amount month)"
 		dateDiffSyntax="DATEDIFF(@dateTo, @dateFrom)"
@@ -168,7 +170,8 @@ Description of the fields:
 		urlSuffix="?ApplicationName=PredictorFactory"
 		dbNameSeparator="/"
 		corrSyntax="corr(@column1, @column2)"
-		supportsJoinUsing="false"
+		supportsJoinUsing="true"
+		supportsSelectExists="true"
 		dateAddSyntax="(@baseDate + INTERVAL '@amount @datePart')"
 		dateAddMonth="(@baseDate + INTERVAL '@amount month')"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
@@ -186,6 +189,7 @@ Description of the fields:
 		dbNameSeparator="/"
 		corrSyntax="corr(@column1, @column2)"
 		supportsJoinUsing="true"
+		supportsSelectExists="true"
 		dateAddSyntax="(@baseDate + INTERVAL '@amount @datePart')"
 		dateAddMonth="(@baseDate + INTERVAL '@amount month')"
 		dateDiffSyntax="(@dateTo - @dateFrom)"

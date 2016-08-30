@@ -396,9 +396,12 @@ public class Aggregation {
 		// Add Primary Key constrain.
 		// This is not because of speeding things up (indeed it has a negative impact on total runtime because only
 		// a small proportion of the predictors gets into MainSample) but because it validates uniqueness of the tuples.
-		if (!SQL.setPrimaryKey(setting, predictor.outputTable)) {
-			logger.warn("Primary key constrain failed");
-			return;
+		// Azure requires not-null constraint -> skip it for MSSQL.
+		if (!"Microsoft SQL Server".equals(setting.databaseVendor)) {
+			if (!SQL.setPrimaryKey(setting, predictor.outputTable)) {
+				logger.warn("Primary key constrain failed");
+				return;
+			}
 		}
 		
 		// Add row count

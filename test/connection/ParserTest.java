@@ -163,15 +163,59 @@ public class ParserTest {
 
 
 	@Test
-	public void replaceExists() {
+	public void replaceExistsSAS() {
 		// Setting
 		Setting setting = new Setting();
-		setting.databaseVendor = "SAS";
+		setting.supportsSelectExists = false;
+		setting.databaseVendor= "SAS";
 		String sql = "SELECT EXISTS(...)";
 
 		// Test
 		String actual = Parser.replaceExists(setting, sql);
 		String expected = "SELECT COUNT(*)>0 FROM (...)";
+		System.out.println(actual);
+		Assert.assertEquals(expected, actual);
+	}
+
+	@Test
+	public void replaceExistsMSSQL() {
+		// Setting
+		Setting setting = new Setting();
+		setting.supportsSelectExists = false;
+		setting.databaseVendor= "Microsoft SQL Server";
+		String sql = "SELECT EXISTS(...)";
+
+		// Test
+		String actual = Parser.replaceExists(setting, sql);
+		String expected = "SELECT CASE WHEN (EXISTS (...)) THEN 1 ELSE 0 END";
+		System.out.println(actual);
+		Assert.assertEquals(expected, actual);
+	}
+
+	@Test
+	public void replaceExistsNot() {
+		// Setting
+		Setting setting = new Setting();
+		setting.supportsSelectExists = true;
+		String sql = "SELECT EXISTS(...)";
+
+		// Test
+		String actual = Parser.replaceExists(setting, sql);
+		String expected = "SELECT EXISTS(...)";
+		System.out.println(actual);
+		Assert.assertEquals(expected, actual);
+	}
+
+	@Test
+	public void replaceExistsSpace() {
+		// Setting
+		Setting setting = new Setting();
+		setting.supportsSelectExists = false;
+		String sql = "Select  Exists  (...)";
+
+		// Test
+		String actual = Parser.replaceExists(setting, sql);
+		String expected = "SELECT COUNT(*)>0 FROM   (...)";
 		System.out.println(actual);
 		Assert.assertEquals(expected, actual);
 	}
