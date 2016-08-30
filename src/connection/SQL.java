@@ -664,7 +664,7 @@ public final class SQL {
 				"GROUP BY @columnName " +
 				"ORDER BY 2 DESC";
 
-		sql = Parser.limitResultSet(setting, sql, setting.valueCount);
+		//sql = Parser.limitResultSet(setting, sql, setting.valueCount); // Because of SAS we use JDBC maxRows
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, tableName);
 		HashMap<String, String> map = new HashMap<>();
@@ -672,7 +672,7 @@ public final class SQL {
 		map.put("@inputTable", tableName); // To cover the scenario that it's in the input schema
 		sql = escapeEntityMap(setting, sql, map);
 
-		return Network.executeQuery(setting.dataSource, sql);
+		return Network.executeQuery(setting.dataSource, sql, setting.valueCount);
 	}
 
 	// Could the two columns in the table describe a symmetric relation (like in borderLength(c1, c2))?

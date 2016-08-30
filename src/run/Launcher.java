@@ -26,8 +26,8 @@ public class Launcher{
 	public static void main(String[] arg){
 
 		// Connect to the following server and database:
-		String connectionProperty = "SAS";	// Host identification as specified in resources/connection.xml
-		String databaseProperty = "SAS";		// Dataset identification as specified in resources/database.xml
+		String connectionProperty = "Azure";	// Host identification as specified in resources/connection.xml
+		String databaseProperty = "financial";		// Dataset identification as specified in resources/database.xml
 
 		// Read command line parameters if they are present (and overwrite the defaults).
 		if (arg.length==1 || arg.length>2) {

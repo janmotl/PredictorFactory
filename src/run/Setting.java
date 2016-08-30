@@ -139,7 +139,6 @@ public final class Setting {
 		driverClass = driverProperty.driverClass;
 		dbNameSeparator = driverProperty.dbNameSeparator;
 		urlPrefix = driverProperty.urlPrefix;
-		urlSuffix = driverProperty.urlSuffix;
 		testQuery = driverProperty.testQuery;
 		dateToNumber = driverProperty.dateToNumber;
 		charLengthCommand = driverProperty.charLengthCommand;
@@ -157,7 +156,8 @@ public final class Setting {
 		predictorMax = databaseProperty.predictorMax;
 
         // Load optional (null-able) properties. Always set appropriate default values.  
- 	   	quoteAliasOpen = MoreObjects.firstNonNull(driverProperty.quoteAliasOpen, "\"");
+		urlSuffix = MoreObjects.firstNonNull(driverProperty.urlSuffix, "");
+		quoteAliasOpen = MoreObjects.firstNonNull(driverProperty.quoteAliasOpen, "\"");
 		quoteAliasClose = MoreObjects.firstNonNull(driverProperty.quoteAliasClose, "\"");
 		indexNameSyntax = MoreObjects.firstNonNull(driverProperty.indexNameSyntax, "table_idx");
 		supportsCatalogs = MoreObjects.firstNonNull(driverProperty.supportsCatalogs, true); 

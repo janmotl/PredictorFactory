@@ -120,6 +120,9 @@ public final class Network {
 		if (StringUtils.isBlank(sql)) {
 			throw new IllegalArgumentException("SQL statement is required");
 		}
+
+		// Check interruption flag
+		isInterrupted();
 		
 		// Initialization
 		boolean isOk = false;
@@ -148,6 +151,9 @@ public final class Network {
 		if (StringUtils.isBlank(sql)) {
 			throw new IllegalArgumentException("SQL statement is required");
 		}
+
+		// Check interruption flag
+		isInterrupted();
 		
 		// Initialization
 		ArrayList<String> result = new ArrayList<>();
@@ -158,7 +164,11 @@ public final class Network {
 	    try (Connection connection = dataSource.getConnection();
 			 Statement stmt = connection.createStatement();
 	    	 ResultSet rs = stmt.executeQuery(sql)) {
-	    	
+
+			// Transfer tuples from database in batches. 100 seems to be a reasonable default: http://guyharrison.squarespace.com/blog/2014/4/30/best-practices-for-accessing-oracle-from-scala-using-jdbc.html
+			// Note: It is ugly that we can't use setting.fetchSize from here.
+			stmt.setFetchSize(100);
+
 			while (rs.next()) {
 				result.add(rs.getString(1)); // Columns in ResultSets are indexed from 1
 			}
@@ -175,6 +185,47 @@ public final class Network {
 	    return result;
     }
 
+	// Get list of strings with the limited amount of results
+	public static List<String> executeQuery(DataSource dataSource, String sql, int maxRows){
+		// Parameter checking
+		if (StringUtils.isBlank(sql)) {
+			throw new IllegalArgumentException("SQL statement is required");
+		}
+
+		// Check interruption flag
+		isInterrupted();
+
+		// Initialization
+		ArrayList<String> result = new ArrayList<>();
+
+		// Query with AutoCloseable interface introduced in Java 7.
+		try (Connection connection = dataSource.getConnection();
+			 Statement stmt = connection.createStatement();
+			 ResultSet rs = stmt.executeQuery(sql)) {
+
+			// Even if the query would return several rows, only the first row is transmitted
+			stmt.setMaxRows(maxRows);
+
+			// Transfer tuples from database in batches. 100 seems to be a reasonable default: http://guyharrison.squarespace.com/blog/2014/4/30/best-practices-for-accessing-oracle-from-scala-using-jdbc.html
+			// Note: It is ugly that we can't use setting.fetchSize from here.
+			stmt.setFetchSize(100);
+
+			while (rs.next()) {
+				result.add(rs.getString(1)); // Columns in ResultSets are indexed from 1
+			}
+
+			// Log it
+			// Remove line breaks and collapse all "whitespace substrings" longer than one character.
+			sql = sql.replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ");
+			logger.debug(sql);
+		} catch (SQLException e) {
+			sql = sql.replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ");
+			logger.info(e.getMessage() + " | " + sql);
+		}
+
+		return result;
+	}
+
 	// Get a single bool. This a useful convenience function because some databases
 	// return t/f, other true/false and another 1/0. And SAS returns 1.0/0.0.
 	// The only reliable way how to deal with this variety to use rs.getBoolean().
@@ -183,6 +234,9 @@ public final class Network {
 		if (StringUtils.isBlank(sql)) {
 			throw new IllegalArgumentException("SQL statement is required");
 		}
+
+		// Check interruption flag
+		isInterrupted();
 
 		// Initialization
 		Boolean result = null;
@@ -220,7 +274,10 @@ public final class Network {
 		if (StringUtils.isBlank(sql)) {
 			throw new IllegalArgumentException("SQL statement is required");
 		}
-		
+
+		// Check interruption flag
+		isInterrupted();
+
 		// Initialization to a default value
 		boolean result = true;
 	
@@ -287,5 +344,11 @@ public final class Network {
 
 		return result;
 	}
-	
+
+	// Groovy's @ThreadInterrupt in Java
+	private static void isInterrupted() {
+		if (Thread.currentThread().isInterrupted()) {
+			throw new RuntimeException("Execution interrupted on the user's request. Note that the interruption does not immediately terminate currently running query. It rather waits for the query to finish and only then terminates the core of Predictor Factory. This is a design choice to make sure that connections to the database are correctly closed.");
+		}
+	}
 }

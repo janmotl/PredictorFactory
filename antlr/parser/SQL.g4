@@ -44,9 +44,10 @@ columns	: TEXT (WS*  COMMA WS* TEXT)*;
 
 //on : ON WS* TEXT WS* EQUALS WS* TEXT (WS* AND WS* TEXT WS* EQUALS WS* TEXT)*;
 
-on: ON (bracket | expression);
+on: ON expression;
 
-payload	: (TEXT | bracket | WS | AND | EQUALS | ARITHMETIC | datediff | datetonumber | corr | from)*;
+
+payload	: (from | TEXT | bracket | WS | AND | EQUALS | ARITHMETIC | datediff | datetonumber | corr)*;
 
 
 
