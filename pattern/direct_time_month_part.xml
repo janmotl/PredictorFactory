@@ -5,6 +5,9 @@
 	<description>
 		Identify, whether it's the beginning, middle or end of the month.
 	</description>
+	<example>
+		People are more likely to take a short-term loan a week before the paycheck day.
+	</example>
 	<author>Jan Motl</author>
 	<date>2015-06-01</date>
 	<code compatibility="PostgreSQL">SELECT @base

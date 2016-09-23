@@ -4,12 +4,23 @@
 	<name>Moments</name>
 	<description>Skewness and kurtosis. 
 	
-	NOTE: Kurtosis will be added once support for multiple columns in the result will be implemented.
-	NOTE: Arithmetic overflow can happen.
-	NOTE: Division by zero can happen.
-	
-	The implementation is from: http://www.experts-exchange.com/Database/MS_Access/A_2529-Median-Mode-Skewness-and-Kurtosis-in-MS-Access.html
+		NOTE: Kurtosis will be added once support for multiple columns in the result will be implemented.
+		NOTE: Arithmetic overflow can happen.
+		NOTE: Division by zero can happen.
+
+		The implementation is from: http://www.experts-exchange.com/Database/MS_Access/A_2529-Median-Mode-Skewness-and-Kurtosis-in-MS-Access.html
+
+		To get at least somehow reliable estimation of skewness and kurtosis requires at least 10 samples. To get a
+		usable estimate, you need hundreds of samples. Reference:
+		https://www.spcforexcel.com/knowledge/basic-statistics/are-skewness-and-kurtosis-useful-statistics
+
+		Note: Clipping of the data could be detected with a ratio of extreme values (a range close to min/max)
+		to the count of values in another pattern.
 	</description>
+	<example>
+		Skewness can be a sign of data truncation. For example, balance withdrawn from an ATM can be skewed
+		because of too low limit on the credit card.
+	</example>
 	<author>Jan Motl</author>
 	<date>2014-12-22</date>
 	<code compatibility="MySQL,Microsoft SQL Server,Oracle,PostgreSQL">SELECT @base

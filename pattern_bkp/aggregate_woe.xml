@@ -46,6 +46,9 @@
 		Some other predictors are mentioned in ACORA (Provost).
 
 	</description>
+	<example>
+		Average logarithmic odds that a customer is a female based on ids of purchased products.
+	</example>
 	<author>Jan Motl</author>
 	<date>2015-03-08</date>
 	<code> SELECT a.@base

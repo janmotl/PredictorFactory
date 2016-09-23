@@ -13,16 +13,19 @@ repositories {
 
 // Dependencies
 dependencies {
-    compile 'org.antlr:antlr4:4.5.3'
-    compile 'uk.com.robust-it:cloning:1.9.2'
-    compile 'org.apache.commons:commons-lang3:3.4'
-    compile 'com.google.guava:guava:19.0'
-    compile 'com.zaxxer:HikariCP:2.4.7'     // Versions 2.4.2 and 2.4.3 do not release connections -> do not use them
-    compile 'org.slf4j:slf4j-log4j12:1.7.14'
-    compile 'log4j:log4j:1.2.17'
-//    compile 'org.sql2o:sql2o:1.5.4'                     // Experimental, could work
-//    compile 'org.codejargon:fluentjdbc:1.3.5'    // Experimental
-    compile 'com.intellij:annotations:12.0'
+    compile 'org.antlr:antlr4:4.5.3'                // Parser
+    compile 'uk.com.robust-it:cloning:1.9.2'        // Deep cloning
+    compile 'org.apache.commons:commons-lang3:3.4'  // Text processing utility
+    compile 'com.google.guava:guava:19.0'           // Convenience library
+    compile 'com.zaxxer:HikariCP:2.4.7'             // Versions 2.4.2 and 2.4.3 do not release connections -> do not use them
+    compile 'org.slf4j:slf4j-log4j12:1.7.14'        // Logging (required by Hikari)
+    compile 'log4j:log4j:1.2.17'                    // Logging
+//    compile 'org.sql2o:sql2o:1.5.4'               // Experimental, could work
+//    compile 'org.codejargon:fluentjdbc:1.3.5'     // Experimental
+    compile 'com.github.rjeschke:txtmark:0.13'      // Markdown for GUI
+    compile 'com.intellij:annotations:12.0'         // Not null annotation
+    compile 'org.hibernate:hibernate-core:5.2.2.Final' // Experimental for SQL formatting (but exports only into plaintext, does not play well with postgre's "mode")
+    compile 'com.atlassian.commonmark:commonmark:0.6.0' // Experimental Markdown
 
 
     runtime fileTree(dir: 'lib/jdbc-driver/hsqldb', include: '*.jar')   // The search is not recursive -> list all directories
@@ -35,6 +38,9 @@ dependencies {
     runtime fileTree(dir: 'lib/jdbc-driver/postgresql-ng', include: '*.jar')
     runtime fileTree(dir: 'lib/jdbc-driver/sas', include: '*.jar')
     runtime fileTree(dir: 'lib/jdbc-driver/vertica', include: '*.jar')
+
+    compile fileTree(dir: 'lib/sqlformatter', include: '*.jar') // But fails on "mode" in postgre sql...
+    compile fileTree(dir: 'lib', include: '*.jar')
 
     testCompile fileTree(dir: 'lib/rapidminer', include: '*.jar')
     testCompile 'junit:junit:4.12'

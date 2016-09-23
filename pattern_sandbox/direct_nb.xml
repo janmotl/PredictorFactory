@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Direct NB</name>
+	<description>Univariate naive Bayes with Laplace correction.
+
+		Purpose: This pattern is for experimental comparison with Weight of Evidence.
+
+		Results: WoE and NB give equally good predictors. NB is just 3 times slower (possibly because of unnecessary
+		logarithms, sorting,...).
+
+		Technical notes: We ignore nulls in the target. But we threat null in an attribute as another nominal value.
+		As QC check the sum of likelihoods per target_value. It has always to be equal 1.
+		The query could be simplified by removing unnecessary computations.
+
+	</description>
+	<author>Jan Motl</author>
+	<date>2016-09-05</date>
+	<code> with input_table as ( 
+				select *
+				from @propagatedTable
+				where @baseTarget is not null
+			), total as (
+				select count(*) as total_count
+				from input_table
+			), level_count as ( 
+				select count(*) as level_count
+				from (
+					select distinct @column
+					from @propagatedTable
+				) t
+			), prior_table as (
+				select @baseTarget as target_value
+					 , count(*) as prior_count
+					 , 1.0*count(*)/total.total_count  as prior_probability
+					 , ln(1.0*count(*)/total.total_count)  as log_prior
+				from input_table, total
+				group by @baseTarget, total.total_count
+			), joint_counts as (
+				select @column as attribute_value
+					 , @baseTarget as target_value
+					 , coalesce(max(joint_count), 0) as joint_count
+				from (
+					select distinct t1.@column
+						 , t2.@baseTarget
+					from input_table t1
+					cross join input_table t2
+				) t1
+				full outer join  (
+					select @column
+						, @baseTarget
+						, count(*) as joint_count
+					from input_table
+					group by @column,@baseTarget
+				) t2
+				using(@column,@baseTarget)
+				group by @column, @baseTarget
+			), likelihood_table as ( 
+				select j.attribute_value
+					, p.target_value
+					, j.joint_count
+					, p.prior_count
+					, l.level_count
+					, 1.0*j.joint_count /p.prior_count AS likelihood
+					, (1.0+j.joint_count) / (p.prior_count + l.level_count) AS smoothed_likelihood
+					, ln((1.0+j.joint_count) / (p.prior_count + l.level_count)) AS log_likelihood
+					, p.prior_probability
+					, p.log_prior
+				from joint_counts j
+				join prior_table p
+				on p.target_value = j.target_value
+				, level_count l
+			) , probability_table as (
+				select attribute_value
+					, target_value
+					, exp(sum(log_likelihood)+ max(log_prior)) as probability
+					, max(smoothed_likelihood) * max(prior_probability) as smoothed_probability
+					, max(likelihood) * max(prior_probability) as raw_probability
+				from likelihood_table l
+				group by target_value, attribute_value
+			) ,  normalization_table as (
+				select attribute_value
+					, sum(probability) as normalization
+				from probability_table
+				group by attribute_value
+			) , lookup_table as (
+				select n.attribute_value
+					, target_value
+					, probability/normalization as estimate
+					, probability
+					, normalization
+				from probability_table p
+				join normalization_table n
+				on p.attribute_value = n.attribute_value or (p.attribute_value is NULL and n.attribute_value is NULL)
+				order by 1,2
+			)
+
+
+			select t1.@base
+		         , t2.estimate as @columnName
+			from @propagatedTable t1
+			left join lookup_table t2
+			on t1.@column = t2.attribute_value or t1.@column is NULL and t2.attribute_value is NULL
+			where t2.target_value = '@targetValue'
+	</code>
+	<parameter key="@column" value="@nominalColumn, @idColumn"/>
+	<cardinality>1</cardinality>
+</pattern>

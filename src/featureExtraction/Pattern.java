@@ -27,6 +27,7 @@ public class Pattern {
 	@XmlAttribute public int topN = 1; // The default value is to return the single best predictor per predictor.groupId.
 	public String name;
 	public String description;
+	public String example;
 	public String author;
 	public String cardinality;
 	public boolean requiresBaseDate;

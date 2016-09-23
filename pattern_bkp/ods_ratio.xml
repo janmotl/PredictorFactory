@@ -9,7 +9,12 @@
 
 		NOTE: TARGET VALUES SHOULD BE ESCAPED IN PF - if target is numerical, do not escape, if nominal, escape with
 		the right escape character.
+
+		NOTE: How it is different from WoE?
 	</description>
+	<example>
+		Logarithmic odds that a customer is a female based on the client's address.
+	</example>
 	<author>Jan Motl</author>
 	<date>2015-07-09</date>
 	<code>SELECT t1.@base

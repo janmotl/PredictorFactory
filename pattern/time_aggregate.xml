@@ -5,6 +5,9 @@
 	<description>Just like aggregate pattern, but on time attributes. In comparison to time since pattern, this
 		pattern is not relative to the target date.
 	</description>
+	<example>
+		Variance of time, when transaction happens.
+	</example>
 	<author>Jan Motl</author>
 	<date>2015-01-25</date>
 	<code>SELECT @base

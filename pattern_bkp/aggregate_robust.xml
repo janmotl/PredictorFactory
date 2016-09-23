@@ -3,7 +3,7 @@
 <pattern>
 	<name>Aggregate robust</name>
 	<description>
-		Consider n-th lowest/biggest value instead of the lowest/biggest value. This pattern is also known as "ranked
+		Returns the n-th lowest/biggest value instead of the lowest/biggest value. This pattern is also known as "ranked
 		aggregate".
 		
 		Note: There are several approaches how to deal with scenarios when there isn't enough samples. We can return 
@@ -17,7 +17,6 @@
 		simplified and return null whenever there is too few samples.  
 	</description>
 	<example>
-		Published in one of the articles that I cannot find.
 		Minimum of the balance.
 	</example>
 	<author>Jan Motl</author>

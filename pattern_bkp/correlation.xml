@@ -10,8 +10,10 @@
 		
 		Note: functions "corr" and "dateToNumber" are automatically converted based on the target database. MySQL
 		has it's own implementation because in this case MySQL doesn't require conversion of dates to numbers.
-
 	</description>
+	<example>
+		Trend of balance on the customer's account.
+	</example>
 	<author>Jan Motl</author>
 	<date>2014-12-22</date>
 	<code compatibility="Default,Oracle,PostgreSQL">SELECT @base

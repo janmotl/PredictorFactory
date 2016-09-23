@@ -7,7 +7,7 @@ public class ParseInteger {
 		try {
 			return Integer.parseInt(string);
 		}
-		catch (NumberFormatException e ) {
+		catch (NumberFormatException ignored) {
 			return null;
 		}
 	}

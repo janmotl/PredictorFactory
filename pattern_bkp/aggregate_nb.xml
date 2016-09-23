@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Aggregate NB</name>
+	<description>Multinominal univariate naive Bayes with Laplace correction. The data in the attribute are modeled as
+		a bag-of-words.
+
+		The implementation is compatible with MATLAB's naive Bayes:
+			fitcnb(data, label, 'Distribution', 'mn')
+		where data is a matrix (in bag of word representation) and label is a vector (with the same row count as data).
+
+		The speed of the pattern could be improved by removal of sorting and debugging variables.
+
+		Rows with null value in the target are ignored during the learning phase.
+
+		Null value in the attribute is treated as another distinct value.
+
+		To avoid calculation of the ratio of the near-zero probabilities use Log-sum-exp trick.
+
+		Out-of-bag values that are in the scoring set (but absent in the learning set) are ignored.
+
+		Reference:
+			What do we do about words that occur in our test data but are not in our vocabulary
+			at all because they did not occur in any training document in any class? The standard
+			solution for such unknown words is to ignore such words—remove them from the test
+			document and not include any probability for them at all.
+		https://web.stanford.edu/~jurafsky/slp3/7.pdf
+		But that is a bad approach:
+			If the word has never been observed in some set, the probability of the message in it
+			should decrease. Ignoring the word is not a good idea, you need to account for it as a
+			highly unprobable one.
+		http://stackoverflow.com/questions/8680243/implementation-of-naive-bayes-accuracy-issues
+
+
+		Another possible treatment of out-of-bag values is to create a category "rare values":
+			One common solution is to treat tokens seen less than n times (across all classes)
+			as a special "unknown" or "rare" token. You then use this probability to assign
+			values to legitimately unknown known words. This captures the idea that different
+			classes may have different amounts of out-of-dictionary words.
+		http://stats.stackexchange.com/questions/98986/naive-bayes-non-dictionary-term-in-test-document
+
+		Another plausible solution would be to assign class apriory probability to out-of-bag values.
+		The rationale behind this approach is that it decreases our confidence in the prediction if
+		out-of-bag word is present. A better variant is to calculate apriory probability not for the
+		target_id, but for the attribute_value. This is the approach taken by MATLAB.
+	</description>
+	<example>
+		The probability that a customer is a female based on ids of purchased products.
+	</example>
+	<author>Jan Motl</author>
+	<date>2016-09-05</date>
+	<code> with input_table as (
+			select *
+			from @propagatedTable
+			where @baseTarget is not null
+		), total as (
+			select count(distinct @baseId) as total_count
+			from input_table
+		), level_count as (
+			select count(*) as level_count
+			from (
+				select distinct @column
+				from input_table
+			) t
+		), prior_counts as (
+			select @baseTarget as target_value
+				 , count(*) as prior_count
+			from input_table, total
+			group by @baseTarget, total.total_count
+		), prior_table as (
+			select @baseTarget as target_value
+				 , 1.0*count(*)/total.total_count  as prior_probability
+				 , ln(1.0*count(*)/total.total_count)  as log_prior
+			from (
+				select @baseId
+					 , @baseTarget
+				from input_table
+				group by @baseId, @baseTarget
+			) t1, total
+			group by @baseTarget, total.total_count
+		), joint_counts as (
+			select @column as attribute_value
+				 , @baseTarget as target_value
+				 , coalesce(max(joint_count), 0) as joint_count
+			from (
+				select t1.@column
+					 , t2.@baseTarget
+				from (select distinct @column from input_table) t1
+				cross join (select distinct @baseTarget from input_table) t2
+			) t1
+			full outer join  (
+				select @column
+					 , @baseTarget
+					 , count(*) as joint_count
+				from input_table
+				group by @column,@baseTarget
+			) t2
+			using(@column,@baseTarget)
+			group by @column, @baseTarget
+		), likelihood_table as (
+			SELECT j.attribute_value
+				, p.target_value
+				, j.joint_count
+				, c.prior_count
+				, l.level_count
+				, 1.0*j.joint_count /c.prior_count AS likelihood
+				, (1.0+j.joint_count) / (c.prior_count + l.level_count) AS smoothed_likelihood
+				, ln((1.0+j.joint_count) / (c.prior_count + l.level_count)) AS log_likelihood
+				, p.prior_probability
+				, p.log_prior
+			FROM joint_counts j
+			JOIN prior_table p
+			ON p.target_value = j.target_value
+			JOIN prior_counts c
+			ON c.target_value = j.target_value
+			, level_count l
+			order by 1,2
+		) , probability_table as (
+			select t1.@base
+				 , t2.target_value
+				 , exp(sum(t2.log_likelihood)+max(t2.log_prior)) as probability
+			from  @propagatedTable t1
+			join likelihood_table t2
+			on t1.@column=t2.attribute_value or (t1.@column is NULL and t2.attribute_value is NULL)
+			group by @base, target_value
+			order by 1,2
+		) ,  normalization_table as (
+			select @baseId
+				 , sum(probability) as normalization
+			from probability_table
+			group by @baseId
+		) , lookup_table as (
+			select p.@base
+				 , p.target_value
+				 , p.probability/n.normalization as estimate
+				 , p.probability
+				 , n.normalization
+			from probability_table p
+			join normalization_table n
+			on p.@baseId = n.@baseId or (p.@baseId is NULL and n.@baseId is NULL)
+			order by 1,2
+		)
+
+		select @base
+			, estimate as @columnName
+		from lookup_table
+		where target_value = '@targetValue'
+	</code>
+	<parameter key="@column" value="@nominalColumn, @idColumn"/>
+	<cardinality>n</cardinality>
+</pattern>

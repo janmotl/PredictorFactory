@@ -328,7 +328,8 @@ public final class SQL {
 	// Create index on {baseId, baseDate}.
 	// Returns true if the update was successful.
 	// Note: The index can not be unique because we are creating it on propagated tables (like table of transactions...).
-	// Design note: There are troubles with (obligatory - they can not be omitted) index names:
+	// Design note: There are troubles with obligatory index names (PostgreSQL allows to omit the name but other
+	// databases like MySQL, Oracle, SAS or MSSQL require the index name) :
 	//	1) The created index name can be already taken (e.g.: a user may have backed up the table from a previous run).
 	//	2) The created index name can be too long. We could have truncated the index names, but then we could end up with duplicates.
 	//  3) Naming conventions differ database from database. E.g. in SAS:
@@ -965,8 +966,8 @@ public final class SQL {
 	      "parameter_list " + setting.typeVarchar + "(1024), " +
 	      "pattern_name " + setting.typeVarchar + "(255), " + 
 	      "pattern_author " + setting.typeVarchar + "(255), " + 
-	      "pattern_code " + setting.typeVarchar + "(2024), " +	// For example code for WoE is close to 1024 chars
-	      "sql_code " + setting.typeVarchar + "(2024), " + // For example code for WoE is close to 1024 chars
+	      "pattern_code " + setting.typeVarchar + "(3600), " +	// For example code for WoE is close to 1024 chars and NB is 3000
+	      "sql_code " + setting.typeVarchar + "(3600), " + // For example code for WoE is close to 1024 chars and NB is 3000
 	      "target " + setting.typeVarchar + "(255), " +
 	      "relevance " + setting.typeDecimal + "(18,3), " +
 	      "qc_rowCount " + setting.typeInteger + ", " +

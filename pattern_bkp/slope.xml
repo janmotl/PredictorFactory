@@ -7,8 +7,13 @@
 
 		NOTE: Could calculate slope of two numerical attributes (in another pattern).
 		NOTE: Whenever correlation is calculated manually, arithmetic overflow can happen.
-		NOTE: DateToNumber function is automatically replaced with the database aware function call.  
+		NOTE: DateToNumber function is automatically replaced with the database aware function call.
+
+		NOTE: What is the difference between this and correlation?
 	</description>
+	<example>
+		Trend of customer's balance on his account.
+	</example>
 	<author>Jan Motl</author>
 	<date>2014-12-22</date>
 	<code compatibility="SAS">SELECT @base

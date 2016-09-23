@@ -5,6 +5,9 @@
 	<description>
 		Identify, whether it's working hour, morning, evening or night.
 	</description>
+	<example>
+		Newspapers are commonly sold in the morning.
+	</example>
 	<author>Jan Motl</author>
 	<date>2015-06-01</date>
     <code compatibility="SAS">SELECT @base

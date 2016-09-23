@@ -53,6 +53,9 @@ public class FromListener extends SQLBaseListener {
 		}
 	}
 
+	// Note, that we do not deduplicate columns from the returned relation as we should.
+	// If we name all columns in the query that we need, we are ok. But we are using stars, we are doomed.
+	// Also, if we are grouping based on the join key, we have to, likely, group by the attributes in both relations.
 	private static void transformUsing(SQLParser.UsingContext ctx, String name1, String name2) {
 
 		// Back up old contexts

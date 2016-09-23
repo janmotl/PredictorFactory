@@ -4,7 +4,12 @@
 	<name>Nominal change</name>
 	<description>
 		Count of changes of a nominal attribute in time.
+
+		NOTE: How it is different from change count?
 	</description>
+	<example>
+		How many times did a student interrupt his studies?
+	</example>
 	<author>Jan Motl</author>
 	<date>2015-03-14</date>
 	<code compatibility="PostgreSQL">WITH intermediate AS (

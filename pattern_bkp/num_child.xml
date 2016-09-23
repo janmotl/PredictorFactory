@@ -5,6 +5,9 @@
 	<description>
 		Number of observations of the child entity with child filter F.
 	</description>
+	<example>
+		Count of transactions.
+	</example>
 	<author>Filip Trojan</author>
 	<date>2014-12-25</date>
 	<code>SELECT @base

@@ -3,7 +3,7 @@
 <pattern>
 	<name>Aggregate subgroup</name>
 	<description>
-		Apply aggregation function on a subgroup of numerical attributes.
+		Applies aggregation function on a subgroup of numerical attributes.
 		
 		Note: The pattern fails in following conditions:
 			- If @nominalColumn is an id-like column and stddev_samp function is used. (Because std of 
@@ -18,6 +18,9 @@
 
 		This pattern can be ridiculously slow, but it can provide good predictors.
 	</description>
+	<example>
+		Total price of returned products.
+	</example>
 	<author>Jan Motl</author>
 	<date>2015-04-12</date>
 	<code>SELECT @base

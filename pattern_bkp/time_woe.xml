@@ -23,6 +23,9 @@
 	Some other predictors are mentioned in ACORA (Provost).
 
 	</description>
+	<example>
+		Average log odds for the time the customer accessed our webpage.
+	</example>
 	<author>Jan Motl</author>
 	<date>2015-06-01</date>
 	<code> SELECT a.@base

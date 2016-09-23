@@ -194,7 +194,7 @@ public final class Setting {
 		blackListTable = MoreObjects.firstNonNull(databaseProperty.blackListTable, "");
 		whiteListColumn = MoreObjects.firstNonNull(databaseProperty.whiteListColumn, "");
 		blackListColumn = MoreObjects.firstNonNull(databaseProperty.blackListColumn, "");
-		targetSchema = MoreObjects.firstNonNull(databaseProperty.targetSchema, inputSchema);
+		targetSchema = MoreObjects.firstNonNull(databaseProperty.targetSchema, inputSchema); // What if inputSchema is not set?
 		useIdAttributes = databaseProperty.useIdAttributes;	// The default is set in xsd
 
 		// Initialize baseIdList based on the count of columns in targetIdList

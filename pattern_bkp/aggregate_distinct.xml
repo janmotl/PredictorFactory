@@ -3,7 +3,7 @@
 <pattern>
 	<name>Aggregate distinct</name>
 	<description>
-		Apply aggregation function on distinct values.	
+		Applies aggregation function on distinct values.
 		
 		Note that distinct count is implemented in "num_child_types" because it can be executed on any data type.
 		

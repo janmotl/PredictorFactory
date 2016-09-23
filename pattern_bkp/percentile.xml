@@ -2,11 +2,15 @@
 
 <pattern>
 	<name>Percentile</name>
-	<description>Percentiles
+	<description>Percentile of a numerical attribute.
 	
 	Note: The implementation for PostgreSQL is supported from PostgreSQL 9.4.
 	Note: Schizofrenic window functions - PostgreSQL requires "group by", MSSQL requires "over".
 	</description>
+	<example>
+		The 95th percentile of the transaction amount. The advantage of the percentile in comparison to other aggregates
+		like min, avg and max is the resistance to outliers. The disadvantage is increased
+	</example>
 	<author>Jan Motl</author>
 	<date>2014-12-22</date>
 	<code compatibility="PostgreSQL">SELECT @base

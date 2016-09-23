@@ -11,9 +11,11 @@
 	
 	</description>
 	<example>
-	Example usage: Consider a column with birth year. Then age is more appropriate as a modeling variable because it is 
-	not time dependent. A model will predict the behavior of 20-year-old people today, next year, and five years from 
-	now, and will always be predicting the behavior of incoming 20-year-old people based on the experience data. 
+		Let's imagine we want to predict customer's behaviour and that we have an attribute with the client's birth year.
+		We could use direct_field pattern on the attribute. However,
+		age is more appropriate as a modeling variable because it is not time dependent. The model will predict the
+		behavior of 20-year-old people today, next year, and five years from now, and will always be predicting the
+		behavior of incoming 20-year-old people based on the experience data.
 	</example>
 	<author>Jan Motl</author>
 	<date>2015-01-10</date>

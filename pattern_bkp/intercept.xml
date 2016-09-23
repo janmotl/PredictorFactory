@@ -10,6 +10,9 @@
 		
 		Note: Function "dateToNumber" is automatically translated to comply with the database.
 	</description>
+	<example>
+		When customer's balance is estimated to reach zero.
+	</example>
 	<author>Jan Motl</author>
 	<date>2014-12-22</date>
 	<code compatibility="MySQL">SELECT @base

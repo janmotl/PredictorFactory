@@ -32,7 +32,9 @@ datetonumber : DATETONUMBER LBR payload RBR;
 corr : CORR LBR payload COMMA payload RBR;
 
 
-from : FROM  WS* (bracket|table) WS* alias? (WS* TEXT* WS* JOIN WS* (bracket|table) WS* alias? WS* (using|on))*;
+// Using/On clause is not used in cross join -> it is optional
+// Permit both, full outer join and outer join
+from : FROM  WS* (bracket|table) WS* alias? (WS* TEXT* WS* TEXT* WS* JOIN WS* (bracket|table) WS* alias? WS* (using|on)?)*;
 
 table : TEXT;
 

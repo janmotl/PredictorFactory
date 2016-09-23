@@ -3,10 +3,16 @@
 <pattern>
 	<name>Aggregate</name>
 	<description>
-		Apply aggregation function on numerical attributes. Following aggregate functions were selected for being 
+		Applies aggregation function on numerical attributes. Following aggregate functions were selected for being
 		supported in many databases: avg, min, max and stddev_samp.
+
+		This pattern is a horse power for 1:n relationships and has a great ratio predictive power/runtime.
+
+		~~~sql
+		Select * from table
+		~~~
 		
-		Note that "stddev_samp" is automatically translate to the database specific command for sample standard
+		Note that "stddev_samp" is automatically translated to the database specific command for sample standard
 		deviation (for example, MS SQL is using "stddev" while Oracle is using "stddev_samp"). Hence if you want
 		sample standard deviation, use "stddev_samp" keyword, even if you are using MS SQL, to make the script 
 		transferable.
@@ -43,10 +49,7 @@
 		NOTE: ADDED SUM
 	</description>
 	<example>
-		Year of first gift,
-		Number of events attended,
-		Year person’s personal information in the database was last updated,
-		Total giving in last five years.
+		Count of attended events.
 	</example>
 	<author>Jan Motl</author>
 	<date>2014-10-14</date>

@@ -4,9 +4,13 @@
 	<name>Time frequency</name>
 	<description>
 		Count of records divided by duration.
+
+		The duration is always incremented by 1 temporal unit to avoid division by zero. The size of a temporal unit
+		is given by the data type, set resolution, database vendor and compilation parameters. Nevertheless, it is
+		typically 1 microsecond for a timestamp.
 	</description>
 	<example>
-		Count of visited pages divided by session duration (regularized to avoid division by zero).
+		Count of visited pages divided by session duration.
 	</example>
 	<author>Jan Motl</author>
 	<date>2015-06-01</date>

@@ -3,7 +3,7 @@
 <pattern topN="1">
 	<name>Aggregate frame</name>
 	<description>
-		Apply aggregation function on numerical attributes. In comparison to aggregate pattern, this pattern limits
+		Applies aggregation function on numerical attributes. In comparison to aggregate pattern, this pattern limits
 		the history to the specific amount of days.
 
 		Note: Are you getting int overflows on avg()? Cast the ints first into biginst! See:
@@ -22,9 +22,6 @@
 				1.0/2,1.0/3,1.0/4,1.0/5,0
 	</description>
 	<example>
-		Year of first gift,
-		Number of events attended,
-		Year person’s personal information in the database was last updated,
 		Total giving in last five years.
 	</example>
 	<author>Jan Motl</author>

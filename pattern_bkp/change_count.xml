@@ -8,6 +8,9 @@
 		Note: This pattern is different from the count of duplicates - you can have a list of binary values, but still
 		have more than two changes.
 	</description>
+	<example>
+		How many times did a student interrupt his studies?
+	</example>
 	<author>Jan Motl</author>
 	<date>2015-05-10</date>
 	<code compatibility="PostgreSQL">SELECT @base

@@ -10,6 +10,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTreeCell;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import metaInformation.Column;
 import metaInformation.Table;
 import org.apache.commons.lang3.StringUtils;
@@ -20,6 +22,8 @@ import java.net.URL;
 import java.util.*;
 
 import static utility.ParseInteger.parseInteger;
+import static utility.TextToHTML.textToHTML;
+import static utility.FormatSQL.formatSQL;
 
 
 public class Events implements Initializable {
@@ -57,7 +61,7 @@ public class Events implements Initializable {
 	@FXML private TextField textSampleCount;
 	@FXML private TextField textPredictorMax;
 	@FXML private TextArea textAreaConsole;
-	@FXML private TextArea textAreaDescription;
+	@FXML private WebView webView;
 	@FXML private TreeView<String> treeViewSelect;
 	@FXML private TreeView<String> treeViewPattern;
 	@FXML private TabPane tabPane;
@@ -351,14 +355,21 @@ public class Events implements Initializable {
 
             @Override
             public void changed(ObservableValue<? extends TreeItem<String>> obs, TreeItem<String> old_val, TreeItem<String> new_val) {
-                
+
+				WebEngine engine = webView.getEngine();
+				engine.setUserStyleSheetLocation("data:,body {font-size: 13px;  font-family: system;  }"); // Set system look-and-feel
+
             	if (new_val.getParent() == null) {
-            		textAreaDescription.setText("");	// This is the parent node
+					engine.loadContent("Select patterns to use.");
             	} else {
-            		String text = patternMap.get(new_val.getValue()).description;
-            		text = text.trim().replaceAll(" +", " ");	// Remove unnecessary spaces
-            		text = text.replace("\t", "");	// Remove tabs
-            		textAreaDescription.setText(text);
+            		String description = patternMap.get(new_val.getValue()).description;
+					String example = patternMap.get(new_val.getValue()).example;
+						patternMap.get(new_val.getValue()).initialize(setting);
+					String sql =  patternMap.get(new_val.getValue()).dialectCode;
+					description = textToHTML(description);
+					example = textToHTML(example);
+					sql = formatSQL(sql);
+					engine.loadContent("<h3>Description</h3>" + description + "<h3>Example</h3>" + example + "<h3>SQL</h3>" + sql);
             	}
             	
             }

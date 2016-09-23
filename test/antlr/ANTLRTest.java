@@ -98,6 +98,24 @@ public class ANTLRTest {
 	}
 
 	@Test
+	public void crossJoin() {
+		String sql = "select * from table1 t1 cross join table2 t2"; // We test that On/Using clause in join is not required
+		String actual = ANTLR.parseSQL(setting, sql);
+		String expected = "select * from table1 t1 cross join table2 t2";
+		System.out.println(actual);
+		Assert.assertEquals(expected, actual);
+	}
+
+	@Test
+	public void fullOuterJoin() {
+		String sql = "select * from table1 full outer join table2"; // We test that multiple texts can be in front of join
+		String actual = ANTLR.parseSQL(setting, sql);
+		String expected = "select * from table1 full outer join table2";
+		System.out.println(actual);
+		Assert.assertEquals(expected, actual);
+	}
+
+	@Test
 	public void allTogether() {
 		String sql = "select dateToNumber(col1), dateDiff(col1,col2), corr(col1,col2) from tab1 join tab2 using(id)";
 		String actual = ANTLR.parseSQL(setting, sql);

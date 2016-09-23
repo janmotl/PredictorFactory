@@ -16,6 +16,9 @@
 	
 	Note, that this pattern will fail on non-string nominal columns. Such behavior is normal.
 	</description>
+	<example>
+		Average text message length.
+	</example>
 	<author>Jan Motl</author>
 	<date>2015-01-25</date>
 	<code>SELECT @base

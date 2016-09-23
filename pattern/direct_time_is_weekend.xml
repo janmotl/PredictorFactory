@@ -9,6 +9,9 @@
 		can be set to start the week on any day in a week. And this setting may not correspond to the actual division 
 		of work days into workday/weekend. 
 	</description>
+	<example>
+		Sales in an office area drops during the weekend.
+	</example>
 	<author>Jan Motl</author>
 	<date>2015-01-10</date>
 	<code compatibility="MySQL">SELECT @base
