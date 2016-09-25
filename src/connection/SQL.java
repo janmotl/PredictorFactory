@@ -371,7 +371,7 @@ public final class SQL {
 	// Set primary key for a table in the output schema.
 	// Design note: On Azure it is necessary to first set the column as not null. Hence, we first set not-null constraint.
 	// Design note: There are generally just two ways how to create a table with a primary key constraint:
-	//	1) create table with primary key first, and use select into later
+	//	1) create table with primary key first, and use SELECT into later
 	//	2) create table as first, and use add primary key later
 	// Of the two options, creating the primary key (and its associated index) after data is loaded will probably be faster.
 	// Alternatives in MySQL, Snowflake,... include CREATE TABLE LIKE. But that does not permit modification
@@ -382,16 +382,18 @@ public final class SQL {
 			columns = "(@baseId, @baseDate)";
 		}
 
-		// Unique constraint first
-		String sql = "ALTER TABLE @outputTable ADD UNIQUE " + columns;
-		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, outputTable);
-		Network.executeUpdate(setting.dataSource, sql);
-
+		// Unique constraint first, but not on Oracle because it would result into:
+		// 		ORA-02261: such unique or primary key already exists in the table
+		// error.
 		// Azure also requires Not-Null constraint. But to set the constraint we have to repeat the data type...
+		// Hence, just skip creation of unique constraint.
+//		String sql = "ALTER TABLE @outputTable ADD UNIQUE " + columns;
+//		sql = expandName(sql);
+//		sql = escapeEntity(setting, sql, outputTable);
+//		Network.executeUpdate(setting.dataSource, sql);
 
 		// Primary key at the end
-		sql = "ALTER TABLE @outputTable ADD PRIMARY KEY " + columns;
+		String sql = "ALTER TABLE @outputTable ADD PRIMARY KEY " + columns;
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, outputTable);
 		boolean isOK = Network.executeUpdate(setting.dataSource, sql);
@@ -473,6 +475,10 @@ public final class SQL {
 	// Returns true if the column contains null.
 	public static boolean containsNull(Setting setting, String table, String column) {
 
+		if ("Oracle".equals(setting.databaseVendor)) {
+			return containsNullOracle(setting, table, column); // A quick patch. Should use a factory.
+		}
+
 		String sql = "SELECT exists(SELECT 1 FROM @inputTable WHERE @column is null)";
 
 		sql = Parser.replaceExists(setting, sql);
@@ -487,6 +493,21 @@ public final class SQL {
 		return Network.isTrue(setting.dataSource, sql);
 	}
 
+	private static boolean containsNullOracle(Setting setting, String table, String column) {
+		String sql = "SELECT count(*) FROM @inputTable WHERE @column is null";
+
+		sql = Parser.replaceExists(setting, sql);
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, table);
+
+		Map<String, String> fieldMap = new HashMap<>();
+		fieldMap.put("@column", column);
+		fieldMap.put("@inputTable", table);
+		sql = escapeEntityMap(setting, sql, fieldMap);
+
+		return Integer.valueOf(Network.executeQuery(setting.dataSource, sql).get(0)) > 0;
+	}
+
 	// Returns true if the date column contains a date from the future.
 	// NOTE: May fail on a timestamp or different database dialect.
 	public static boolean containsFutureDate(Setting setting, String table, String column) {
@@ -496,6 +517,11 @@ public final class SQL {
 		// database specific command. The ODBC command works in PostgreSQL.
 		// Plus the comparison works with: date, timestamp and datetime.
 		// Comparison with time fails.
+
+		if ("Oracle".equals(setting.databaseVendor)) {
+			return containsFutureDateOracle(setting, table, column);
+		}
+
 		String sql = "SELECT exists(SELECT 1 FROM @inputTable WHERE {fn NOW()} < @column)";
 
 		sql = Parser.replaceExists(setting, sql);
@@ -510,6 +536,22 @@ public final class SQL {
 		sql = ANTLR.parseSQL(setting, sql);
 
 		return Network.isTrue(setting.dataSource, sql);
+	}
+
+	private static boolean containsFutureDateOracle(Setting setting, String table, String column) {
+		String sql = "SELECT count(*) FROM (SELECT 1 FROM @inputTable WHERE {fn NOW()} < @column)";
+
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, table);
+
+		Map<String, String> fieldMap = new HashMap<>();
+		fieldMap.put("@column", column);
+		fieldMap.put("@inputTable", table);
+		sql = escapeEntityMap(setting, sql, fieldMap);
+
+		sql = ANTLR.parseSQL(setting, sql);
+
+		return Integer.valueOf(Network.executeQuery(setting.dataSource, sql).get(0)) > 0;
 	}
 
 	// Get count of tuples fulfilling the time constraint.
@@ -552,11 +594,16 @@ public final class SQL {
 	// Note that we are working with the input tables -> alter commands are forbidden.
 	// IS NOT USING SYSTEM ESCAPING
 	public static boolean isIdUnique(Setting setting, MetaOutput.OutputTable table) {
+
+		if ("Oracle".equals(setting.databaseVendor)) {
+			return isIdUniqueOracle(setting, table);
+		}
+
 		String sql = "SELECT exists(" +
 						 "SELECT count(*) " +
 						 "FROM @inputTable " +
 						 "GROUP BY @idCommaSeparated " +
-						 "HAVING COUNT(*)>1" +
+						 "HAVING count(*)>1" +
 					 ")";
 
 		// Get escape characters
@@ -585,15 +632,52 @@ public final class SQL {
 		return result;
 	}
 
+	private static boolean isIdUniqueOracle(Setting setting, MetaOutput.OutputTable table) {
+		String sql = "SELECT count(*) FROM (" +
+				"SELECT count(*) " +
+				"FROM @inputTable " +
+				"GROUP BY @idCommaSeparated " +
+				"HAVING count(*)>1" +
+				")";
+
+		// Get escape characters
+		String QL = setting.quoteEntityOpen;
+		String QR = setting.quoteEntityClose;
+
+		// Escape ids
+		String idCommaSeparated = "";
+		for (String id : table.propagationForeignConstraint.fColumn) {
+			idCommaSeparated += QL + id + QR + ",";
+		}
+		idCommaSeparated = idCommaSeparated.substring(0, idCommaSeparated.length() - 1);
+		sql = sql.replace("@idCommaSeparated", idCommaSeparated);
+
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, "dummy");
+		sql = escapeEntityTable(setting, sql, table);
+
+		boolean result = Integer.valueOf(Network.executeQuery(setting.dataSource, sql).get(0)) == 0;
+
+		if (result) logger.trace("# Column " + table.propagationForeignConstraint.fColumn + " in " + table.originalName + " doesn't contain duplicates #");
+		else logger.trace("# Column " + table.propagationForeignConstraint.fColumn + " in " + table.originalName + " CONTAINS duplicates #");
+
+		return result;
+	}
+
 	// Check whether the columns {baseId, baseDate} are unique in the table in the inputSchema.
 	public static boolean isTargetTupleUnique(Setting setting, String table) {
 		// We could have used possibly faster: "ALTER TABLE @outputTable ADD UNIQUE (@baseId, @baseDate)".
 		// But it would not work in Netezza as Netezza doesn't support constraint checking and referential integrity.
-		String sql = "SELECT EXISTS(" +
+
+		if ("Oracle".equals(setting.databaseVendor)) {
+			return isTargetTupleUniqueOracle(setting, table);
+		}
+
+		String sql = "SELECT exists(" +
 						"SELECT @targetId " +
 						"FROM @targetTable " +
 						"GROUP BY @targetId" + (setting.targetDate==null ? " " : ", @targetDate ") +
-						"HAVING COUNT(*)>1" +
+						"HAVING count(*)>1" +
 				      ")";
 
 		sql = Parser.replaceExists(setting, sql);
@@ -603,17 +687,48 @@ public final class SQL {
 		return !Network.isTrue(setting.dataSource, sql); // Return negation
 	}
 
+	private static boolean isTargetTupleUniqueOracle(Setting setting, String table) {
+
+		String sql = "SELECT count(*)" +
+				"FROM (" +
+				"SELECT @targetId " +
+				"FROM @targetTable " +
+				"GROUP BY @targetId" + (setting.targetDate==null ? " " : ", @targetDate ") +
+				"HAVING count(*)>1" +
+				") t";
+
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, table);
+
+		return Integer.valueOf(Network.executeQuery(setting.dataSource, sql).get(0)) == 0;
+	}
+
 	// Returns 1 if the baseId in the table in the outputSchema is unique.
-	// MUST BE TESTED ON ORACLE
 	public static boolean isTargetIdUnique(Setting setting, String table) {
-		String sql = "SELECT EXISTS(" +
-					 "SELECT @baseId FROM @outputTable GROUP BY @baseId HAVING COUNT(*)>1)";
+
+		if ("Oracle".equals(setting.databaseVendor)) {
+			return isTargetIdUniqueOracle(setting, table);
+		}
+
+		String sql = "SELECT exists(" +
+					 "SELECT @baseId FROM @outputTable GROUP BY @baseId HAVING count(*)>1)";
 
 		sql = Parser.replaceExists(setting, sql);
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, table);
 
 		return !Network.isTrue(setting.dataSource, sql); // Return negation
+	}
+
+	private static boolean isTargetIdUniqueOracle(Setting setting, String table) {
+		String sql = "SELECT count(*) FROM (" +
+				"SELECT @baseId FROM @outputTable GROUP BY @baseId HAVING count(*)>1)";
+
+
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, table);
+
+		return Integer.valueOf(Network.executeQuery(setting.dataSource, sql).get(0)) == 0;
 	}
 
 
@@ -655,7 +770,7 @@ public final class SQL {
 				"FROM " + table + " " +
 				"WHERE @columnName is not null " +
 				"GROUP BY @columnName " +
-				"ORDER BY COUNT(*) DESC";
+				"ORDER BY count(*) DESC";
 
 		// A query without an aggregate function in order by clause because of following limitation of SAS:
 		//	Summary functions are restricted to the SELECT and HAVING clauses only...
@@ -679,7 +794,7 @@ public final class SQL {
 	// Could the two columns in the table describe a symmetric relation (like in borderLength(c1, c2))?
 	// DEVELOPMENTAL AND LIKELY USELESS...
 	public static boolean isSymmetric(Setting setting, HashMap<String, String> map) {
-		String sql = "SELECT EXISTS("
+		String sql = "SELECT exists("
 						+ "SELECT @lagColumn, @column FROM @inputTable"
 						+ "EXCEPT "
 						+ "SELECT @column, @lagColumn FROM @inputTable"
@@ -703,16 +818,16 @@ public final class SQL {
  		
  		// Is the predictor categorical, numeric or time? 		
  		if ("nominal".equals(dataType)) {
- 			sql = "select count(*)*power(corr(t2.average, t1.@baseTarget), 2) " +
-					"from @outputTable t1 " +
-					"join ( " +
-						"select @column " + 
+ 			sql = "SELECT count(*)*power(corr(t2.average, t1.@baseTarget), 2) " +
+					"FROM @outputTable t1 " +
+					"JOIN ( " +
+						"SELECT @column " + 
 							", cast(avg(@baseTarget) as decimal(38, 10)) as average " +	// NOT NICE, but solves frequent arithmetic errors on MSSQL.
-						"from @outputTable " +
-						"group by @column " +
+						"FROM @outputTable " +
+						"GROUP BY @column " +
 					") t2 " +
-					"on t1.@column = t2.@column" +
-					"where t1.@column is not null and t1.@baseTarget is not null";
+					"ON t1.@column = t2.@column" +
+					"where t1.@column is not null AND t1.@baseTarget is not null";
  		} else if ("numerical".equals(dataType)){
  			sql = "SELECT count(@column)*power(corr(@column, @baseTarget), 2) " +
 					"FROM @outputTable " + /* We are working with the outputTable, hence schema & database are output. */
@@ -768,87 +883,87 @@ public final class SQL {
  		// Technical: MySQL or PostgreSQL require correlation name (also known as alias) for derived tables. 
  		// But Oracle does not accept "as" keyword in front of the table alias. See:
  		// http://www.techonthenet.com/oracle/alias.php
- 		// Hence use following syntax: (select col1 from table t1) t2.
+ 		// Hence use following syntax: (SELECT col1 from table t1) t2.
 		// Linear regularization is appropriate assuming infinite samples. On finite samples it is possibly too
 		// harsh on attributes with too many unique values. But I can live with that.
  		if ("nominal".equals(predictorType)) {
  			// Use categorical column directly
- 			sql = "select sum(chi2)/count(distinct(bin)) " // Linearly regularized against columns with high cardinality
-				+ "from ( "
-				+ "	select (expected.expected-measured.count) * (expected.expected-measured.count) / expected.expected AS chi2"
+ 			sql = "SELECT sum(chi2)/count(distinct(bin)) " // Linearly regularized against columns with high cardinality
+				+ "FROM ( "
+				+ "	SELECT (expected.expected-measured.count) * (expected.expected-measured.count) / expected.expected AS chi2"
 				+ " , expected.bin AS bin"
-				+ "	from ( "
-				+ "		select expected_bin.count*expected_target.prob AS expected "
+				+ "	FROM ( "
+				+ "		SELECT expected_bin.count*expected_target.prob AS expected "
 				+ "			 , bin "
 				+ "			 , target "
-				+ "		from ( "
-				+ "			select @baseTarget AS target "
+				+ "		FROM ( "
+				+ "			SELECT @baseTarget AS target "
 				+ "				 , count(*)/max(t2.nrow) AS prob "
-				+ "			from @outputTable, ( "
-				+ "				select count(*) AS nrow "
-				+ "				from @outputTable "
+				+ "			FROM @outputTable, ( "
+				+ "				SELECT count(*) AS nrow "
+				+ "				FROM @outputTable "
 				+ "			) t2 "
 				+ "			GROUP BY @baseTarget "
 				+ "		) expected_target, ( "
-				+ "			select count(*) AS count "
+				+ "			SELECT count(*) AS count "
 				+ "				 , @column AS bin "
-				+ "			from @outputTable "
-				+ "			group by @column "
+				+ "			FROM @outputTable "
+				+ "			GROUP BY @column "
 				+ "		) expected_bin "
 				+ "	) expected "
-				+ "	left join ( "
-				+ "		select @baseTarget AS target "
+				+ "	LEFT JOIN ( "
+				+ "		SELECT @baseTarget AS target "
 				+ "			 , count(*) AS count "
 				+ "			 , @column AS bin "
-				+ "		from @outputTable "
-				+ "		group by @column, @baseTarget "
+				+ "		FROM @outputTable "
+				+ "		GROUP BY @column, @baseTarget "
 				+ "	) measured "
-				+ "	on expected.bin = measured.bin "
-				+ "	and expected.target = measured.target "
+				+ "	ON expected.bin = measured.bin "
+				+ "	AND expected.target = measured.target "
 				+ ") chi2";
  		} else {
  			// Group numerical/time values into 10 bins.
  			// If desirable you can optimize the optimal amount of bins with Sturge's rule 
  			// but syntax for log is different in each database. 
- 			sql = "select sum(chi2)/10 " // To match regularization of nominal columns
-				+ "from ( "
-				+ "	select (expected.expected-measured.count) * (expected.expected-measured.count) / expected.expected AS chi2 "
-				+ "	from ( "
-				+ "		select expected_bin.count*expected_target.prob AS expected "
+ 			sql = "SELECT sum(chi2)/10 " // To match regularization of nominal columns
+				+ "FROM ( "
+				+ "	SELECT (expected.expected-measured.count) * (expected.expected-measured.count) / expected.expected AS chi2 "
+				+ "	FROM ( "
+				+ "		SELECT expected_bin.count*expected_target.prob AS expected "
 				+ "			 , bin "
 				+ "			 , target "
-				+ "		from ( "
-				+ "			select @baseTarget AS target "
+				+ "		FROM ( "
+				+ "			SELECT @baseTarget AS target "
 				+ "				 , count(*)/max(t2.nrow) AS prob "
-				+ "			from @outputTable, ( "
-				+ "				select count(*) AS nrow "
-				+ "				from @outputTable "
+				+ "			FROM @outputTable, ( "
+				+ "				SELECT count(*) AS nrow "
+				+ "				FROM @outputTable "
 				+ "			) t2 "
 				+ "			GROUP BY @baseTarget "
 				+ "		) expected_target, ( "
-				+ "			select count(*) AS count "
+				+ "			SELECT count(*) AS count "
 				+ "				 , floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) AS bin " // Bin really into 10 bins.
-				+ "			from @outputTable, ( "
-				+ "					select (max(@column)-min(@column)) / 10 AS bin_width "
+				+ "			FROM @outputTable, ( "
+				+ "					SELECT (max(@column)-min(@column)) / 10 AS bin_width "
 				+ "						 , min(@column) AS min_value "
-				+ "					from @outputTable "
+				+ "					FROM @outputTable "
 				+ "				) t2 "
-				+ "			group by floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) "	// And avoid division by zero.
+				+ "			GROUP BY floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) "	// And avoid division by zero.
 				+ "		) expected_bin "
 				+ "	) expected "
-				+ "	left join ( "
-				+ "		select @baseTarget AS target "
+				+ "	LEFT JOIN ( "
+				+ "		SELECT @baseTarget AS target "
 				+ "			 , count(*) AS count "
 				+ "			 , floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) AS bin "
-				+ "		from @outputTable, ( "
-				+ "				select (max(@column)-min(@column)) / 10 AS bin_width "
+				+ "		FROM @outputTable, ( "
+				+ "				SELECT (max(@column)-min(@column)) / 10 AS bin_width "
 				+ "					 , min(@column) AS min_value "
-				+ "				from @outputTable "
+				+ "				FROM @outputTable "
 				+ "			) t2 "
-				+ "		group by floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)), @baseTarget "
+				+ "		GROUP BY floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)), @baseTarget "
 				+ "	) measured "
-				+ "	on expected.bin = measured.bin "
-				+ "	and expected.target = measured.target "
+				+ "	ON expected.bin = measured.bin "
+				+ "	AND expected.target = measured.target "
 				+ ") chi2";
 
  			// For time columns just cast time to number.
@@ -891,9 +1006,9 @@ public final class SQL {
 	
  	// QC patterns based on produced predictors
  	private static List<String> qcPredictors(Setting setting) {
- 		String sql = "select pattern_name " +
-					 "from @outputTable " +
-					 "group by pattern_name " +
+ 		String sql = "SELECT pattern_name " +
+					 "FROM @outputTable " +
+					 "GROUP BY pattern_name " +
 					 "having avg(is_ok + 0.0) = 0";	// We have to cast int to double before averaging
  		
  		sql = expandName(sql);
@@ -912,7 +1027,7 @@ public final class SQL {
  		dropTable(setting, "ms_" + setting.inputSchema);
  		
  		// Copy the current mainSample
- 		String sql = "create table @outputSchema.@ms as select * from @outputTable";
+ 		String sql = "create table @outputSchema.@ms as SELECT * FROM @outputTable";
  		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, setting.mainTable);
 		HashMap<String, String> fieldMap = new HashMap<>();
@@ -924,7 +1039,7 @@ public final class SQL {
  		dropTable(setting, "j_" + setting.inputSchema);
  		
  		// Copy the current journal
- 		sql = "create table @outputSchema.@j as select * from @outputTable";
+ 		sql = "create table @outputSchema.@j as SELECT * FROM @outputTable";
  		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, setting.journalPredictor);
 		fieldMap = new HashMap<>();
@@ -1375,7 +1490,7 @@ public final class SQL {
 		String QL = setting.quoteEntityOpen;
 		String QR = setting.quoteEntityClose;
 
-		// Escape the select part
+		// Escape the SELECT part
 		String baseId = "";
 		for (String id : setting.baseIdList) {
 			baseId = baseId + "t1." + QL + id + QR + ", ";

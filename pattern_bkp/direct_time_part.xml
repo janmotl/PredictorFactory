@@ -29,7 +29,7 @@
 	</example>
 	<author>Jan Motl</author>
 	<date>2015-04-16</date>
-	<code compatibility="PostgreSQL, MySQL">SELECT @base
+	<code compatibility="PostgreSQL, MySQL, Oracle">SELECT @base
 	           , EXTRACT(@field from @timeColumn) AS @columnName
 	      FROM @propagatedTable
 	</code>

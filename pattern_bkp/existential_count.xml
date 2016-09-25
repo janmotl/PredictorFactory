@@ -36,7 +36,7 @@
 	<author>Jan Motl</author>
 	<date>2015-05-07</date>
 	<code>SELECT @base
-			   , sum(CASE @nominalColumn WHEN '@value' THEN 1 ELSE 0 END) AS @columnName
+			   , sum(CASE WHEN @nominalColumn = '@value' THEN 1 ELSE 0 END) AS @columnName
 	      FROM @propagatedTable
 	      GROUP BY @base
 	</code>

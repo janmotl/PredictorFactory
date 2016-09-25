@@ -141,7 +141,7 @@ public class Parser {
 	}
 
 	// Replace:
-	// 		CASE EXISTS (...)
+	// 		SELECT EXISTS (...)
 	// with:
 	//		SELECT COUNT(*)>1 FROM (...)
 	//
@@ -151,6 +151,8 @@ public class Parser {
 	// MSSQL: MSSQL does not support SELECT EXISTS.
 	//        MSSQL allows EXISTS clause only in CASE WHEN EXISTS or WHERE EXISTS.
 	//        Reference: http://stackoverflow.com/questions/2759756/is-it-possible-to-select-exists-directly-as-a-bit
+	// ORACLE: Oracle supports only WHERE EXISTS, because Oracle does not known a concept of a boolean.
+	//		  Reference: http://stackoverflow.com/questions/3726758/is-there-a-boolean-type-in-oracle-databases
 	// PostgreSQL and MariaDB are ok.
 	public static String replaceExists(Setting setting, String sql) {
 		if (setting.supportsSelectExists) return sql;

@@ -140,7 +140,8 @@ Description of the fields:
 	/>
 	
 	<!-- Interval arithmetic can result into an invalid date -> use add_months for months and years
-	as it can correctly deal with different length of months and leap years. -->
+	as it can correctly deal with different length of months and leap years.
+	DateAddSyntax has a precision appendix to avoid errors. -->
 	<driver
 		name="Oracle"
 		driverClass="oracle.jdbc.OracleDriver"
@@ -149,7 +150,7 @@ Description of the fields:
 		dbNameSeparator=":"
 		supportsJoinUsing="true"
 		corrSyntax="corr(@column1, @column2)"
-		dateAddSyntax="(@baseDate + INTERVAL '@amount' @datePart)"
+		dateAddSyntax="(@baseDate + INTERVAL '@amount' @datePart(9))"
 		dateAddMonth="add_months(@baseDate, @amount)"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="(@column - TO_DATE('01011970','DDMMYYYY'))"

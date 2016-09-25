@@ -4,6 +4,11 @@
 	<name>Day part</name>
 	<description>
 		Identify, whether it's working hour, morning, evening or night.
+
+		If the temporal attribute does not contain time part (i.e. is a date),
+		then the pattern fails.
+
+		Note: Could just return hour (but then it would double direct_time_part).
 	</description>
 	<example>
 		Newspapers are commonly sold in the morning.

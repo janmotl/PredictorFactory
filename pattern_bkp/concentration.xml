@@ -18,7 +18,7 @@
 	</example>
 	<author>Jan Motl</author>
 	<date>2014-12-22</date>
-	<code compatibility="PostgreSQL">SELECT a.@base
+	<code compatibility="PostgreSQL">SELECT @base
   			   	, 100.0 * count(CASE WHEN m."mode"=@column THEN 1 ELSE null END) / nullif(count(@column), 0) AS @columnName
 			FROM @propagatedTable a
   			JOIN (select @basePartitionBy
@@ -27,9 +27,9 @@
         		GROUP BY @basePartitionBy
         	) m
 			USING (@basePartitionBy)
-        	GROUP BY a.@base
+        	GROUP BY @base
 	</code>
-	<code compatibility="Oracle">SELECT a.@base
+	<code compatibility="Oracle">SELECT @base
   			   	, 100.0 * count(CASE WHEN m."mode"=@column THEN 1 ELSE null END) / nullif(count(@column), 0) AS @columnName
 			FROM @propagatedTable a
   			JOIN (select @basePartitionBy
@@ -38,7 +38,7 @@
         		GROUP BY @basePartitionBy
         	) m
 			USING (@basePartitionBy)
-        	GROUP BY a.@base
+        	GROUP BY @base
 	</code>
 	<parameter key="@column" value="@nominalColumn, @numericalColumn, @timeColumn"/>
 	<cardinality>n</cardinality>
