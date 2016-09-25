@@ -9,7 +9,7 @@ import gudusoft.gsqlparser.pp.para.styleenums.TCaseOption;
 import gudusoft.gsqlparser.pp.stmtformatter.FormatterFactory;
 
 
-public class FormatSQL2 {
+public class FormatSQL {
 
     // Converts SQL text to colorful HTML SQL
     public static String formatSQL(String sql)

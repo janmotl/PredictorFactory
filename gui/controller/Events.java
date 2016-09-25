@@ -23,7 +23,7 @@ import java.util.*;
 
 import static utility.ParseInteger.parseInteger;
 import static utility.TextToHTML.textToHTML;
-import static utility.FormatSQL2.formatSQL;
+import static utility.FormatSQL.formatSQL;
 
 
 public class Events implements Initializable {
