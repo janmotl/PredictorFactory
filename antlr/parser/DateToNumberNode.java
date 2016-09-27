@@ -5,19 +5,19 @@ import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 
 public class DateToNumberNode extends TerminalNodeImpl {
 
-	private final String text;
+    private final String text;
 
-	public DateToNumberNode(SQLParser.DatetonumberContext context, String pattern) {
-		// Constructor
-		super(context.getStart());
+    public DateToNumberNode(SQLParser.DatetonumberContext context, String pattern) {
+        // Constructor
+        super(context.getStart());
 
-		String column = context.payload().getText();
+        String column = context.payload().getText();
 
-		text = pattern.replace("@column", column);
-	}
+        text = pattern.replace("@column", column);
+    }
 
-	@Override
-	public String getText() {
-		return text;
-	}
+    @Override
+    public String getText() {
+        return text;
+    }
 }

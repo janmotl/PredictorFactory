@@ -1,5 +1,5 @@
 package metaInformation;
 
 public enum StatisticalType {
-	ID, NOMINAL, NUMERICAL, TEMPORAL
+    ID, NOMINAL, NUMERICAL, TEMPORAL
 }

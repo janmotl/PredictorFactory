@@ -27,75 +27,75 @@ import java.util.ArrayList;
 @XmlRootElement (name="databases")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class DatabasePropertyList {
-	// Logging
-	private static final Logger logger = Logger.getLogger(DatabasePropertyList.class.getName());
-	
-	// Private Fields
-	private ArrayList<DatabaseProperty> database = new ArrayList<>();
-	
-	// Get property by name
-	public DatabaseProperty getDatabaseProperties(String name) {
-		for (DatabaseProperty property : database) {
-			if (property.name.equals(name)) {
-				return property;
-			}
-		}
-		
-		logger.warn("There isn't a database setting for: " + name);
-		return new DatabaseProperty();
-	}
-	
-	// Set property by name
-	public void setDatabaseProperties(DatabaseProperty property) {
-		
-		// Remove the old setting
-		database.removeIf(i -> i.name.equals(property.name));
-		
-		// Add the new setting
-		database.add(property);
-	}
-	
-	// Load property list from XML
-	public static DatabasePropertyList unmarshall(){
-		DatabasePropertyList list = null;
-	    
-		try {
-			JAXBContext context = JAXBContext.newInstance(DatabasePropertyList.class);
-		    Unmarshaller unmarshaller = context.createUnmarshaller();
+    // Logging
+    private static final Logger logger = Logger.getLogger(DatabasePropertyList.class.getName());
 
-			SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-			Schema schema = factory.newSchema(DatabasePropertyList.class.getResource("/database.xsd"));
+    // Private Fields
+    private ArrayList<DatabaseProperty> database = new ArrayList<>();
 
-			// JAXB's default parser (Metro) does not take into account attributes' defaults defined in the xsd.
-			// The implemented solution to the problem uses SAX parser instead.
-			// See: http://stackoverflow.com/questions/5423414/does-jaxb-support-default-schema-values
-			SAXParserFactory parser = SAXParserFactory.newInstance();
-			parser.setSchema(schema);
-			XMLReader xmlReader = parser.newSAXParser().getXMLReader();
-			SAXSource source = new SAXSource(xmlReader, new InputSource(new FileInputStream("config/database.xml")));
-			list = (DatabasePropertyList) unmarshaller.unmarshal(source);
-		} catch (JAXBException|SAXException|FileNotFoundException|ParserConfigurationException e) {
-			logger.warn("Attempt to parse 'config/database.xml' failed. Does the file exist?");
-		}
+    // Get property by name
+    public DatabaseProperty getDatabaseProperties(String name) {
+        for (DatabaseProperty property : database) {
+            if (property.name.equals(name)) {
+                return property;
+            }
+        }
+    
+        logger.warn("There isn't a database setting for: " + name);
+        return new DatabaseProperty();
+    }
 
-		return list;
-	}
-	
-	// Write into the XML
-	public static void marshall(DatabasePropertyList databasePropertyList) {
-	 	 
-		try {
-			File file = new File("config/database.xml");
-			JAXBContext jaxbContext = JAXBContext.newInstance(DatabasePropertyList.class);
-			Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+    // Set property by name
+    public void setDatabaseProperties(DatabaseProperty property) {
+    
+        // Remove the old setting
+        database.removeIf(i -> i.name.equals(property.name));
+    
+        // Add the new setting
+        database.add(property);
+    }
 
-			// Output pretty printed
-			jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-			
-			// Write into the file
-			jaxbMarshaller.marshal(databasePropertyList, file);
-		} catch (JAXBException e) {
-			logger.warn("Attempt to write 'config/database.xml' failed. Does Predictor Factory have the right to write?");
-		}
-	}
+    // Load property list from XML
+    public static DatabasePropertyList unmarshall(){
+        DatabasePropertyList list = null;
+       
+        try {
+            JAXBContext context = JAXBContext.newInstance(DatabasePropertyList.class);
+            Unmarshaller unmarshaller = context.createUnmarshaller();
+
+            SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            Schema schema = factory.newSchema(DatabasePropertyList.class.getResource("/database.xsd"));
+
+            // JAXB's default parser (Metro) does not take into account attributes' defaults defined in the xsd.
+            // The implemented solution to the problem uses SAX parser instead.
+            // See: http://stackoverflow.com/questions/5423414/does-jaxb-support-default-schema-values
+            SAXParserFactory parser = SAXParserFactory.newInstance();
+            parser.setSchema(schema);
+            XMLReader xmlReader = parser.newSAXParser().getXMLReader();
+            SAXSource source = new SAXSource(xmlReader, new InputSource(new FileInputStream("config/database.xml")));
+            list = (DatabasePropertyList) unmarshaller.unmarshal(source);
+        } catch (JAXBException|SAXException|FileNotFoundException|ParserConfigurationException e) {
+            logger.warn("Attempt to parse 'config/database.xml' failed. Does the file exist?");
+        }
+
+        return list;
+    }
+
+    // Write into the XML
+    public static void marshall(DatabasePropertyList databasePropertyList) {
+        
+        try {
+            File file = new File("config/database.xml");
+            JAXBContext jaxbContext = JAXBContext.newInstance(DatabasePropertyList.class);
+            Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+
+            // Output pretty printed
+            jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+        
+            // Write into the file
+            jaxbMarshaller.marshal(databasePropertyList, file);
+        } catch (JAXBException e) {
+            logger.warn("Attempt to write 'config/database.xml' failed. Does Predictor Factory have the right to write?");
+        }
+    }
 }

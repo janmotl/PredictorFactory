@@ -10,12 +10,12 @@ import java.util.List;
 
 @XmlType(name="foreignConstraint")
 public class ForeignConstraint implements Comparable<ForeignConstraint> {
-	@XmlAttribute public String name;		// Optional in the input XML. More like a comment.
+    @XmlAttribute public String name;       // Optional in the input XML. More like a comment.
     public String table;
     public String fTable;
     public List<String> column = new ArrayList<>();
     public List<String> fColumn = new ArrayList<>();
-	@XmlTransient public int sequence;		// Composite keys in the input XML use multiple column and fColumn fields.
+    @XmlTransient public int sequence;      // Composite keys in the input XML use multiple column and fColumn fields.
 
     ////////////////// Boring stuff //////////////
 
@@ -33,30 +33,30 @@ public class ForeignConstraint implements Comparable<ForeignConstraint> {
 
     // Required for assembling of composite keys (function collectRelationships)
     @Override
-	public int compareTo(ForeignConstraint that) {
-    	final int BEFORE = -1;
-	    final int EQUAL = 0;
-	    final int AFTER = 1;
+    public int compareTo(ForeignConstraint that) {
+        final int BEFORE = -1;
+        final int EQUAL = 0;
+        final int AFTER = 1;
 
-	    // This optimization is usually worthwhile, and can always be added
-	    if (this == that) return EQUAL;
- 
-    	int comparison = this.table.compareTo(that.table);
-    	if (comparison != EQUAL) return comparison;
+        // This optimization is usually worthwhile, and can always be added
+        if (this == that) return EQUAL;
 
-    	comparison = this.fTable.compareTo(that.fTable);
-    	if (comparison != EQUAL) return comparison;
-    	    
-    	comparison = this.name.compareTo(that.name);
-    	if (comparison != EQUAL) return comparison;
+        int comparison = this.table.compareTo(that.table);
+        if (comparison != EQUAL) return comparison;
 
-    	// Primitive numbers follow this form
-	    if (this.sequence < that.sequence) return BEFORE;
-	    if (this.sequence > that.sequence) return AFTER;
-	    
-	    return EQUAL;
-	}
-    
+        comparison = this.fTable.compareTo(that.fTable);
+        if (comparison != EQUAL) return comparison;
+           
+        comparison = this.name.compareTo(that.name);
+        if (comparison != EQUAL) return comparison;
+
+        // Primitive numbers follow this form
+        if (this.sequence < that.sequence) return BEFORE;
+        if (this.sequence > that.sequence) return AFTER;
+       
+        return EQUAL;
+    }
+   
     // Required for assembling of composite keys (function collectRelationships)
     // Compares based on {table, fTable, name} and intentionally ignores {sequence, column, fColumn}
     @Override

@@ -12,102 +12,102 @@ import java.util.List;
 
 public class FromListener extends SQLBaseListener {
 
-	private boolean supportsJoinUsing;
+    private boolean supportsJoinUsing;
 
-	public FromListener(boolean supportsJoinUsing) {
-		this.supportsJoinUsing = supportsJoinUsing;
-	}
+    public FromListener(boolean supportsJoinUsing) {
+        this.supportsJoinUsing = supportsJoinUsing;
+    }
 
-	@Override
-	public void enterFrom(SQLParser.FromContext ctx)  {
+    @Override
+    public void enterFrom(SQLParser.FromContext ctx)  {
 
-		// Do we have to transcribe the SQL?
-		if (supportsJoinUsing) return;
+        // Do we have to transcribe the SQL?
+        if (supportsJoinUsing) return;
 
-		// Initialization
-		String name1 = null;
-		String name2 = null;
+        // Initialization
+        String name1 = null;
+        String name2 = null;
 
-		// Get table names (prefer aliases, if available)
-		// NOTE: the conditions on tables and using are unnecessary
-		List<SQLParser.TableContext> tables = ctx.table();
-		if (tables.size()>0) {
-			name1 = tables.get(0).getText();
-		}
-		if (tables.size()>1) {
-			name2 = tables.get(1).getText();
-		}
+        // Get table names (prefer aliases, if available)
+        // NOTE: the conditions on tables and using are unnecessary
+        List<SQLParser.TableContext> tables = ctx.table();
+        if (tables.size()>0) {
+            name1 = tables.get(0).getText();
+        }
+        if (tables.size()>1) {
+            name2 = tables.get(1).getText();
+        }
 
-		List<SQLParser.AliasContext> aliases = ctx.alias();
-		if (aliases.size()>0) {
-			name1 = aliases.get(0).getText();
-		}
-		if (aliases.size()>1) {
-			name2 = aliases.get(1).getText();
-		}
+        List<SQLParser.AliasContext> aliases = ctx.alias();
+        if (aliases.size()>0) {
+            name1 = aliases.get(0).getText();
+        }
+        if (aliases.size()>1) {
+            name2 = aliases.get(1).getText();
+        }
 
-		// Deal with "using"
-		List<SQLParser.UsingContext> usings = ctx.using();
-		if (usings.size()>0) {
-			transformUsing(usings.get(0), name1, name2);
-		}
-	}
+        // Deal with "using"
+        List<SQLParser.UsingContext> usings = ctx.using();
+        if (usings.size()>0) {
+            transformUsing(usings.get(0), name1, name2);
+        }
+    }
 
-	// Note, that we do not deduplicate columns from the returned relation as we should.
-	// If we name all columns in the query that we need, we are ok. But we are using stars, we are doomed.
-	// Also, if we are grouping based on the join key, we have to, likely, group by the attributes in both relations.
-	private static void transformUsing(SQLParser.UsingContext ctx, String name1, String name2) {
+    // Note, that we do not deduplicate columns from the returned relation as we should.
+    // If we name all columns in the query that we need, we are ok. But we are using stars, we are doomed.
+    // Also, if we are grouping based on the join key, we have to, likely, group by the attributes in both relations.
+    private static void transformUsing(SQLParser.UsingContext ctx, String name1, String name2) {
 
-		// Back up old contexts
-		Token using = (Token) ctx.getToken(SQLParser.USING, 0).getPayload();
-		Token lbr = (Token) ctx.getToken(SQLParser.LBR, 0).getPayload();
-		ParseTree ids = ctx.columns();
-		Token rbr = (Token) ctx.getToken(SQLParser.RBR, 0).getPayload();
+        // Back up old contexts
+        Token using = (Token) ctx.getToken(SQLParser.USING, 0).getPayload();
+        Token lbr = (Token) ctx.getToken(SQLParser.LBR, 0).getPayload();
+        ParseTree ids = ctx.columns();
+        Token rbr = (Token) ctx.getToken(SQLParser.RBR, 0).getPayload();
 
-		// Remove all blocks
-		for (int i = ctx.getChildCount(); i > 0; i--) {
-			ctx.removeLastChild();
-		}
+        // Remove all blocks
+        for (int i = ctx.getChildCount(); i > 0; i--) {
+            ctx.removeLastChild();
+        }
 
-		// Convert "using" token to "on" token
-		CommonToken on = (CommonToken) using;
-		on.setText("on ");
+        // Convert "using" token to "on" token
+        CommonToken on = (CommonToken) using;
+        on.setText("on ");
 
-		// Convert ids
-		ParserRuleContext parserRuleContext = new ParserRuleContext();
-		for (int i = 0; i < ids.getChildCount(); i++) {
-			CommonToken newId = (CommonToken) ids.getChild(i).getPayload();
-			newId.setText(transformColumns(newId, name1, name2));
-			parserRuleContext.addChild(newId);
-		}
+        // Convert ids
+        ParserRuleContext parserRuleContext = new ParserRuleContext();
+        for (int i = 0; i < ids.getChildCount(); i++) {
+            CommonToken newId = (CommonToken) ids.getChild(i).getPayload();
+            newId.setText(transformColumns(newId, name1, name2));
+            parserRuleContext.addChild(newId);
+        }
 
-		// And replace it with the new block
-		ctx.addChild(on);
-		ctx.addChild(lbr);
-		ctx.addChild(parserRuleContext);
-		ctx.addChild(rbr);
-	}
+        // And replace it with the new block
+        ctx.addChild(on);
+        ctx.addChild(lbr);
+        ctx.addChild(parserRuleContext);
+        ctx.addChild(rbr);
+    }
 
-	// Converts "id1" to "id1=id1" or "," to " AND ". Ignore whitespaces.
-	private static String getSingleText(CommonToken token, String name1, String name2) {
-		String input = token.getText();
+    // Converts "id1" to "id1=id1" or "," to " AND ". Ignore whitespaces.
+    private static String getSingleText(CommonToken token, String name1, String name2) {
+        String input = token.getText();
 
-		if (StringUtils.containsWhitespace(input)) return input;
-		if (",".equals(input)) return " AND ";
-		return name1 + "." + input + "=" + name2 + "." + input;
-	}
+        if (StringUtils.containsWhitespace(input)) return input;
+        if (",".equals(input)) return " AND ";
+        return name1 + "." + input + "=" + name2 + "." + input;
+    }
 
-	private static String transformColumns(CommonToken token, String name1, String name2) {
-		String input = token.getText();
-		String text = "";
+    private static String transformColumns(CommonToken token, String name1, String name2) {
+        String input = token.getText();
+        String text = "";
 
-		if (StringUtils.containsWhitespace(input)) return input;
+        if (StringUtils.containsWhitespace(input)) return input;
 
-		switch (token.getText()) {
-			case ",": return  " AND ";
-			case "@base": text = " AND " + name1 + ".@baseTarget = " + name2 + ".@baseTarget";
-			case "@basePartitionBy": return name1 + ".@baseId = " + name2 + ".@baseId AND " + name1 + ".@baseDate = " + name2 + ".@baseDate" + text;
-			default: return name1 + "." + input + "=" + name2 + "." + input;
-		}
-	}
+        switch (token.getText()) {
+            case ",": return  " AND ";
+            case "@base": text = " AND " + name1 + ".@baseTarget = " + name2 + ".@baseTarget";
+            case "@basePartitionBy": return name1 + ".@baseId = " + name2 + ".@baseId AND " + name1 + ".@baseDate = " + name2 + ".@baseDate" + text;
+            default: return name1 + "." + input + "=" + name2 + "." + input;
+        }
+    }
 }

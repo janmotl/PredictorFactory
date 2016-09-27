@@ -5,31 +5,31 @@ import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 
 public class DateDiffNode extends TerminalNodeImpl {
 
-	private final String text;
+    private final String text;
 
-	public DateDiffNode(SQLParser.DatediffContext context, String pattern) {
-		// Constructor
-		super(context.getStart());
+    public DateDiffNode(SQLParser.DatediffContext context, String pattern) {
+        // Constructor
+        super(context.getStart());
 
-		// The first content
-		String dateTo = (context.payload(0)).getText();
+        // The first content
+        String dateTo = (context.payload(0)).getText();
 
-		// The second content
-		String dateFrom = (context.payload(1)).getText();
+        // The second content
+        String dateFrom = (context.payload(1)).getText();
 
-		text = modifyDateDiff(dateTo, dateFrom, pattern);
-	}
+        text = modifyDateDiff(dateTo, dateFrom, pattern);
+    }
 
-	// Return the modified dateDiff
-	private static String modifyDateDiff(String dateTo, String dateFrom, String pattern) {
-		pattern = pattern.replace("@dateTo", dateTo);
-		pattern = pattern.replace("@dateFrom", dateFrom);
+    // Return the modified dateDiff
+    private static String modifyDateDiff(String dateTo, String dateFrom, String pattern) {
+        pattern = pattern.replace("@dateTo", dateTo);
+        pattern = pattern.replace("@dateFrom", dateFrom);
 
-		return pattern;
-	}
+        return pattern;
+    }
 
-	@Override
-	public String getText() {
-		return text;
-	}
+    @Override
+    public String getText() {
+        return text;
+    }
 }
