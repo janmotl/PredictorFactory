@@ -513,7 +513,8 @@ public class Events implements Initializable {
                 @Override
                 protected Void call() throws Exception {
                     String[] arguments = { "GUI", "GUI" };
-                    run.Launcher.main(arguments);
+                    //run.Launcher.main(arguments);
+                    FakeLogger.fakeCalculation();
                     return null;
                 }
             };

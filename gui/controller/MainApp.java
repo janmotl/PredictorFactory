@@ -22,7 +22,7 @@ public class MainApp extends Application {
     public void start(Stage stage) throws Exception {
     
         System.out.println("All the resources were found: " + ValidatorResource.isResourceAvailable());
-    
+
         Parent root = FXMLLoader.load(getClass().getResource("/fxml/main.fxml"));
     
         stage.setTitle("Predictor Factory");
