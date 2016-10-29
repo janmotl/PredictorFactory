@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Count</name>
+	<description>
+		Number of observations of the child entity with child filter F.
+	</description>
+	<example>
+		Count of transactions.
+	</example>
+	<author>Filip Trojan</author>
+	<date>2014-12-25</date>
+	<code>SELECT @base
+				, coalesce(count(*), 0) AS @columnName
+	      FROM @propagatedTable
+	      GROUP BY @base
+	</code>
+	<cardinality>n</cardinality>
+</pattern>

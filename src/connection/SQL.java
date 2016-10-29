@@ -882,8 +882,15 @@ public final class SQL {
     
         // Technical: MySQL or PostgreSQL require correlation name (also known as alias) for derived tables.
         // But Oracle does not accept "as" keyword in front of the table alias. See:
-        // http://www.techonthenet.com/oracle/alias.php
+        //   http://www.techonthenet.com/oracle/alias.php
         // Hence use following syntax: (SELECT col1 from table t1) t2.
+        // Technical: Oracle and MSSQL do not permit aliases of generated attributes in ORDER BY clause. See:
+        //   http://stackoverflow.com/questions/497241/how-do-i-perform-a-group-by-on-an-aliased-column-in-ms-sql-server
+        //   http://stackoverflow.com/questions/2681494/why-doesnt-oracle-sql-allow-us-to-use-column-aliases-in-group-by-clauses
+        // However, SAS does not return expected results if calculations happen in GROUP BY clause. The warning is:
+        //   The query requires remerging summary statistics back with the original data.
+        // The solution is to create a subqury, which returns table with the generated attribute. And then group the
+        // table by the attribute (applies to "bin" attribute).
         // Linear regularization is appropriate assuming infinite samples. On finite samples it is possibly too
         // harsh on attributes with too many unique values. But I can live with that.
         if ("nominal".equals(predictorType)) {
@@ -898,7 +905,7 @@ public final class SQL {
                 + "          , target "
                 + "     FROM ( "
                 + "         SELECT @baseTarget AS target "
-                + "              , count(*)/max(t2.nrow) AS prob "
+                + "              , 1.0*count(*)/max(t2.nrow) AS prob "
                 + "         FROM @outputTable, ( "
                 + "             SELECT count(*) AS nrow "
                 + "             FROM @outputTable "
@@ -911,7 +918,7 @@ public final class SQL {
                 + "         GROUP BY @column "
                 + "     ) expected_bin "
                 + " ) expected "
-                + " LEFT JOIN ( "
+                + " INNER JOIN ( "
                 + "     SELECT @baseTarget AS target "
                 + "          , count(*) AS count "
                 + "          , @column AS bin "
@@ -934,33 +941,40 @@ public final class SQL {
                 + "          , target "
                 + "     FROM ( "
                 + "         SELECT @baseTarget AS target "
-                + "              , count(*)/max(t2.nrow) AS prob "
+                + "              , 1.0*count(*)/max(t2.nrow) AS prob " // Multiplied by 1.0 to get a decimal value in SAS.
                 + "         FROM @outputTable, ( "
                 + "             SELECT count(*) AS nrow "
                 + "             FROM @outputTable "
                 + "         ) t2 "
                 + "         GROUP BY @baseTarget "
                 + "     ) expected_target, ( "
-                + "         SELECT count(*) AS count "
-                + "              , floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) AS bin " // Bin really into 10 bins.
-                + "         FROM @outputTable, ( "
+                + "         SELECT bin "
+                + "              , count(*) AS count "
+                + "         FROM ( "
+                + "             SELECT floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) AS bin " // Bin really into 10 bins and avoid division by zero.
+                + "             FROM @outputTable, ( "
                 + "                 SELECT (max(@column)-min(@column)) / 10 AS bin_width "
                 + "                      , min(@column) AS min_value "
                 + "                 FROM @outputTable "
                 + "             ) t2 "
-                + "         GROUP BY floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) "   // And avoid division by zero.
+                + "         ) t3 "
+                + "         GROUP BY bin "
                 + "     ) expected_bin "
                 + " ) expected "
-                + " LEFT JOIN ( "
-                + "     SELECT @baseTarget AS target "
+                + " INNER JOIN ( "
+                + "     SELECT target "
+                + "          , bin "
                 + "          , count(*) AS count "
-                + "          , floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) AS bin "
-                + "     FROM @outputTable, ( "
+                + "     FROM ( "
+                + "         SELECT @baseTarget AS target "
+                + "                , floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) AS bin "
+                + "         FROM @outputTable, ( "
                 + "             SELECT (max(@column)-min(@column)) / 10 AS bin_width "
                 + "                  , min(@column) AS min_value "
                 + "             FROM @outputTable "
                 + "         ) t2 "
-                + "     GROUP BY floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)), @baseTarget "
+                + "     ) t3 "
+                + "     GROUP BY bin, target "
                 + " ) measured "
                 + " ON expected.bin = measured.bin "
                 + " AND expected.target = measured.target "
@@ -995,7 +1009,7 @@ public final class SQL {
 
         try {
             chi2 = Double.parseDouble(response.get(0));
-        } catch (Exception e){  // Cover's both, number format exception and null pointer exception.
+        } catch (Exception ignored){  // Cover's both, number format exception and null pointer exception.
             chi2 = 0;
             logger.info("The result of Chi2 calculation on " + table + "." + column + " is null (empty table...). Returning 0.");
         }

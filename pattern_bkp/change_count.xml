@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Change count</name>
+	<description>
+		Count number of changes in an ordered list.
+		
+		Note: This pattern is different from the count of duplicates - you can have a list of binary values, but still
+		have more than two changes.
+	</description>
+	<example>
+		How many times did a student interrupt his studies?
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-05-10</date>
+	<code compatibility="PostgreSQL">SELECT @base
+				 , sum(is_change) AS @columnName
+			FROM (
+			   SELECT @base
+					, (CASE WHEN lag(@column) OVER (ORDER BY @timeColumn) != @column
+							THEN 1
+							ELSE 0
+						END) is_change
+			   FROM @propagatedTable
+			) t
+			GROUP BY @base
+	</code>
+	<parameter key="@column" value="@nominalColumn,@numericalColumn"/>
+	<cardinality>n</cardinality>
+</pattern>

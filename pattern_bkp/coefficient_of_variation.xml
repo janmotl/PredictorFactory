@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Coefficient of variation</name>
+	<description>
+		This is a special scenario of ratio of aggregates. It is defined as the ratio of the standard deviation
+		to the mean.
+
+		The advantage of Coefficient of variation (CV) is that the actual value of the CV is independent of the unit
+		in which the measurement has been taken, so it is a dimensionless number. For comparison between data sets with
+		different units or widely different means, one should use the coefficient of variation instead of the standard
+		deviation.
+
+		The disadvantage is that CV does not make sense on attributes that may take both, positive and negative values.
+	</description>
+	<example>
+		Transaction balance - customers with high coefficient of variation are less likely to pay off the loan in time
+		(they often have negative balance -> average balance is around zero -> coefficient of variation is high).
+	</example>
+	<author>Jan Motl</author>
+	<date>2014-10-14</date>
+	<code>SELECT @base
+			   , stddev_samp(@numericalColumn)/nullif(avg(@numericalColumn), 0) AS @columnName
+	      FROM @propagatedTable
+	      GROUP BY @base
+	</code>
+	<code compatibility="SAS">SELECT @base
+			   , stddev_samp(@numericalColumn)/avg(@numericalColumn) AS @columnName
+	      FROM @propagatedTable
+	      GROUP BY @base
+	</code>
+	<cardinality>n</cardinality>
+</pattern>

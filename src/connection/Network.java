@@ -100,7 +100,7 @@ public final class Network {
             throw new RuntimeException(e);
         }
 
-        //logger.info("#### Successfully connected to the database ####");
+        logger.info("#### Successfully connected to the database ####");
 
         // Set default values if they are not provided
         setting.quoteEntityOpen = MoreObjects.firstNonNull(setting.quoteEntityOpen, quoteEntity.substring(0, 1));

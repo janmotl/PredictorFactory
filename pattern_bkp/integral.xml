@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Integral</name>
+	<description>
+		The integral (area under curve) is computed with the trapezoidal rule as described at:
+			http://www.lexjansen.com/wuss/2004/posters/c_post_the_sas_calculations_.pdf
+	</description>
+	<example>
+		Civilisation's score from Civilization III (a computer game).
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-03-14</date>
+	<code compatibility="PostgreSQL">WITH intermediate AS (
+			SELECT @base
+				 , @numericalColumn nowValue
+				 , @timeColumn nowTime
+				 , LAG(@numericalColumn) OVER (PARTITION BY @basePartitionBy ORDER BY @timeColumn) AS lagValue
+				 , LAG(@timeColumn) OVER (PARTITION BY @basePartitionBy ORDER BY @timeColumn) AS lagTime
+			FROM @propagatedTable
+		  )
+		  SELECT @base
+			   , sum((nowValue + lagValue) * (nowTime - lagTime) / 2) AS @columnName
+		  FROM intermediate
+		  GROUP BY @base
+	</code>
+	<cardinality>n</cardinality>
+</pattern>

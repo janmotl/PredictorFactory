@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Duplicate ratio</name>
+	<description>
+		Proportion of records with a duplicate value.
+		
+		Note: It's different from concentration pattern.
+	</description>
+	<example>
+		Is the customer a man of one taste or an explorer?
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-03-04</date>
+	<code>SELECT t1.@base
+		       , COALESCE(Sum(t2.nrow)/t1.nrow, 0) AS @columnName
+		  FROM (
+		  		SELECT @base
+		       		 , Count(*) AS nrow
+			    FROM @propagatedTable
+			    GROUP BY @base
+			    ) t1
+		  LEFT JOIN (
+		  		SELECT @baseId
+					 , @baseDate
+	  				 , Count(*) AS nrow
+		        FROM @propagatedTable
+		        GROUP BY @base, @column
+		        HAVING Count(*) >= 2
+		        ) t2
+		  USING(@basePartitionBy)
+		  GROUP BY t1.@base, t1.nrow
+	</code>
+    <parameter key="@column" value="@nominalColumn, @numericalColumn"/>
+	<cardinality>n</cardinality>
+</pattern>

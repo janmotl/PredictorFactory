@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Aggregate range</name>
+	<description>
+		As many databases do not support range aggregate, calculate it with min and max. The value is given with:
+		f(x) = max(x) - min(x),
+		where x is an attribute.
+	</description>
+	<example>
+		Swing on the account (the difference between the highest and lowest balance during the period).
+	</example>
+	<author>Jan Motl</author>
+	<date>2014-10-25</date>
+	<code>SELECT @base
+			   , max(@numericalColumn) - min(@numericalColumn) AS @columnName
+	      FROM @propagatedTable
+	      GROUP BY @base
+	</code>
+	<cardinality>n</cardinality>
+</pattern>
