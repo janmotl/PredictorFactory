@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 
 <pattern>
-	<name>Is weekend</name>
+	<name>Time is weekend</name>
 	<description>
 		Divide the date into workday/weekend. 
 		

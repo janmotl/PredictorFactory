@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 
 <pattern>
-	<name>Day part</name>
+	<name>Time day part</name>
 	<description>
 		Identify, whether it's working hour, morning, evening or night.
 

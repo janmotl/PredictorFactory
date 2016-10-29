@@ -5,6 +5,6 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlType(name="parameter")
 public class PatternParameter {
-	@XmlAttribute String key;
-	@XmlAttribute String value;
+    @XmlAttribute String key;
+    @XmlAttribute String value;
 }

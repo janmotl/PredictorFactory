@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 
 <pattern>
-	<name>Number of child types</name>
+	<name>Distinct count</name>
 	<description>
 		Number of distinct values of the child nominal field with the child filter F.
 

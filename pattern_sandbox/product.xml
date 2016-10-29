@@ -10,8 +10,8 @@
 		The implementation is from:
 			http://stackoverflow.com/questions/3912204/why-is-there-no-product-aggregate-function-in-sql
 			
-		NOTE: Can easily result into overflow -> could return directly the logarithm. But what to return,
-		when the product is zero?
+		NOTE: Can easily result into overflow -> should return directly the logarithm. But what to return,
+		when the product is zero? -> return: log(max(product, -999)
 
 		This is a very slow pattern.
 	</description>

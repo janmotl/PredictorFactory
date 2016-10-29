@@ -22,8 +22,9 @@
 		This pattern is producing great predictors with reasonable speed.
 	</description>
 	<example>
-		Industry average.
-		Regional average.
+		Subject's position relative to industry average.
+
+		Subject's position relative to regional average.
 	</example>
 	<author>Filip Trojan</author>
 	<date>2014-12-31</date>

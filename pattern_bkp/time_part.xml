@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 
 <pattern>
-	<name>Time part direct</name>
+	<name>Time part</name>
 	<description>
 		The hour/day/day-of-week/month of the event.
 
@@ -26,6 +26,8 @@
 	</description>
 	<example>
 		Time of waking up.
+
+		Day in week: For example, let’s say you are trying to predict foot fall in a shopping mall based on dates. If you try and use the dates directly, you may not be able to extract meaningful insights from the data. This is because the foot fall is less affected by the day of the month than it is by the day of the week. Now this information about day of week is implicit in your data. You need to bring it out to make your model better.
 	</example>
 	<author>Jan Motl</author>
 	<date>2015-04-16</date>

@@ -26,7 +26,7 @@
 	<code compatibility="PostgreSQL">WITH intermediate AS (
 			SELECT @base
 				 , @numericalColumn AS nowValue
-				 , LAG(@numericalColumn) OVER (PARTITION BY @baseId, @baseDate ORDER BY @timeColumn) AS lagValue
+				 , LAG(@numericalColumn) OVER (PARTITION BY @basePartitionBy ORDER BY @timeColumn) AS lagValue
 			FROM @propagatedTable
 		  )
 		  SELECT @base

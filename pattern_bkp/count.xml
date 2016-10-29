@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 
 <pattern>
-	<name>Number of children</name>
+	<name>Count</name>
 	<description>
 		Number of observations of the child entity with child filter F.
 	</description>

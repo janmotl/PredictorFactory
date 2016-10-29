@@ -2,13 +2,13 @@ package featureExtraction;
 
 public class LeakDetector {
 
-	// A draft of feature leak detector
-	public static void aa() {
+    // A draft of feature leak detector
+    public static void aa() {
 
-		// 1) Is it a target table?
+        // 1) Is it a target table?
 
-		// 2) It the propagated table time constrained?
+        // 2) It the propagated table time constrained?
 
-		// 3) Does the feature function use target attribute, other target ids or other target dates?
-	}
+        // 3) Does the feature function use target attribute, other target ids or other target dates?
+    }
 }

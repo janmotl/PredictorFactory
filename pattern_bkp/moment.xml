@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 
 <pattern>
-	<name>Moments</name>
+	<name>Moment</name>
 	<description>Skewness and kurtosis. 
 	
 		NOTE: Kurtosis will be added once support for multiple columns in the result will be implemented.

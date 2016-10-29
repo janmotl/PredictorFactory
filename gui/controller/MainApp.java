@@ -11,20 +11,20 @@ import utility.ValidatorResource;
 
 public class MainApp extends Application {
 
-	// Main method is only for legacy support - Java 8 won't call it for a JavaFX application (it directly calls launch()).
-	public static void main(String[] args) {
-        launch(args);	// Tell Java to show the GUI
+    // Main method is only for legacy support - Java 8 won't call it for a JavaFX application (it directly calls launch()).
+    public static void main(String[] args) {
+        launch(args);   // Tell Java to show the GUI
     }
-    
+   
     @Override
     // Define the GUI. Stage is OS window. Scene is the content of the window.
-    // Note: All network connections are automatically closed on window closing - no need to handle it manually. 
+    // Note: All network connections are automatically closed on window closing - no need to handle it manually.
     public void start(Stage stage) throws Exception {
-    	
-    	System.out.println("All the resources were found: " + ValidatorResource.isResourceAvailable());
-    	
-        Parent root = FXMLLoader.load(getClass().getResource("/fxml/Main.fxml"));
-    	
+    
+        System.out.println("All the resources were found: " + ValidatorResource.isResourceAvailable());
+
+        Parent root = FXMLLoader.load(getClass().getResource("/fxml/main.fxml"));
+    
         stage.setTitle("Predictor Factory");
         stage.getIcons().add(new Image("/img/ios7-gear-24.png"));
         stage.setMinWidth(600);
@@ -32,9 +32,9 @@ public class MainApp extends Application {
         stage.setScene(new Scene(root, 600, 460));
         stage.show();
 
-		// Setup logging - load the property file. Important for subsequent connection to the database.
-		// SHOULD USE A DIFFERENT CONFIGURATION FILE WITH GUI APPENDER ENABLED
-		Logging.initialization();
+        // Setup logging - load the property file. Important for subsequent connection to the database.
+        // SHOULD USE A DIFFERENT CONFIGURATION FILE WITH GUI APPENDER ENABLED
+        Logging.initialization();
 
     }
 }

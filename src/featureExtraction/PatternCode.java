@@ -6,6 +6,6 @@ import javax.xml.bind.annotation.XmlValue;
 
 @XmlType(name="code")
 public class PatternCode {
-	@XmlAttribute String compatibility;
-	@XmlValue String code;
+    @XmlAttribute String compatibility;
+    @XmlValue String code;
 }

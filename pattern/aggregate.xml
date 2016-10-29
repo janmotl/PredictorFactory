@@ -8,10 +8,6 @@
 
 		This pattern is a horse power for 1:n relationships and has a great ratio predictive power/runtime.
 
-		~~~sql
-		Select * from table
-		~~~
-		
 		Note that "stddev_samp" is automatically translated to the database specific command for sample standard
 		deviation (for example, MS SQL is using "stddev" while Oracle is using "stddev_samp"). Hence if you want
 		sample standard deviation, use "stddev_samp" keyword, even if you are using MS SQL, to make the script 
@@ -28,7 +24,7 @@
 		
 		Time values are aggregated in an a separate pattern (time_since) since it requires casting of time attribute
 		into number. 
-		
+
 		Note: Are you getting int overflows on avg()? Cast the ints first into biginst! See:
 			http://stackoverflow.com/questions/1197720/sql-server-giving-arithmetic-overflow-when-calculating-avg  
 		Of course, the same remedy applies to sum() and stddev_samp().
@@ -47,6 +43,9 @@
 		because of integer columns
 
 		NOTE: ADDED SUM
+
+		NOTE: Testing Markdown code highlight syntax:
+
 	</description>
 	<example>
 		Count of attended events.
@@ -54,9 +53,9 @@
 	<author>Jan Motl</author>
 	<date>2014-10-14</date>
 	<code>SELECT @base
-			   , @aggregateFunction(@numericalColumn) AS @columnName
-	      FROM @propagatedTable
-	      GROUP BY @base
+		     , @aggregateFunction(@numericalColumn) AS @columnName
+		FROM @propagatedTable
+		GROUP BY @base
 	</code>
     <parameter key="@aggregateFunction" value="stddev_samp, avg, min, max, sum"/>
 	<cardinality>n</cardinality>

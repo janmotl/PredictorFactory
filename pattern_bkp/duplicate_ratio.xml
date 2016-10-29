@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 
 <pattern>
-	<name>Duplication ratio</name>
+	<name>Duplicate ratio</name>
 	<description>
 		Proportion of records with a duplicate value.
 		
@@ -28,7 +28,7 @@
 		        GROUP BY @base, @column
 		        HAVING Count(*) >= 2
 		        ) t2
-		  ON t1.@baseId = t2.@baseId AND t1.@baseDate = t2.@baseDate
+		  USING(@basePartitionBy)
 		  GROUP BY t1.@base, t1.nrow
 	</code>
     <parameter key="@column" value="@nominalColumn, @numericalColumn"/>

@@ -14,46 +14,46 @@ import run.Setting;
 // The first parameter is the SQL query. The second parameter is the new dateDiff string.
 public class ANTLR {
 
-	public static String parseSQL(Setting setting, String text) {
-		
-		// Create a CharStream that reads from the String.
-		ANTLRInputStream input = new ANTLRInputStream(text);
+    public static String parseSQL(Setting setting, String text) {
+    
+        // Create a CharStream that reads from the String.
+        ANTLRInputStream input = new ANTLRInputStream(text);
 
-		// Create a lexer that feeds off of input CharStream, lexer splits input into tokens.
-		SQLLexer lexer = new SQLLexer(input);
+        // Create a lexer that feeds off of input CharStream, lexer splits input into tokens.
+        SQLLexer lexer = new SQLLexer(input);
 
-		// Create a buffer of tokens pulled from the lexer. Reads tokens only from one channel + hidden tokens.
-		CommonTokenStream tokens = new CommonTokenStream(lexer);
+        // Create a buffer of tokens pulled from the lexer. Reads tokens only from one channel + hidden tokens.
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
 
-		// Create a parser that feeds off the tokens buffer, parser generates abstract syntax tree.
-		SQLParser parser = new SQLParser(tokens);
-		ParseTree tree = parser.expression(); 				// Begin parsing at rule 'expression'
-			  
-		// Create a tree walker
-	    ParseTreeWalker walker = new ParseTreeWalker();
+        // Create a parser that feeds off the tokens buffer, parser generates abstract syntax tree.
+        SQLParser parser = new SQLParser(tokens);
+        ParseTree tree = parser.expression();               // Begin parsing at rule 'expression'
+             
+        // Create a tree walker
+        ParseTreeWalker walker = new ParseTreeWalker();
 
-		// Walk over the tree and replace dateDiff blocks with new dateDiff blocks
-		DateDiffListener dateDiffListener = new DateDiffListener(setting.dateDiffSyntax) ;
-	    walker.walk(dateDiffListener, tree);
-	    
-	    // Walk over the tree and replace dateToNumber blocks with new dateToNumber blocks
-	    DateToNumberListener dateToNumberListener = new DateToNumberListener(setting.dateToNumber) ;
-	 	walker.walk(dateToNumberListener, tree);
+        // Walk over the tree and replace dateDiff blocks with new dateDiff blocks
+        DateDiffListener dateDiffListener = new DateDiffListener(setting.dateDiffSyntax) ;
+        walker.walk(dateDiffListener, tree);
+       
+        // Walk over the tree and replace dateToNumber blocks with new dateToNumber blocks
+        DateToNumberListener dateToNumberListener = new DateToNumberListener(setting.dateToNumber) ;
+        walker.walk(dateToNumberListener, tree);
 
-		// Walk over the tree and replace corr blocks with new corr blocks
-		CorrListener corrListener = new CorrListener(setting.corrSyntax) ;
-		walker.walk(corrListener, tree);
+        // Walk over the tree and replace corr blocks with new corr blocks
+        CorrListener corrListener = new CorrListener(setting.corrSyntax) ;
+        walker.walk(corrListener, tree);
 
-		// Walk over the tree and replace using blocks with on blocks
-		FromListener fromListener = new FromListener(setting.supportsJoinUsing) ;
-		walker.walk(fromListener, tree);
+        // Walk over the tree and replace using blocks with on blocks
+        FromListener fromListener = new FromListener(setting.supportsJoinUsing) ;
+        walker.walk(fromListener, tree);
 
-	    // Return the result
-	    return tree.getText();
-	}
+        // Return the result
+        return tree.getText();
+    }
 
 
-	
-	
+
+
 }
 

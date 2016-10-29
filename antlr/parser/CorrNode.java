@@ -6,34 +6,34 @@ import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 
 public class CorrNode extends TerminalNodeImpl {
 
-	private final String text;
+    private final String text;
 
-	public CorrNode(CorrContext context, String corrPattern) {
-		// Constructor
-		super(context.getStart());
+    public CorrNode(CorrContext context, String corrPattern) {
+        // Constructor
+        super(context.getStart());
 
-		// The first content
+        // The first content
         String col1 = (context.payload(0)).getText();
-        
+       
         // The second content
         String col2 = (context.payload(1)).getText();
-		
-		text = modifyCorr(col1, col2, corrPattern);
-	}
+    
+        text = modifyCorr(col1, col2, corrPattern);
+    }
 
-	// Returns the modified corr
-	private static String modifyCorr(String col1, String col2, String corrPattern) {
-		corrPattern = corrPattern.replace("@column1", col1);
-		corrPattern = corrPattern.replace("@column2", col2);
+    // Returns the modified corr
+    private static String modifyCorr(String col1, String col2, String corrPattern) {
+        corrPattern = corrPattern.replace("@column1", col1);
+        corrPattern = corrPattern.replace("@column2", col2);
 
-		return corrPattern;
-	}
+        return corrPattern;
+    }
 
 
-	@Override
-	public String getText() {
-		return text;
-	}
+    @Override
+    public String getText() {
+        return text;
+    }
 
 }
 

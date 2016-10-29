@@ -5,10 +5,11 @@ See Wiki for more details.
 
 How to run Predictor Factory
 ============================
-1. Download the latest release from GitHub.
+1. Download the [latest release](https://github.com/janmotl/PredictorFactory/releases) from GitHub.
 2. Unpack the archive.
-3. Check Java 8 or newer is installed (```java -version```). Note that the application is not tested for compatibility with OpenJDK.
+3. Check Java 8 or newer is installed (```java -version```). Iff you are using OpenJDK, install OpenJFX (```sudo apt-get install openjfx```).
 4. Run PredictorFactory.jar (double click the jar file or enter in the command line: ```java -jar PF.jar```).
+5. Follow the [manual](https://github.com/janmotl/PredictorFactory/wiki).
 
 How to edit the source code
 ===========================

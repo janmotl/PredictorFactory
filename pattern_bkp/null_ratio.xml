@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 
 <pattern>
-	<name>Ratio of missing values</name>
+	<name>Null ratio</name>
 	<description>
 		Real-world data commonly contain contain missing values. And sometimes they are not missing at random. 
 		Thus we mine them.

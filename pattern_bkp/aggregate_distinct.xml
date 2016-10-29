@@ -10,6 +10,9 @@
 		Note that stddev_samp distinct doesn't work in MariaDB.
 		
 		Note that to get standard deviation working with distinct in Oracle, we have to use "stddev" command.
+
+		Note: On big tables an approximate formulation like hyperloglog can be desirable:
+		https://www.periscopedata.com/blog/hyperloglog-in-pure-sql.html
 	</description>
 	<example>
 		Sum of unique (impact scored) warnings. In the case of a faulty sensor that floods the log with the same error this pattern can be better than plain aggregate. Nevertheless, the odds are ~50:50 that aggregate_distinct is better than aggregate (in the rest of situations it is just reversed).
