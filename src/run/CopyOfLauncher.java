@@ -59,7 +59,7 @@ public class CopyOfLauncher{
                     map.put("@column", column);
                     map.put("@lagColumn", lagColumn);
                     map.put("@inputTable", table);
-                    boolean result = SQL.isSymmetric(setting, map);
+                    boolean result = setting.dialect.isSymmetric(setting, map);
                     
                     System.out.println(result);
                     break;  // We know we have to consider the table. No need to dig further.

@@ -36,7 +36,7 @@ public class TemporalConstraint {
         // it is not necessary to set the time constrain.
         // NOTE: if the id is a primary key, I know the relationship between the target table and the non-target
         // table must be 1:1 or n:1. Either way, the id is unique. This may accelerate the query, if the planer is dumb.
-        table.isIdUnique = SQL.isIdUnique(setting, table);
+        table.isIdUnique = setting.dialect.isIdUnique(setting, table);
         if (table.isIdUnique) {
             table.temporalConstraintJustification = "Static table. The relationship between targetTable and this table appears to be in 1:1 or n:1. This is a sign of a static table or a table without old versions of the data.";
             return table;
@@ -91,7 +91,7 @@ public class TemporalConstraint {
         TreeMap<Integer, String> treeMap = new TreeMap();
 
         for (Column column : candidateSet) {
-            int count = SQL.countUsableDates(setting, table.originalName, column.name);
+            int count = setting.dialect.countUsableDates(setting, table.originalName, column.name);
             treeMap.put(count, column.name);
             logger.debug("Column " + table.originalName + "." + column.name + " has " + count + " rows that may satisfy the time constraint.");
         }

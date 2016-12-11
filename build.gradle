@@ -1,7 +1,7 @@
 apply plugin: 'java'
 
 group 'PredictorFactory'
-version '3.2.9'
+version '3.3.0'
 sourceCompatibility = 1.8
 
 
@@ -14,7 +14,6 @@ repositories {
 // Dependencies
 dependencies {
     compile 'org.antlr:antlr4:4.5.3'                // Parser
-    compile 'uk.com.robust-it:cloning:1.9.2'        // Deep cloning
     compile 'org.apache.commons:commons-lang3:3.4'  // Text processing utility
     compile 'com.google.guava:guava:19.0'           // Convenience library
     compile 'com.zaxxer:HikariCP:2.4.7'             // Versions 2.4.2 and 2.4.3 do not release connections -> do not use them

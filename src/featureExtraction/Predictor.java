@@ -1,6 +1,7 @@
 package featureExtraction;
 
 
+import metaInformation.MetaOutput.OutputTable;
 import org.apache.commons.lang3.text.WordUtils;
 import run.Setting;
 
@@ -11,23 +12,6 @@ import java.util.*;
 
 public class Predictor implements Comparable<Predictor> {
 
-    // SHOULD UNIFY - PUBLIC AND PRIVATE looks ugly.
-    // Should be a composite of {pattern, table, column} and provide relevant functionality of these classes.
-    // Struct for predictor's metadata. Make sure that each collection is initialized to something and doesn't return null!
-    public String outputTable;          // The name of the constructed predictor table.
-    public String propagatedTable;      // The input table name after propagation.
-    public String originalTable;        // The input table name before propagation. Useful for origin tracking.
-    public String propagationDate;      // The single column name that was used during base propagation as time constrain.
-    public List<String> propagationPath = new ArrayList<>();    // In the case of loops path makes difference
-    public SortedMap<String, String> columnMap = new TreeMap<>();   // Contains {@nominalColumn=gender,...}
-    
-    
-    // Relevance of the predictor for classification
-    // SHOULD BE AN OBJECT AND CONTAIN: Target, MeasureType, Value
-    // FOR INSPIRATION HOW TO DEAL WITH A MIXTURE OF MEASURES WHERE WE MAXIMIZE AND MINIMIZE A VALUE SEE RAPIDMINER
-    private SortedMap<String, Double> relevance = new TreeMap<>();
-    
-        
     // Private
     private int id;                                 // Unique number. SHOULD BE FINAL.
     private int groupId;                            // Id of the optimisation group
@@ -35,15 +19,6 @@ public class Predictor implements Comparable<Predictor> {
     private boolean isOk;                           // Summary flag for quality control
     private int rowCount;                           // Count of rows in the predictor's table
     private int nullCount;                          // Count of null rows in the predictor's table
-    private final int patternTopN;                  // Inherited from the pattern
-    private final String patternName;               // Inherited from the pattern during the class construction
-    private final String patternAuthor;             // Adds an element of gamification
-    private final String patternCode;               // Inherited from the pattern
-    private final String patternCardinality;        // Inherited from the pattern
-    private final String patternDescription;        // Inherited from the pattern
-    private final Boolean patternRequiresBaseDate;  // Inherited from the pattern
-    private final SortedMap<String, String> patternParameterMap;    // Inherited from the pattern
-    private final List<Pattern.OptimizeParameters> patternOptimizeList; // Inherited from the pattern
     private String name;                            // Predictor's name abbreviated to comply with vendor's limits
     private String longName;                        // Predictor's name in it's whole glory
     private final LocalDateTime timestampDesigned;  // When the predictor was defined
@@ -53,47 +28,91 @@ public class Predictor implements Comparable<Predictor> {
     private boolean isInferiorDuplicate = false;    // Decided based on the predictor's values
     private String duplicateName;                   // The name of the duplicate predictor
     private int candidateState = 1;                 // The states are: {1=candidate, 0=dropped, -1=toDrop}
-    
-    
+    private String outputTable;                     // The name of the constructed predictor table
+    private SortedMap<String, String> columnMap = new TreeMap<>();   // Contains {@nominalColumn=gender,...}
+    private String rawDataType;                     // Not a statistical type. Contains {Nominal, Numerical, Temporal}
+
+    // Note: Could have used Table.Column or OutputTable.Column for storage...
+    private int dataType;                           // Data type as defined by JDBC
+    private String dataTypeName;                    // Data type name as defined by database
+
+    // Composition
+    private OutputTable table;                      // The table with all the columns
+    private final Pattern pattern;                  // The used pattern
+
+    // Relevance of the predictor for classification
+    // SHOULD BE AN OBJECT AND CONTAIN: Target, MeasureType, Value
+    // FOR INSPIRATION HOW TO DEAL WITH A MIXTURE OF MEASURES WHERE WE MAXIMIZE AND MINIMIZE A VALUE SEE RAPIDMINER
+    private SortedMap<String, Double> relevance = new TreeMap<>();
+    private SortedMap<String, Double> conceptDrift = new TreeMap<>();
+
     // Constructor
-    Predictor(Pattern pattern){
-        if (pattern == null) {
+    Predictor(Pattern p){
+        if (p == null) {
             throw new NullPointerException("Pattern is null");
         }
-        if (pattern.name == null) {
+        if (p.name == null) {
             throw new NullPointerException("Name in the pattern is null");
         }
-        if (pattern.dialectCode == null) {
+        if (p.dialectCode == null) {
             throw new NullPointerException("DialectCode in the pattern is null");
         }
-        if (pattern.author == null) {
+        if (p.author == null) {
             throw new NullPointerException("Author in the pattern is null");
         }
-        if (pattern.cardinality == null) {
+        if (p.cardinality == null) {
             throw new NullPointerException("Cardinality in the pattern is null");
         }
-        if (pattern.dialectParameter == null) {
+        if (p.dialectParameter == null) {
             throw new NullPointerException("DialectParameter in the pattern is null");
         }
-        if (pattern.optimizeParameter == null) {
+        if (p.optimizeParameter == null) {
             throw new NullPointerException("OptimizeParameter in the pattern is null");
         }
-        if (pattern.description == null) {
+        if (p.description == null) {
             throw new NullPointerException("Description in the pattern is null");
         }
         
         timestampDesigned = LocalDateTime.now();
-        patternName = pattern.name;
-        patternCode = pattern.dialectCode;
-        patternAuthor = pattern.author; 
-        patternCardinality = pattern.cardinality;
-        patternRequiresBaseDate = pattern.requiresBaseDate;
-        patternParameterMap = pattern.dialectParameter;
-        patternOptimizeList = pattern.optimizeParameter;
-        patternTopN = pattern.topN;
-        patternDescription = pattern.description;
+        pattern = p;
     }
-    
+
+
+    // Copy constructor
+    // Note that it merely performs a shallow copy of {OutputTable, Pattern} and it copies a few other attributes
+    // that are required for correct functionality of Aggregation. Shallow copies are alright as it saves RAM
+    // and we do not need (or want) to change anything in these objects.
+    // Note also that com.rits.cloning.Cloner was failing on cloning Table.Column.uniqueValueSet with StackOverflow
+    // error.
+    protected Predictor(Predictor other) {
+        this.groupId = other.groupId;                           // Required copy of the int
+        this.sql = other.sql;                                   // Required copy of the String
+        this.table = other.table;                               // Just a copy of the pointer is OK
+        this.pattern = other.pattern;                           // Just a copy of the pointer is OK
+        this.timestampDesigned = LocalDateTime.now();           // Newly created
+        this.parameterMap = new TreeMap<>(other.parameterMap);  // Shallow copy of the Map is OK
+        this.columnMap = new TreeMap<>(other.columnMap);        // Shallow copy of the Map is OK
+
+        // TO DELETE
+//        this.id = other.id;
+//        this.outputTable = other.outputTable;
+//        this.name = other.name;
+//        this.longName = other.longName;
+//        this.timestampBuilt = other.timestampBuilt;
+//        this.timestampDelivered = other.timestampDelivered;
+//        this.isOk = other.isOk;
+//        this.rowCount = other.rowCount;
+//        this.nullCount = other.nullCount;
+//        this.isInferiorDuplicate = other.isInferiorDuplicate;
+//        this.duplicateName = other.duplicateName;
+//        this.candidateState = other.candidateState;
+//        this.rawDataType = other.rawDataType;
+//        this.dataType = other.dataType;
+//        this.dataTypeName = other.dataTypeName;
+//        this.relevance = other.relevance;
+//        this.conceptDrift = other.conceptDrift;
+    }
+
     // Get column name.
     // Note that the returned String can be longer than the allowed length in the database.
     // For example PostgreSQL limits column labels to 63 characters.
@@ -104,29 +123,29 @@ public class Predictor implements Comparable<Predictor> {
     public String getLongNameOnce() {
         // Path
         String name = "";
-        for (int i = 1; i < propagationPath.size(); i++) {  // Ignore the first table, base table, as it is fixed.
-            name = name + propagationPath.get(i) + "__"; // Use doubled separators to deal with already underscored entities.
+        for (int i = 1; i < getPropagationPath().size(); i++) {  // Ignore the first table, base table, as it is fixed.
+            name = name + getPropagationPath().get(i) + "__"; // Use doubled separators to deal with already underscored entities.
         }
         
         // Add table name
-        name = name + originalTable;
+        name = name + getOriginalTable();
         
         // Add column names
         name = name + "_";  // Three separators to separate tables from columns
-        for (String columnName : columnMap.values()) {
+        for (String columnName : getColumnMap().values()) {
             name = name + "__" + columnName;
         }
 
         // Replace special characters with spaces
-        String pattern = patternName.replaceAll("[^a-zA-Z0-9_\\s]", " ");
+        String patternName = pattern.name.replaceAll("[^a-zA-Z0-9_\\s]", " ");
                 
         // Convert the string to camelCase and remove the spaces 
-        pattern = WordUtils.capitalizeFully(pattern, new char[]{' '}).replaceAll(" ", "");
+        patternName = WordUtils.capitalizeFully(patternName, new char[]{' '}).replaceAll(" ", "");
         
         // We would like to have camelCase, not CamelCase
-        pattern = Character.toLowerCase(pattern.charAt(0)) + pattern.substring(1);
+        patternName = Character.toLowerCase(patternName.charAt(0)) + patternName.substring(1);
         
-        name = name + "___" + pattern;
+        name = name + "___" + patternName;
         
         // Add parameters. Ignore all special symbols (particularly "@" from "@column" parameters)
         for (String parameter : parameterMap.keySet()) {
@@ -143,25 +162,25 @@ public class Predictor implements Comparable<Predictor> {
         int length = (int) Math.floor((identifierLengthMax-9)/3);
         
         // Add table name
-        String name = originalTable.substring(0, Math.min(originalTable.length(), length));
+        String name = getOriginalTable().substring(0, Math.min(getOriginalTable().length(), length));
         
         // Add column names
-        for (String columnName : columnMap.values()) {
+        for (String columnName : getColumnMap().values()) {
             name = name + "_" + columnName;
         }
         
         name = name.substring(0, Math.min(name.length(), 2*length+1));
 
         // Replace special characters with spaces
-        String pattern = patternName.replaceAll("[^a-zA-Z0-9_\\s]", " ");
+        String patternName = pattern.name.replaceAll("[^a-zA-Z0-9_\\s]", " ");
                 
         // Convert the string to camelCase and remove the spaces 
-        pattern = WordUtils.capitalizeFully(pattern, new char[]{' '}).replaceAll(" ", "");
+        patternName = WordUtils.capitalizeFully(patternName, new char[]{' '}).replaceAll(" ", "");
         
         // We would like to have camelCase, not CamelCase
-        pattern = Character.toLowerCase(pattern.charAt(0)) + pattern.substring(1);
+        patternName = Character.toLowerCase(patternName.charAt(0)) + patternName.substring(1);
         
-        name = name + "_" + pattern;
+        name = name + "_" + patternName;
         
         // Add parameters. Ignore all special symbols (particularly "@" from "@column" parameters)
         for (String parameter : parameterMap.keySet()) {
@@ -249,6 +268,15 @@ public class Predictor implements Comparable<Predictor> {
         relevance.put(target, value);
     }
 
+    public Double getConceptDrift(String target) {
+        return conceptDrift.get(target);
+    }
+
+    public void setConceptDrift(String target, Double value) {
+        conceptDrift.put(target, value);
+    }
+
+
     public double getRuntime() {
         // Runtime in seconds with three decimal values. Assumes that start time and end time are available.
         return timestampBuilt.until(timestampDelivered, ChronoUnit.MILLIS)/1000.0;
@@ -299,36 +327,37 @@ public class Predictor implements Comparable<Predictor> {
     }
 
     public String getPatternCode() {
-        return patternCode;
+        return pattern.dialectCode;
     }
     
     public String getPatternName() {
-        return patternName;
+        return pattern.name;
     }
 
     public String getPatternAuthor() {
-        return patternAuthor;
+        return pattern.author;
     }
     
     public String getPatternCardinality() {
-        return patternCardinality;
+        return pattern.cardinality;
     }
 
-    public SortedMap<String, String> getPatternParameterList() {
-        return patternParameterMap;
+    public SortedMap<String, String> getPatternParameterMap() {
+        return pattern.dialectParameter;
     }
 
-    public List<Pattern.OptimizeParameters> getPatternOptimizeList() {
-        return patternOptimizeList;
-    }
-    
-    public int getPatternTopN() {
-        return patternTopN;
+    public List<Pattern.OptimizeParameters> getPatternOptimizeParameter() {
+        return pattern.optimizeParameter;
     }
 
     public String getPatternDescription() {
-        return patternDescription;
+        return pattern.description;
     }
+
+    public Boolean getPatternRequiresBaseDate() {
+        return pattern.requiresBaseDate;
+    }
+
 
     public String getName() {
         return name;
@@ -354,9 +383,6 @@ public class Predictor implements Comparable<Predictor> {
         this.sql = sql;
     }
 
-    public Boolean getPatternRequiresBaseDate() {
-        return patternRequiresBaseDate;
-    }
 
     public boolean isOk() {
         return isOk;
@@ -408,5 +434,71 @@ public class Predictor implements Comparable<Predictor> {
 
     public void setCandidateState(int candidateState) {
         this.candidateState = candidateState;
+    }
+
+
+    public OutputTable getTable() {
+        return table;
+    }
+
+    public void setTable(OutputTable table) {
+        this.table = table;
+    }
+
+
+    public String getPropagatedTable() {
+        return table.name;
+    }
+
+    public String getOriginalTable() {
+        return table.originalName;
+    }
+
+    public String getPropagationDate() {
+        return table.temporalConstraint;
+    }
+
+    public List<String> getPropagationPath() {
+        return table.propagationPath;
+    }
+
+    public String getOutputTable() {
+        return outputTable;
+    }
+
+    public void setOutputTable(String outputTable) {
+        this.outputTable = outputTable;
+    }
+
+    public SortedMap<String, String> getColumnMap() {
+        return columnMap;
+    }
+
+    public void setColumnMap(SortedMap<String, String> columnMap) {
+        this.columnMap = columnMap;
+    }
+
+    public String getDataTypeName() {
+        return dataTypeName;
+    }
+
+    public void setDataTypeName(String dataTypeName) {
+        this.dataTypeName = dataTypeName;
+    }
+
+    public int getDataType() {
+        return dataType;
+    }
+
+    public void setDataType(int dataType) {
+        this.dataType = dataType;
+    }
+
+    public String getRawDataType() {
+        return rawDataType;
+    }
+
+    public void setRawDataType(String rawDataType) {
+        this.rawDataType = rawDataType;
     }
 }

@@ -73,7 +73,7 @@ public class Table {
         // Get setting.valueCount most frequent distinct values for each nominal column.
         // The unique values will be used in patterns like "WoE" or "Existential count".
         for (Column column : getColumns(setting, StatisticalType.NOMINAL)) {
-            column.uniqueValueSet.addAll(SQL.getTopUniqueRecords(setting, name, column.name));
+            column.uniqueValueSet.addAll(setting.dialect.getTopUniqueRecords(setting, name, column.name));
         }
 
     }

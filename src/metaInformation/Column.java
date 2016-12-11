@@ -18,7 +18,7 @@ import java.util.Set;
 public class Column implements Comparable<Column> {
 
     public int dataType;            // Data type as defined by JDBC
-    public String dataTypeName;     // Data type as defined by database
+    public String dataTypeName;     // Data type name as defined by database
     public boolean isNullable;      // From JDBC
     public boolean isUnique;        // From JDBC
     public String name;             // We have name field even though Column object is in a Map because it allows an easy iteration over the Columns (and not over that ugly Entry).
@@ -54,7 +54,7 @@ public class Column implements Comparable<Column> {
         // Memoized
         if (containsNull == null) {
             if (isNullable) {
-                containsNull = SQL.containsNull(setting, tableName, name);
+                containsNull = setting.dialect.containsNull(setting, tableName, name);
             } else {
                 containsNull = false;   // We trust the database that it enforces the constrains. In Netezza, we trust the architect...
             }
@@ -66,7 +66,7 @@ public class Column implements Comparable<Column> {
     public Boolean containsFutureDate(Setting setting, String tableName){
         // Memoized
         if (containsFutureDate == null) {
-            containsFutureDate = SQL.containsFutureDate(setting, tableName, name);
+            containsFutureDate = setting.dialect.containsFutureDate(setting, tableName, name);
         }
         return containsFutureDate;
     }

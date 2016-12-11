@@ -1,15 +1,13 @@
 package propagation;
 
 
-import com.rits.cloning.Cloner;
 import connection.Network;
-import connection.SQL;
 import metaInformation.Column;
 import metaInformation.ForeignConstraint;
 import metaInformation.MetaOutput.OutputTable;
+import metaInformation.Table;
 import org.apache.log4j.Logger;
 import run.Setting;
-import metaInformation.Table;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -18,9 +16,6 @@ import java.util.stream.Collectors;
 public class Propagation{
     // Logging
     private static final Logger logger = Logger.getLogger(Propagation.class.getName());
-
-    // Deep cloning
-    private static Cloner cloner = new Cloner();
 
     // Propagate tuples from the base table into all other tables
     // BLIND APPROACH IS IMPLEMENTED - get list of PK-FK pairs
@@ -58,7 +53,7 @@ public class Propagation{
 
         // Get an estimate of range of targetDate
         if (setting.targetDate != null) {
-            setting.baseDateRange = SQL.getDateRange(setting, setting.baseTable, setting.baseDate);
+            setting.baseDateRange = setting.dialect.getDateRange(setting, setting.baseTable, setting.baseDate);
         }
     
         // Call BFS
@@ -105,31 +100,31 @@ public class Propagation{
                     table = TemporalConstraint.find(setting, table);
 
                     // Make a new table
-                    table.sql = SQL.propagateID(setting, table);
+                    table.sql = setting.dialect.propagateID(setting, table);
                     table.isSuccessfullyExecuted = Network.executeUpdate(setting.dataSource, table.sql);
 
                     // Get the row count
                     // NOTE: Should be conditional on isSuccessfullyPropagated (also below).
-                    table.rowCount = SQL.getRowCount(setting, setting.outputSchema, table.name);
+                    table.rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, table.name);
                     logger.debug("Table \"" + table.originalName + "\" with \"" + table.temporalConstraint + "\" time constraint has " + table.rowCount + " rows.");
 
                     // If the produced table has 0 rows and time constrain was used, repeat without any time constraint.
                     if (table.rowCount == 0 && table.temporalConstraint != null) {
-                        SQL.dropTable(setting, table.name);
+                        setting.dialect.dropTable(setting, table.name);
                         table.temporalConstraint = null;
                         table.temporalConstraintJustification = "The attempt to use time constrain failed - no row satisfies the time frame defined in the initial setting of Predictor Factory.";
 
                         // Make a new table
-                        table.sql = SQL.propagateID(setting, table);
+                        table.sql = setting.dialect.propagateID(setting, table);
                         table.isSuccessfullyExecuted = Network.executeUpdate(setting.dataSource, table.sql);
 
                         // Get the row count
-                        table.rowCount = SQL.getRowCount(setting, setting.outputSchema, table.name);
+                        table.rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, table.name);
                         logger.debug("Table \"" + table.originalName + "\" with \"" + table.temporalConstraint + "\" time constraint has " + table.rowCount + " rows.");
                     }
 
                     // Add indexes
-                    SQL.addIndex(setting, table.name);
+                    setting.dialect.addIndex(setting, table.name);
 
                     // Is OK?
                     table.isOk = (table.isSuccessfullyExecuted && table.rowCount > 0);
@@ -141,7 +136,7 @@ public class Propagation{
                     }
 
                     // Collect metadata
-                    table.isTargetIdUnique = SQL.isTargetIdUnique(setting, table.name);
+                    table.isTargetIdUnique = setting.dialect.isTargetIdUnique(setting, table.name);
                     table.propagationOrder = metaOutput.size();
                     table.timestampDelivered = LocalDateTime.now();
 
@@ -149,7 +144,7 @@ public class Propagation{
                     metaOutput.put(table.name, table);
 
                     // Log it
-                    SQL.addToJournalTable(setting, table);
+                    setting.dialect.addToJournalTable(setting, table);
                 }
             }
         }

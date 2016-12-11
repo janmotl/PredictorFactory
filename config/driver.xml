@@ -140,8 +140,8 @@ Description of the fields:
 	/>
 	
 	<!-- Interval arithmetic can result into an invalid date -> use add_months for months and years
-	as it can correctly deal with different length of months and leap years.
-	DateAddSyntax has a precision appendix to avoid errors. -->
+	as it can correctly deal with different length of months and leap years. Oracle may even abort completely
+	abort the calculation. DateAddSyntax has a precision appendix to avoid errors. -->
 	<driver
 		name="Oracle"
 		driverClass="oracle.jdbc.OracleDriver"

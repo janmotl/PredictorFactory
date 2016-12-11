@@ -1,17 +1,18 @@
 package featureExtraction;
 
-import com.rits.cloning.Cloner;
 import connection.Network;
 import connection.SQL;
 import featureExtraction.Pattern.OptimizeParameters;
 import metaInformation.Column;
 import metaInformation.MetaOutput.OutputTable;
 import metaInformation.StatisticalType;
+import metaInformation.Table;
 import org.apache.log4j.Logger;
 import run.Setting;
 import utility.BlackWhiteList;
+import utility.Meta;
 import utility.PatternMap;
-import utility.Text;
+import utility.TextParser;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -22,10 +23,6 @@ import java.util.stream.Collectors;
 public class Aggregation {
     // Logging
     private static final Logger logger = Logger.getLogger(Aggregation.class.getName());
-
-    // Deep cloning
-    private static final Cloner cloner = new Cloner();
-
 
 
     // Do it
@@ -39,8 +36,8 @@ public class Aggregation {
         // 1) Get predictors
         List<Predictor> predictorList = loopPatterns(setting);
         // Log patterns
-        SQL.getJournalPattern(setting);
-        SQL.addToJournalPattern(setting, predictorList);
+        setting.dialect.getJournalPattern(setting);
+        setting.dialect.addToJournalPattern(setting, predictorList);
     
         // 2) Set @targetValue
             // First, get the cached list of unique values in the target column
@@ -74,13 +71,13 @@ public class Aggregation {
         // 5) Loop over columns
         List<Predictor> predictorList5 = new ArrayList<>();
         for (Predictor predictor : predictorList4) {
-            predictorList5.addAll(loopColumns(setting, predictor, tableMetadata));
+            predictorList5.addAll(loopColumns(setting, predictor));
         }
     
         // 6) Loop over @value
         List<Predictor> predictorList6 = new ArrayList<>();
         for (Predictor predictor : predictorList5) {
-            predictorList6.addAll(addValue(setting, predictor, tableMetadata));
+            predictorList6.addAll(addValue(predictor));
         }
     
         // 7) Optimize parameters
@@ -92,7 +89,7 @@ public class Aggregation {
     
 
         // 8) Execute the SQL & log the result
-        int maxRowLimit = SQL.getRowCount(setting, setting.outputSchema, setting.baseSampled); // For QC purposes.
+        int maxRowLimit = setting.dialect.getRowCount(setting, setting.outputSchema, setting.baseSampled); // For QC purposes.
 
         journal = new Journal(setting, predictorList7.size());
         logger.debug(journal.getExpectedPredictorCount() + " predictors are scheduled for calculation.");
@@ -114,8 +111,8 @@ public class Aggregation {
         SortedMap<String, Pattern> patternMap = PatternMap.getPatternMap();
 
         // Apply black/white lists
-        List blackList = Text.string2list(setting.blackListPattern);
-        List whiteList = Text.string2list(setting.whiteListPattern);
+        List blackList = TextParser.string2list(setting.blackListPattern);
+        List whiteList = TextParser.string2list(setting.whiteListPattern);
         patternMap = BlackWhiteList.filter(patternMap, blackList, whiteList);
 
         // Get the dialect code
@@ -172,7 +169,7 @@ public class Aggregation {
         predictorList.add(predictor);
     
         // Loop over each parameter
-        for (Entry<String, String> parameter : predictor.getPatternParameterList().entrySet()) {
+        for (Entry<String, String> parameter : predictor.getPatternParameterMap().entrySet()) {
             predictorList = expandParameter(predictorList, parameter.getKey(), parameter.getValue().split(","));
         }
     
@@ -191,8 +188,8 @@ public class Aggregation {
     
         for (Predictor predictor : predictorList) {
             for (String parameterValue : parameterValueList) {
-            
-                Predictor cloned = cloner.deepClone(predictor);
+
+                Predictor cloned = new Predictor(predictor);
                 cloned.setParameter(parameterName, parameterValue);
                 outputList.add(cloned);
             
@@ -217,17 +214,10 @@ public class Aggregation {
             if (("1".equals(cardinality) && !workingTable.isTargetIdUnique) || ("n".equals(cardinality) && workingTable.isTargetIdUnique)) {
                 continue;
             }
-        
-            // Clone
-            Predictor cloned = cloner.deepClone(predictor);
-    
-            // Store the necessary data into the clone
-            cloned.propagatedTable = workingTable.name;
-            cloned.originalTable = workingTable.originalName;
-            cloned.propagationDate = workingTable.temporalConstraint;
-            cloned.propagationPath = workingTable.propagationPath;
-        
-            // Store the clone
+
+            // Store the table into the clone
+            Predictor cloned = new Predictor(predictor);
+            cloned.setTable(workingTable);
             outputList.add(cloned);
         }
     
@@ -239,7 +229,7 @@ public class Aggregation {
     // NO GUARANTIES ABOUT COLUMN1 != COLUMN2 IF THEY ARE OF THE SAME TYPE!
     // NEITHER THAT {COLUMN1, COLUMN2} WILL BE REPEATED AS {COLUMN2, COLUMN1}!
     // CHECK HOW DO I TREAT COLUMNS THAT ARE BOTH, NUMERICAL AND NOMINAL...
-    protected static List<Predictor> loopColumns(Setting setting, Predictor predictor, SortedMap<String, OutputTable> tableMetadata) {
+    protected static List<Predictor> loopColumns(Setting setting, Predictor predictor) {
     
         // Initialize the output
         List<Predictor> predictorList = new ArrayList<>();
@@ -249,12 +239,12 @@ public class Aggregation {
         String regexPattern = "@\\w+Column\\w*";
         Matcher m = java.util.regex.Pattern.compile(regexPattern).matcher(predictor.getSql());
         while (m.find()) {
-            predictor.columnMap.put(m.group(), null);
+            predictor.getColumnMap().put(m.group(), null);
         }
     
         // Loop over each column in the predictor
-        for (Entry<String, String> parameter : predictor.columnMap.entrySet()) {
-            predictorList = expandColumn(setting, predictorList, parameter.getKey(), tableMetadata.get(predictor.propagatedTable));
+        for (Entry<String, String> parameter : predictor.getColumnMap().entrySet()) {
+            predictorList = expandColumn(setting, predictorList, parameter.getKey(), predictor.getTable());
         }
     
         return predictorList;
@@ -277,8 +267,8 @@ public class Aggregation {
         
             // Bind the columnKey to the actual columnValue.    
             for (Column columnValue : columnValueSet) {
-                Predictor cloned = cloner.deepClone(predictor);
-                cloned.columnMap.put(columnKey, columnValue.name);
+                Predictor cloned = new Predictor(predictor);
+                cloned.getColumnMap().put(columnKey, columnValue.name);
                 outputList.add(cloned);
             }
         }
@@ -289,22 +279,22 @@ public class Aggregation {
 
     // Subroutine 6: Populate @value parameter.
     // NOTE: The value is populated only for the first column in the columnMap.
-    protected static List<Predictor> addValue(Setting setting, Predictor predictor, SortedMap<String, OutputTable> tableMetadata) {
+    protected static List<Predictor> addValue(Predictor predictor) {
     
         // Initialize the output
         List<Predictor> predictorList = new ArrayList<>();
 
         // If the pattern code contains @value
         if (predictor.getPatternCode().contains("@value")) {
-            for (Entry<String, String> column : predictor.columnMap.entrySet()) {
+            for (Entry<String, String> column : predictor.getColumnMap().entrySet()) {
                 // Pick a nominal column
                 if (column.getKey().toUpperCase().matches("@NOMINALCOLUMN\\d*")) {
                 
                     // Get list of unique values
-                    Set<String> valueList = tableMetadata.get(predictor.propagatedTable).getColumn(column.getValue()).uniqueValueSet;
+                    Set<String> valueList = predictor.getTable().getColumn(column.getValue()).uniqueValueSet;
 
                     for (String value : valueList) {
-                        Predictor cloned = cloner.deepClone(predictor);
+                        Predictor cloned = new Predictor(predictor);
                         cloned.setParameter("@value", value);
                         predictorList.add(cloned);
                     }
@@ -332,7 +322,7 @@ public class Aggregation {
         outputList.add(predictor);
     
         // Loop over all parameters to optimize
-        for (OptimizeParameters parameter : predictor.getPatternOptimizeList()) {
+        for (OptimizeParameters parameter : predictor.getPatternOptimizeParameter()) {
             outputList = optimize(outputList, parameter);
         }
     
@@ -357,7 +347,7 @@ public class Aggregation {
             // CURRENTLY JUST SWEEP OVER THE VALUES. USE A REAL OPTIMISATION TOOLBOX.
             for (int i = 0; i < parameter.iterationLimit; i++) {
                 double value = parameter.min + i * (parameter.max-parameter.min)/(parameter.iterationLimit-1);
-                Predictor clonedPredictor = cloner.deepClone(predictor);
+                Predictor clonedPredictor = new Predictor(predictor);
                 clonedPredictor.setParameter(parameter.key, String.valueOf(value));
                 outputList.add(clonedPredictor);
             }
@@ -372,7 +362,7 @@ public class Aggregation {
             
         // Set predictor's id & table name
         predictor.setId(journal.getNextId(setting)); 
-        predictor.outputTable = setting.predictorPrefix + (predictor.getId());
+        predictor.setOutputTable(setting.predictorPrefix + (predictor.getId()));
     
         // Set predictor's names
         predictor.setName(predictor.getNameOnce(setting));
@@ -382,7 +372,7 @@ public class Aggregation {
         predictor.setRelevance(setting.baseTarget, 0.0);
     
         // Convert pattern to SQL
-        predictor.setSql(SQL.getPredictor(setting, predictor));
+        predictor.setSql(setting.dialect.getPredictor(setting, predictor));
     
         // Set timestamp_build
         predictor.setTimestampBuilt(LocalDateTime.now());
@@ -398,14 +388,14 @@ public class Aggregation {
         // a small proportion of the predictors gets into MainSample) but because it validates uniqueness of the tuples.
         // Azure requires not-null constraint -> skip it for MSSQL.
         if (!"Microsoft SQL Server".equals(setting.databaseVendor)) {
-            if (!SQL.setPrimaryKey(setting, predictor.outputTable)) {
+            if (!setting.dialect.setPrimaryKey(setting, predictor.getOutputTable())) {
                 logger.warn("Primary key constrain failed");
                 return;
             }
         }
     
         // Add row count
-        predictor.setRowCount(SQL.getRowCount(setting, setting.outputSchema, predictor.outputTable));
+        predictor.setRowCount(setting.dialect.getRowCount(setting, setting.outputSchema, predictor.getOutputTable()));
         if (predictor.getRowCount()==0) return;
         if (predictor.getRowCount()>maxRowLimit) {
             logger.warn("Predictor " + predictor.getName() + " has " + predictor.getRowCount() + " rows. But base table has only " + maxRowLimit + " rows.");
@@ -413,15 +403,24 @@ public class Aggregation {
         }
     
         // Add null count
-        predictor.setNullCount(predictor.getRowCount() - SQL.getNotNullCount(setting, setting.outputSchema, predictor.outputTable, predictor.getName()));
+        predictor.setNullCount(predictor.getRowCount() - setting.dialect.getNotNullCount(setting, setting.outputSchema, predictor.getOutputTable(), predictor.getName()));
         if (predictor.getNullCount()==predictor.getRowCount()) return;
-        
+
+        // Get the predictor's data type
+        getPredictorType(setting, predictor);
+
         // Add univariate relevance estimate
         if ("classification".equalsIgnoreCase(setting.task)) {
-            predictor.setRelevance(setting.baseTarget, SQL.getChi2(setting, predictor.outputTable, predictor.getName()));
+            predictor.setRelevance(setting.baseTarget, setting.dialect.getChi2(setting, predictor));
         } else {
-            predictor.setRelevance(setting.baseTarget, SQL.getR2(setting, predictor.outputTable, predictor.getName()));
+            predictor.setRelevance(setting.baseTarget, setting.dialect.getR2(setting, predictor));
         }
+
+        // Add concept drift (so far just for nominal labels & if targetDate exists)
+        if ("classification".equalsIgnoreCase(setting.task) && setting.targetDate!=null) {
+            predictor.setConceptDrift(setting.baseTarget, setting.dialect.getConceptDrift(setting, predictor));
+        }
+
     }
 
 
@@ -438,4 +437,32 @@ public class Aggregation {
        
         return predictor;
     }
+
+    // Subroutine: Is the predictor a string or a number? Just ask the database.
+    // The answer is returned by modifying Predictor's fields.
+    // Note: The data type could be predicted from the pattern and pattern parameters. But the implemented
+    // method is foolproof, though slow.
+    private static void getPredictorType(Setting setting, Predictor predictor) {
+
+        Table table = new Table();
+        table.columnMap = Meta.collectColumns(setting, setting.database, setting.outputSchema, predictor.getOutputTable());
+        table.categorizeColumns(setting);
+
+        Column column = table.getColumn(predictor.getName());
+
+        predictor.setDataType(column.dataType);
+        predictor.setDataTypeName(column.dataTypeName);
+
+        // NOTE: WE DO NOT WANT STATISTICAL TYPE, WE WANT RAW TYPE!
+        if (column.dataType == -7) {   // We treat here boolean data type as nominal, not numerical!
+            predictor.setRawDataType("nominal");
+        } else if (column.isTemporal) {
+            predictor.setRawDataType("temporal");
+        } else if (column.isNumerical) {
+            predictor.setRawDataType("numerical");
+        }
+
+        predictor.setRawDataType("nominal");
+    }
+
 }
