@@ -34,7 +34,7 @@ public class BenchmarkNegative {
 		for (String journal : journalList) {
 			
 			String mainSample = "ms_" + journal.substring(2, journal.length());
-			List<String> patternList = SQL.getUniqueRecords(setting, journal, "pattern_name", false); 
+			List<String> patternList = setting.dialect.getUniqueRecords(setting, journal, "pattern_name", false);
 			
 			for (String pattern : patternList) {
 				
@@ -42,7 +42,7 @@ public class BenchmarkNegative {
 				List<String> predictorList = Network.executeQuery(setting.dataSource, "select predictor_name from (select *  from predictor_factory.\"" + journal + "\" where relevance is not null and relevance > 0 order by relevance DESC limit 197) t where pattern_name <> '" + pattern + "'");
 				
 				// Drop mainSample
-				SQL.dropTable(setting, "mainSample");
+				setting.dialect.dropTable(setting, "mainSample");
 				
 				// Create new mainSample
 				String sql = "create table predictor_factory.\"mainSample\" as select propagated_target, propagated_id, \"" + String.join("\", \"", predictorList) + "\" from predictor_factory.\"" + mainSample + "\"";

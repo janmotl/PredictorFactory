@@ -10,10 +10,7 @@ import utility.JDBCCompliance;
 
 import javax.sql.DataSource;
 import java.io.Console;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -162,15 +159,16 @@ public final class Network {
         // Hence statements and result sets are closed with the end of try block.
         // See: https://blogs.oracle.com/WebLogicServer/entry/using_try_with_resources_with
         try (Connection connection = dataSource.getConnection();
-             Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+             Statement stmt = connection.createStatement()) {
 
             // Transfer tuples from database in batches. 100 seems to be a reasonable default: http://guyharrison.squarespace.com/blog/2014/4/30/best-practices-for-accessing-oracle-from-scala-using-jdbc.html
             // Note: It is ugly that we can't use setting.fetchSize from here.
             stmt.setFetchSize(100);
 
-            while (rs.next()) {
-                result.add(rs.getString(1)); // Columns in ResultSets are indexed from 1
+            try (ResultSet rs = stmt.executeQuery(sql)) {
+                while (rs.next()) {
+                    result.add(rs.getString(1)); // Columns in ResultSets are indexed from 1
+                }
             }
         
             // Log it
@@ -200,18 +198,19 @@ public final class Network {
 
         // Query with AutoCloseable interface introduced in Java 7.
         try (Connection connection = dataSource.getConnection();
-             Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+             Statement stmt = connection.createStatement()) {
 
-            // Even if the query would return several rows, only the first row is transmitted
+            // Even if the query would return several rows, only the first n rows are transmitted
             stmt.setMaxRows(maxRows);
 
             // Transfer tuples from database in batches. 100 seems to be a reasonable default: http://guyharrison.squarespace.com/blog/2014/4/30/best-practices-for-accessing-oracle-from-scala-using-jdbc.html
             // Note: It is ugly that we can't use setting.fetchSize from here.
-            stmt.setFetchSize(Math.min(100, maxRows)); // We have to limit it because of SAS driver
+            stmt.setFetchSize(Math.min(100, maxRows)); // We have to set up the limit to the min because of SAS driver
 
-            while (rs.next()) {
-                result.add(rs.getString(1)); // Columns in ResultSets are indexed from 1
+            try (ResultSet rs = stmt.executeQuery(sql)) {
+                while (rs.next()) {
+                    result.add(rs.getString(1)); // Columns in ResultSets are indexed from 1
+                }
             }
 
             // Log it
@@ -228,7 +227,7 @@ public final class Network {
 
     // Get a single bool. This a useful convenience function because some databases
     // return t/f, other true/false and another 1/0. And SAS returns 1.0/0.0.
-    // The only reliable way how to deal with this variety to use rs.getBoolean().
+    // The only reliable way how to deal with this variety is to use rs.getBoolean().
     public static Boolean isTrue(DataSource dataSource, String sql){
         // Parameter checking
         if (StringUtils.isBlank(sql)) {
@@ -254,6 +253,47 @@ public final class Network {
             // If there is the first row, the result set is not empty.
             if(rs.next()) {
                 result = rs.getBoolean(1);
+            }
+
+            // Log it
+            // Remove line breaks and collapse all "whitespace substrings" longer than one character.
+            sql = sql.replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ");
+            logger.debug(sql);
+        } catch (SQLException e) {
+            sql = sql.replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ");
+            logger.info(e.getMessage() + " | " + sql);
+        }
+
+        return result;
+    }
+
+    // For concept drift - we leave it up to JDBC to (eventually) convert date to datetime.
+    public static List<Timestamp> getTimestamp(DataSource dataSource, String sql){
+        // Parameter checking
+        if (StringUtils.isBlank(sql)) {
+            throw new IllegalArgumentException("SQL statement is required");
+        }
+
+        // Check interruption flag
+        isInterrupted();
+
+        // Initialization
+        ArrayList<Timestamp> result = new ArrayList<>();
+
+        // Query with AutoCloseable interface introduced in Java 7.
+        // Hence statements and result sets are closed with the end of try block.
+        // See: https://blogs.oracle.com/WebLogicServer/entry/using_try_with_resources_with
+        try (Connection connection = dataSource.getConnection();
+             Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            // Even if the query would return several rows, only the first row is transmitted
+            stmt.setMaxRows(1);
+
+            // If there is the first row, the result set is not empty.
+            if(rs.next()) {
+                result.add(rs.getTimestamp(1));
+                result.add(rs.getTimestamp(2));
             }
 
             // Log it
@@ -345,10 +385,11 @@ public final class Network {
         return result;
     }
 
-    // Groovy's @ThreadInterrupt in Java
+    // Groovy's @ThreadInterrupt in Java.
+    // Check also http://www.ibm.com/developerworks/java/library/j-jtp05236/index.html
     private static void isInterrupted() {
         if (Thread.currentThread().isInterrupted()) {
-            throw new RuntimeException("Execution interrupted on the user's request. Note that the interruption does not immediately terminate currently running query. It rather waits for the query to finish and only then terminates the core of Predictor Factory. This is a design choice to make sure that connections to the database are correctly closed.");
+            throw new RuntimeException("Execution interrupted on the user's request. Note that the interruption does not immediately terminate currently running query. It rather waits for the query to finish and only then terminates the core of Predictor Factory. This is a design choice to make sure that connections to the database are correctly closed. Can be terminated immediately with stmt.cancel() if it is supported. ");
         }
     }
 }

@@ -16,6 +16,8 @@ import utility.Meta;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -24,7 +26,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.regex.Matcher;
 
-public final class SQL {
+public class SQL {
     // Logging
     private static final Logger logger = Logger.getLogger(SQL.class.getName());
 
@@ -53,9 +55,9 @@ public final class SQL {
 
         return sql;
     }
-    
+
     // Subroutine 2.1: Expand tables (like: Table -> Schema.Table)
-    private static String expandName(String sql){
+    protected static String expandName(String sql){
         // While MySQL doesn't implement "true" schemas, it implements information_schema
         // and places it next to the database (instead of inside the database).
         // Hence purely based on the hierarchical structure we call MySQL's database as schema.
@@ -83,7 +85,7 @@ public final class SQL {
     }
 
     // Subroutine 3.1: Replace & escape the entities present in setting
-    private static String escapeEntity(Setting setting, String sql, String outputTable) {
+    protected static String escapeEntity(Setting setting, String sql, String outputTable) {
             // Test parameters
         if (setting.targetIdList == null || setting.targetIdList.isEmpty()) {
             throw new IllegalArgumentException("Target ID list is required");
@@ -163,15 +165,19 @@ public final class SQL {
     }
 
     // Subroutine 3.2: Replace & escape the entities from predictor fields
+    // Note: If a named entity (attribute/table/schema) contains single quote or a double quote, we can get into a
+    // problem. The problem is explained at:
+    //      https://www.owasp.org/index.php/Preventing_SQL_Injection_in_Java
+    // A possible solution could be to completely switch to FluentJdbc.
     private static String escapeEntityPredictor(Setting setting, String sql, Predictor predictor) {
         // Test parameters
         if (StringUtils.isBlank(sql)) {
           throw new IllegalArgumentException("Code is required");
         }
-        if (predictor.columnMap==null) {
+        if (predictor.getColumnMap() ==null) {
           throw new IllegalArgumentException("ColumnMap can not be null, but it can be empty");
         }
-        if (StringUtils.isBlank(predictor.propagatedTable)) {
+        if (StringUtils.isBlank(predictor.getPropagatedTable())) {
           throw new IllegalArgumentException("PropagatedTable is required");
         }
 
@@ -179,29 +185,30 @@ public final class SQL {
         String QL = setting.quoteEntityOpen;
         String QR = setting.quoteEntityClose;
 
-        // Escape the entities
-        sql = sql.replace("@propagatedTable", QL + predictor.propagatedTable + QR);
-        sql = sql.replace("@columnName", escapeAlias(setting, predictor.getName()));
-       
-        for (String columnName : predictor.columnMap.keySet()) {
-            sql = sql.replace(columnName, QL + predictor.columnMap.get(columnName) + QR);
+        // Replace variables with the escaped entities
+        for (String columnName : predictor.getColumnMap().keySet()) {
+            sql = sql.replace(columnName, QL + predictor.getColumnMap().get(columnName) + QR);
         }
+
+        // @columnName is replaced at the end because it may contain a substring with the name of some @variable
+        sql = sql.replace("@propagatedTable", QL + predictor.getPropagatedTable() + QR);
+        sql = sql.replace("@columnName", escapeAlias(setting, predictor.getName()));
 
         return sql;
       }
 
     // Subroutine 3.3: Replace & escape the entities from map
     // IT COULD CALL escapeEntity to avoid the necessity to call 2 different escapeEntity*
-    private static String escapeEntityMap(Setting setting, String sql, Map<String, String> fieldMap) {
+    protected static String escapeEntityMap(Setting setting, String sql, Map<String, String> fieldMap) {
         // Test parameters
         if (StringUtils.isBlank(sql)) {
             throw new IllegalArgumentException("Code is required");
         }
-    
+
         // Get escape characters
         String QL = setting.quoteEntityOpen;
         String QR = setting.quoteEntityClose;
-    
+
         // Escape the entities
         for (Map.Entry<String, String> field : fieldMap.entrySet()) {
             sql = sql.replace(field.getKey(), QL + field.getValue() + QR);
@@ -210,7 +217,7 @@ public final class SQL {
         return sql;
     }
 
-    private static String escapeEntityTable(Setting setting, String sql, MetaOutput.OutputTable table) {
+    protected static String escapeEntityTable(Setting setting, String sql, MetaOutput.OutputTable table) {
         // Get escape characters
         String QL = setting.quoteEntityOpen;
         String QR = setting.quoteEntityClose;
@@ -239,24 +246,6 @@ public final class SQL {
         return setting.quoteAliasOpen + alias + setting.quoteAliasClose;
     }
 
-    // Subroutine: Is the predictor a string or a number? Just ask the database.
-    // Note: The data type could be predicted from the pattern and pattern parameters. But the implemented
-    // method is foolproof, though slow.
-    private static String getPredictorType(Setting setting, String tableName, String columnName) {
-
-        Table table = new Table();
-        table.columnMap = Meta.collectColumns(setting, setting.database, setting.outputSchema, tableName);
-        table.categorizeColumns(setting);
-
-        // NOTE: WE DO NOT WANT STATISTICAL TYPE, WE WANT RAW TYPE!
-        if (table.getColumn(columnName).isTemporal) {
-            return "temporal";
-        } else if (table.getColumn(columnName).isNumerical) {
-            return "numerical";
-        }
-        
-        return "nominal";
-    }
 
 
     // Drop command
@@ -270,7 +259,7 @@ public final class SQL {
 
         sql = expandName(sql);
         sql = escapeEntity(setting, sql, outputTable);
-    
+
         return Network.executeUpdate(setting.dataSource, sql);
     }
 
@@ -306,7 +295,7 @@ public final class SQL {
         // Initialization
         Map<String, Table> tableMap = utility.Meta.collectTables(setting, setting.database, setting.outputSchema);
         SortedMap<String, String> dropMap = new TreeMap<>();
-    
+
         // Select tables for dropping
         for (String table : tableMap.keySet()) {
             if (table.startsWith(setting.mainTable)) dropMap.put(1 + table, table);         // MainSample and it's temporary tables
@@ -362,9 +351,9 @@ public final class SQL {
 
         sql = expandName(sql);
         sql = escapeEntity(setting, sql, outputTable);
-    
+
         boolean isOK = Network.executeUpdate(setting.dataSource, sql);
-    
+
         return isOK;
     }
 
@@ -413,13 +402,13 @@ public final class SQL {
         // is implemented. Some databases, like MySQL, returns the answer to count(*) query immediately. In other
         // databases, like PostgreSQL, you may have to wait ~200ms.
         // Note also, that JDBC 'metadata' method may indeed be slower than plain count(*) as it has to collect
-        // and return more information than just the rowCount. This seems to be the problem with Teradata. 
-    
+        // and return more information than just the rowCount. This seems to be the problem with Teradata.
+
         List<String> resultList = Network.executeQuery(setting.dataSource, sql);
-    
+
         // If the table doesn't exist, the resultSet is empty. Return 0.
         if (resultList.isEmpty()) return 0;
-    
+
         // Otherwise return the actual row count
         return (int)Double.parseDouble(resultList.get(0)); // SAS can return 682.0. SHOULD IMPLEMENT LIST<INTEGERS>.
     }
@@ -456,28 +445,25 @@ public final class SQL {
 
         // By default count over a column ignores NULL values
         String sql = "SELECT count(@column) FROM " + entity;
-    
+
         sql = expandName(sql);
         sql = escapeEntity(setting, sql, table);
-    
+
         Map<String, String> fieldMap = new HashMap<>();
         fieldMap.put("@column", column);
         sql = escapeEntityMap(setting, sql, fieldMap);
-    
+
         List<String> resultList = Network.executeQuery(setting.dataSource, sql);
-    
+
         // If the table doesn't exist, the resultSet is empty. Return 0.
         if (resultList.isEmpty()) return 0;
-    
+
         return (int)Double.parseDouble(resultList.get(0)); // SAS can return 682.0
     }
 
     // Returns true if the column contains null.
-    public static boolean containsNull(Setting setting, String table, String column) {
-
-        if ("Oracle".equals(setting.databaseVendor)) {
-            return containsNullOracle(setting, table, column); // A quick patch. Should use a factory.
-        }
+    // Overwritten in SQLOracle.
+    public boolean containsNull(Setting setting, String table, String column) {
 
         String sql = "SELECT exists(SELECT 1 FROM @inputTable WHERE @column is null)";
 
@@ -493,35 +479,16 @@ public final class SQL {
         return Network.isTrue(setting.dataSource, sql);
     }
 
-    private static boolean containsNullOracle(Setting setting, String table, String column) {
-        String sql = "SELECT count(*) FROM @inputTable WHERE @column is null";
-
-        sql = Parser.replaceExists(setting, sql);
-        sql = expandName(sql);
-        sql = escapeEntity(setting, sql, table);
-
-        Map<String, String> fieldMap = new HashMap<>();
-        fieldMap.put("@column", column);
-        fieldMap.put("@inputTable", table);
-        sql = escapeEntityMap(setting, sql, fieldMap);
-
-        return Integer.valueOf(Network.executeQuery(setting.dataSource, sql).get(0)) > 0;
-    }
-
     // Returns true if the date column contains a date from the future.
     // NOTE: May fail on a timestamp or different database dialect.
-    public static boolean containsFutureDate(Setting setting, String table, String column) {
+    // Overwritten in SQLOracle.
+    public boolean containsFutureDate(Setting setting, String table, String column) {
 
         // The good thing on "current_date" is that it is a standard. The bad thing is that it does not work in MSSQL.
         // Hence we use ODBC standard of "{fn NOW()}", which should be automatically replaced in the JDBC driver to the
         // database specific command. The ODBC command works in PostgreSQL.
         // Plus the comparison works with: date, timestamp and datetime.
         // Comparison with time fails.
-
-        if ("Oracle".equals(setting.databaseVendor)) {
-            return containsFutureDateOracle(setting, table, column);
-        }
-
         String sql = "SELECT exists(SELECT 1 FROM @inputTable WHERE {fn NOW()} < @column)";
 
         sql = Parser.replaceExists(setting, sql);
@@ -538,24 +505,10 @@ public final class SQL {
         return Network.isTrue(setting.dataSource, sql);
     }
 
-    private static boolean containsFutureDateOracle(Setting setting, String table, String column) {
-        String sql = "SELECT count(*) FROM (SELECT 1 FROM @inputTable WHERE {fn NOW()} < @column)";
-
-        sql = expandName(sql);
-        sql = escapeEntity(setting, sql, table);
-
-        Map<String, String> fieldMap = new HashMap<>();
-        fieldMap.put("@column", column);
-        fieldMap.put("@inputTable", table);
-        sql = escapeEntityMap(setting, sql, fieldMap);
-
-        sql = ANTLR.parseSQL(setting, sql);
-
-        return Integer.valueOf(Network.executeQuery(setting.dataSource, sql).get(0)) > 0;
-    }
-
     // Get count of tuples fulfilling the time constraint.
     // This is an optimistic estimate based on max(targetDate) and min(targetDate).
+    // NOTE: It may fail on Oracle if we use month unit because we are using "interval".
+    // If we used add_month, it would work.
     public static int countUsableDates(Setting setting, String table, String column) {
 
         // First the upper bound (lead)
@@ -593,11 +546,8 @@ public final class SQL {
     // we may want to remove the bottom time constrain in base propagation.
     // Note that we are working with the input tables -> alter commands are forbidden.
     // IS NOT USING SYSTEM ESCAPING
-    public static boolean isIdUnique(Setting setting, MetaOutput.OutputTable table) {
-
-        if ("Oracle".equals(setting.databaseVendor)) {
-            return isIdUniqueOracle(setting, table);
-        }
+    // Overwritten in SQLOracle.
+    public boolean isIdUnique(Setting setting, MetaOutput.OutputTable table) {
 
         String sql = "SELECT exists(" +
                          "SELECT count(*) " +
@@ -623,40 +573,8 @@ public final class SQL {
         sql = expandName(sql);
         sql = escapeEntity(setting, sql, "dummy");
         sql = escapeEntityTable(setting, sql, table);
-    
+
         boolean result = Network.isResultSetEmpty(setting.dataSource, sql);
-    
-        if (result) logger.trace("# Column " + table.propagationForeignConstraint.fColumn + " in " + table.originalName + " doesn't contain duplicates #");
-        else logger.trace("# Column " + table.propagationForeignConstraint.fColumn + " in " + table.originalName + " CONTAINS duplicates #");
-    
-        return result;
-    }
-
-    private static boolean isIdUniqueOracle(Setting setting, MetaOutput.OutputTable table) {
-        String sql = "SELECT count(*) FROM (" +
-                "SELECT count(*) " +
-                "FROM @inputTable " +
-                "GROUP BY @idCommaSeparated " +
-                "HAVING count(*)>1" +
-                ")";
-
-        // Get escape characters
-        String QL = setting.quoteEntityOpen;
-        String QR = setting.quoteEntityClose;
-
-        // Escape ids
-        String idCommaSeparated = "";
-        for (String id : table.propagationForeignConstraint.fColumn) {
-            idCommaSeparated += QL + id + QR + ",";
-        }
-        idCommaSeparated = idCommaSeparated.substring(0, idCommaSeparated.length() - 1);
-        sql = sql.replace("@idCommaSeparated", idCommaSeparated);
-
-        sql = expandName(sql);
-        sql = escapeEntity(setting, sql, "dummy");
-        sql = escapeEntityTable(setting, sql, table);
-
-        boolean result = Integer.valueOf(Network.executeQuery(setting.dataSource, sql).get(0)) == 0;
 
         if (result) logger.trace("# Column " + table.propagationForeignConstraint.fColumn + " in " + table.originalName + " doesn't contain duplicates #");
         else logger.trace("# Column " + table.propagationForeignConstraint.fColumn + " in " + table.originalName + " CONTAINS duplicates #");
@@ -665,14 +583,10 @@ public final class SQL {
     }
 
     // Check whether the columns {baseId, baseDate} are unique in the table in the inputSchema.
-    public static boolean isTargetTupleUnique(Setting setting, String table) {
+    // Overwritten in SQLOracle.
+    public boolean isTargetTupleUnique(Setting setting, String table) {
         // We could have used possibly faster: "ALTER TABLE @outputTable ADD UNIQUE (@baseId, @baseDate)".
         // But it would not work in Netezza as Netezza doesn't support constraint checking and referential integrity.
-
-        if ("Oracle".equals(setting.databaseVendor)) {
-            return isTargetTupleUniqueOracle(setting, table);
-        }
-
         String sql = "SELECT exists(" +
                         "SELECT @targetId " +
                         "FROM @targetTable " +
@@ -687,28 +601,10 @@ public final class SQL {
         return !Network.isTrue(setting.dataSource, sql); // Return negation
     }
 
-    private static boolean isTargetTupleUniqueOracle(Setting setting, String table) {
-
-        String sql = "SELECT count(*)" +
-                "FROM (" +
-                "SELECT @targetId " +
-                "FROM @targetTable " +
-                "GROUP BY @targetId" + (setting.targetDate==null ? " " : ", @targetDate ") +
-                "HAVING count(*)>1" +
-                ") t";
-
-        sql = expandName(sql);
-        sql = escapeEntity(setting, sql, table);
-
-        return Integer.valueOf(Network.executeQuery(setting.dataSource, sql).get(0)) == 0;
-    }
-
     // Returns 1 if the baseId in the table in the outputSchema is unique.
-    public static boolean isTargetIdUnique(Setting setting, String table) {
-
-        if ("Oracle".equals(setting.databaseVendor)) {
-            return isTargetIdUniqueOracle(setting, table);
-        }
+    // It appears this can be disk space demanding (tested in Accidents dataset)
+    // Overwritten in SQLOracle.
+    public boolean isTargetIdUnique(Setting setting, String table) {
 
         String sql = "SELECT exists(" +
                      "SELECT @baseId FROM @outputTable GROUP BY @baseId HAVING count(*)>1)";
@@ -720,15 +616,31 @@ public final class SQL {
         return !Network.isTrue(setting.dataSource, sql); // Return negation
     }
 
-    private static boolean isTargetIdUniqueOracle(Setting setting, String table) {
-        String sql = "SELECT count(*) FROM (" +
-                "SELECT @baseId FROM @outputTable GROUP BY @baseId HAVING count(*)>1)";
-
+    // Return a pivot date for concept drift detection.
+    // The implementation returns the mid-range.
+    // The returned value should is a temporal unit (not a number). There are two reasons:
+    //  1) It is human readable
+    //  2) If we are comparing date-to-date it is faster than number-to-date (we can at least use indexes)
+    // The temporal logic is done in Java for portability across databases.
+    // NOTE: If min==max, return warning?
+    public static Timestamp getPivotDate(Setting setting) {
+        String sql = "select min(@targetDate), max(@targetDate) " +
+                     "from @targetTable";
 
         sql = expandName(sql);
-        sql = escapeEntity(setting, sql, table);
+        sql = escapeEntity(setting, sql, "ignored");
 
-        return Integer.valueOf(Network.executeQuery(setting.dataSource, sql).get(0)) == 0;
+        List<Timestamp> timestamps = Network.getTimestamp(setting.dataSource, sql);
+
+        // Mid-range calculation
+        Timestamp min = timestamps.get(0);
+        Timestamp max = timestamps.get(1);
+        Long midrangeValue = min.getTime() + (max.getTime() - min.getTime())/2;
+        Timestamp midrange = Timestamp.from(Instant.ofEpochMilli(midrangeValue));
+
+        logger.debug("TargetDate is in range: " + min + " to " + max + " with " + midrange + " mid-range.");
+
+        return midrange;
     }
 
 
@@ -811,13 +723,12 @@ public final class SQL {
     // Get R2. For discrete variables, following method is used:
     // http://stats.stackexchange.com/questions/119835/correlation-between-a-nominal-iv-and-a-continuous-dv-variable
     // R2 is normalized by the count of non-null samples of the predictor to penalize for sparse predictors.
-    public static double getR2(Setting setting, String table, String column) {
+    public static double getR2(Setting setting, Predictor predictor) {
         // Initialization
         String sql;
-        String dataType = getPredictorType(setting, table, column);
-    
-        // Is the predictor categorical, numeric or time?   
-        if ("nominal".equals(dataType)) {
+
+        // Is the predictor categorical, numeric or time?
+        if ("nominal".equals(predictor.getRawDataType())) {
             sql = "SELECT count(*)*power(corr(t2.average, t1.@baseTarget), 2) " +
                     "FROM @outputTable t1 " +
                     "JOIN ( " +
@@ -828,7 +739,7 @@ public final class SQL {
                     ") t2 " +
                     "ON t1.@column = t2.@column" +
                     "where t1.@column is not null AND t1.@baseTarget is not null";
-        } else if ("numerical".equals(dataType)){
+        } else if ("numerical".equals(predictor.getRawDataType())){
             sql = "SELECT count(@column)*power(corr(@column, @baseTarget), 2) " +
                     "FROM @outputTable " + /* We are working with the outputTable, hence schema & database are output. */
                     "WHERE @column is not null AND @baseTarget is not null";
@@ -844,18 +755,18 @@ public final class SQL {
 
         // Take care of stdDev (needed if the corr command is assembled from the basic commands)
         sql = sql.replaceAll("stdDev_samp", setting.stdDevCommand);
-    
+
         // Escape the entities
         sql = expandName(sql);
-        sql = escapeEntity(setting, sql, table);    /* outputTable, outputSchema, output.Database */
+        sql = escapeEntity(setting, sql, predictor.getOutputTable());    /* outputTable, outputSchema, output.Database */
         HashMap<String, String> fieldMap = new HashMap<>();
-        fieldMap.put("@column", column);
+        fieldMap.put("@column", predictor.getName());
         fieldMap.put("@baseTarget", setting.baseTarget);
         sql = escapeEntityMap(setting, sql, fieldMap);
-    
+
         // Execute the SQL
         List<String> response = Network.executeQuery(setting.dataSource, sql);
-    
+
         // Parse the response
         double correlation;
 
@@ -865,7 +776,7 @@ public final class SQL {
             logger.info("The response in correlation calculation is null (constant values, empty table...), return 0.");
             correlation = 0;
         }
-    
+
         return correlation;
     }
 
@@ -875,11 +786,11 @@ public final class SQL {
     // The calculation could be streamlined as described in:
     //  Study of feature selection algorithms for text-categorization.
     // SHOULD BE EXTENDED TO SUPPORT BOOLEANS
-    public static double getChi2(Setting setting, String table, String column) {
+    public static double getChi2(Setting setting, Predictor predictor) {
         // Initialization
         String sql;
-        String predictorType = getPredictorType(setting, table, column);
-    
+
+
         // Technical: MySQL or PostgreSQL require correlation name (also known as alias) for derived tables.
         // But Oracle does not accept "as" keyword in front of the table alias. See:
         //   http://www.techonthenet.com/oracle/alias.php
@@ -891,9 +802,11 @@ public final class SQL {
         //   The query requires remerging summary statistics back with the original data.
         // The solution is to create a subqury, which returns table with the generated attribute. And then group the
         // table by the attribute (applies to "bin" attribute).
-        // Linear regularization is appropriate assuming infinite samples. On finite samples it is possibly too
-        // harsh on attributes with too many unique values. But I can live with that.
-        if ("nominal".equals(predictorType)) {
+        // Technical: Linear regularization is appropriate assuming infinite samples. On finite samples it is possibly
+        // too harsh on attributes with too many unique values. But I can live with that.
+        // NOTE: We should treat NULL values as another category in the histograms/list of categorical values.
+        // Technical: Azure cloud may require after us to cast some of the count(*) to decimal. Not tested.
+        if ("nominal".equals(predictor.getRawDataType())) {
             // Use categorical column directly
             sql = "SELECT sum(chi2)/count(distinct(bin)) " // Linearly regularized against columns with high cardinality
                 + "FROM ( "
@@ -905,7 +818,7 @@ public final class SQL {
                 + "          , target "
                 + "     FROM ( "
                 + "         SELECT @baseTarget AS target "
-                + "              , 1.0*count(*)/max(t2.nrow) AS prob "
+                + "              , 1.0 * count(*)/max(t2.nrow) AS prob " // We use 1.0 to cast integer to double (important on MSSQL)
                 + "         FROM @outputTable, ( "
                 + "             SELECT count(*) AS nrow "
                 + "             FROM @outputTable "
@@ -932,6 +845,10 @@ public final class SQL {
             // Group numerical/time values into 10 bins.
             // If desirable you can optimize the optimal amount of bins with Sturge's rule
             // but syntax for log is different in each database.
+            // There are different approaches to binning in SQL. A nice treatment of the maximum is at:
+            //      https://sqlsunday.com/2014/09/14/histogram-in-t-sql/
+            // Also check:
+            //      https://technet.microsoft.com/en-us/library/aa224898(v=sql.80).aspx
             sql = "SELECT sum(chi2)/10 " // To match regularization of nominal columns
                 + "FROM ( "
                 + " SELECT (expected.expected-measured.count) * (expected.expected-measured.count) / expected.expected AS chi2 "
@@ -941,7 +858,7 @@ public final class SQL {
                 + "          , target "
                 + "     FROM ( "
                 + "         SELECT @baseTarget AS target "
-                + "              , 1.0*count(*)/max(t2.nrow) AS prob " // Multiplied by 1.0 to get a decimal value in SAS.
+                + "              , 1.0 * count(*)/max(t2.nrow) AS prob "  // We use 1.0 to cast integer to double (important on MSSQL)
                 + "         FROM @outputTable, ( "
                 + "             SELECT count(*) AS nrow "
                 + "             FROM @outputTable "
@@ -951,11 +868,11 @@ public final class SQL {
                 + "         SELECT bin "
                 + "              , count(*) AS count "
                 + "         FROM ( "
-                + "             SELECT floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) AS bin " // Bin really into 10 bins and avoid division by zero.
+                + "             SELECT floor((@column-t2.min_value) / t2.bin_width) AS bin "
                 + "             FROM @outputTable, ( "
-                + "                 SELECT (max(@column)-min(@column)) / 10 AS bin_width "
-                + "                      , min(@column) AS min_value "
-                + "                 FROM @outputTable "
+                + "                 SELECT ((max(@column)-min(@column)) / 10.0) + 0.0000001 bin_width " // 0.0000001 because the maximum should fall into into the 10th bin, not the 11th.
+                + "                      , min(@column) AS min_value "                                  // Also it prevents division by zero if all the values are constant.
+                + "                 FROM @outputTable "                                                 // 10.0 because bin_width may not be a whole number.
                 + "             ) t2 "
                 + "         ) t3 "
                 + "         GROUP BY bin "
@@ -967,9 +884,9 @@ public final class SQL {
                 + "          , count(*) AS count "
                 + "     FROM ( "
                 + "         SELECT @baseTarget AS target "
-                + "                , floor((@column-t2.min_value) / (t2.bin_width + 0.0000001)) AS bin "
+                + "                , floor((@column-t2.min_value) / t2.bin_width) AS bin "
                 + "         FROM @outputTable, ( "
-                + "             SELECT (max(@column)-min(@column)) / 10 AS bin_width "
+                + "             SELECT ((max(@column)-min(@column)) / 10.0) + 0.0000001 AS bin_width "
                 + "                  , min(@column) AS min_value "
                 + "             FROM @outputTable "
                 + "         ) t2 "
@@ -981,29 +898,23 @@ public final class SQL {
                 + ") chi2";
 
             // For time columns just cast time to number.
-            if ("temporal".equals(predictorType)) {
+            if ("temporal".equals(predictor.getRawDataType())) {
                 sql = sql.replace("@column", setting.dateToNumber);
             }
         }
 
-        // For databases that suffer from overflow whenever calculating an average, cast to DECIMAL.
-        // Note that SAS does not support anything like DECIMAL/NUMERIC... Hence, code bifurcation is necessary.
-        if (!"SAS".equals(setting.databaseVendor)) {
-            sql = sql.replace("count(*)", "cast(count(*) as DECIMAL)");
-        }
-
         sql = expandName(sql);
-        sql = escapeEntity(setting, sql, table);    /* outputTable, outputSchema, output.Database */
-    
+        sql = escapeEntity(setting, sql, predictor.getOutputTable());    /* outputTable, outputSchema, output.Database */
+
         // Escape the entities
         HashMap<String, String> fieldMap = new HashMap<>();
-        fieldMap.put("@column", column);
+        fieldMap.put("@column", predictor.getName());
         fieldMap.put("@baseTarget", setting.baseTarget);
         sql = escapeEntityMap(setting, sql, fieldMap);
 
         // Execute the SQL
         List<String> response = Network.executeQuery(setting.dataSource, sql);
-    
+
         // Parse the response.
         double chi2;
 
@@ -1011,12 +922,329 @@ public final class SQL {
             chi2 = Double.parseDouble(response.get(0));
         } catch (Exception ignored){  // Cover's both, number format exception and null pointer exception.
             chi2 = 0;
-            logger.info("The result of Chi2 calculation on " + table + "." + column + " is null (empty table...). Returning 0.");
+            logger.info("The result of Chi2 calculation on " + predictor.getOutputTable() + "." + predictor.getName() + " is null (empty table...). Returning 0.");
         }
-    
+
         return chi2;
-    
+
     }
+
+    // Estimate true concept drift.
+    // Requires @baseFold in the target OR I need a median value for training/testing split based on the time.
+    // Note: We should never really return zero to void the effect of Chi2.
+    // Note: Concept drift is so far just for nominal labels. Should be extended to continuous label
+    // Note: If the targetDate is a constant, we should not perform concept drift (at least not by time).
+    // TESTED ONLY ON POSTGRESQL
+    // REWRITE TO NOT USE WITH CLAUSE.
+    // NOTE: We should reuse the histogram calculated for Chi2 -> Proposal: Calculate histograms in SQL, send
+    // them to Predictor Factory (it is necessary to limit the length of the histogram for nominal attributes)
+    // and calculate Chi2 in Concept Drift in Java?
+    public static double getConceptDriftO(Setting setting, Predictor predictor) {
+
+        String sql = "";
+
+        // Nominal
+        if ("nominal".equals(predictor.getRawDataType())) {
+            sql = "with histogram as ( " +    //  Count() by y,x,fold
+                    "    select @baseTarget " +
+                    "        , @column " +
+                    "        , is_testing " +
+                    "        , COALESCE(cnt, 0) as cnt " +
+                    "    from ( " +
+                    "        select *  " +      // The planner on PostgreSQL likes if we first get the unique values and only then perform the join.
+                    "        from ( " +
+                    "            select distinct @baseTarget " +
+                    "            from @outputTable " +
+                    "        ) t1, ( " +
+                    "            select distinct @column " +
+                    "            from @outputTable " +
+                    "        ) t2, ( " +
+                    "            select TRUE as is_testing union select FALSE as is_testing " +
+                    "        ) t3 " +
+                    "    ) t4 " +
+                    "    left join  " +
+                    "    ( " +
+                    "        select @baseTarget " +
+                    "             , @column " +
+                    "             , @baseDate > @pivotDate as is_testing " +
+                    "             , count(*) as cnt " +
+                    "        from @outputTable t3 " +
+                    "        GROUP BY @baseTarget, @column, @baseDate > @pivotDate " +
+                    "    ) t5 " +
+                    "    using(@baseTarget, @column, is_testing) " +
+                    "), " +
+                    "x as (  " +            // Counts for the attribute x
+                    "    select @column " +
+                    "         , is_testing " +
+                    "         , sum(cnt) as x_cnt " +
+                    "    from histogram " +
+                    "    GROUP BY @column, is_testing " +
+                    "), " +
+                    "posterior as ( " +     // Conditional probability p(y|x)
+                    "    select @baseTarget " +
+                    "        , @column " +
+                    "        , is_testing " +
+                    "        , cnt/(x_cnt+1.0) as probability " + // Laplace correction for division by zero. Avoid integer division.
+                    "    from histogram  " +
+                    "    join x " +
+                    "    using(@column, is_testing) " +
+                    "),  " +
+                    "minmax as ( " +
+                    "    select min(probability) minimum " +
+                    "        , max(probability) maximum " +
+                    "    from posterior " +
+                    "    GROUP BY @baseTarget, @column " +
+                    ") " +
+                    "select sum(minimum)/sum(maximum) as jaccard_index " + // The problem is that 0 does not correspond to the random distribution; Ruzicka 1958. But if combined with CHi2, this adjustment is not necessary, as Chi2 includes correction for observation by chance.
+                    "from minmax";
+        } else {
+            sql = "with histogram as ( " +
+                    "    select @baseTarget " +
+                    "        , bin " +
+                    "        , is_testing " +
+                    "        , COALESCE(cnt, 0) as cnt " +
+                    "    from ( " +
+                    "        select *  " +  // The planner on PostgreSQL likes if we first get the unique values and only then perform the join.
+                    "        from ( " +
+                    "            select distinct @baseTarget " +
+                    "            from @outputTable " +
+                    "        ) t1, ( " +
+                    "            select 0 as bin union all select 1 as bin union all select 2 as bin union all select 3 as bin union all select 4 as bin  " +
+                    "            union all " +
+                    "            select 5 as bin union all select 6 as bin union all select 7 as bin union all select 8 as bin union all select 9 as bin " +
+                    "        ) t2, ( " +
+                    "            select TRUE as is_testing union all select FALSE as is_testing " +
+                    "        ) t3 " +
+                    "    ) t4 " +
+                    "    left join  " +
+                    "    ( " +
+                    "        SELECT @baseTarget " +
+                    "             , bin " +
+                    "             , @baseDate > @pivotDate as is_testing " +
+                    "             , count(*) AS cnt " +
+                    "        FROM ( " +
+                    "             SELECT @baseTarget " +
+                    "                  , @baseDate " +
+                    "                 , @column " +
+                    "                  , floor((@column-t2.min_value) / t2.bin_width ) AS bin " +
+                    "             FROM @outputTable, ( " +
+                    "                     SELECT ((max(@column)-min(@column)) / 10.0) + 0.00000001 AS bin_width " +
+                    "                          , min(@column) AS min_value " +
+                    "                     FROM @outputTable " +
+                    "             ) t2 " +
+                    "        ) t3 " +
+                    "        GROUP BY bin, @baseTarget, @baseDate > @pivotDate  " +
+                    "    ) t5 " +
+                    "    using(@baseTarget, bin, is_testing) " +
+                    "), " +
+                    "x as ( " +
+                    "    select bin " +
+                    "         , is_testing " +
+                    "         , sum(cnt) as x_cnt " +
+                    "    from histogram " +
+                    "    GROUP BY bin, is_testing " +
+                    "), " +
+                    "posterior as ( " +
+                    "    select @baseTarget " +
+                    "        , bin " +
+                    "        , is_testing " +
+                    "        , cnt/(x_cnt+1.0) as probability " + // Laplace correction for division by zero. Avoid integer division.
+                    "    from histogram  " +
+                    "    join x " +
+                    "    using(bin, is_testing) " +
+                    "),  " +
+                    "minmax as ( " +
+                    "    select min(probability) minimum " +
+                    "        , max(probability) maximum " +
+                    "    from posterior " +
+                    "    GROUP BY @baseTarget, bin " +
+                    ") " +
+                    "select sum(minimum)/sum(maximum) as jaccard_index " +
+                    "from minmax ";
+
+            // For time columns just cast time to number.
+            if ("temporal".equals(predictor.getRawDataType())) {
+                sql = sql.replace("@column", setting.dateToNumber);
+            }
+        }
+
+        // Replace, but do not escape
+        sql = sql.replace("@pivotDate", "{ts '" + setting.pivotDate + "'}");
+
+        sql = expandName(sql);
+        sql = escapeEntity(setting, sql, predictor.getOutputTable());
+
+        // Escape the entities
+        HashMap<String, String> fieldMap = new HashMap<>();
+        fieldMap.put("@column", predictor.getName());
+        fieldMap.put("@baseTarget", setting.baseTarget);
+        sql = escapeEntityMap(setting, sql, fieldMap);
+
+        // Execute the SQL
+        List<String> response = Network.executeQuery(setting.dataSource, sql);
+
+        // Parse the response.
+        double similarity;
+
+        try {
+            similarity = Double.parseDouble(response.get(0));
+        } catch (Exception ignored){  // Cover's both, number format exception and null pointer exception.
+            similarity = 0;
+            logger.info("The estimated concept drift on " + predictor.getOutputTable() + "." + predictor.getName() + " is null (empty table...). Returning 0.");
+        }
+
+        return similarity;
+    }
+
+
+
+    // Estimate true concept drift.
+    // Requires @baseFold in the target OR I need a median value for training/testing split based on the time.
+    // Note: We should never really return zero to void the effect of Chi2.
+    // Note: Concept drift is so far just for nominal labels. Should be extended to continuous label
+    // Note: If the targetDate is a constant, we should not perform concept drift (at least not by time).
+    // NOTE: THIS IMPLEMENTATION INCREASES RUNTIME BY ~30%
+    public static double getConceptDrift(Setting setting, Predictor predictor) {
+
+        String histogram = "";
+
+        // Nominal
+        if ("nominal".equals(predictor.getRawDataType())) {
+
+             histogram = " ( " +    //  Count() by y,x,fold
+                "    select @baseTarget " +
+                "        , @column " +
+                "        , is_testing " +
+                "        , COALESCE(cnt, 0) as cnt " +
+                "    from ( " +
+                "        select *  " +      // The planner on PostgreSQL likes if we first get the unique values and only then perform the join.
+                "        from ( " +
+                "            select distinct @baseTarget " +
+                "            from @outputTable " +
+                "        ) t1, ( " +
+                "            select distinct @column " +
+                "            from @outputTable " +
+                "        ) t2, ( " +
+                "            select TRUE as is_testing union select FALSE as is_testing " +
+                "        ) t3 " +
+                "    ) t4 " +
+                "    left join  " +
+                "    ( " +
+                "        select @baseTarget " +
+                "             , @column " +
+                "             , @baseDate > @pivotDate as is_testing " +
+                "             , count(*) as cnt " +
+                "        from @outputTable t3 " +
+                "        GROUP BY @baseTarget, @column, @baseDate > @pivotDate " +
+                "    ) t5 " +
+                "    using(@baseTarget, @column, is_testing) " +
+                ") histogram ";
+
+        } else {
+
+             histogram = " ( " +
+                "    select @baseTarget " +
+                "        , bin " +
+                "        , is_testing " +
+                "        , COALESCE(cnt, 0) as cnt " +
+                "    from ( " +
+                "        select *  " +  // The planner on PostgreSQL likes if we first get the unique values and only then perform the join.
+                "        from ( " +
+                "            select distinct @baseTarget " +
+                "            from @outputTable " +
+                "        ) t1, ( " +
+                "            select 0 as bin union all select 1 as bin union all select 2 as bin union all select 3 as bin union all select 4 as bin  " +
+                "            union all " +
+                "            select 5 as bin union all select 6 as bin union all select 7 as bin union all select 8 as bin union all select 9 as bin " +
+                "        ) t2, ( " +
+                "            select TRUE as is_testing union all select FALSE as is_testing " +
+                "        ) t3 " +
+                "    ) t4 " +
+                "    left join  " +
+                "    ( " +
+                "        SELECT @baseTarget " +
+                "             , bin " +
+                "             , @baseDate > @pivotDate as is_testing " +
+                "             , count(*) AS cnt " +
+                "        FROM ( " +
+                "             SELECT @baseTarget " +
+                "                  , @baseDate " +
+                "                 , @column " +
+                "                  , floor((@column-t2.min_value) / t2.bin_width ) AS bin " +
+                "             FROM @outputTable, ( " +
+                "                     SELECT ((max(@column)-min(@column)) / 10.0) + 0.00000001 AS bin_width " +
+                "                          , min(@column) AS min_value " +
+                "                     FROM @outputTable " +
+                "             ) t2 " +
+                "        ) t3 " +
+                "        GROUP BY bin, @baseTarget, @baseDate > @pivotDate  " +
+                "    ) t5 " +
+                "    using(@baseTarget, bin, is_testing) " +
+                ") histogram ";
+
+            // For time columns just cast time to number.
+            if ("temporal".equals(predictor.getRawDataType())) {
+                histogram = histogram.replace("@column", setting.dateToNumber);
+            }
+        }
+
+        String x = " ( " +            // Counts for the attribute x
+                "    select @column " +
+                "         , is_testing " +
+                "         , sum(cnt) as x_cnt " +
+                "    from " + histogram +
+                "    GROUP BY @column, is_testing " +
+                ") x ";
+
+        String posterior = " ( " +     // Conditional probability p(y|x)
+                "    select @baseTarget " +
+                "        , @column " +
+                "        , is_testing " +
+                "        , cnt/(x_cnt+1.0) as probability " + // Laplace correction for division by zero. Avoid integer division.
+                "    from " + histogram +
+                "    join " + x +
+                "    using(@column, is_testing) " +
+                ") posterior ";
+
+        String minmax = " ( " +
+                "    select min(probability) minimum " +
+                "        , max(probability) maximum " +
+                "    from " + posterior +
+                "    GROUP BY @baseTarget, @column " +
+                ") minmax ";
+
+        String sql =
+                "select sum(minimum)/sum(maximum) as jaccard_index " + // The problem is that 0 does not correspond to the random distribution; Ruzicka 1958. But if combined with CHi2, this adjustment is not necessary, as Chi2 includes correction for observation by chance.
+                        "from " + minmax;
+
+        // Replace, but do not escape
+        sql = sql.replace("@pivotDate", "{ts '" + setting.pivotDate + "'}");
+
+        sql = expandName(sql);
+        sql = escapeEntity(setting, sql, predictor.getOutputTable());
+
+        // Escape the entities
+        HashMap<String, String> fieldMap = new HashMap<>();
+        fieldMap.put("@column", predictor.getName());
+        fieldMap.put("@baseTarget", setting.baseTarget);
+        sql = escapeEntityMap(setting, sql, fieldMap);
+
+        // Execute the SQL
+        List<String> response = Network.executeQuery(setting.dataSource, sql);
+
+        // Parse the response.
+        double similarity;
+
+        try {
+            similarity = Double.parseDouble(response.get(0));
+        } catch (Exception ignored){  // Cover's both, number format exception and null pointer exception.
+            similarity = 0;
+            logger.info("The estimated concept drift on " + predictor.getOutputTable() + "." + predictor.getName() + " is null (empty table...). Returning 0.");
+        }
+
+        return similarity;
+    }
+
 
     // QC patterns based on produced predictors
     private static List<String> qcPredictors(Setting setting) {
@@ -1024,14 +1252,14 @@ public final class SQL {
                      "FROM @outputTable " +
                      "GROUP BY pattern_name " +
                      "having avg(is_ok + 0.0) = 0"; // We have to cast int to double before averaging
-    
+
         sql = expandName(sql);
         sql = escapeEntity(setting, sql, setting.journalPredictor);
         List<String> badPatterns = Network.executeQuery(setting.dataSource, sql);
-    
+
         return badPatterns;
     }
- 
+
     // Log Predictor Factory total run time.
     // ADD: column with count of produced predictors & whether PF finished successfully.
     // NOTE: COPYING OF TABLES IS UGLY. GIVE IT DIRECTLY THE SPECIFIC NAMES AND MAKE GENERIC TABLES JUST AS A VIEW?
@@ -1039,7 +1267,7 @@ public final class SQL {
     public static void logRunTime(Setting setting, long elapsedTime){
         // Drop the previous version
         dropTable(setting, "ms_" + setting.inputSchema);
-    
+
         // Copy the current mainSample
         String sql = "create table @outputSchema.@ms as SELECT * FROM @outputTable";
         sql = expandName(sql);
@@ -1048,10 +1276,10 @@ public final class SQL {
         fieldMap.put("@ms", "ms_" + setting.inputSchema);
         sql = escapeEntityMap(setting, sql, fieldMap);
         Network.executeUpdate(setting.dataSource, sql);
-    
+
         // Drop the previous version
         dropTable(setting, "j_" + setting.inputSchema);
-    
+
         // Copy the current journal
         sql = "create table @outputSchema.@j as SELECT * FROM @outputTable";
         sql = expandName(sql);
@@ -1060,7 +1288,7 @@ public final class SQL {
         fieldMap.put("@j", "j_" + setting.inputSchema);
         sql = escapeEntityMap(setting, sql, fieldMap);
         Network.executeUpdate(setting.dataSource, sql);
-    
+
         // Log time in the database
         sql = "insert into @outputTable (schema_name, runtime) values ('" + setting.inputSchema + "', " + elapsedTime + ")";
         sql = expandName(sql);
@@ -1071,7 +1299,7 @@ public final class SQL {
         logger.debug("Time of finishing: " + LocalDate.now() + " " + LocalTime.now());
         logger.debug("Run time: " + DurationFormatUtils.formatDurationWords(elapsedTime, true, true));
     }
- 
+
 
     // 1a) Return create journal_predictor table command
     // Return true if the journal table was successfully created.
@@ -1099,18 +1327,19 @@ public final class SQL {
           "sql_code " + setting.typeVarchar + "(3600), " + // For example code for WoE is close to 1024 chars and NB is 3000
           "target " + setting.typeVarchar + "(255), " +
           "relevance " + setting.typeDecimal + "(18,3), " +
+          "concept_drift " + setting.typeDecimal + "(7,6), " +
           "qc_rowCount " + setting.typeInteger + ", " +
           "qc_nullCount " + setting.typeInteger + ", " +
           "is_ok " + setting.typeInteger + ", " +
           "is_duplicate " + setting.typeInteger + ", " +
           "duplicate_name " + setting.typeVarchar + "(255))";
-    
+
         sql = expandName(sql);
         sql = escapeEntity(setting, sql, setting.journalPredictor);
-    
+
         return Network.executeUpdate(setting.dataSource, sql);
     }
-    
+
     // 1b) Add record into the journal_predictor
     // Return true if the journal table was successfully updated.
     public static boolean addToJournal(Setting setting, Predictor predictor) {
@@ -1118,10 +1347,10 @@ public final class SQL {
         // Convert bool to int
         int isOk = predictor.isOk()? 1 : 0;
         int isInferiorDuplicate = predictor.isInferiorDuplicate()? 1 : 0;
-    
+
         // Insert timestamp subquery
         String timestampBuild = date2query(setting, predictor.getTimestampBuilt());
-    
+
         // Assembly the head of the insert command
         String sql = "INSERT INTO @outputTable VALUES (";
         sql = expandName(sql);
@@ -1134,11 +1363,11 @@ public final class SQL {
                   predictor.getRuntime()+ ", " +
             "'" + predictor.getName() + "', " +
             "'" + predictor.getLongName() + "', " +
-            "'" + predictor.originalTable + "', " +         
-            "'" + predictor.columnMap.toString() + "', " +      // Should be a list...
-            "'" + predictor.propagationPath.toString() + "', " +
-                  predictor.propagationPath.size() + ", " +
-            "'" + predictor.propagationDate + "', " +
+            "'" + predictor.getOriginalTable() + "', " +
+            "'" + predictor.getColumnMap().toString() + "', " +      // Should be a list...
+            "'" + predictor.getPropagationPath().toString() + "', " +
+                  predictor.getPropagationPath().size() + ", " +
+            "'" + predictor.getPropagationDate() + "', " +
             "'" + predictor.getParameterMap().toString() + "', " +  // Violates the 1st norm...
             "'" + predictor.getPatternName() + "', " +
             "'" + predictor.getPatternAuthor() + "', " +
@@ -1146,6 +1375,7 @@ public final class SQL {
             "'" + predictor.getSql().replaceAll("'", "''") + "', " +        // Escape single quotes
             "'" + setting.targetColumn + "', " +
                   predictor.getRelevance(setting.baseTarget) + ", " + // Chi2
+                  predictor.getConceptDrift(setting.baseTarget) + ", " +
                   predictor.getRowCount() + ", " +
                   predictor.getNullCount() + ", " +
                   isOk + ", " +
@@ -1366,7 +1596,7 @@ public final class SQL {
     // IS NOT USING SYSTEM ESCAPING
     public static boolean getBase(Setting setting) {
         logger.debug("# Setting up base table #");
-    
+
         String sql;
         String id = "";
         String dateAs = "";
@@ -1378,7 +1608,7 @@ public final class SQL {
         String QR = setting.quoteEntityClose;
 
         // Detect duplicates in the base table
-        boolean isTargetTupleUnique = isTargetTupleUnique(setting, setting.targetTable);
+        boolean isTargetTupleUnique = setting.dialect.isTargetTupleUnique(setting, setting.targetTable);
 
         // Use date?
         if (setting.targetDate != null) {
@@ -1424,16 +1654,16 @@ public final class SQL {
                         "WHERE t2.@targetId is null AND t1.@targetDate is not null"; // TargetDate should never be null
             }
         }
-    
+
         // Assembly the query.
         // Originally we were creating a view. But SAS does not support sampling of views. Hence, create a table.
         sql = addCreateTableAs(setting, sql);
         sql = expandName(sql);
         sql = escapeEntity(setting, sql, setting.baseTable);
-    
+
         // Execute the query
         boolean isCreated = Network.executeUpdate(setting.dataSource, sql);
-    
+
         if (!isCreated) {
             logger.warn("The base table was not successfully created.");
         }
@@ -1445,30 +1675,30 @@ public final class SQL {
     // Sample base table based on target class.
     // Note: The selection is not guaranteed to be random.
     public static void getSubSampleClassification(Setting setting, SortedMap<String, Table> metaInput) {
-    
+
         // Initialization
         String sql = "";
         Set<String> targetValueList = metaInput.get(setting.targetTable).getColumn(setting.targetColumn).uniqueValueSet;
         String quote = "";
-    
+
         // Iff the target is nominal, quote the values with single quotes.
         if (setting.isTargetString) {
             quote = "'";
         }
-    
+
         // Create union
         for (String targetValue : targetValueList) {
             sql = sql + "(" + Parser.limitResultSet(setting, "SELECT * FROM @baseTable WHERE @baseTarget = " + quote + targetValue + quote + "\n", setting.sampleCount) + ")";
             sql = sql + " UNION ALL \n";    // Add "union all" between all the selects.
         }
-    
+
         // Finally, add unclassified records.
         sql = sql + "(" + Parser.limitResultSet(setting, "SELECT * FROM @baseTable WHERE @baseTarget is null\n", setting.sampleCount) + ")";
-                    
+
         sql = addCreateTableAs(setting, sql);
         sql = expandName(sql);
         sql = escapeEntity(setting, sql, setting.baseSampled);
-    
+
         Network.executeUpdate(setting.dataSource, sql);
 
         // Add indexes
@@ -1493,7 +1723,7 @@ public final class SQL {
         addIndex(setting, setting.baseSampled);
     }
 
- 
+
     // 3) Propagate ID. The map should contain @outputTable, @propagatedTable, @inputTable and @targetId[?].
     // If the map contains @dateColumn, time condition is added.
     // Technical note: We have to return SQL string, because these things are logged and exported for the user
@@ -1531,7 +1761,7 @@ public final class SQL {
             // First the upper bound (lead)
             sql = sql + " WHERE t2.@dateColumn <= " + setting.dateAddSyntax;
             sql = sql.replaceAll("@amount", "-" + setting.lead); // Negative lead
-        
+
             // Then, if required, add the lower bound (lag)
             if (table.dateBottomBounded) {
                 sql = sql + " AND " + setting.dateAddSyntax + " <= t2.@dateColumn";
@@ -1541,13 +1771,13 @@ public final class SQL {
 
             sql = sql.replaceAll("@datePart", setting.unit);
         }
-                    
+
         // Pattern_code to SQL conversion
         sql = addCreateTableAs(setting, sql);
         sql = expandName(sql);
         sql = escapeEntity(setting, sql, table.name);
         sql = escapeEntityTable(setting, sql, table);
-                
+
         return sql;
     }
 
@@ -1560,13 +1790,13 @@ public final class SQL {
 
         sql = addCreateTableAs(setting, sql);
         sql = expandName(sql);
-        sql = escapeEntity(setting, sql, predictor.outputTable);
-        sql = escapeEntityPredictor(setting, sql, predictor);   
-    
+        sql = escapeEntity(setting, sql, predictor.getOutputTable());
+        sql = escapeEntityPredictor(setting, sql, predictor);
+
         if ("SAS".equals(setting.databaseVendor)) {
             sql = sql.replace("\"", "");                // VERY UGLY WORKAROUND. SHOULD IMPLEMENT quoteAlias
         }
-    
+
         return sql;
     }
 
@@ -1580,16 +1810,16 @@ public final class SQL {
         // ASSUMING THAT THE MATCH IS 1:1!
         List<String> tableListAll = new ArrayList<>();
         List<String> columnListAll = new ArrayList<>();
-    
+
         for (Predictor predictor : predictorList) {
-                tableListAll.add(predictor.outputTable);
+                tableListAll.add(predictor.getOutputTable());
                 columnListAll.add(predictor.getName());
         }
-    
+
         // MySQL can join maximally 61 tables in a single command. Hence split the task into several smaller joins.
         List<List<String>> tableListSmall = Lists.partition(tableListAll, 60); // One table is reserved for baseSampled.
         List<List<String>> columnListSmall = Lists.partition(columnListAll, 60);
-    
+
         // Prepare a list of the temporary table names
         List<String> tempTableList = new ArrayList<>();
 
@@ -1608,7 +1838,7 @@ public final class SQL {
         if (setting.targetDate != null) {
             date = "t1.@baseDate, ";
         }
-    
+
         // Create temporary tables
         for (int i = 0; i < tableListSmall.size(); i++) {
             // Initialization
@@ -1616,7 +1846,7 @@ public final class SQL {
             int tableCount;                                                 // The tables are named t1..t* in the join
             String tempTable = setting.mainTable + "_temp" + (100+i);   // The name of the temporary table
             tempTableList.add(tempTable);
-            List<String> tableList = tableListSmall.get(i);             
+            List<String> tableList = tableListSmall.get(i);
             List<String> columnList = columnListSmall.get(i);
 
             // Select part
@@ -1626,7 +1856,7 @@ public final class SQL {
                 stringBuffer.append(", t" + tableCount + ".@"  + column);   // The column name will be escaped
                 tableCount++;
             }
-        
+
             // From part
             stringBuffer.append(" FROM @baseSampled t1");
             tableCount = 2;
@@ -1647,39 +1877,39 @@ public final class SQL {
 
                 tableCount++;
             }
-        
+
             // Make SQL from the pattern
             String pattern_code = stringBuffer.toString();
             pattern_code = addCreateTableAs(setting, pattern_code);
             pattern_code = expandName(pattern_code);
             pattern_code = expandNameList(pattern_code, tableList);
             pattern_code = escapeEntity(setting, pattern_code, tempTable);
-        
+
             // Escape table & column entities (tables can't be escaped in definition because they have to be first expanded...)
             Map<String, String> map = new HashMap<>(61);
             for (String table : tableList) map.put(table, table);           // This is dangerous (no prefix... in the substitution)
             for (String column : columnList) map.put("@" + column, column);
             String sql = escapeEntityMap(setting, pattern_code, map);
-        
+
             // Execute the query
             Network.executeUpdate(setting.dataSource, sql);
-        
+
             // Build index on BaseId in the temporary table for possibly faster final join
             addIndex(setting, tempTable);
         }
-    
+
         //// Combine the temporary tables into a single output table ////
         StringBuilder stringBuffer = new StringBuilder(500);
-    
+
         // Select part (like t1.column1)
         stringBuffer.append("SELECT " + idList + date + "t1.@baseTarget");
-    
+
         for (int i = 0; i < tempTableList.size(); i++) {
             for (String column : columnListSmall.get(i)) {
                 stringBuffer.append(", t" + (i+2) + ".@"  + column);    // The column name will be escaped
             }
         }
-    
+
         // From part
         stringBuffer.append(" FROM @baseSampled t1");
 
@@ -1700,30 +1930,30 @@ public final class SQL {
                 stringBuffer.append(" AND t1.@baseDate = t" + tableCount + ".@baseDate");
             }
         }
-    
+
         // Make SQL from the pattern
         String pattern_code = stringBuffer.toString();
         pattern_code = addCreateTableAs(setting, pattern_code);
         pattern_code = expandName(pattern_code);
         pattern_code = expandNameList(pattern_code, tempTableList);
         pattern_code = escapeEntity(setting, pattern_code, setting.mainTable);
-    
+
         // Escape table & column entities (tables can't be escaped in definition because they have to be first expanded...)
         Map<String, String> map = new HashMap<>(61);
         for (String table : tempTableList) map.put(table, table);
         for (String column : columnListAll) map.put("@" + column, column);
         String sql = escapeEntityMap(setting, pattern_code, map);
-    
+
         // Execute the query
         Network.executeUpdate(setting.dataSource, sql);
-    
-    
+
+
         //// Perform output Quality Control ////
         List<String> suspiciousPatternList = qcPredictors(setting);
         if (suspiciousPatternList.size()>0) {
             logger.warn("Following patterns always failed: " + suspiciousPatternList.toString());
         }
-    
+
         int columnCount = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable).size();
         logger.debug("Table " + setting.mainTable + " contains: " + columnCount + " columns");
     }

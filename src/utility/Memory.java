@@ -44,14 +44,10 @@ public class Memory {
         // Initialization
         Runtime runtime = Runtime.getRuntime();
         double usedMemory = usedMemory(runtime);
-        double reservedMemory = reservedMemory(runtime);
-        double maxMemory = maxMemory(runtime);
         NumberFormat f = new DecimalFormat("###,##0.0");
 
         // Logging
         logger.debug("Used memory: " + f.format(usedMemory) + " MB");
-        //logger.debug("Reserved memory: " + f.format(reservedMemory)  + "MB");
-        //logger.debug("Max available memory: " + f.format(maxMemory) + "MB");
     }
 
 

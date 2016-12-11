@@ -30,7 +30,7 @@ public class Journal {
         valueDuplicate = new HashMap<>();
         
         // Create journal table in the database
-        SQL.getJournal(setting);
+        setting.dialect.getJournal(setting);
     }
      
     // Get journal size.
@@ -63,7 +63,7 @@ public class Journal {
         journal.sort(Predictor.RelevanceComparator);
 
         // Synchronize journal table in the database
-        SQL.addToJournal(setting, predictor);
+        setting.dialect.addToJournal(setting, predictor);
 
         // Drop already unnecessary tables from the database
         dropToDrop(setting);
@@ -159,7 +159,7 @@ public class Journal {
         while(li.hasPrevious()) {
             Predictor predictor = (Predictor) li.previous();
             if (predictor.getCandidateState() == -1) {
-                SQL.dropTable(setting, predictor.outputTable);
+                setting.dialect.dropTable(setting, predictor.getOutputTable());
                 predictor.setCandidateState(0);
             }
             else {
@@ -170,7 +170,7 @@ public class Journal {
         // Drop the (N+1)th, if necessary
         if (journal.size()>featureLimitCount && journal.get(featureLimitCount).getCandidateState()==1) {
             Predictor overflower = journal.get(featureLimitCount);
-            SQL.dropTable(setting, overflower.outputTable);
+            setting.dialect.dropTable(setting, overflower.getOutputTable());
             overflower.setCandidateState(0);
         }
     }

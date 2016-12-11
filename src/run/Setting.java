@@ -6,8 +6,11 @@ package run;
 import com.google.common.base.MoreObjects;
 import com.zaxxer.hikari.HikariDataSource;
 import connection.*;
-import utility.Text;
+import org.apache.log4j.Logger;
+import propagation.Propagation;
+import utility.TextParser;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,9 +18,10 @@ import java.util.List;
 //  Could make the variables static to be available from everywhere (and final, if possible).
 //  We should break the setting into individual classes. Or at least build a hierarchy.
 public final class Setting {
+    // Logging
+    private static final Logger logger = Logger.getLogger(Propagation.class.getName());
 
     // Connection related
-
     public HikariDataSource dataSource;         // Pool of connections
     public int identifierLengthMax;             // The maximal length of a column/table
     public Integer predictorMax;                // The maximal count of columns in a table
@@ -115,6 +119,10 @@ public final class Setting {
     public boolean skipPropagation = false;
     public boolean skipAggregation = false;
 
+    // Computed variables
+    public Timestamp pivotDate;                     // A central timestamp in targetDate. Used in concept drift.
+    public SQL dialect;                             // SQL commands for the specific database vendor
+
     // Constructors
     public Setting() {}
 
@@ -152,7 +160,7 @@ public final class Setting {
         // Load database properties
         inputSchema = databaseProperty.inputSchema;
         outputSchema = databaseProperty.outputSchema;
-        targetIdList = Text.string2list(databaseProperty.targetId); // Permits composite id
+        targetIdList = TextParser.string2list(databaseProperty.targetId); // Permits composite id
         targetDate = databaseProperty.targetDate;
         targetColumn = databaseProperty.targetColumn;
         targetTable = databaseProperty.targetTable;
@@ -201,10 +209,30 @@ public final class Setting {
         for (int i = 0; i < targetIdList.size(); i++) {
             baseIdList.add("propagated_id" + (i+1));    // Indexing from 1
         }
+
+        // Set dialect
+        switch (databaseVendor) {
+            case "Oracle": dialect = new SQLOracle();
+                break;
+            default: dialect = new SQL();
+        };
+
+        // Log the configuration
+        prettyPrint();
     }
 
-    // Provide brief description. Useful for documentation.
-    public String toString() {
-        return "Setting configuration: [[Lag: " + lag + "], [Lead: " + lead + "], [Sample count: " + sampleCount + "], [Use ids: " + useIdAttributes + "], [Predictor count limit: " + predictorMax + "]]";
+    // Pretty print the configuration.
+    // Useful to have this information in the log if the client has problems.
+    private void prettyPrint() {
+        logger.debug("Lag: " + lag);
+        logger.debug("Lead: " + lead);
+        logger.debug("Sample count: " + sampleCount);
+        logger.debug("Use ids: " + useIdAttributes);
+        logger.debug("Target schema: " + targetSchema);
+        logger.debug("Target table: " + targetTable);
+        logger.debug("Target column: " + targetColumn);
+        logger.debug("Target ids: " + targetIdList);
+        logger.debug("Target timestamp: " + targetDate);
+        logger.debug("Output schema: " + outputSchema);
     }
 }

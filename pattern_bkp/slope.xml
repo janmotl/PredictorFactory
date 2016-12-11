@@ -5,11 +5,12 @@
 	<description>
 		Slope of an attribute in time as estimated with a linear regression.
 
+		In comparison to correlation, this pattern looks at the angle of the fitted line, while correlation looks at
+		how well the data can be fit by the line multiplied by the sign of the direction of the line.
+
 		NOTE: Could calculate slope of two numerical attributes (in another pattern).
 		NOTE: Whenever correlation is calculated manually, arithmetic overflow can happen.
 		NOTE: DateToNumber function is automatically replaced with the database aware function call.
-
-		NOTE: What is the difference between this and correlation?
 	</description>
 	<example>
 		Trend of customer's balance on his account.

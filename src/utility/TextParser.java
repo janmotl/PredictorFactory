@@ -1,11 +1,16 @@
 package utility;
 
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
 
-public class Text {
+public class TextParser {
+
+    // Logging
+    private static final Logger logger = Logger.getLogger(TextParser.class.getName());
+
     // Convert comma delimited string to list
     @NotNull
     public static List<String> string2list(String string) {
@@ -32,7 +37,10 @@ public class Text {
 
         for (String tuple : list) {
             String[] tableColumn = tuple.split("\\."); // Dot, but escaped for regex
-            if (tableColumn.length != 2) continue;  // Take care of empty strings...
+            if (tableColumn.length != 2) {  // Take care of empty strings...
+                logger.warn("Expected string in the form table.column but obtained: " + tuple);
+                continue;
+            }
             String table = tableColumn[0];
             String column = tableColumn[1];
 

@@ -5,7 +5,7 @@ import org.apache.log4j.Logger;
 import run.Setting;
 import utility.BlackWhiteList;
 import utility.Meta;
-import utility.Text;
+import utility.TextParser;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -27,11 +27,12 @@ public class MetaInput {
         SortedMap<String, Table> tableMap;                                          // Map of {tableName, tableData}
         final String database = setting.database;
         final String schema = setting.inputSchema;
-        final List<String> whiteListTable = Text.string2list(setting.whiteListTable); // Parsed values
-        final List<String> blackListTable = Text.string2list(setting.blackListTable); // Parsed values
-        final Map<String,List<String>> whiteMapColumn = Text.list2map(Text.string2list(setting.whiteListColumn)); // Parsed values
-        final Map<String,List<String>> blackMapColumn = Text.list2map(Text.string2list(setting.blackListColumn)); // Parsed values
-    
+        final List<String> whiteListTable = TextParser.string2list(setting.whiteListTable); // Parsed values
+        final List<String> blackListTable = TextParser.string2list(setting.blackListTable); // Parsed values
+        final Map<String,List<String>> whiteMapColumn = TextParser.list2map(TextParser.string2list(setting.whiteListColumn)); // Parsed values
+        final Map<String,List<String>> blackMapColumn = TextParser.list2map(TextParser.string2list(setting.blackListColumn)); // Parsed values
+
+
         // What data types are used by the database? In journal file we use {3, 4, 12 and 93}.
         logger.debug("Supported data types are: " + getDataTypes(setting));
 
@@ -60,7 +61,7 @@ public class MetaInput {
         // QC that targetDate doesn't contain nulls
         // Note: we do not use Column call because Columns are still not populated
         if (setting.targetDate != null) {
-            if (SQL.containsNull(setting, setting.targetTable, setting.targetDate)) {
+            if (setting.dialect.containsNull(setting, setting.targetTable, setting.targetDate)) {
                 logger.warn("Target date column '" + setting.targetDate + "' contains null. Rows with the null in target date column WILL BE IGNORED!");
             }
         }
@@ -132,6 +133,17 @@ public class MetaInput {
                 logger.warn("Target date column '" + setting.targetDate + "' is " + column.dataTypeName + ". But a temporal data type was expected.");
             }
         }
+
+        // Get the pivot date for targetDate
+        // Note: It is ugly we are modifying the "setting" here. Neither MetaInput is good because in the time we
+        // need pivotDate we are already using MetaOutput. And MetaOutput is concerned with table-level and column-level
+        // info. Maybe we could move this out. But the only good current place is Launcher...
+        // Maybe this information should be encoded in @baseFold?
+        if (setting.targetDate != null) {
+            setting.pivotDate = setting.dialect.getPivotDate(setting);
+        }
+
+
 
         // QC that label is numerical if performing regression
         if ("regression".equals(setting.task)) {

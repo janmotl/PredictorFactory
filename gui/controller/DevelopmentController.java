@@ -17,6 +17,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.ResourceBundle;
 
+
+@SuppressWarnings("MethodMayBeStatic")
 public class DevelopmentController implements Initializable {
 
     @FXML private TextFlow textFlow;
@@ -77,4 +79,5 @@ public class DevelopmentController implements Initializable {
 
 
     }
+
 }

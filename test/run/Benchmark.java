@@ -129,7 +129,7 @@ public class Benchmark {
 			if ("regression".equals(setting.task)) {
 				regression(setting);
 			} else {
-				List<String> uniqueRecords = SQL.getUniqueRecords(setting, setting.targetTable, setting.targetColumn, true);
+				List<String> uniqueRecords = setting.dialect.getUniqueRecords(setting, setting.targetTable, setting.targetColumn, true);
 
 				if (uniqueRecords.size() == 2) binaryClassification(setting);
 				else classification(setting);

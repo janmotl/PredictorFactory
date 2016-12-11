@@ -3,7 +3,8 @@
 <pattern>
 	<name>Change ratio</name>
 	<description>
-		Ratio of increases to decreases in time. 
+		Ratio of increases to decreases in time. If the attribute is nominal, we look at the alphabetical order of the
+		values.
 		
 		Note: The value is regularized toward 1. When no change happens, 1 is returned. Also by using regularization
 		we avoid division by zero. 

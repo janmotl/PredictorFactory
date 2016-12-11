@@ -3,10 +3,19 @@
 <pattern>
 	<name>Change count</name>
 	<description>
-		Count number of changes in an ordered list.
+		Count of changes of an attribute value in time.
 		
 		Note: This pattern is different from the count of duplicates - you can have a list of binary values, but still
 		have more than two changes.
+
+		NOTE: Transitions from/to NULL are ignored in the sum (because A!=B returns NULL, if at least one value is NULL).
+		This may not be a desirable behaviour. A solution of the problem could be to use following equality test:
+			(A = B) OR (ISNULL(A, B) IS NULL)
+
+		NOTE: The ordering by @timeColumn may not be unique - for example, if @timeColumn is a date attribute and
+		multiple events happen during a day. Consequently, it may always return slightly different result.
+
+		NOTE: Pattern nominal_change was a duplicate -> removed nominal_change.
 	</description>
 	<example>
 		How many times did a student interrupt his studies?

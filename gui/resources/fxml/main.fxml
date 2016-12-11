@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import java.lang.*?>
+<?import javafx.scene.text.*?>
 <?import javafx.scene.web.*?>
-<?import javafx.scene.image.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.web.WebView?>
 
 <TabPane fx:id="tabPane" prefHeight="470.0" prefWidth="800.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.Events">
    <Tab text="Connect">
@@ -390,6 +393,38 @@
                </left>
             </BorderPane>
          </bottom>
+      </BorderPane>
+   </Tab>
+   <Tab text="About">
+      <graphic>
+         <ImageView>
+            <image>
+               <Image url="@../img/info.png" />
+            </image>
+         </ImageView>
+      </graphic>
+      <BorderPane>
+         <center>
+            <VBox alignment="CENTER" spacing="10.0">
+               <children>
+                  <Hyperlink onAction="#openHomepage">
+                     <graphic>
+                        <ImageView>
+                           <image>
+                              <Image url="@../img/red-gear.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </Hyperlink>
+                  <Text fx:id="textVersion" text="Version 3.42" />
+                  <Text text="Automatically creates a single table of predictors from relational data" textAlignment="CENTER" wrappingWidth="220.0" />
+                  <Hyperlink onAction="#sendEmail" text="Email the developer" />
+               </children>
+               <BorderPane.margin>
+                  <Insets />
+               </BorderPane.margin>
+            </VBox>
+         </center>
       </BorderPane>
    </Tab>
 </TabPane>

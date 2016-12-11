@@ -20,6 +20,9 @@
 		To avoid division by zero and logarithm of zero in evaluation of WoE we use the Laplace correction.
 		Laplacean correction is from: http://shigglesblog.blogspot.com/2013/07/weight-of-evidence.html
 
+		A different correction schema:
+		http://support.sas.com/documentation/cdl/en/prochp/66704/HTML/default/viewer.htm#prochp_hpbin_details02.htm
+
 		The empirical evidence suggests that Laplacean correction improves AUC by 5 percent points.
 			See: http://papers.ssrn.com/sol3/papers.cfm?abstract_id=1918410
 

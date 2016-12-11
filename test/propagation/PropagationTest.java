@@ -15,23 +15,26 @@ public class PropagationTest {
 
 	@Test
 	public void propagateBase() {
+		utility.Logging.initialization();
+
 		Setting setting = new Setting("PostgreSQL", "mutagenesis");
 
 		setting = Network.openConnection(setting);
-		SQL.tidyUp(setting);
-		SQL.getBase(setting);
+		setting.dialect.tidyUp(setting);
+		setting.dialect.getBase(setting);
 		SortedMap<String, Table> metaInput = metaInformation.MetaInput.getMetaInput(setting);
+		setting.dialect.getSubSampleClassification(setting, metaInput);
 
 		// Run!
 		Propagation.propagateBase(setting, metaInput);
-		Network.closeConnection(setting);
 		
 		// Validate
-		Assert.assertEquals(188, SQL.getRowCount(setting, setting.outputSchema, "propagated_molecule_001"));
-		Assert.assertEquals(4893, SQL.getRowCount(setting, setting.outputSchema, "propagated_atom_002"));
-		Assert.assertEquals(5243, SQL.getRowCount(setting, setting.outputSchema, "propagated_bond_003"));
+		Assert.assertEquals(188, setting.dialect.getRowCount(setting, setting.outputSchema, "propagated_molecule_001"));
+		Assert.assertEquals(4893, setting.dialect.getRowCount(setting, setting.outputSchema, "propagated_atom_002"));
+		Assert.assertEquals(5243, setting.dialect.getRowCount(setting, setting.outputSchema, "propagated_bond_003"));
 		SortedMap<String, Column> meta = Meta.collectColumns(setting, setting.database, setting.outputSchema, "propagated_molecule_001");
-		Assert.assertTrue(meta.containsKey("propagated_id"));
+		Network.closeConnection(setting);
+		Assert.assertTrue(meta.containsKey("propagated_id1"));
 		Assert.assertTrue(meta.containsKey("propagated_target"));
 		Assert.assertTrue(meta.containsKey("lumo"));
 	}

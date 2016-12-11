@@ -8,8 +8,14 @@ import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.*;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxTreeCell;
+import javafx.scene.text.Text;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import metaInformation.Column;
@@ -17,13 +23,20 @@ import metaInformation.Table;
 import org.apache.commons.lang3.StringUtils;
 import run.Setting;
 import utility.*;
+import utility.TextParser;
 
+import java.awt.*;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
+import java.util.List;
 
+import static utility.FormatSQL.formatSQL;
 import static utility.ParseInteger.parseInteger;
 import static utility.TextToHTML.textToHTML;
-import static utility.FormatSQL.formatSQL;
+import static utility.SystemQualityControl.getPFVersion;
 
 
 public class Events implements Initializable {
@@ -65,7 +78,7 @@ public class Events implements Initializable {
     @FXML private TreeView<String> treeViewSelect;
     @FXML private TreeView<String> treeViewPattern;
     @FXML private TabPane tabPane;
-
+    @FXML private Text textVersion;
 
     // Event handlers
     @FXML private void connectAction() {
@@ -263,6 +276,32 @@ public class Events implements Initializable {
 
     }
 
+    @FXML private void sendEmail() {
+        Desktop desktop;
+
+        if (Desktop.isDesktopSupported() && (desktop = Desktop.getDesktop()).isSupported(Desktop.Action.MAIL)) {
+            try {
+                URI uri = new URI("mailto:jan.motl@fit.cvut.cz");
+                desktop.mail(uri);
+            } catch (IOException | URISyntaxException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @FXML private void openHomepage() {
+        Desktop desktop;
+
+        if (Desktop.isDesktopSupported() && (desktop = Desktop.getDesktop()).isSupported(Desktop.Action.BROWSE)) {
+            try {
+                URI uri = new URI("http://predictorfactory.com/");
+                desktop.browse(uri);
+            } catch (IOException | URISyntaxException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
 
     // The initialize() method is automatically called after the FXML file has been loaded.
     // By this time, all the FXML fields are already initialized.
@@ -281,7 +320,7 @@ public class Events implements Initializable {
     
         // Populate comboBoxes
         // VENDOR COMBOBOX SHOULD BE POPULATED BASED ON DRIVER.XML
-        comboBoxVendor.getItems().addAll("Microsoft SQL Server", "MonetDB", "Netezza", "MySQL", "Oracle", "PostgreSQL", "SAS", "Teradata");
+        comboBoxVendor.getItems().addAll("Microsoft SQL Server", "MySQL", "Oracle", "PostgreSQL", "SAS");
         comboBoxTask.getItems().addAll("classification", "regression");
         comboBoxUnit.getItems().addAll("second", "hour", "day", "month", "year");
        
@@ -312,8 +351,8 @@ public class Events implements Initializable {
          try {comboBoxTask.setValue(databaseProperty.task);} catch (NullPointerException ignored) {}
          try {textPredictorMax.setText(databaseProperty.predictorMax.toString());} catch (NullPointerException ignored) {}
          try {checkBoxUseId.setSelected(databaseProperty.useIdAttributes);} catch (NullPointerException ignored) {}
-         try {blackListPattern = Text.string2list(databaseProperty.blackListPattern);} catch (NullPointerException ignored) {}
-         try {whiteListPattern = Text.string2list(databaseProperty.whiteListPattern);} catch (NullPointerException ignored) {}
+         try {blackListPattern = TextParser.string2list(databaseProperty.blackListPattern);} catch (NullPointerException ignored) {}
+         try {whiteListPattern = TextParser.string2list(databaseProperty.whiteListPattern);} catch (NullPointerException ignored) {}
 
 
         // Add ability to select an item in a combobox with a key stroke
@@ -381,6 +420,8 @@ public class Events implements Initializable {
         ValidatorText.addNumericValidation(textSampleCount);
         ValidatorText.addNumericValidation(textPredictorMax, setting.predictorMaxTheory);
 
+        // About tab
+        textVersion.setText("Version " + getPFVersion());
     }
 
 
@@ -395,10 +436,10 @@ public class Events implements Initializable {
         DatabaseProperty databaseProperty = databaseList.getDatabaseProperties("GUI");
 
         // Parse from XML (the data are stored in SQL-like syntax, not in XML-like syntax)
-        final List<String> whiteListTable = Text.string2list(databaseProperty.whiteListTable); // Parsed values
-        final List<String> blackListTable = Text.string2list(databaseProperty.blackListTable); // Parsed values
-        final Map<String,List<String>> whiteMapColumn = Text.list2map(Text.string2list(databaseProperty.whiteListColumn)); // Parsed values
-        final Map<String,List<String>> blackMapColumn = Text.list2map(Text.string2list(databaseProperty.blackListColumn)); // Parsed values
+        final List<String> whiteListTable = TextParser.string2list(databaseProperty.whiteListTable); // Parsed values
+        final List<String> blackListTable = TextParser.string2list(databaseProperty.blackListTable); // Parsed values
+        final Map<String,List<String>> whiteMapColumn = TextParser.list2map(TextParser.string2list(databaseProperty.whiteListColumn)); // Parsed values
+        final Map<String,List<String>> blackMapColumn = TextParser.list2map(TextParser.string2list(databaseProperty.blackListColumn)); // Parsed values
 
 
         // The logic (a hierarchical extension of BlackWhiteList) is following:
@@ -490,6 +531,7 @@ public class Events implements Initializable {
             ConnectionDialog.exceptionDialog(exception);
         });
     }
+
 
     // Takes a setting, makes a connection, returns the setting
     private class ConnectionService extends Service<Setting> {

@@ -29,12 +29,7 @@ public class AggregationTest {
 		pattern.cardinality = "1";
 		pattern.description = "Once upon a time...";
 		
-		// Initialize predictor
-		predictor = new Predictor(pattern);
-		predictor.setSql("select * from t1 where propagated_target = '@targetValue'");
-		predictor.propagatedTable = "propagatedTable1";
-		predictor.columnMap.put("@nominalColumn", "column1");
-		predictor.setParameter("@value", "value1");
+
 		
 		// Initialize tableMetadata
 		OutputTable outputTable = new OutputTable();
@@ -57,6 +52,13 @@ public class AggregationTest {
 		outputTable2.isTargetIdUnique = true;
 		outputTable2.name = "propagatedName2";
 		tableMetadata.put("propagatedTable2", outputTable2);
+
+		// Initialize predictor
+		predictor = new Predictor(pattern);
+		predictor.setSql("select * from t1 where propagated_target = '@targetValue'");
+		predictor.setTable(outputTable);
+		predictor.getColumnMap().put("@nominalColumn", "column1");
+		predictor.setParameter("@value", "value1");
 		
 
 	}
@@ -99,17 +101,17 @@ public class AggregationTest {
 		List<Predictor> list = Aggregation.loopTables(predictor, tableMetadata);
 		
 		Assert.assertEquals(2, list.size());
-		Assert.assertEquals("propagatedName1", list.get(0).propagatedTable);
-		Assert.assertEquals("propagatedName2", list.get(1).propagatedTable);
+		Assert.assertEquals("propagatedName1", list.get(0).getPropagatedTable());
+		Assert.assertEquals("propagatedName2", list.get(1).getPropagatedTable());
 	}
 	
 	@Test
 	public void loopColumns() {
-		List<Predictor> list = Aggregation.loopColumns(setting, predictor, tableMetadata);
+		List<Predictor> list = Aggregation.loopColumns(setting, predictor);
 		
 		Assert.assertEquals(2, list.size());
-		Assert.assertEquals("nominalColumn1", list.get(0).columnMap.get("@nominalColumn"));
-		Assert.assertEquals("nominalColumn2", list.get(1).columnMap.get("@nominalColumn"));
+		Assert.assertEquals("nominalColumn1", list.get(0).getColumnMap().get("@nominalColumn"));
+		Assert.assertEquals("nominalColumn2", list.get(1).getColumnMap().get("@nominalColumn"));
 	}
 	
 	@Test
@@ -121,7 +123,7 @@ public class AggregationTest {
 	
 	@Test
 	public void addValue() {
-		List<Predictor> list = Aggregation.addValue(setting, predictor, tableMetadata);
+		List<Predictor> list = Aggregation.addValue(predictor);
 		
 		Assert.assertEquals(2, list.size());
 		Assert.assertEquals("unique1", list.get(0).getParameterMap().get("@value"));

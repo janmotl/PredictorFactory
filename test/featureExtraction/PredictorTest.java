@@ -1,6 +1,7 @@
 package featureExtraction;
 
 
+import metaInformation.MetaOutput;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,7 +65,9 @@ public class PredictorTest {
 		
 		predictor = new Predictor(pattern);
 		predictor.setId(1);
-		predictor.originalTable = "table1";
+		MetaOutput.OutputTable table = new MetaOutput.OutputTable();
+		table.originalName = "table1";
+		predictor.setTable(table);
 		predictor.setParameter("par1", "val456789_123456789_123456789_123456789_123456789_123456789");
 		
 		// Run
@@ -82,7 +85,9 @@ public class PredictorTest {
 		
 		predictor = new Predictor(pattern);
 		predictor.setId(1);
-		predictor.originalTable = "table1";
+		MetaOutput.OutputTable table = new MetaOutput.OutputTable();
+		table.originalName = "table1";
+		predictor.setTable(table);
 		predictor.setParameter("par1", "val456789_123456789_123456789_123456789_123456789_123456789");
 		predictor.setParameter("par2", "val456789_123456789_123456789_123456789_123456789_123456789");
 		
@@ -108,7 +113,9 @@ public class PredictorTest {
 		
 		predictor = new Predictor(pattern);
 		predictor.setId(1);
-		predictor.originalTable = "table1";
+		MetaOutput.OutputTable table = new MetaOutput.OutputTable();
+		table.originalName = "table1";
+		predictor.setTable(table);
 		predictor.setParameter("par1", "val456789_123456789_123456789_123456789_123456789_123456789");
 		predictor.setParameter("par2", "val456789_123456789_123456789_123456789_123456789_123456789");
 		
@@ -127,7 +134,9 @@ public class PredictorTest {
 		
 		predictor = new Predictor(pattern);
 		predictor.setId(1);
-		predictor.originalTable = "tab456789_123456789_123456789_123456789_123456789_123456789";
+		MetaOutput.OutputTable table = new MetaOutput.OutputTable();
+		table.originalName = "tab456789_123456789_123456789_123456789_123456789_123456789";
+		predictor.setTable(table);
 		predictor.setParameter("par1", "val456789_123456789_123456789_123456789_123456789_123456789");
 		predictor.setParameter("par2", "val456789_123456789_123456789_123456789_123456789_123456789");
 		
@@ -147,7 +156,9 @@ public class PredictorTest {
 		
 		predictor = new Predictor(pattern);
 		predictor.setId(1);
-		predictor.originalTable = "table1";
+		MetaOutput.OutputTable table = new MetaOutput.OutputTable();
+		table.originalName = "table1";
+		predictor.setTable(table);
 		predictor.setParameter("par1", "val456789_123456789_123456789_123456789_123456789_123456789");
 		predictor.setParameter("par2", "val456789_123456789_123456789_123456789_123456789_123456789");
 		
@@ -173,7 +184,9 @@ public class PredictorTest {
 		
 		predictor = new Predictor(pattern);
 		predictor.setId(1);
-		predictor.originalTable = "table1";
+		MetaOutput.OutputTable table = new MetaOutput.OutputTable();
+		table.originalName = "table1";
+		predictor.setTable(table);
 		predictor.setParameter("par1", "val456789_123456789_123456789_123456789_123456789_123456789");
 		predictor.setParameter("par2", "val456789_123456789_123456789_123456789_123456789_123456789");
 		
@@ -192,7 +205,9 @@ public class PredictorTest {
 		
 		predictor = new Predictor(pattern);
 		predictor.setId(1);
-		predictor.originalTable = "tab456789_123456789_123456789_123456789_123456789_123456789";
+		MetaOutput.OutputTable table = new MetaOutput.OutputTable();
+		table.originalName = "tab456789_123456789_123456789_123456789_123456789_123456789";
+		predictor.setTable(table);
 		predictor.setParameter("par1", "val456789_123456789_123456789_123456789_123456789_123456789");
 		predictor.setParameter("par2", "val456789_123456789_123456789_123456789_123456789_123456789");
 		

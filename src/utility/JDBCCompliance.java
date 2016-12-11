@@ -13,14 +13,14 @@ public class JDBCCompliance {
         // Test presence of a JDBC 2.1 feature
         try {
             metaData.supportsResultSetType(ResultSet.TYPE_FORWARD_ONLY);
-        } catch (Throwable e) {
+        } catch (Throwable ignored) {
             return "1.0";
         }
 
         // Test presence of a JDBC 3.0 feature
         try {
             metaData.supportsSavepoints();
-        } catch (Throwable e) {
+        } catch (Throwable ignored) {
             return "2.1";
         }
 

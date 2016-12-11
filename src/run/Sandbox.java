@@ -1,7 +1,7 @@
 package run;
 
 
-import utility.Text;
+import utility.TextParser;
 
 import java.util.*;
 
@@ -16,6 +16,6 @@ public class Sandbox {
         System.out.println(set.toString());
 
         ////
-        Text.string2list(null);
+        TextParser.string2list(null);
     }
 }
