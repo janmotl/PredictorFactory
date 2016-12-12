@@ -623,9 +623,15 @@ public class SQL {
     //  2) If we are comparing date-to-date it is faster than number-to-date (we can at least use indexes)
     // The temporal logic is done in Java for portability across databases.
     // NOTE: If min==max, return warning?
+    // VERSION FOR SAS
     public static Timestamp getPivotDate(Setting setting) {
         String sql = "select min(@targetDate), max(@targetDate) " +
                      "from @targetTable";
+
+        if (setting.databaseVendor.equals("SAS")) {
+            sql = "select min(@targetDate) format=date., max(@targetDate) format=date. " +
+                  "from @targetTable";
+        }
 
         sql = expandName(sql);
         sql = escapeEntity(setting, sql, "ignored");

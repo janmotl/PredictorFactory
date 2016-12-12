@@ -115,7 +115,7 @@ public class Table {
         if ("classification".equals(setting.task) && setting.targetTable.equals(name)) {
 
             // If the target is a String, store the information.
-            // NOTE: I AM NOT SURE I NEED THIS INFORMATION
+            // NOTE: I AM NOT SURE I NEED THIS INFORMATION - getSubSampleClassification can extract it...
             if (columnMap.get(setting.targetColumn).isNominal) {
                 setting.isTargetString = true;
             }

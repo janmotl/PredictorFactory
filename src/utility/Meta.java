@@ -21,7 +21,7 @@ public class Meta {
     public static SortedSet<String> collectSchemas(Setting setting, String database) {
 
         // Initialization
-        SortedSet<String> schemaSet = new TreeSet<>(new NaturalOrderComparator());
+        SortedSet<String> schemaSet = new TreeSet<>();
     
         // If supports only catalogs (MySQL) -> get all catalogs
         if (setting.supportsCatalogs && !setting.supportsSchemas) {
@@ -87,7 +87,7 @@ public class Meta {
         }
             
         // Initialization
-        SortedMap<String, Table> tableMap = new TreeMap<>(new NaturalOrderComparator());
+        SortedMap<String, Table> tableMap = new TreeMap<>();    // Case sensitive to recognize "LOAN" from "loan"
         String[] tableType = {"TABLE", "VIEW", "MATERIALIZED VIEW"};    // Ignore system tables...
     
         // Get all the tables using try-with-resources.
@@ -129,7 +129,7 @@ public class Meta {
         }
     
         // Initialization
-        SortedMap<String, Column> columnMap = new TreeMap<>(new NaturalOrderComparator());
+        SortedMap<String, Column> columnMap = new TreeMap<>();
     
         // Get all the columns in the table using try-with-resources.
         try (Connection connection = setting.dataSource.getConnection();

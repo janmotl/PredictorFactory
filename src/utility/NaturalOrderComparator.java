@@ -115,7 +115,7 @@ public class NaturalOrderComparator implements Comparator
         }
     }
 
-    static char charAt(String s, int i)
+    private static char charAt(String s, int i)
     {
         if (i >= s.length())
         {
@@ -127,7 +127,7 @@ public class NaturalOrderComparator implements Comparator
         }
     }
 
-    int compareRight(String a, String b)
+    private int compareRight(String a, String b)
     {
         int bias = 0;
         int ia = 0;
@@ -173,6 +173,12 @@ public class NaturalOrderComparator implements Comparator
         }
     }
 
+    // QC
+    // NOTE: It is not currently used to compare {schemas, tables, columns}, because if the database is case
+    // sensitive, it may result into problems (e.g. two tables differ only in the case of the letters).
+    // If we want to make use case insensitive comparison, we have to first ask the database, whether it is case
+    // insensitive. The case sensitivity can be estimated with ResultSetMetaData.isCaseSensitive().
+    // NOTE: Alternatively, we could use natural sorting. But do it always case sensitive.
     public static void main(String[] args)
     {
         String[] strings = new String[] { "1-2", "1-02", "1-20", "10-20", "fred", "jane", "pic01",
