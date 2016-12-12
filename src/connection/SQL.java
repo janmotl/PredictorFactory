@@ -934,11 +934,10 @@ public class SQL {
     // Note: We should never really return zero to void the effect of Chi2.
     // Note: Concept drift is so far just for nominal labels. Should be extended to continuous label
     // Note: If the targetDate is a constant, we should not perform concept drift (at least not by time).
-    // TESTED ONLY ON POSTGRESQL
-    // REWRITE TO NOT USE WITH CLAUSE.
+    // THIS IS POSTGRESQL DIALECT (FAILS ON ORACLE, SAS, MySQL).
     // NOTE: We should reuse the histogram calculated for Chi2 -> Proposal: Calculate histograms in SQL, send
     // them to Predictor Factory (it is necessary to limit the length of the histogram for nominal attributes)
-    // and calculate Chi2 in Concept Drift in Java?
+    // and calculate Chi2 in Concept Drift in Java? This way we could also easily calculate CFS...
     public static double getConceptDriftO(Setting setting, Predictor predictor) {
 
         String sql = "";
@@ -1106,6 +1105,10 @@ public class SQL {
     // NOTE: THIS IMPLEMENTATION INCREASES RUNTIME BY ~30%
     public static double getConceptDrift(Setting setting, Predictor predictor) {
 
+        String fromDual = "";
+        if (setting.databaseVendor.equals("Oracle")) fromDual = " from dual ";
+        if (setting.databaseVendor.equals("SAS")) fromDual = " from dictionary.libnames where libname = 'WORK' ";
+
         String histogram = "";
 
         // Nominal
@@ -1125,18 +1128,23 @@ public class SQL {
                 "            select distinct @column " +
                 "            from @outputTable " +
                 "        ) t2, ( " +
-                "            select TRUE as is_testing union select FALSE as is_testing " +
+                "            select 1 as is_testing " + fromDual + " union select 0 as is_testing " + fromDual + // We can't use TRUE/ELSE because Oracle does not know booleans
                 "        ) t3 " +
                 "    ) t4 " +
                 "    left join  " +
                 "    ( " +
-                "        select @baseTarget " +
-                "             , @column " +
-                "             , @baseDate > @pivotDate as is_testing " +
-                "             , count(*) as cnt " +
-                "        from @outputTable t3 " +
-                "        GROUP BY @baseTarget, @column, @baseDate > @pivotDate " +
-                "    ) t5 " +
+                "       select @baseTarget " +
+                "           , @column " +
+                "           , is_testing " +
+                "           , count(*) as cnt " +
+                "       from ( " +
+                "           select @baseTarget " +	// We group by a created column and SAS dislikes these things -> we first create a table
+                "               , @column " +
+                "               , case when (@baseDate > @pivotDate) then 1 else 0 end as is_testing " +
+                "           from @outputTable t3 " +
+                "       ) t5 " +
+                "       GROUP BY @baseTarget, @column, is_testing " +
+                "    ) t6 " +
                 "    using(@baseTarget, @column, is_testing) " +
                 ") histogram ";
 
@@ -1153,31 +1161,33 @@ public class SQL {
                 "            select distinct @baseTarget " +
                 "            from @outputTable " +
                 "        ) t1, ( " +
-                "            select 0 as bin union all select 1 as bin union all select 2 as bin union all select 3 as bin union all select 4 as bin  " +
+                "            select 0 as bin " + fromDual + " union all select 1 as bin " + fromDual + " union all select 2 as bin " + fromDual + " union all select 3 as bin " + fromDual + " union all select 4 as bin  " + fromDual +
                 "            union all " +
-                "            select 5 as bin union all select 6 as bin union all select 7 as bin union all select 8 as bin union all select 9 as bin " +
+                "            select 5 as bin " + fromDual + " union all select 6 as bin " + fromDual + " union all select 7 as bin " + fromDual + " union all select 8 as bin " + fromDual + " union all select 9 as bin " + fromDual +
                 "        ) t2, ( " +
-                "            select TRUE as is_testing union all select FALSE as is_testing " +
+                "            select 1 as is_testing " + fromDual + " union all select 0 as is_testing " + fromDual +
                 "        ) t3 " +
                 "    ) t4 " +
                 "    left join  " +
                 "    ( " +
-                "        SELECT @baseTarget " +
-                "             , bin " +
-                "             , @baseDate > @pivotDate as is_testing " +
-                "             , count(*) AS cnt " +
-                "        FROM ( " +
-                "             SELECT @baseTarget " +
-                "                  , @baseDate " +
-                "                 , @column " +
-                "                  , floor((@column-t2.min_value) / t2.bin_width ) AS bin " +
-                "             FROM @outputTable, ( " +
-                "                     SELECT ((max(@column)-min(@column)) / 10.0) + 0.00000001 AS bin_width " +
-                "                          , min(@column) AS min_value " +
-                "                     FROM @outputTable " +
-                "             ) t2 " +
-                "        ) t3 " +
-                "        GROUP BY bin, @baseTarget, @baseDate > @pivotDate  " +
+                "     SELECT @baseTarget, bin, is_testing, count(*) AS cnt " +
+                "     FROM (" +
+                "         SELECT @baseTarget " +
+                "              , bin " +
+                "              , case when (@baseDate > @pivotDate) then 1 else 0 end as is_testing " +
+                "         FROM ( " +
+                "                 SELECT @baseTarget " +
+                "                      , @baseDate " +
+                "                      , @column " +
+                "                      , floor((@column-t2.min_value) / t2.bin_width ) AS bin " +
+                "                 FROM @outputTable, ( " +
+                "                         SELECT ((max(@column)-min(@column)) / 10.0) + 0.00000001 AS bin_width " +
+                "                              , min(@column) AS min_value " +
+                "                      FROM @outputTable " +
+                "                 ) t2 " +
+                "             ) t3 " +
+                "         ) t4 " +
+                "         GROUP BY bin, @baseTarget, is_testing  " +
                 "    ) t5 " +
                 "    using(@baseTarget, bin, is_testing) " +
                 ") histogram ";
