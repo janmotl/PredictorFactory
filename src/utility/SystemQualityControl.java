@@ -10,8 +10,12 @@ public class SystemQualityControl {
 
     // A set of system variables that are useful for debugging of client's problems.
     public static void validateSystem(){
-        logger.debug("Java Version: " +  System.getProperty("java.version"));
         logger.debug("Predictor Factory Version: " + getPFVersion());
+        logger.debug("Java vendor: " + System.getProperty("java.vendor"));
+        logger.debug("Java version: " + System.getProperty("java.version"));
+        logger.debug("JavaFX Version: " + com.sun.javafx.runtime.VersionInfo.getRuntimeVersion());
+        logger.debug("OS: " + System.getProperty("os.name"));
+        logger.debug("Architecture: " + System.getProperty("os.arch"));
     }
 
     // Read the version from the manifest file. If executed from IDE, return "Development".
