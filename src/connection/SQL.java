@@ -938,6 +938,7 @@ public class SQL {
     // NOTE: We should reuse the histogram calculated for Chi2 -> Proposal: Calculate histograms in SQL, send
     // them to Predictor Factory (it is necessary to limit the length of the histogram for nominal attributes)
     // and calculate Chi2 in Concept Drift in Java? This way we could also easily calculate CFS...
+    // Note: Calculate it only if Chi2 is big enough to get into the output table.
     public static double getConceptDriftO(Setting setting, Predictor predictor) {
 
         String sql = "";
@@ -1115,9 +1116,9 @@ public class SQL {
         if ("nominal".equals(predictor.getRawDataType())) {
 
              histogram = " ( " +    //  Count() by y,x,fold
-                "    select @baseTarget " +
-                "        , @column " +
-                "        , is_testing " +
+                "    select t4.@baseTarget " +
+                "        , t4.@column " +
+                "        , t4.is_testing " +
                 "        , COALESCE(cnt, 0) as cnt " +
                 "    from ( " +
                 "        select *  " +      // The planner on PostgreSQL likes if we first get the unique values and only then perform the join.
@@ -1141,19 +1142,19 @@ public class SQL {
                 "           select @baseTarget " +	// We group by a created column and SAS dislikes these things -> we first create a table
                 "               , @column " +
                 "               , case when (@baseDate > @pivotDate) then 1 else 0 end as is_testing " +
-                "           from @outputTable t3 " +
+                "           from @outputTable " +
                 "       ) t5 " +
                 "       GROUP BY @baseTarget, @column, is_testing " +
                 "    ) t6 " +
-                "    using(@baseTarget, @column, is_testing) " +
+                "    on t4.@baseTarget=t6.@baseTarget and t4.@column=t6.@column and t4.is_testing=t6.is_testing " +
                 ") histogram ";
 
         } else {
 
              histogram = " ( " +
-                "    select @baseTarget " +
-                "        , bin " +
-                "        , is_testing " +
+                "    select t4.@baseTarget " +
+                "        , t4.bin " +
+                "        , t4.is_testing " +
                 "        , COALESCE(cnt, 0) as cnt " +
                 "    from ( " +
                 "        select *  " +  // The planner on PostgreSQL likes if we first get the unique values and only then perform the join.
@@ -1189,7 +1190,7 @@ public class SQL {
                 "         ) t4 " +
                 "         GROUP BY bin, @baseTarget, is_testing  " +
                 "    ) t5 " +
-                "    using(@baseTarget, bin, is_testing) " +
+                "    on t4.@baseTarget=t5.@baseTarget and t4.bin=t5.bin and t4.is_testing=t5.is_testing " +
                 ") histogram ";
 
             // For time columns just cast time to number.
@@ -1207,13 +1208,13 @@ public class SQL {
                 ") x ";
 
         String posterior = " ( " +     // Conditional probability p(y|x)
-                "    select @baseTarget " +
-                "        , @column " +
-                "        , is_testing " +
+                "    select histogram.@baseTarget " +
+                "        , histogram.@column " +
+                "        , histogram.is_testing " +
                 "        , cnt/(x_cnt+1.0) as probability " + // Laplace correction for division by zero. Avoid integer division.
                 "    from " + histogram +
                 "    join " + x +
-                "    using(@column, is_testing) " +
+                "    on histogram.@column=x.@column and histogram.is_testing=x.is_testing " +
                 ") posterior ";
 
         String minmax = " ( " +
