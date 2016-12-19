@@ -8,7 +8,8 @@ import java.util.Properties;
 
 public class Logging {
 
-    // Setup logging - load the property file
+    // Setup logging - load the property file from the non-default location.
+    // We are using this location to allow users to change the logging parameters.
     public static void initialization() {
         try {
             Properties p = new Properties();
@@ -19,4 +20,5 @@ public class Logging {
             System.out.println("The working directory is: " + System.getProperty("user.dir"));
         }
     }
+
 }

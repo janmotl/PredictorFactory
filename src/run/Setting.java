@@ -91,10 +91,12 @@ public final class Setting {
     public final String baseFold = "propagated_fold";       // The name for fold in x-fold cross-validation.
     public final String baseSampled = "base_sampled";       // The name of the sampled base table.
     public final String mainTable = "MAINSAMPLE";           // The name of the result table with predictors.
-    public final String journalPredictor = "journal";       // The name of predictors' journal table.
+    public final String journalPredictor = "journal_predictor";   // The name of predictors' journal table.
     public final String journalTable = "journal_table";     // The name of propagation journal table.
     public final String journalTemporal = "journal_temporal";// The name of temporal constraints' journal table.
     public final String journalPattern = "journal_pattern"; // The name of the list of patterns.
+    public final String journalRun = "journal_run";         // The name of the list of runs.
+	public final String bkpPrefix = "bkp_";                 // To be able to recover the old work.
     public final String propagatedPrefix = "propagated_";   // For single schema databases.
     public final String predictorPrefix = "PREDICTOR";      // Tables with predictors have uniform prefix.
     public final int predictorStart = 100000;               // Convenience for "natural sorting".

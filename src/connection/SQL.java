@@ -8,9 +8,12 @@ import metaInformation.StatisticalType;
 import metaInformation.Table;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import parser.ANTLR;
 import run.Setting;
+import utility.CountAppender;
+import utility.Memory;
 import utility.Meta;
 
 import java.sql.Connection;
@@ -278,8 +281,32 @@ public class SQL {
         return Network.executeUpdate(setting.dataSource, sql);
     }
 
+	// Back up a table in the output schema
+	// Note: We copy the table instead of renaming the table because each database is using a different syntax.
+	// And we already have a working procedure for creating tables from other tables.
+	private static void bkpTable(Setting setting, Map<String, Table> tableMap, String tableName) {
+		// Initialization
+		String bkpName = setting.bkpPrefix + setting.inputSchema + "_" + tableName;
 
-    // Remove all Predictor Factory related tables
+		// Conditionally drop the old back up
+		if (tableMap.containsKey(bkpName)) dropTable(setting, bkpName);
+
+		// Copy the table into a back up
+		String sql = "SELECT * FROM @outputTable";
+
+		// From table
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, tableName);
+
+		// Into table
+		sql = addCreateTableAs(setting, sql);
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, bkpName);
+
+		Network.executeUpdate(setting.dataSource, sql);
+	}
+
+    // Prepare output schema for Predictor Factory
     // Note: The function is using names from the setting object. If the current setting doesn't match the setting
     // with witch the tables were generated, the tables are NOT going to get dropped!
     // Note: Deleting whole schema is not going to work, if it contains tables (at least in PostgreSQL).
@@ -287,25 +314,36 @@ public class SQL {
     // privileges entered wrong output schema (for example, if someone swaps by accident input and output schema).
     // Also, if someone has set up Predictor Factory that inputSchema=outputSchema, we would delete all the user's data.
     // Note: Use addBatch() for speeding up if possible. Take care of memory limits as described at:
-    // http://viralpatel.net/blogs/batch-insert-in-java-jdbc/
-    // Note: Maybe this is the right place for making backup of mainsample and journal.
+    //  http://viralpatel.net/blogs/batch-insert-in-java-jdbc/
+	// But first check that it is going to work in SAS.
     // Note: We have to delete the tables/views in the reverse order of their creation because of dependencies if views
     // are used.
-    public static void tidyUp(Setting setting) {
-        // Initialization
+    public static void prepareOutputSchema(Setting setting) {
+        // Get list of tables
         Map<String, Table> tableMap = utility.Meta.collectTables(setting, setting.database, setting.outputSchema);
-        SortedMap<String, String> dropMap = new TreeMap<>();
+
+		// Create tables if they do not exist
+	    if (!tableMap.containsKey(setting.journalRun)) getJournalRun(setting);
+
+	    // Back up by replacing the old back up
+	    if (tableMap.containsKey(setting.mainTable)) bkpTable(setting, tableMap, setting.mainTable);
+	    if (tableMap.containsKey(setting.journalPattern)) bkpTable(setting, tableMap, setting.journalPattern);
+	    if (tableMap.containsKey(setting.journalPredictor)) bkpTable(setting, tableMap, setting.journalPredictor);
+	    if (tableMap.containsKey(setting.journalTable)) bkpTable(setting, tableMap, setting.journalTable);
+	    if (tableMap.containsKey(setting.journalTemporal)) bkpTable(setting, tableMap, setting.journalTemporal);
 
         // Select tables for dropping
+	    SortedMap<String, String> dropMap = new TreeMap<>();
         for (String table : tableMap.keySet()) {
             if (table.startsWith(setting.mainTable)) dropMap.put(1 + table, table);         // MainSample and it's temporary tables
             if (table.startsWith(setting.predictorPrefix)) dropMap.put(2 + table, table);   // Predictors
             if (table.startsWith(setting.propagatedPrefix)) dropMap.put(3 + table, table);  // Propagated tables
             if (table.equals(setting.baseSampled)) dropMap.put(4 + table, table);           // Sampled base table
             if (table.equals(setting.baseTable)) dropMap.put(5 + table, table);             // Base table
-            if (table.equals(setting.journalPredictor)) dropMap.put(6 + table, table);      // Journal table
-            if (table.equals(setting.journalPattern)) dropMap.put(7 + table, table);        // Journal patterns
+	        if (table.equals(setting.journalPattern)) dropMap.put(6 + table, table);        // Journal patterns
+	        if (table.equals(setting.journalPredictor)) dropMap.put(7 + table, table);      // Journal table
             if (table.equals(setting.journalTable)) dropMap.put(8 + table, table);          // Journal propagated table
+	        if (table.equals(setting.journalTemporal)) dropMap.put(9 + table, table);       // Journal temporal constrains
         }
 
         // Drop the tables
@@ -678,21 +716,16 @@ public class SQL {
     public static List<String> getTopUniqueRecords(Setting setting, String tableName, String columnName) {
         String table = "@inputTable";
 
-        String sql = "SELECT @columnName " +
-                "FROM " + table + " " +
-                "WHERE @columnName is not null " +
-                "GROUP BY @columnName " +
-                "ORDER BY count(*) DESC";
-
-        // A query without an aggregate function in order by clause because of following limitation of SAS:
+        // A query without an aggregate function in ORDER BY clause because of the following limitation of SAS:
         //  Summary functions are restricted to the SELECT and HAVING clauses only...
-        sql = "SELECT @columnName, count(*) " +
+	    // If desirable, wrap it in another select and return only @columnName.
+        String sql = "SELECT @columnName, count(*) " +
                 "FROM " + table + " " +
                 "WHERE @columnName is not null " +
                 "GROUP BY @columnName " +
                 "ORDER BY 2 DESC";
 
-        //sql = Parser.limitResultSet(setting, sql, setting.valueCount); // Because of SAS we use JDBC maxRows
+        sql = Parser.limitResultSet(setting, sql, setting.valueCount); // Possibly not necessary...
         sql = expandName(sql);
         sql = escapeEntity(setting, sql, tableName);
         HashMap<String, String> map = new HashMap<>();
@@ -700,7 +733,7 @@ public class SQL {
         map.put("@inputTable", tableName); // To cover the scenario that it's in the input schema
         sql = escapeEntityMap(setting, sql, map);
 
-        return Network.executeQuery(setting.dataSource, sql, setting.valueCount);
+        return Network.executeQuery(setting.dataSource, sql, setting.valueCount); // Because of SAS we use JDBC maxRows
     }
 
     // Could the two columns in the table describe a symmetric relation (like in borderLength(c1, c2))?
@@ -939,7 +972,7 @@ public class SQL {
     // them to Predictor Factory (it is necessary to limit the length of the histogram for nominal attributes)
     // and calculate Chi2 in Concept Drift in Java? This way we could also easily calculate CFS...
     // Note: Calculate it only if Chi2 is big enough to get into the output table.
-    public static double getConceptDriftO(Setting setting, Predictor predictor) {
+    public static double getConceptDriftPostgre(Setting setting, Predictor predictor) {
 
         String sql = "";
 
@@ -1271,56 +1304,91 @@ public class SQL {
         return badPatterns;
     }
 
-    // Log Predictor Factory total run time.
-    // ADD: column with count of produced predictors & whether PF finished successfully.
-    // NOTE: COPYING OF TABLES IS UGLY. GIVE IT DIRECTLY THE SPECIFIC NAMES AND MAKE GENERIC TABLES JUST AS A VIEW?
-    // NOTE: NECESSARY TO ADD COMMAND createTableAs BECAUSE OF MSSQL.
-    public static void logRunTime(Setting setting, long elapsedTime){
-        // Drop the previous version
-        dropTable(setting, "ms_" + setting.inputSchema);
 
-        // Copy the current mainSample
-        String sql = "create table @outputSchema.@ms as SELECT * FROM @outputTable";
+	public static boolean getJournalRun(Setting setting) {
+		logger.debug("# Setting up journal table for runtime summary #");
+
+		// An important limitation: Oracle limits name length of an identifier to 30 characters
+		String sql = "CREATE TABLE @outputTable ("+
+				"finish_time " + setting.typeTimestamp + " PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
+				"schema_name " + setting.typeVarchar + "(255), " +
+				"run_time " + setting.typeDecimal + "(18,3), " +
+				"memory " + setting.typeDecimal + "(18,3), " +
+				"warn_count " + setting.typeInteger + ", " +
+				"error_count " + setting.typeInteger + ", " +
+				"predictor_count " + setting.typeInteger + ", " +
+				"predictor_output_count " + setting.typeInteger + ", " +
+				"propagated_table_count " + setting.typeInteger + ", " +
+				"setting " + setting.typeVarchar + "(2024), " +
+
+				"accuracy_avg " + setting.typeDecimal + "(8,3), " +     // Should possibly create a new table [measure, value, std]
+				"accuracy_std " + setting.typeDecimal + "(8,3), " +
+				"auc_avg " + setting.typeDecimal + "(8,3), " +
+				"auc_std " + setting.typeDecimal + "(8,3), " +
+				"fscore_avg " + setting.typeDecimal + "(8,3), " +
+				"fscore_std " + setting.typeDecimal + "(8,3), " +
+				"precision_avg " + setting.typeDecimal + "(8,3), " +    // Precision is a reserved word in MySQL -> _avg suffix
+				"precision_std " + setting.typeDecimal + "(8,3), " +
+				"recall_avg " + setting.typeDecimal + "(8,3), " +
+				"recall_std " + setting.typeDecimal + "(8,3), " +
+				"auc_optimistic_avg " + setting.typeDecimal + "(8,3), " +
+				"auc_optimistic_std " + setting.typeDecimal + "(8,3), " +
+				"auc_average_avg " + setting.typeDecimal + "(8,3), " +
+				"auc_average_std " + setting.typeDecimal + "(8,3), " +
+				"auc_pessimistic_avg " + setting.typeDecimal + "(8,3), " +
+				"auc_pessimistic_std " + setting.typeDecimal + "(8,3), " +
+				"correlation_avg " + setting.typeDecimal + "(8,3), " +
+				"correlation_std " + setting.typeDecimal + "(8,3), " +
+				"rmse_avg " + setting.typeDecimal + "(8,3), " +                 // The precision can be too small...
+				"rmse_std " + setting.typeDecimal + "(8,3), " +
+				"relative_error_avg " + setting.typeDecimal + "(8,3), " +
+				"relative_error_std " + setting.typeDecimal + "(8,3))";
+
+		sql = expandName(sql);
+		sql = escapeEntity(setting, sql, setting.journalRun);
+
+		return Network.executeUpdate(setting.dataSource, sql);
+	}
+
+    // Log the result of Predictor Factory run
+    // ADD: column with count of produced predictors & whether PF finished successfully & setting.
+    public static void addJournalRun(Setting setting, long elapsedTime){
+
+        // Log the status into the database
+        String sql = "insert into @outputTable (schema_name, run_time, finish_time, memory, warn_count, error_count) values ('" +
+		        setting.inputSchema + "', " +
+		        elapsedTime/1000 + ", '" +                          // In seconds
+		        Timestamp.valueOf(LocalDateTime.now()) + "', " +
+		        Memory.usedMemory() + ", " +                        // In MB
+		        CountAppender.getCount(Level.WARN) + ", " +
+		        CountAppender.getCount(Level.ERROR) + ")";
         sql = expandName(sql);
-        sql = escapeEntity(setting, sql, setting.mainTable);
-        HashMap<String, String> fieldMap = new HashMap<>();
-        fieldMap.put("@ms", "ms_" + setting.inputSchema);
-        sql = escapeEntityMap(setting, sql, fieldMap);
+        sql = escapeEntity(setting, sql, setting.journalRun);
         Network.executeUpdate(setting.dataSource, sql);
 
-        // Drop the previous version
-        dropTable(setting, "j_" + setting.inputSchema);
-
-        // Copy the current journal
-        sql = "create table @outputSchema.@j as SELECT * FROM @outputTable";
-        sql = expandName(sql);
-        sql = escapeEntity(setting, sql, setting.journalPredictor);
-        fieldMap = new HashMap<>();
-        fieldMap.put("@j", "j_" + setting.inputSchema);
-        sql = escapeEntityMap(setting, sql, fieldMap);
-        Network.executeUpdate(setting.dataSource, sql);
-
-        // Log time in the database
-        sql = "insert into @outputTable (schema_name, runtime) values ('" + setting.inputSchema + "', " + elapsedTime + ")";
-        sql = expandName(sql);
-        sql = escapeEntity(setting, sql, "log");
-        Network.executeUpdate(setting.dataSource, sql);
-
-        // Log the time into the local log in a nice-to-read format
+        // Log the time in a nice-to-read format
         logger.debug("Time of finishing: " + LocalDate.now() + " " + LocalTime.now());
         logger.debug("Run time: " + DurationFormatUtils.formatDurationWords(elapsedTime, true, true));
+
+	    // Tell us how greedy you are
+	    Memory.logMemoryInfo();
+
+	    // Tell us how buggy you are
+	    logger.debug("Info event count: " + CountAppender.getCount(Level.INFO));
+	    logger.debug("Warn event count: " + CountAppender.getCount(Level.WARN));
+	    logger.debug("Error event count: " + CountAppender.getCount(Level.ERROR));
     }
 
 
     // 1a) Return create journal_predictor table command
     // Return true if the journal table was successfully created.
     // Note: Default values are not supported on SAS data sets -> avoid them.
-    public static boolean getJournal(Setting setting) {
+    public static boolean getJournalPredictor(Setting setting) {
         logger.debug("# Setting up journal table #");
 
         // The primary key is set directly behind the column name, not at the end, because SAS supports only the first declaration.
         String sql = "CREATE TABLE @outputTable ("+
-          "predictor_id " + setting.typeInteger + " NOT NULL PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
+          "predictor_id " + setting.typeInteger + " PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
           "group_id " + setting.typeInteger + ", " +
           "start_time " + setting.typeTimestamp + ", " +
           "run_time " + setting.typeDecimal + "(18,3), " +  // Old MySQL and SQL92 do not have/require support for fractions of a second.
@@ -1353,7 +1421,7 @@ public class SQL {
 
     // 1b) Add record into the journal_predictor
     // Return true if the journal table was successfully updated.
-    public static boolean addToJournal(Setting setting, Predictor predictor) {
+    public static boolean addToJournalPredictor(Setting setting, Predictor predictor) {
 
         // Convert bool to int
         int isOk = predictor.isOk()? 1 : 0;
@@ -1401,7 +1469,7 @@ public class SQL {
 
         // An important limitation: Oracle limits name length of an identifier to 30 characters
         String sql = "CREATE TABLE @outputTable ("+
-                "table_id " + setting.typeInteger + " NOT NULL PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
+                "table_id " + setting.typeInteger + " PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
                 "start_time " + setting.typeTimestamp + ", " +
                 "run_time " + setting.typeDecimal + "(18,3), " +
                 "table_name " + setting.typeVarchar + "(255), " +
@@ -1474,7 +1542,7 @@ public class SQL {
 
     public static boolean getJournalPattern(Setting setting) {
         String sql = "CREATE TABLE @outputTable (" +
-                "name varchar(255) NOT NULL PRIMARY KEY, " +
+                "name varchar(255) PRIMARY KEY, " +
                 "author varchar(255), " +
                 "is_aggregate integer, " +
                 "is_multivariate integer, " +
@@ -1556,7 +1624,7 @@ public class SQL {
 
         // An important limitation: Oracle limits name length of an identifier to 30 characters
         String sql = "CREATE TABLE @outputTable ("+
-                "temporal_constraint_id " + setting.typeInteger + " NOT NULL PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
+                "temporal_constraint_id " + setting.typeInteger + " PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
                 "table_name " + setting.typeVarchar + "(255), " +
                 "column_name " + setting.typeVarchar + "(255), " +
                 "data_type " + setting.typeVarchar + "(255), " +

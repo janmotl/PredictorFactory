@@ -10,7 +10,6 @@ import metaInformation.Table;
 import org.apache.log4j.Logger;
 import propagation.Propagation;
 import utility.Logging;
-import utility.Memory;
 import utility.SystemQualityControl;
 
 import java.util.SortedMap;
@@ -26,7 +25,7 @@ public class Launcher{
     public static void main(String[] arg){
 
         // Connect to the following server and database:
-        String connectionProperty = "MSSQL Jan";   // Host identification as specified in resources/connection.xml
+        String connectionProperty = "PostgreSQL";   // Host identification as specified in resources/connection.xml
         String databaseProperty = "financial";       // Dataset identification as specified in resources/database.xml
 
         // Read command line parameters if they are present (and overwrite the defaults).
@@ -62,8 +61,8 @@ public class Launcher{
         logger.info("#### Collected metadata about the database ####");
 
         // Remove all the tables from the previous run
-        setting.dialect.tidyUp(setting);
-        logger.info("#### Cleaned the output schema ####");
+        setting.dialect.prepareOutputSchema(setting);
+        logger.info("#### Prepared the output schema ####");
 
         // Setup journal of propagated tables
         setting.dialect.getJournalTable(setting);
@@ -87,16 +86,13 @@ public class Launcher{
         setting.dialect.getMainSample(setting, journal.getTopPredictors());
         logger.info("#### Produced " + setting.outputSchema + "." + setting.mainTable + " with " + journal.getTopPredictors().size() + " most predictive predictors from " + journal.size() + " evaluated. Duplicate or unsuccessfully calculated predictors are not passed into the output table. ####");
 
-        // Write the status into "log" table
+        // Write the status into journal_run table
         long stopTime = System.currentTimeMillis();
         long elapsedTime = stopTime - startTime;
-        setting.dialect.logRunTime(setting, elapsedTime);
+        setting.dialect.addJournalRun(setting, elapsedTime);
 
         // Be nice toward the server and close the connection
         Network.closeConnection(setting);
-
-        // Tell us how greedy you are
-        Memory.logMemoryInfo();
 
         // Tell the user we are finished
         logger.info("#### Finished ####");

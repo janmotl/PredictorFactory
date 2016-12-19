@@ -95,12 +95,12 @@ public class Parser {
         // Also, SAS "eats" line breaks without replacing them with a space -> accidental concats may render the
         // query invalid.
         if ("obs".equals(setting.limitSyntax)) {
-            Pattern pattern = Pattern.compile("(?i)\\b(.*FROM\\s+\\S+)(.*)");
-            Matcher matcher = pattern.matcher(sql);
-        
-            if (matcher.find()) {
-                sql =  matcher.group(1) + "(obs=" + rowCount + ")" + matcher.group(2);
-            }
+//            Pattern pattern = Pattern.compile("(?i)\\b(.*FROM\\s+\\S+)(.*)");
+//            Matcher matcher = pattern.matcher(sql);
+//
+//            if (matcher.find()) {
+//                sql =  matcher.group(1) + "(obs=" + rowCount + ")" + matcher.group(2);
+//            }
         }
     
         // Set rownum (Oracle)

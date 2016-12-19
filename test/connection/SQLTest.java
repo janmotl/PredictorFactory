@@ -8,6 +8,7 @@ import org.junit.Test;
 import run.Setting;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public   class SQLTest {
 
@@ -176,6 +177,20 @@ public   class SQLTest {
 		// Missing values
 		boolean result2 = setting.dialect.containsNull(setting, "trans", "k_symbol");
 		Assert.assertTrue(result2);
+
+	    Network.closeConnection(setting);
     }
+
+	@Test
+	public void getTopUniqueRecords() {
+		// Setting
+		Setting setting = new Setting("PostgreSQL", "financial");
+		Network.openConnection(setting);
+
+		List<String> records = setting.dialect.getTopUniqueRecords(setting, "district", "A2");
+		Assert.assertTrue(records.size() <= setting.valueCount);
+
+		Network.closeConnection(setting);
+	}
 
 }

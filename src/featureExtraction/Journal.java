@@ -4,7 +4,6 @@
  */
 package featureExtraction;
 
-import connection.SQL;
 import run.Setting;
 
 import java.time.LocalDateTime;
@@ -30,7 +29,7 @@ public class Journal {
         valueDuplicate = new HashMap<>();
         
         // Create journal table in the database
-        setting.dialect.getJournal(setting);
+        setting.dialect.getJournalPredictor(setting);
     }
      
     // Get journal size.
@@ -63,7 +62,7 @@ public class Journal {
         journal.sort(Predictor.RelevanceComparator);
 
         // Synchronize journal table in the database
-        setting.dialect.addToJournal(setting, predictor);
+        setting.dialect.addToJournalPredictor(setting, predictor);
 
         // Drop already unnecessary tables from the database
         dropToDrop(setting);

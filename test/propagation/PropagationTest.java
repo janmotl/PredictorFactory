@@ -1,7 +1,6 @@
 package propagation;
 
 import connection.Network;
-import connection.SQL;
 import metaInformation.Column;
 import metaInformation.Table;
 import org.junit.Assert;
@@ -20,7 +19,7 @@ public class PropagationTest {
 		Setting setting = new Setting("PostgreSQL", "mutagenesis");
 
 		setting = Network.openConnection(setting);
-		setting.dialect.tidyUp(setting);
+		setting.dialect.prepareOutputSchema(setting);
 		setting.dialect.getBase(setting);
 		SortedMap<String, Table> metaInput = metaInformation.MetaInput.getMetaInput(setting);
 		setting.dialect.getSubSampleClassification(setting, metaInput);

@@ -87,7 +87,7 @@ public class Meta {
         }
             
         // Initialization
-        SortedMap<String, Table> tableMap = new TreeMap<>(new NaturalOrderComparator());
+        SortedMap<String, Table> tableMap = new TreeMap<String, Table>(new NaturalOrderComparator());
         String[] tableType = {"TABLE", "VIEW", "MATERIALIZED VIEW"};    // Ignore system tables...
     
         // Get all the tables using try-with-resources.

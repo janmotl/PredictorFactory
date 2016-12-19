@@ -11,7 +11,7 @@
 <?import javafx.scene.web.WebView?>
 
 <TabPane fx:id="tabPane" prefHeight="470.0" prefWidth="800.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.Events">
-   <Tab text="Connect">
+   <Tab fx:id="tabConnect" text="Connect">
       <graphic>
          <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
             <Image url="@../img/connect-24.png" />
@@ -353,7 +353,7 @@
       </VBox>
    </Tab>
 
-   <Tab text="Run">
+   <Tab fx:id="tabRun" text="Run">
       <graphic>
          <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
             <Image url="@../img/android-play-circle-outline-24.png" />
@@ -368,7 +368,7 @@
             </TextArea>
          </center>
          <bottom>
-            <BorderPane prefHeight="50.0" BorderPane.alignment="BOTTOM_CENTER">
+            <BorderPane prefHeight="50.0" style="-fx-background-color: DDD;" BorderPane.alignment="BOTTOM_CENTER">
                <right>
                   <Button fx:id="buttonRun" mnemonicParsing="false" onAction="#runAction" text="Run" BorderPane.alignment="CENTER">
                      <BorderPane.margin>
@@ -395,6 +395,7 @@
          </bottom>
       </BorderPane>
    </Tab>
+
    <Tab text="About">
       <graphic>
          <ImageView>

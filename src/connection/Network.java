@@ -136,7 +136,7 @@ public final class Network {
             logger.debug(sql);
         } catch (SQLException e) {
             sql = sql.replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ");
-            logger.info(e.getMessage() + " | " + sql);
+            logger.warn(e.getMessage() + " | " + sql);
         }
        
         return isOk;
@@ -177,7 +177,7 @@ public final class Network {
             logger.debug(sql);
         } catch (SQLException e) {
             sql = sql.replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ");
-            logger.info(e.getMessage() + " | " + sql);
+            logger.warn(e.getMessage() + " | " + sql);
         }
 
         return result;
@@ -219,7 +219,7 @@ public final class Network {
             logger.debug(sql);
         } catch (SQLException e) {
             sql = sql.replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ");
-            logger.info(e.getMessage() + " | " + sql);
+            logger.warn(e.getMessage() + " | " + sql);
         }
 
         return result;
@@ -261,7 +261,7 @@ public final class Network {
             logger.debug(sql);
         } catch (SQLException e) {
             sql = sql.replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ");
-            logger.info(e.getMessage() + " | " + sql);
+            logger.warn(e.getMessage() + " | " + sql);
         }
 
         return result;
@@ -302,7 +302,7 @@ public final class Network {
             logger.debug(sql);
         } catch (SQLException e) {
             sql = sql.replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ");
-            logger.info(e.getMessage() + " | " + sql);
+            logger.warn(e.getMessage() + " | " + sql);
         }
 
         return result;
@@ -340,7 +340,7 @@ public final class Network {
             logger.debug(sql);
         } catch (SQLException e) {
             sql = sql.replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ");
-            logger.info(e.getMessage() + " | " + sql);
+            logger.warn(e.getMessage() + " | " + sql);
         }
 
         return result;

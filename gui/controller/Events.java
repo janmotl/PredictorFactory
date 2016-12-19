@@ -78,6 +78,8 @@ public class Events implements Initializable {
     @FXML private TreeView<String> treeViewSelect;
     @FXML private TreeView<String> treeViewPattern;
     @FXML private TabPane tabPane;
+	@FXML private Tab tabConnect;
+	@FXML private Tab tabRun;
     @FXML private Text textVersion;
 
     // Event handlers
@@ -309,9 +311,8 @@ public class Events implements Initializable {
     @Override public void initialize(URL fxmlFileLocation, ResourceBundle rb) {
     
         // Setup logging into textArea (before any attempt to log anything)
-        //PropertyConfigurator.configure("/config/log4j.properties");
-        TextAreaAppender textAreaHandler = new TextAreaAppender();
-        textAreaHandler.setTextArea(textAreaConsole);
+        TextAreaAppender textAreaAppender = new TextAreaAppender();
+        textAreaAppender.setTextArea(textAreaConsole);
     
         // Hide progress indicators as nothing is running so far
         labelPredictorCountText.setVisible(false);
@@ -368,6 +369,7 @@ public class Events implements Initializable {
 
         // Connection tab
         ValidatorText.addNumericValidation(textPort, Integer.MAX_VALUE);
+        buttonConnect.defaultButtonProperty().bind(tabConnect.selectedProperty());
                
         // Pattern tab - populate list of patterns
         SortedMap<String, Pattern> patternMap = utility.PatternMap.getPatternMap(); // Get patternMap
@@ -419,6 +421,9 @@ public class Events implements Initializable {
         ValidatorText.addNumericValidation(textLead);
         ValidatorText.addNumericValidation(textSampleCount);
         ValidatorText.addNumericValidation(textPredictorMax, setting.predictorMaxTheory);
+
+	    // Run tab
+	    buttonRun.defaultButtonProperty().bind(tabRun.selectedProperty());
 
         // About tab
         textVersion.setText("Version " + getPFVersion());

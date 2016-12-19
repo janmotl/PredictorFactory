@@ -21,11 +21,13 @@ package utility;
  */
 
 /*
- Modified by Jan Motl to be case insensitive.
+ Notes by Jan Motl.
  The implementation dislikes nulls at the input.
  If this sort ends up to be unintuitive, replace this class with some other from:
     http://stackoverflow.com/questions/1262239/natural-sort-order-string-comparison-in-java-is-one-built-in
- Or just revert to plain old String.CASE_INSENSITIVE.
+ If you decide to make "case-ignoring", make sure "TABLE" and "table" are not going to clash in maps (these two names
+ can appear in case-sensitive database). Hence, do not implement case-insensitive but something like "case is of low
+ importance".
 */
 
 import java.util.Arrays;
@@ -33,7 +35,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class NaturalOrderComparator implements Comparator
+public class NaturalOrderComparator implements Comparator<Object>   // Modified to avoid unchecked warning
 {
 
     public int compare(Object o1, Object o2)
@@ -123,11 +125,11 @@ public class NaturalOrderComparator implements Comparator
         }
         else
         {
-            return s.toUpperCase().charAt(i);
+            return s.charAt(i);
         }
     }
 
-    int compareRight(String a, String b)
+    static int compareRight(String a, String b)
     {
         int bias = 0;
         int ia = 0;
@@ -195,4 +197,5 @@ public class NaturalOrderComparator implements Comparator
 
         System.out.println("Sorted: " + scrambled);
     }
+
 }
