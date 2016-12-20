@@ -2,6 +2,7 @@ package connection;
 
 import metaInformation.ForeignConstraint;
 import metaInformation.MetaOutput;
+import org.apache.log4j.Level;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,6 +17,8 @@ public   class SQLTest {
 
     @Before
     public void initialization() {
+        utility.Logging.initialization();
+
         table = new MetaOutput.OutputTable();
         table.originalName = "trans";
         table.name = "propagated_trans";
@@ -162,7 +165,7 @@ public   class SQLTest {
     }
 
     @Test
-    public void containsNull() {
+    public void containsNullPostgreSQL() {
         // Setting
         Setting setting = new Setting("PostgreSQL", "financial");
         Network.openConnection(setting);
@@ -182,7 +185,7 @@ public   class SQLTest {
     }
 
 	@Test
-	public void getTopUniqueRecords() {
+	public void getTopUniqueRecordsPostgreSQL() {
 		// Setting
 		Setting setting = new Setting("PostgreSQL", "financial");
 		Network.openConnection(setting);
@@ -193,4 +196,17 @@ public   class SQLTest {
 		Network.closeConnection(setting);
 	}
 
+    @Test
+    public void addJournalRunOracle() {
+        // Setting
+        Setting setting = new Setting("Oracle", "financial_xe");
+        Network.openConnection(setting);
+        //setting.dialect.getJournalRun(setting);   // Create journal_run
+
+        setting.dialect.addJournalRun(setting, 100L); // Assumes journal_run is already there
+
+        Assert.assertTrue(utility.CountAppender.getCount(Level.WARN) == 0);
+
+        Network.closeConnection(setting);
+    }
 }
