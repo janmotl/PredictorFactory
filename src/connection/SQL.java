@@ -2,10 +2,7 @@ package connection;
 
 import com.google.common.collect.Lists;
 import featureExtraction.Predictor;
-import metaInformation.Column;
-import metaInformation.MetaOutput;
-import metaInformation.StatisticalType;
-import metaInformation.Table;
+import metaInformation.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Level;
@@ -17,10 +14,7 @@ import utility.Memory;
 import utility.Meta;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -662,8 +656,19 @@ public class SQL {
     //  2) If we are comparing date-to-date it is faster than number-to-date (we can at least use indexes)
     // The temporal logic is done in Java for portability across databases.
     // NOTE: If min==max, return warning?
-    public static Timestamp getPivotDate(Setting setting) {
-        String sql = "select min(@targetDate), max(@targetDate) " +
+    // NOTE: Midranges like 1996-03-21 23:30:00 are apparently correct (the expected midrange is 1996-03-21 12:00:00)
+    // NOTE: Branch for SAS.
+    public static Timestamp getPivotDate(Setting setting, int dateDataType) {
+        // SAS requires informat. NOTE: NOT TESTED ON DATETIME AND TIME!
+        String informat = "";
+        if ("SAS".equals(setting.databaseVendor)) {
+            if (dateDataType==91) informat = " format=ddmmyy10. ";      // Date
+            if (dateDataType==92) informat = " format=time10. ";        // Time
+            if (dateDataType==93) informat = " format=datetime21. ";    // Datetime
+        }
+
+        String sql = "select min(@targetDate)" + informat +
+                     "     , max(@targetDate) " + informat +
                      "from @targetTable";
 
         sql = expandName(sql);
@@ -1024,8 +1029,8 @@ public class SQL {
                     "    using(@column, is_testing) " +
                     "),  " +
                     "minmax as ( " +
-                    "    select min(probability) minimum " +
-                    "        , max(probability) maximum " +
+                    "    select min(probability) as minimum " +
+                    "        , max(probability) as maximum " +
                     "    from posterior " +
                     "    GROUP BY @baseTarget, @column " +
                     ") " +
@@ -1088,8 +1093,8 @@ public class SQL {
                     "    using(bin, is_testing) " +
                     "),  " +
                     "minmax as ( " +
-                    "    select min(probability) minimum " +
-                    "        , max(probability) maximum " +
+                    "    select min(probability) as minimum " +
+                    "        , max(probability) as maximum " +
                     "    from posterior " +
                     "    GROUP BY @baseTarget, bin " +
                     ") " +
@@ -1252,8 +1257,8 @@ public class SQL {
                 ") posterior ";
 
         String minmax = " ( " +
-                "    select min(probability) minimum " +
-                "        , max(probability) maximum " +
+                "    select min(probability) as minimum " +
+                "        , max(probability) as maximum " +
                 "    from " + posterior +
                 "    GROUP BY @baseTarget, @column " +
                 ") minmax ";
@@ -1378,7 +1383,7 @@ public class SQL {
         try (Connection connection = setting.dataSource.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, setting.inputSchema);
-            ps.setBigDecimal(2, BigDecimal.valueOf(elapsedTime/1000.0)); // In seconds
+            ps.setDouble(2, elapsedTime/1000.0); // In seconds. Note: Do not use bigDecimal as it is unsupported on SAS
             ps.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
             ps.setDouble(4, Memory.usedMemory());   // In MB
             ps.setInt(5, CountAppender.getCount(Level.WARN));

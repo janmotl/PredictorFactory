@@ -23,6 +23,7 @@
     <database name="employee" inputSchema="employee" outputSchema="predictor_factory" targetTable="salaries" targetId="emp_no" targetDate="from_date" targetColumn="salary" task="regression" useIdAttributes="true"/>
     <database name="EWS" inputSchema="EWS" outputSchema="predictor_factory" targetTable="target_default" targetId="ico" targetDate="date_value1" targetColumn="default_flag" task="classification" useIdAttributes="true"/>
     <database name="financial" inputSchema="financial" outputSchema="predictor_factory" targetTable="loan" targetId="account_id" targetDate="date" targetColumn="status" task="classification" blackListTable="result" useIdAttributes="true"/>
+    <database name="financial_sas" inputSchema="INPUT" outputSchema="OUTPUT" targetTable="LOAN" targetId="account_id" targetDate="date" targetColumn="status" task="classification"/>
     <database name="financial_ugly_names" inputSchema="financial_ugly_names" outputSchema="predictor_factory" targetTable="loan" targetId="id" targetColumn="target" task="classification" useIdAttributes="true"/>
     <database name="financial_chi2" inputSchema="financial_chi2" outputSchema="predictor_factory" targetTable="loan" targetId="id" targetColumn="target" task="classification" useIdAttributes="true"/>
     <database name="financial_sandbox" inputSchema="financial_sandbox" outputSchema="predictor_factory" targetTable="loan" targetId="account_id" targetDate="date" targetColumn="status" task="classification" blackListTable="result" useIdAttributes="true"/>
