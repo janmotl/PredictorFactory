@@ -16,6 +16,7 @@ import utility.CountAppender;
 import utility.Memory;
 import utility.Meta;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -1352,19 +1353,8 @@ public class SQL {
 
     // Log the result of Predictor Factory run
     // ADD: column with count of produced predictors & whether PF finished successfully & setting.
-    public static void addJournalRun(Setting setting, long elapsedTime){
-
-        // Log the status into the database
-        String sql = "insert into @outputTable (schema_name, run_time, finish_time, memory, warn_count, error_count) values ('" +
-		        setting.inputSchema + "', " +
-		        elapsedTime/1000 + ", '" +                          // In seconds
-		        Timestamp.valueOf(LocalDateTime.now()) + "', " +
-		        Memory.usedMemory() + ", " +                        // In MB
-		        CountAppender.getCount(Level.WARN) + ", " +
-		        CountAppender.getCount(Level.ERROR) + ")";
-        sql = expandName(sql);
-        sql = escapeEntity(setting, sql, setting.journalRun);
-        Network.executeUpdate(setting.dataSource, sql);
+    // Note: We are using preparedStatement because Oracle is sensitive on the format in which TimesTamp is passed.
+    public static boolean addJournalRun(Setting setting, long elapsedTime){
 
         // Log the time in a nice-to-read format
         logger.debug("Time of finishing: " + LocalDate.now() + " " + LocalTime.now());
@@ -1377,6 +1367,29 @@ public class SQL {
 	    logger.debug("Info event count: " + CountAppender.getCount(Level.INFO));
 	    logger.debug("Warn event count: " + CountAppender.getCount(Level.WARN));
 	    logger.debug("Error event count: " + CountAppender.getCount(Level.ERROR));
+
+        // Log the status into the database
+        String sql = "insert into @outputTable " +
+                "(schema_name, run_time, finish_time, memory, warn_count, error_count) " +
+                "values (?, ?, ?, ?, ?, ?)";
+        sql = expandName(sql);
+        sql = escapeEntity(setting, sql, setting.journalRun);
+
+        try (Connection connection = setting.dataSource.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, setting.inputSchema);
+            ps.setBigDecimal(2, BigDecimal.valueOf(elapsedTime/1000.0)); // In seconds
+            ps.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setDouble(4, Memory.usedMemory());   // In MB
+            ps.setInt(5, CountAppender.getCount(Level.WARN));
+            ps.setInt(6, CountAppender.getCount(Level.ERROR));
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 
 
