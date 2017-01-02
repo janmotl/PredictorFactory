@@ -2,7 +2,7 @@ package utility;
 
 
 import connection.Network;
-import metaInformation.ForeignConstraint;
+import meta.ForeignConstraint;
 import org.junit.Assert;
 import org.junit.Test;
 import run.Setting;

@@ -1,6 +1,7 @@
-package featureExtraction;
+package extraction;
 
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -12,8 +13,7 @@ import java.util.SortedMap;
 
 public class PatternTest {
 
-	private Pattern pattern = new Pattern();
-	private Setting setting = new Setting();
+	@NotNull private Setting setting = new Setting();
 
 	@Test
 	public void corr() {

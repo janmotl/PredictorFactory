@@ -29,16 +29,18 @@ package utility;
 //      Treats nicely repeated spaces, but is difficult to modify to give the case low priority
 
 
+import org.jetbrains.annotations.NotNull;
+
 import java.text.Collator;
 import java.text.DecimalFormatSymbols;
 import java.util.Comparator;
-
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Compares Strings by human values instead of traditional machine values.
+ *
  * @author elberry
  */
 public class NaturalOrderComparator implements Comparator<String> {
@@ -49,14 +51,14 @@ public class NaturalOrderComparator implements Comparator<String> {
 		this(Locale.getDefault());
 	}
 
-	public NaturalOrderComparator(Locale locale) {
+	public NaturalOrderComparator(@NotNull Locale locale) {
 		DecimalFormatSymbols dfs = new DecimalFormatSymbols(locale);
 		char localeDecimalSeparator = dfs.getDecimalSeparator();
 		// alphaNumChunkPatter initialized here to get correct decimal separator for locale.
 		alphaNumChunkPattern = Pattern.compile("(\\d+\\" + localeDecimalSeparator + "\\d+)|(\\d+)|(\\D+)");
 	}
 
-	public int compare(String s1, String s2) {
+	public int compare(@NotNull String s1, @NotNull String s2) {
 		int compareValue = 0;
 		Matcher s1ChunkMatcher = alphaNumChunkPattern.matcher(s1);
 		Matcher s2ChunkMatcher = alphaNumChunkPattern.matcher(s2);

@@ -1,25 +1,25 @@
 <schema xmlns="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
-  <element name="connections">
-    <complexType>
-      <sequence>
-        <element name="connection" minOccurs="1" maxOccurs="unbounded" >
-          <complexType>
-            <simpleContent>
-              <extension base="string">
-                <attribute type="string" name="name" use="required"/>
-                <attribute type="string" name="description" use="optional"/>
-                <attribute type="string" name="driver" use="required"/>
-                <attribute type="string" name="host" use="optional"/>
-                <attribute type="int" name="port" use="optional"/>
-                <attribute type="string" name="database" use="optional"/>
-                <attribute type="string" name="url" use="optional"/>
-                <attribute type="string" name="username" use="optional"/>
-                <attribute type="string" name="password" use="optional"/>
-              </extension>
-            </simpleContent>
-          </complexType>
-        </element>
-      </sequence>
-    </complexType>
-  </element>
+    <element name="connections">
+        <complexType>
+            <sequence>
+                <element name="connection" minOccurs="1" maxOccurs="unbounded">
+                    <complexType>
+                        <simpleContent>
+                            <extension base="string">
+                                <attribute type="string" name="name" use="required"/>
+                                <attribute type="string" name="description" use="optional"/>
+                                <attribute type="string" name="driver" use="required"/>
+                                <attribute type="string" name="host" use="optional"/>
+                                <attribute type="int" name="port" use="optional"/>
+                                <attribute type="string" name="database" use="optional"/>
+                                <attribute type="string" name="url" use="optional"/>
+                                <attribute type="string" name="username" use="optional"/>
+                                <attribute type="string" name="password" use="optional"/>
+                            </extension>
+                        </simpleContent>
+                    </complexType>
+                </element>
+            </sequence>
+        </complexType>
+    </element>
 </schema>

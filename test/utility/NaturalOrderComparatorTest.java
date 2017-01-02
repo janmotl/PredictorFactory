@@ -12,7 +12,7 @@ public class NaturalOrderComparatorTest {
 
 	@Test
 	public void naturalOrdering() {
-		String[] strings = new String[] {"muta_44", "muta_188", "muta_32"};
+		String[] strings = {"muta_44", "muta_188", "muta_32"};
 
 		Arrays.sort(strings, new NaturalOrderComparator());
 
@@ -21,7 +21,7 @@ public class NaturalOrderComparatorTest {
 
 	@Test
 	public void accentCasePriority() {
-		String[] strings = new String[] {"Äbc", "äbc", "Àbc", "àbc", "Abc", "abc", "ABC"};
+		String[] strings = {"Äbc", "äbc", "Àbc", "àbc", "Abc", "abc", "ABC"};
 
 		Arrays.sort(strings, new NaturalOrderComparator());
 
@@ -31,7 +31,7 @@ public class NaturalOrderComparatorTest {
 
 	@Test
 	public void singleSpace() {
-		String[] strings = new String[] {"m 69", "m 07", "m 6"};
+		String[] strings = {"m 69", "m 07", "m 6"};
 
 		Arrays.sort(strings, new NaturalOrderComparator());
 
@@ -41,7 +41,7 @@ public class NaturalOrderComparatorTest {
 
 	@Test
 	public void suffix() {
-		String[] strings = new String[] {"m13", "m12", "m12 a", "m12 b", "m11"};
+		String[] strings = {"m13", "m12", "m12 a", "m12 b", "m11"};
 
 		Arrays.sort(strings, new NaturalOrderComparator());
 

@@ -8,18 +8,20 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.misc.*;
+import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class SQLLexer extends Lexer {
     static { RuntimeMetaData.checkVersion("4.5.3", RuntimeMetaData.VERSION); }
 
-    protected static final DFA[] _decisionToDFA;
+    @NotNull protected static final DFA[] _decisionToDFA;
     protected static final PredictionContextCache _sharedContextCache =
         new PredictionContextCache();
     public static final int
         FROM=1, JOIN=2, ON=3, AND=4, USING=5, DATEDIFF=6, DATETONUMBER=7, CORR=8,
         LBR=9, RBR=10, COMMA=11, EQUALS=12, ARITHMETIC=13, TEXT=14, WS=15;
-    public static String[] modeNames = {
+    @NotNull public static String[] modeNames = {
         "DEFAULT_MODE"
     };
 
@@ -41,7 +43,7 @@ public class SQLLexer extends Lexer {
     /**
      * @deprecated Use {@link #VOCABULARY} instead.
      */
-    @Deprecated
+    @NotNull @Deprecated
     public static final String[] tokenNames;
     static {
         tokenNames = new String[_SYMBOLIC_NAMES.length];
@@ -57,13 +59,13 @@ public class SQLLexer extends Lexer {
         }
     }
 
-    @Override
+    @NotNull @Override
     @Deprecated
     public String[] getTokenNames() {
         return tokenNames;
     }
 
-    @Override
+    @NotNull @Override
 
     public Vocabulary getVocabulary() {
         return VOCABULARY;
@@ -75,16 +77,16 @@ public class SQLLexer extends Lexer {
         _interp = new LexerATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
     }
 
-    @Override
+    @NotNull @Override
     public String getGrammarFileName() { return "SQL.g4"; }
 
-    @Override
+    @NotNull @Override
     public String[] getRuleNames() { return ruleNames; }
 
-    @Override
+    @NotNull @Override
     public String getSerializedATN() { return _serializedATN; }
 
-    @Override
+    @org.jetbrains.annotations.NotNull @Override
     public String[] getModeNames() { return modeNames; }
 
     @Override

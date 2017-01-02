@@ -1,7 +1,8 @@
-package featureExtraction;
+package extraction;
 
 
-import metaInformation.MetaOutput;
+import meta.MetaOutput;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,8 +14,8 @@ import java.util.*;
 
 public class PredictorTest {
 
-	private Setting setting = new Setting();
-	private Pattern pattern = new Pattern();
+	@NotNull private Setting setting = new Setting();
+	@NotNull private Pattern pattern = new Pattern();
 	private Predictor predictor;
 		
 	@Before
@@ -217,5 +218,5 @@ public class PredictorTest {
 		System.out.println(actual);
 		System.out.println(actual.length());
 		Assert.assertTrue(actual.length() <= setting.identifierLengthMax);
-	}	
+	}
 }

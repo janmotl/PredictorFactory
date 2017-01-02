@@ -1,7 +1,14 @@
 <component name="ProjectDictionaryState">
-  <dictionary name="Jan">
+  <dictionary name="jan">
     <words>
-      <w>mssql</w>
+      <w>fkcolumn</w>
+      <w>fktable</w>
+      <w>informat</w>
+      <w>odbc</w>
+      <w>pkcolumn</w>
+      <w>pktable</w>
+      <w>schem</w>
+      <w>uncheck</w>
     </words>
   </dictionary>
 </component>

@@ -1,45 +1,46 @@
 <schema xmlns="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
-  <element name="databases">
-    <complexType>
-      <sequence>
-        <element name="database" minOccurs="1" maxOccurs="unbounded">
-          <complexType>
-            <simpleContent>
-              <extension base="string">
-                <attribute type="string" name="name" use="required"/>
-                <attribute type="string" name="description"/>
-                <attribute type="string" name="inputSchema" use="required"/>
-                <attribute type="string" name="outputSchema" use="required"/>
-                <attribute type="string" name="targetSchema"/>
-                <attribute type="string" name="targetTable" use="required"/>
-                <attribute type="string" name="targetId" use="required"/>
-                <attribute type="string" name="targetColumn" use="required"/>
-                <attribute type="string" name="targetDate"/>
-                <attribute type="string" name="unit"/>
-                <attribute type="decimal" name="lag"/>
-                <attribute type="decimal" name="lead"/>
-                <attribute type="int" name="sampleCount"/>
-				<attribute type="int" name="predictorMax"/>
-                <attribute type="boolean" name="useIdAttributes" default="true"/>
-                <attribute name="task">
-			       <simpleType>
-			         <restriction base="string">
-			           <enumeration value="classification"/>
-			           <enumeration value="regression"/>
-			         </restriction>
-			       </simpleType>
-			    </attribute>
-                <attribute type="string" name="whiteListTable"/>
-                <attribute type="string" name="blackListTable"/>
-                <attribute type="string" name="whiteListColumn"/>
-                <attribute type="string" name="blackListColumn"/>
-                <attribute type="string" name="whiteListPattern"/>
-                <attribute type="string" name="blackListPattern"/>
-              </extension>
-            </simpleContent>
-          </complexType>
-        </element>
-      </sequence>
-    </complexType>
-  </element>
+    <element name="databases">
+        <complexType>
+            <sequence>
+                <element name="database" minOccurs="1" maxOccurs="unbounded">
+                    <complexType>
+                        <simpleContent>
+                            <extension base="string">
+                                <attribute type="string" name="name" use="required"/>
+                                <attribute type="string" name="description"/>
+                                <attribute type="string" name="inputSchema" use="required"/>
+                                <attribute type="string" name="outputSchema" use="required"/>
+                                <attribute type="string" name="targetSchema"/>
+                                <attribute type="string" name="targetTable" use="required"/>
+                                <attribute type="string" name="targetId" use="required"/>
+                                <attribute type="string" name="targetColumn" use="required"/>
+                                <attribute type="string" name="targetDate"/>
+                                <attribute type="string" name="unit"/>
+                                <attribute type="decimal" name="lag"/>
+                                <attribute type="decimal" name="lead"/>
+                                <attribute type="int" name="sampleCount"/>
+                                <attribute type="int" name="predictorMax"/>
+                                <attribute type="boolean" name="useIdAttributes" default="true"/>
+                                <attribute type="boolean" name="useTwoStages" default="true"/>
+                                <attribute name="task">
+                                    <simpleType>
+                                        <restriction base="string">
+                                            <enumeration value="classification"/>
+                                            <enumeration value="regression"/>
+                                        </restriction>
+                                    </simpleType>
+                                </attribute>
+                                <attribute type="string" name="whiteListTable"/>
+                                <attribute type="string" name="blackListTable"/>
+                                <attribute type="string" name="whiteListColumn"/>
+                                <attribute type="string" name="blackListColumn"/>
+                                <attribute type="string" name="whiteListPattern"/>
+                                <attribute type="string" name="blackListPattern"/>
+                            </extension>
+                        </simpleContent>
+                    </complexType>
+                </element>
+            </sequence>
+        </complexType>
+    </element>
 </schema>

@@ -10,7 +10,7 @@ public class DatabasePropertyListTest {
   
   @Test
   public void testReadWriteRead() {
-	  DatabasePropertyList databaseList = DatabasePropertyList.unmarshall();  
+	  DatabasePropertyList databaseList = DatabasePropertyList.unmarshall();
 	  DatabasePropertyList.marshall(databaseList);
 	  DatabasePropertyList databaseList2 = DatabasePropertyList.unmarshall();
 	  

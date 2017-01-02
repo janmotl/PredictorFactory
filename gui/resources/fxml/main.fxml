@@ -328,7 +328,7 @@
             </Label>
             <TextField fx:id="textPredictorMax" maxWidth="170.0" promptText="database bounded">
                <tooltip>
-                  <Tooltip text="Don't produce more predictors than is the sample count.&#10;Don't cross the limit of the database on the count of columns in a table.&#10;Don't cross the byte limit of the database on the row size." />
+                  <Tooltip text="Don't cross the limit of the database on the count of columns in a table.&#10;Don't cross the byte limit of the database on the row size." />
                </tooltip>
             </TextField>
          </VBox>
@@ -337,7 +337,7 @@
                <Insets bottom="8.0" top="3.0" />
             </padding>
          </Separator>
-         <VBox minHeight="57.0">
+         <VBox minHeight="30.0">
             <CheckBox fx:id="checkBoxUseId" mnemonicParsing="false" text="Calculate predictors from identifiers">
                <tooltip>
                   <Tooltip text="IDs may contain leaking data. That is good in challenges. But bad in deployment." />
@@ -347,6 +347,18 @@
                </VBox.margin>
             </CheckBox>
          </VBox>
+          <VBox minHeight="30.0">
+              <CheckBox fx:id="checkBoxUseTwoStages" mnemonicParsing="false"
+                        text="Permit two-stage processing (exploration, exploitation)">
+                 <tooltip>
+                     <Tooltip
+                             text="Identify promising predictors on &quot;Sample count&quot;.&#10;Then calculate the best predictors for whole target table."/>
+                 </tooltip>
+                 <VBox.margin>
+                     <Insets left="4.0"/>
+                 </VBox.margin>
+              </CheckBox>
+          </VBox>
       </VBox>
    </Tab>
 
@@ -396,31 +408,22 @@
    <Tab text="About">
       <graphic>
          <ImageView>
-            <image>
-               <Image url="@../img/info.png" />
-            </image>
+            <Image url="@../img/info.png" />
          </ImageView>
       </graphic>
       <BorderPane>
          <center>
             <VBox alignment="CENTER" spacing="10.0">
-               <children>
-                  <Hyperlink onAction="#openHomepage">
-                     <graphic>
-                        <ImageView>
-                           <image>
-                              <Image url="@../img/red-gear.png" />
-                           </image>
-                        </ImageView>
-                     </graphic>
-                  </Hyperlink>
-                  <Text fx:id="textVersion" text="Version 3.42" />
-                  <Text text="Automatically creates a single table of predictors from relational data" textAlignment="CENTER" wrappingWidth="220.0" />
-                  <Hyperlink onAction="#sendEmail" text="Email the developer" />
-               </children>
-               <BorderPane.margin>
-                  <Insets />
-               </BorderPane.margin>
+               <Hyperlink onAction="#openHomepage">
+                  <graphic>
+                     <ImageView>
+                        <Image url="@../img/red-gear.png" />
+                     </ImageView>
+                  </graphic>
+               </Hyperlink>
+               <Text fx:id="textVersion" text="Version 3.42" />
+               <Text text="Automatically creates a single table of predictors from relational data" textAlignment="CENTER" wrappingWidth="220.0" />
+               <Hyperlink onAction="#sendEmail" text="Email the developer" />
             </VBox>
          </center>
       </BorderPane>

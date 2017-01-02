@@ -8,13 +8,14 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
+import org.jetbrains.annotations.NotNull;
 import run.Setting;
 
 // Lex & parse the SQL.
 // The first parameter is the SQL query. The second parameter is the new dateDiff string.
 public class ANTLR {
 
-    public static String parseSQL(Setting setting, String text) {
+    public static String parseSQL(@NotNull Setting setting, @NotNull String text) {
     
         // Create a CharStream that reads from the String.
         ANTLRInputStream input = new ANTLRInputStream(text);

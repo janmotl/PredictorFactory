@@ -1,5 +1,6 @@
 package connection;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -12,7 +13,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class NetworkTest {
-	private Setting setting = new Setting("PostgreSQL", "financial");
+	@NotNull private Setting setting = new Setting("PostgreSQL", "financial");
 	
 	@Before
 	public void connectToDatabase(){
@@ -79,7 +80,7 @@ public class NetworkTest {
 	public void loadTest_metaData() {
 		for (int i = 0; i < 30; i++) {
 
-			metaInformation.MetaInput.getMetaInput(setting);
+			meta.MetaInput.getMetaInput(setting);
 
 			System.out.println("	iteration: " + i);
 		}

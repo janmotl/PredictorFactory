@@ -1,4 +1,4 @@
-package metaInformation;
+package meta;
 
 
 import connection.Network;

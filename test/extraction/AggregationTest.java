@@ -1,7 +1,8 @@
-package featureExtraction;
+package extraction;
 
-import metaInformation.Column;
-import metaInformation.MetaOutput.OutputTable;
+import meta.Column;
+import meta.MetaOutput.OutputTable;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,10 +11,10 @@ import run.Setting;
 import java.util.*;
 
 public class AggregationTest {
-	private Setting setting = new Setting("PostgreSQL", "financial");
-	private Pattern pattern = new Pattern();
+	@NotNull private Setting setting = new Setting("PostgreSQL", "financial");
+	@NotNull private Pattern pattern = new Pattern();
 	private Predictor predictor;
-	private SortedMap<String, OutputTable> tableMetadata = new TreeMap<>();
+	@NotNull private SortedMap<String, OutputTable> tableMetadata = new TreeMap<>();
 	
 	@Before
 	public void initialize(){

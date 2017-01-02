@@ -1,5 +1,6 @@
 package antlr;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -9,7 +10,7 @@ import run.Setting;
 
 public class ANTLRTest {
 
-	private Setting setting = new Setting("MySQL", "financial");
+	@NotNull private Setting setting = new Setting("MySQL", "financial");
 
 	@Before
 	public void initialization() {

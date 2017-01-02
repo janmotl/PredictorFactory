@@ -1,8 +1,8 @@
 package propagation;
 
 import connection.Network;
-import metaInformation.Column;
-import metaInformation.Table;
+import meta.Column;
+import meta.Table;
 import org.junit.Assert;
 import org.junit.Test;
 import run.Setting;
@@ -21,7 +21,7 @@ public class PropagationTest {
 		setting = Network.openConnection(setting);
 		setting.dialect.prepareOutputSchema(setting);
 		setting.dialect.getBase(setting);
-		SortedMap<String, Table> metaInput = metaInformation.MetaInput.getMetaInput(setting);
+		SortedMap<String, Table> metaInput = meta.MetaInput.getMetaInput(setting);
 		setting.dialect.getSubSampleClassification(setting, metaInput);
 
 		// Run!

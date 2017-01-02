@@ -1,6 +1,7 @@
 package connection;
 
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -14,67 +15,67 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-@XmlRootElement (name="connections")
+@XmlRootElement(name = "connections")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ConnectionPropertyList {
-    // Logging
-    private static final Logger logger = Logger.getLogger(ConnectionPropertyList.class.getName());
+	// Logging
+	private static final Logger logger = Logger.getLogger(ConnectionPropertyList.class.getName());
 
-    // Private Fields. Note that we are using List because it's marshalable by default.
-    private List<ConnectionProperty> connection = new ArrayList<>();
+	// Private Fields. Note that we are using List because it's marshallable by default.
+	@NotNull private List<ConnectionProperty> connection = new ArrayList<>();
 
-    // Get property by name
-    public ConnectionProperty getConnectionProperties(String name) {
-        for (ConnectionProperty property : connection) {
-            if (name.equals(property.name)) {
-                return property;
-            }
-        }
-    
-        logger.warn("There isn't a connection setting for: " + name);
-        return new ConnectionProperty();
-    }
+	// Get property by name
+	@NotNull public ConnectionProperty getConnectionProperties(@NotNull String name) {
+		for (ConnectionProperty property : connection) {
+			if (name.equals(property.name)) {
+				return property;
+			}
+		}
 
-    // Set property by name
-    public void setConnectionProperties(ConnectionProperty property) {
-    
-        // Remove the old setting
-        connection.removeIf(i -> i.name.equals(property.name));
-    
-        // Add the new setting
-        connection.add(property);
-    }
+		logger.warn("There isn't a connection setting for: " + name);
+		return new ConnectionProperty();
+	}
 
-    // Load property list from XML
-    public static ConnectionPropertyList unmarshall(){
-        ConnectionPropertyList list = null;
-       
-        try {
-            JAXBContext jaxbContext = JAXBContext.newInstance(ConnectionPropertyList.class);
-            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            list = (ConnectionPropertyList) jaxbUnmarshaller.unmarshal(new File("config/connection.xml"));
-        } catch (JAXBException e) {
-            logger.warn("Attempt to parse 'config/connection.xml' failed. Does the file exist?");
-        }
+	// Set property by name
+	public void setConnectionProperties(@NotNull ConnectionProperty property) {
 
-        return list;
-    }
+		// Remove the old setting
+		connection.removeIf(i -> i.name.equals(property.name));
 
-    // Write into the XML
-    public static void marshall(ConnectionPropertyList connectionPropertyList) {
-            
-        try {
-            File file = new File("config/connection.xml");
-            JAXBContext jaxbContext = JAXBContext.newInstance(ConnectionPropertyList.class);
-            Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+		// Add the new setting
+		connection.add(property);
+	}
 
-            // Output pretty printed
-            jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-        
-            // Write into the file
-            jaxbMarshaller.marshal(connectionPropertyList, file);
-        } catch (JAXBException e) {
-            logger.warn("Attempt to write 'config/connection.xml' failed. Does Predictor Factory have the right to write?");
-        }
-    }
+	// Load property list from XML
+	@NotNull public static ConnectionPropertyList unmarshall() {
+		ConnectionPropertyList list = new ConnectionPropertyList();
+
+		try {
+			JAXBContext jaxbContext = JAXBContext.newInstance(ConnectionPropertyList.class);
+			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+			list = (ConnectionPropertyList) jaxbUnmarshaller.unmarshal(new File("config/connection.xml"));
+		} catch (JAXBException e) {
+			logger.warn("Attempt to parse 'config/connection.xml' failed. Does the file exist?");
+		}
+
+		return list;
+	}
+
+	// Write into the XML
+	public static void marshall(ConnectionPropertyList connectionPropertyList) {
+
+		try {
+			File file = new File("config/connection.xml");
+			JAXBContext jaxbContext = JAXBContext.newInstance(ConnectionPropertyList.class);
+			Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+
+			// Output pretty printed
+			jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+			// Write into the file
+			jaxbMarshaller.marshal(connectionPropertyList, file);
+		} catch (JAXBException e) {
+			logger.warn("Attempt to write 'config/connection.xml' failed. Does Predictor Factory have the right to write?");
+		}
+	}
 }

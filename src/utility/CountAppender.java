@@ -3,10 +3,10 @@ package utility;
 import org.apache.log4j.Level;
 import org.apache.log4j.WriterAppender;
 import org.apache.log4j.spi.LoggingEvent;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
-
 
 
 // Count messages on different levers.
@@ -18,17 +18,17 @@ import java.util.List;
 // Alternatives for Log4j: JAMonAppender
 public class CountAppender extends WriterAppender {
 
-    static private List<LoggingEvent> records = new ArrayList<>();
+	@NotNull private static List<LoggingEvent> records = new ArrayList<>();
 
-    @Override
-    public void append(LoggingEvent loggingEvent) {
-        records.add(loggingEvent);
-    }
+	@Override
+	public void append(LoggingEvent loggingEvent) {
+		records.add(loggingEvent);
+	}
 
 	// Return the count of messages for the given level
-	public static int getCount(Level level) {
+	public static int getCount(@NotNull Level level) {
 		int howMany = 0;
-		for(LoggingEvent record : CountAppender.records) {
+		for (LoggingEvent record : records) {
 			if (record.getLevel().toInt() == level.toInt()) {
 				howMany++;
 			}

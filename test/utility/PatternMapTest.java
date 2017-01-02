@@ -1,7 +1,7 @@
 package utility;
 
 
-import featureExtraction.Pattern;
+import extraction.Pattern;
 import run.Setting;
 
 import java.util.HashSet;
@@ -26,7 +26,7 @@ public class PatternMapTest {
 
 			// Get unique columns
 			Matcher m = java.util.regex.Pattern.compile(regexPattern).matcher(pattern.dialectCode);
-			Set set = new HashSet<>();
+			Set<String> set = new HashSet<>();
 			while (m.find()) {
 				set.add(m.group());
 			}

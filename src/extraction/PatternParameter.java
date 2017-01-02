@@ -1,10 +1,12 @@
-package featureExtraction;
+package extraction;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
-@XmlType(name="parameter")
+@XmlType(name = "parameter")
 public class PatternParameter {
-    @XmlAttribute String key;
-    @XmlAttribute String value;
+	@XmlAttribute
+	String key;
+	@XmlAttribute
+	String value;
 }

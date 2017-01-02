@@ -3,18 +3,18 @@ package utility;
 /**
  * Copyright (c) 2015, ControlsFX
  * All rights reserved.
- *
+ * <p>
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
+ * * Redistributions of source code must retain the above copyright
  * notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
+ * * Redistributions in binary form must reproduce the above copyright
  * notice, this list of conditions and the following disclaimer in the
  * documentation and/or other materials provided with the distribution.
- *     * Neither the name of ControlsFX, any associated website, nor the
+ * * Neither the name of ControlsFX, any associated website, nor the
  * names of its contributors may be used to endorse or promote products
  * derived from this software without specific prior written permission.
- *
+ * <p>
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -36,6 +36,8 @@ import javafx.scene.control.Control;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.util.StringConverter;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -87,131 +89,131 @@ import java.util.concurrent.TimeUnit;
  *  http://stackoverflow.com/questions/13362607/combobox-jump-to-typed-char
  */
 public class PrefixSelectionCustomizer {
-    private static final String SELECTION_PREFIX_STRING = "selectionPrefixString";
-    private static final Object SELECTION_PREFIX_TASK = "selectionPrefixTask";
+	private static final String SELECTION_PREFIX_STRING = "selectionPrefixString";
+	private static final Object SELECTION_PREFIX_TASK = "selectionPrefixTask";
 
-    private static EventHandler<KeyEvent> handler = new EventHandler<KeyEvent>() {
-        private ScheduledExecutorService executorService = null;
+	@Nullable private static EventHandler<KeyEvent> handler = new EventHandler<KeyEvent>() {
+		@Nullable private ScheduledExecutorService executorService;
 
-        @Override
-        public void handle(KeyEvent event) {
-            keyPressed(event);
-        }
+		@Override
+		public void handle(@NotNull KeyEvent event) {
+			keyPressed(event);
+		}
 
-        private <T> void keyPressed(KeyEvent event) {
-            KeyCode code = event.getCode();
-            if (code.isLetterKey() || code.isDigitKey() || code == KeyCode.SPACE) {
-                String letter = code.impl_getChar();
-                if (event.getSource() instanceof ComboBox) {
-                    ComboBox<T> comboBox = (ComboBox<T>) event.getSource();
-                    T item = getEntryWithKey(letter, comboBox.getConverter(), comboBox.getItems(), comboBox);
-                    if (item != null) {
-                        comboBox.setValue(item);
-                    }
-                } else if (event.getSource() instanceof ChoiceBox) {
-                    ChoiceBox<T> choiceBox = (ChoiceBox<T>) event.getSource();
-                    T item = getEntryWithKey(letter, choiceBox.getConverter(), choiceBox.getItems(), choiceBox);
-                    if (item != null) {
-                        choiceBox.setValue(item);
-                    }
-                }
-            }
-        }
+		private <T> void keyPressed(@NotNull KeyEvent event) {
+			KeyCode code = event.getCode();
+			if (code.isLetterKey() || code.isDigitKey() || code == KeyCode.SPACE) {
+				String letter = code.impl_getChar();
+				if (event.getSource() instanceof ComboBox) {
+					ComboBox<T> comboBox = (ComboBox<T>) event.getSource();
+					T item = getEntryWithKey(letter, comboBox.getConverter(), comboBox.getItems(), comboBox);
+					if (item != null) {
+						comboBox.setValue(item);
+					}
+				} else if (event.getSource() instanceof ChoiceBox) {
+					ChoiceBox<T> choiceBox = (ChoiceBox<T>) event.getSource();
+					T item = getEntryWithKey(letter, choiceBox.getConverter(), choiceBox.getItems(), choiceBox);
+					if (item != null) {
+						choiceBox.setValue(item);
+					}
+				}
+			}
+		}
 
-        private <T> T getEntryWithKey(String letter, StringConverter<T> converter, ObservableList<T> items, Control control) {
-            T result = null;
+		@Nullable private <T> T getEntryWithKey(@NotNull String letter, @Nullable StringConverter<T> converter, @NotNull ObservableList<T> items, @NotNull Control control) {
+			T result = null;
 
-            // The converter is null by default for the ChoiceBox. The ComboBox has a default converter
-            if (converter == null) {
-                converter = new StringConverter<T>() {
-                    @Override
-                    public String toString(T t) {
-                        return t == null ? null : t.toString();
-                    }
+			// The converter is null by default for the ChoiceBox. The ComboBox has a default converter
+			if (converter == null) {
+				converter = new StringConverter<T>() {
+					@Nullable @Override
+					public String toString(@Nullable T t) {
+						return t == null ? null : t.toString();
+					}
 
-                    @Override
-                    public T fromString(String string) {
-                        return null;
-                    }
-                };
-            }
+					@Nullable @Override
+					public T fromString(String string) {
+						return null;
+					}
+				};
+			}
 
-            String selectionPrefixString = (String) control.getProperties().get(SELECTION_PREFIX_STRING);
-            if (selectionPrefixString == null) {
-                selectionPrefixString = letter.toUpperCase();
-            } else {
-                selectionPrefixString += letter.toUpperCase();
-            }
-            control.getProperties().put(SELECTION_PREFIX_STRING, selectionPrefixString);
+			String selectionPrefixString = (String) control.getProperties().get(SELECTION_PREFIX_STRING);
+			if (selectionPrefixString == null) {
+				selectionPrefixString = letter.toUpperCase();
+			} else {
+				selectionPrefixString += letter.toUpperCase();
+			}
+			control.getProperties().put(SELECTION_PREFIX_STRING, selectionPrefixString);
 
-            for (T item : items) {
-                String string = converter.toString(item);
-                if (string != null && string.toUpperCase().startsWith(selectionPrefixString)) {
-                    result = item;
-                    break;
-                }
-            }
+			for (T item : items) {
+				String string = converter.toString(item);
+				if (string != null && string.toUpperCase().startsWith(selectionPrefixString)) {
+					result = item;
+					break;
+				}
+			}
 
-            ScheduledFuture<?> task = (ScheduledFuture<?>) control.getProperties().get(SELECTION_PREFIX_TASK);
-            if (task != null) {
-                task.cancel(false);
-            }
-            task = getExecutorService().schedule(
-                    () -> control.getProperties().put(SELECTION_PREFIX_STRING, ""), 500, TimeUnit.MILLISECONDS);
-            control.getProperties().put(SELECTION_PREFIX_TASK, task);
+			ScheduledFuture<?> task = (ScheduledFuture<?>) control.getProperties().get(SELECTION_PREFIX_TASK);
+			if (task != null) {
+				task.cancel(false);
+			}
+			task = getExecutorService().schedule(
+					() -> control.getProperties().put(SELECTION_PREFIX_STRING, ""), 500, TimeUnit.MILLISECONDS);
+			control.getProperties().put(SELECTION_PREFIX_TASK, task);
 
-            return result;
-        }
+			return result;
+		}
 
-        private ScheduledExecutorService getExecutorService() {
-            if (executorService == null) {
-                executorService = Executors.newScheduledThreadPool(1,
-                        runnabble -> {
-                            Thread result = new Thread(runnabble);
-                            result.setDaemon(true);
-                            return result;
-                        });
-            }
-            return executorService;
-        }
+		@Nullable private ScheduledExecutorService getExecutorService() {
+			if (executorService == null) {
+				executorService = Executors.newScheduledThreadPool(1,
+						runnabble -> {
+							Thread result = new Thread(runnabble);
+							result.setDaemon(true);
+							return result;
+						});
+			}
+			return executorService;
+		}
 
-    };
+	};
 
-    /**
-     * This will install an {@link EventHandler} that monitors the
-     * {@link KeyEvent} events to enable the "prefix selection" feature.
-     * The {@link EventHandler} will only be installed if the {@link ComboBox}
-     * is <b>not</b> editable.
-     *
-     * @param comboBox
-     *            The {@link ComboBox} that should be customized
-     *
-     * @see PrefixSelectionCustomizer
-     */
-    public static void customize(ComboBox<?> comboBox) {
-        if (!comboBox.isEditable()) {
-            comboBox.addEventHandler(KeyEvent.KEY_PRESSED, handler);
-        }
-        comboBox.editableProperty().addListener((o, oV, nV) -> {
-            if (!nV) {
-                comboBox.addEventHandler(KeyEvent.KEY_PRESSED, handler);
-            } else {
-                comboBox.removeEventHandler(KeyEvent.KEY_PRESSED, handler);
-            }
-        });
-    }
+	/**
+	 * This will install an {@link EventHandler} that monitors the
+	 * {@link KeyEvent} events to enable the "prefix selection" feature.
+	 * The {@link EventHandler} will only be installed if the {@link ComboBox}
+	 * is <b>not</b> editable.
+	 *
+	 * @param comboBox
+	 *            The {@link ComboBox} that should be customized
+	 *
+	 * @see PrefixSelectionCustomizer
+	 */
+	public static void customize(@NotNull ComboBox<?> comboBox) {
+		if (!comboBox.isEditable()) {
+			comboBox.addEventHandler(KeyEvent.KEY_PRESSED, handler);
+		}
+		comboBox.editableProperty().addListener((o, oV, nV) -> {
+			if (!nV) {
+				comboBox.addEventHandler(KeyEvent.KEY_PRESSED, handler);
+			} else {
+				comboBox.removeEventHandler(KeyEvent.KEY_PRESSED, handler);
+			}
+		});
+	}
 
-    /**
-     * This will install an {@link EventHandler} that monitors the
-     * {@link KeyEvent} events to enable the "prefix selection" feature.
-     *
-     * @param choiceBox
-     *            The {@link ChoiceBox} that should be customized
-     *
-     * @see PrefixSelectionCustomizer
-     */
-    public static void customize(ChoiceBox<?> choiceBox) {
-        choiceBox.addEventHandler(KeyEvent.KEY_PRESSED, handler);
-    }
+	/**
+	 * This will install an {@link EventHandler} that monitors the
+	 * {@link KeyEvent} events to enable the "prefix selection" feature.
+	 *
+	 * @param choiceBox
+	 *            The {@link ChoiceBox} that should be customized
+	 *
+	 * @see PrefixSelectionCustomizer
+	 */
+	public static void customize(@NotNull ChoiceBox<?> choiceBox) {
+		choiceBox.addEventHandler(KeyEvent.KEY_PRESSED, handler);
+	}
 
 }

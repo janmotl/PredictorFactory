@@ -2,8 +2,7 @@ package run;
 
 
 import connection.Network;
-import connection.SQL;
-import metaInformation.Column;
+import meta.Column;
 import org.junit.Assert;
 import org.junit.Test;
 import utility.Meta;
@@ -15,7 +14,7 @@ public class LauncherTest {
 
     @Test
     public void test_Azure() {
-        String[] arguments = new String[]{"Azure", "financial_test_setting"};
+        String[] arguments = {"Azure", "financial_test_setting"};
         Launcher.main(arguments);
 
         Setting setting = new Setting("Azure", "financial_test_setting");
@@ -32,7 +31,7 @@ public class LauncherTest {
 
     @Test
     public void test_HSQLDB() {
-        String[] arguments = new String[]{"HSQLDB", "financial_test_setting"};
+        String[] arguments = {"HSQLDB", "financial_test_setting"};
         Launcher.main(arguments);
 
         Setting setting = new Setting("HSQLDB", "financial_test_setting");
@@ -49,7 +48,7 @@ public class LauncherTest {
 
     @Test
     public void test_MonetDB() {
-        String[] arguments = new String[]{"MonetDB", "financial_test_setting"};
+        String[] arguments = {"MonetDB", "financial_test_setting"};
         Launcher.main(arguments);
 
         Setting setting = new Setting("MonetDB", "financial_test_setting");
@@ -66,7 +65,7 @@ public class LauncherTest {
 
     @Test
     public void test_MySQL() {
-        String[] arguments = new String[]{"MariaDB", "financial_test_setting"};
+        String[] arguments = {"MariaDB", "financial_test_setting"};
         Launcher.main(arguments);
 
         Setting setting = new Setting("MariaDB", "financial_test_setting");
@@ -83,7 +82,7 @@ public class LauncherTest {
 
     @Test
     public void test_Oracle() {
-        String[] arguments = new String[]{"Oracle", "financial_xe_test_setting"};
+        String[] arguments = {"Oracle", "financial_xe_test_setting"};
         Launcher.main(arguments);
 
         Setting setting = new Setting("Oracle", "financial_xe_test_setting");
@@ -97,10 +96,10 @@ public class LauncherTest {
         Assert.assertEquals(120, rowCount);
         Assert.assertEquals(11, columnList.size());
     }
-    
+
     @Test
     public void test_PostgreSQL() {
-        String[] arguments = new String[]{"PostgreSQL", "financial_test_setting"};
+        String[] arguments = {"PostgreSQL", "financial_test_setting"};
         Launcher.main(arguments);
 
         Setting setting = new Setting("PostgreSQL", "financial_test_setting");
@@ -131,7 +130,7 @@ public class LauncherTest {
 
     @Test
     public void test_regression_Azure() {
-        String[] arguments = new String[]{"Azure", "financial_test_setting_regression"};
+        String[] arguments = {"Azure", "financial_test_setting_regression"};
         Launcher.main(arguments);
 
         Setting setting = new Setting("Azure", "financial_test_setting_regression");
@@ -148,7 +147,7 @@ public class LauncherTest {
 
     @Test
     public void test_regression_MySQL() {
-        String[] arguments = new String[]{"MariaDB", "financial_test_setting_regression"};
+        String[] arguments = {"MariaDB", "financial_test_setting_regression"};
         Launcher.main(arguments);
 
         Setting setting = new Setting("MariaDB", "financial_test_setting_regression");
@@ -165,7 +164,7 @@ public class LauncherTest {
 
     @Test
     public void test_regression_Oracle() {
-        String[] arguments = new String[]{"Oracle", "financial_xe_test_setting_regression"};
+        String[] arguments = {"Oracle", "financial_xe_test_setting_regression"};
         Launcher.main(arguments);
 
         Setting setting = new Setting("Oracle", "financial_xe_test_setting_regression");
@@ -179,10 +178,10 @@ public class LauncherTest {
         Assert.assertEquals(30, rowCount);
         Assert.assertEquals(11, columnList.size());
     }
-    
+
     @Test
     public void test_regression_PostgreSQL() {
-        String[] arguments = new String[]{"PostgreSQL", "financial_test_setting_regression"};
+        String[] arguments = {"PostgreSQL", "financial_test_setting_regression"};
         Launcher.main(arguments);
 
         Setting setting = new Setting("PostgreSQL", "financial_test_setting_regression");
@@ -207,7 +206,7 @@ public class LauncherTest {
     // Test VOC dataset
     @Test
     public void test_compositeKey_PostgreSQL() {
-        String[] arguments = new String[]{"PostgreSQL", "voc_test_setting"};
+        String[] arguments = {"PostgreSQL", "voc_test_setting"};
         Launcher.main(arguments);
 
         Setting setting = new Setting("PostgreSQL", "voc_test_setting");
@@ -226,7 +225,7 @@ public class LauncherTest {
     // Test Mutagenesis dataset
     @Test
     public void test_noDate_PostgreSQL() {
-        String[] arguments = new String[]{"PostgreSQL", "mutagenesis_test_setting"};
+        String[] arguments = {"PostgreSQL", "mutagenesis_test_setting"};
         Launcher.main(arguments);
 
         Setting setting = new Setting("PostgreSQL", "mutagenesis_test_setting");

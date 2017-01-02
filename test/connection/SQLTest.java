@@ -1,7 +1,7 @@
 package connection;
 
-import metaInformation.ForeignConstraint;
-import metaInformation.MetaOutput;
+import meta.ForeignConstraint;
+import meta.MetaOutput;
 import org.apache.log4j.Level;
 import org.junit.Assert;
 import org.junit.Before;

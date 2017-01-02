@@ -1,9 +1,7 @@
 package controller;
 
 import connection.*;
-import featureExtraction.Pattern;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import extraction.Pattern;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -18,14 +16,17 @@ import javafx.scene.control.cell.CheckBoxTreeCell;
 import javafx.scene.text.Text;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
-import metaInformation.Column;
-import metaInformation.Table;
+import meta.Column;
+import meta.Table;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import run.Launcher;
 import run.Setting;
 import utility.*;
-import utility.TextParser;
 
 import java.awt.*;
+import java.awt.Desktop.Action;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -35,18 +36,18 @@ import java.util.List;
 
 import static utility.FormatSQL.formatSQL;
 import static utility.ParseInteger.parseInteger;
-import static utility.TextToHTML.textToHTML;
 import static utility.SystemQualityControl.getPFVersion;
+import static utility.TextToHTML.textToHTML;
 
 
 public class Events implements Initializable {
 
-    // Global variables
+	// Global variables
     private Setting setting = new Setting("GUI", "GUI");
-    private List<CheckBoxTreeItem<String>> itemListTable = new ArrayList<>();
-    private List<CheckBoxTreeItem<String>> itemListColumn = new ArrayList<>();
-    private List<CheckBoxTreeItem<String>> itemListPattern = new ArrayList<>();
-    private RunService runService = new RunService();
+    @NotNull private List<CheckBoxTreeItem<String>> itemListTable = new ArrayList<>();
+    @NotNull private List<CheckBoxTreeItem<String>> itemListColumn = new ArrayList<>();
+    @NotNull private List<CheckBoxTreeItem<String>> itemListPattern = new ArrayList<>();
+    @NotNull private Events.RunService runService = new Events.RunService();
 
     // Define GUI elements. The values are automatically initialized by FXMLLoader.
     @FXML private Button buttonConnect;
@@ -66,6 +67,7 @@ public class Events implements Initializable {
     @FXML private ComboBox<String> comboBoxTask;
     @FXML private ComboBox<String> comboBoxUnit;
     @FXML private CheckBox checkBoxUseId;
+	@FXML private CheckBox checkBoxUseTwoStages;
     @FXML private Label labelPredictorCountText;
     @FXML private Label labelPredictorCount;
     @FXML private ProgressIndicator progressWhirl;
@@ -86,7 +88,7 @@ public class Events implements Initializable {
     @FXML private void connectAction() {
 
         // Close the connection, if appropriate
-        if (buttonConnect.getText().equals("Disconnect")) {
+        if ("Disconnect".equals(buttonConnect.getText())) {
             Network.closeConnection(setting);
             buttonConnect.setText("Connect");
             textPredictorMax.setPromptText("database bounded");
@@ -94,8 +96,8 @@ public class Events implements Initializable {
         }
 
         // 1) Read current connections from the XML
-        ConnectionPropertyList connectionList = connection.ConnectionPropertyList.unmarshall();
-        
+        ConnectionPropertyList connectionList = ConnectionPropertyList.unmarshall();
+
         // 2) Create a new connection from the GUI
         ConnectionProperty connectionProperty = new ConnectionProperty();
         connectionProperty.name = "GUI";
@@ -105,16 +107,16 @@ public class Events implements Initializable {
         connectionProperty.port = textPort.getText();
         connectionProperty.username = textUsername.getText();
         connectionProperty.password = textPassword.getText();   // WE SHOULD NOT WRITE THE PASSWORD INTO THE XML. PASS IT AS A PARAMETER TO Launcher?
-            
+
         // 3) Put the new connection into the list of connections
         connectionList.setConnectionProperties(connectionProperty);
-        
+
         // 4) Write the list into the XML
-        connection.ConnectionPropertyList.marshall(connectionList);
+        ConnectionPropertyList.marshall(connectionList);
 
         // 5) Create a setting from the XMLs
         setting = new Setting("GUI", "GUI");
-        
+
         // 6) Asynchronously connect to the database and collect metadata (tables and columns)
         getMetaData(setting);
     }
@@ -125,30 +127,30 @@ public class Events implements Initializable {
         SortedMap<String, Table> tableMap;      // From metadata
         SortedMap<String, Column> columnMap;    // From metadata
         Map<String, SortedMap<String, Column>> tableColumnMap = new HashMap<>();    // Cached results
-    
+
         // Store the new value
         setting.inputSchema = comboBoxInputSchema.getValue();
-    
+
         // Target tab
         tableMap = Meta.collectTables(setting, setting.database, setting.inputSchema);
         comboBoxTargetTable.getItems().setAll(tableMap.keySet());
-            
+
         // Select tab
         CheckBoxTreeItem<String> rootItem = new CheckBoxTreeItem<>("Tables and their columns");
         rootItem.setExpanded(true);
         itemListTable.clear();
         itemListColumn.clear();
-    
+
         for (String table : tableMap.keySet()) {
-            final CheckBoxTreeItem<String> itemTable = new CheckBoxTreeItem<>(table);
+            CheckBoxTreeItem<String> itemTable = new CheckBoxTreeItem<>(table);
             itemListTable.add(itemTable);
-        
+
             // Add columns
             List<CheckBoxTreeItem<String>> localItemListColumn = new ArrayList<>();
             columnMap = Meta.collectColumns(setting, setting.database, setting.inputSchema, table);
             tableColumnMap.put(table, columnMap);
             for (String column : columnMap.keySet()) {
-                final CheckBoxTreeItem<String> itemColumn = new CheckBoxTreeItem<>(column);
+                CheckBoxTreeItem<String> itemColumn = new CheckBoxTreeItem<>(column);
                 localItemListColumn.add(itemColumn);
             }
             itemTable.getChildren().setAll(localItemListColumn);
@@ -159,32 +161,32 @@ public class Events implements Initializable {
         treeViewSelect.setRoot(rootItem);
         treeViewSelect.setCellFactory(CheckBoxTreeCell.forTreeView());
 
-        checkTableColumn(tableMap, tableColumnMap);     // Check checkboxes based on XML
+        setTableColumn();     // Check checkboxes based on XML
 
     }
 
     @FXML private void targetTableAction() {
-    
+
         // Store the new value
         setting.targetTable = comboBoxTargetTable.getValue();
-    
+
         // Target tab
         Set<String> columnList = Meta.collectColumns(setting, setting.database, setting.inputSchema, setting.targetTable).keySet();
         comboBoxTargetColumn.getItems().setAll(columnList);
         comboBoxTargetId.getItems().setAll(columnList);
         comboBoxTargetTimestamp.getItems().setAll(columnList);
     }
-        
+
     @FXML private void runAction() {
 
         // Terminate the current execution, if appropriate
-        if (buttonRun.getText().equals("Stop")) {
+        if ("Stop".equals(buttonRun.getText())) {
             runService.cancel();
             return;
         }
 
         // 1) Read current database list
-        DatabasePropertyList databaseList = connection.DatabasePropertyList.unmarshall();
+        DatabasePropertyList databaseList = DatabasePropertyList.unmarshall();
 
         // 2) Create a new database
         DatabaseProperty databaseProperty = new DatabaseProperty();
@@ -205,7 +207,7 @@ public class Events implements Initializable {
 
         // BlackList tables
         List<String> blackListTable = new ArrayList<>();
-    
+
         for (CheckBoxTreeItem<String> treeItem : itemListTable) {
             if (!treeItem.isSelected() && !treeItem.isIndeterminate()) {  // Only if the whole table is disabled
                 blackListTable.add(treeItem.getValue());
@@ -216,10 +218,10 @@ public class Events implements Initializable {
         if (databaseProperty.blackListTable.isEmpty()) {
             databaseProperty.blackListTable = null; // If empty, do not write the attribute into the XML
         }
-    
+
         // BlackList columns
         List<String> blackListColumn = new ArrayList<>();
-    
+
         for (CheckBoxTreeItem<String> treeItem : itemListColumn) {
             CheckBoxTreeItem parent = (CheckBoxTreeItem) treeItem.getParent();
             if (!treeItem.isSelected() && parent.isIndeterminate()) {   // If table is indeterminate and column is disabled
@@ -233,7 +235,7 @@ public class Events implements Initializable {
         }
         // BlackList patterns
         List<String> blackListPattern = new ArrayList<>();
-    
+
         for (CheckBoxTreeItem<String> treeItem : itemListPattern) {
             if (!treeItem.isSelected()) {
                 blackListPattern.add(treeItem.getValue());
@@ -241,13 +243,13 @@ public class Events implements Initializable {
         }
 
         databaseProperty.blackListPattern = StringUtils.join(blackListPattern, ',');
-    
+
 
         // 3) Add (replace) the new connection into the list of connections
         databaseList.setDatabaseProperties(databaseProperty);
 
         // 4) Write it into the XML
-        connection.DatabasePropertyList.marshall(databaseList);
+        DatabasePropertyList.marshall(databaseList);
 
         // 5) Clear the log window
         textAreaConsole.clear();
@@ -281,11 +283,11 @@ public class Events implements Initializable {
     @FXML private void sendEmail() {
         Desktop desktop;
 
-        if (Desktop.isDesktopSupported() && (desktop = Desktop.getDesktop()).isSupported(Desktop.Action.MAIL)) {
+        if (Desktop.isDesktopSupported() && (desktop = Desktop.getDesktop()).isSupported(Action.MAIL)) {
             try {
                 URI uri = new URI("mailto:jan.motl@fit.cvut.cz");
                 desktop.mail(uri);
-            } catch (IOException | URISyntaxException e) {
+            } catch (@NotNull IOException | URISyntaxException e) {
                 e.printStackTrace();
             }
         }
@@ -294,11 +296,11 @@ public class Events implements Initializable {
     @FXML private void openHomepage() {
         Desktop desktop;
 
-        if (Desktop.isDesktopSupported() && (desktop = Desktop.getDesktop()).isSupported(Desktop.Action.BROWSE)) {
+        if (Desktop.isDesktopSupported() && (desktop = Desktop.getDesktop()).isSupported(Action.BROWSE)) {
             try {
                 URI uri = new URI("http://predictorfactory.com/");
                 desktop.browse(uri);
-            } catch (IOException | URISyntaxException e) {
+            } catch (@NotNull IOException | URISyntaxException e) {
                 e.printStackTrace();
             }
         }
@@ -309,27 +311,27 @@ public class Events implements Initializable {
     // By this time, all the FXML fields are already initialized.
     // rb localize the root object. null if the root object was not localized.
     @Override public void initialize(URL fxmlFileLocation, ResourceBundle rb) {
-    
+
         // Setup logging into textArea (before any attempt to log anything)
         TextAreaAppender textAreaAppender = new TextAreaAppender();
         textAreaAppender.setTextArea(textAreaConsole);
-    
+
         // Hide progress indicators as nothing is running so far
         labelPredictorCountText.setVisible(false);
         labelPredictorCount.setVisible(false);
         progressWhirl.setVisible(false);
-    
+
         // Populate comboBoxes
         // VENDOR COMBOBOX SHOULD BE POPULATED BASED ON DRIVER.XML
         comboBoxVendor.getItems().addAll("Microsoft SQL Server", "MySQL", "Oracle", "PostgreSQL", "SAS");
         comboBoxTask.getItems().addAll("classification", "regression");
         comboBoxUnit.getItems().addAll("second", "hour", "day", "month", "year");
-       
+
         // Read past setting. If no past setting is available, leave it unfilled.
         // NOTE: IF SOME ATTRIBUTE IS MISSING, IT WILL FAIL -> just use try-catch
-         ConnectionPropertyList connectionList = connection.ConnectionPropertyList.unmarshall();
+         ConnectionPropertyList connectionList = ConnectionPropertyList.unmarshall();
          ConnectionProperty connectionProperty = connectionList.getConnectionProperties("GUI");
-        
+
          if (connectionProperty != null) {
             comboBoxVendor.setValue(connectionProperty.driver);
             textDatabase.setText(connectionProperty.database);
@@ -338,12 +340,12 @@ public class Events implements Initializable {
             textUsername.setText(connectionProperty.username);
             textPassword.setText(connectionProperty.password);
          }
-        
-         DatabasePropertyList databaseList = connection.DatabasePropertyList.unmarshall();
+
+         DatabasePropertyList databaseList = DatabasePropertyList.unmarshall();
          DatabaseProperty databaseProperty = databaseList.getDatabaseProperties("GUI");
          List<String> blackListPattern  = new ArrayList<>();
          List<String> whiteListPattern  = new ArrayList<>();
-     
+
          // Database properties
          try {comboBoxUnit.setValue(databaseProperty.unit);} catch (NullPointerException ignored) {}
          try {textLag.setText(databaseProperty.lag.toString());} catch (NullPointerException ignored) {}
@@ -352,6 +354,7 @@ public class Events implements Initializable {
          try {comboBoxTask.setValue(databaseProperty.task);} catch (NullPointerException ignored) {}
          try {textPredictorMax.setText(databaseProperty.predictorMax.toString());} catch (NullPointerException ignored) {}
          try {checkBoxUseId.setSelected(databaseProperty.useIdAttributes);} catch (NullPointerException ignored) {}
+	     try {checkBoxUseTwoStages.setSelected(databaseProperty.useTwoStages);} catch (NullPointerException ignored) {}
          try {blackListPattern = TextParser.string2list(databaseProperty.blackListPattern);} catch (NullPointerException ignored) {}
          try {whiteListPattern = TextParser.string2list(databaseProperty.whiteListPattern);} catch (NullPointerException ignored) {}
 
@@ -370,17 +373,17 @@ public class Events implements Initializable {
         // Connection tab
         ValidatorText.addNumericValidation(textPort, Integer.MAX_VALUE);
         buttonConnect.defaultButtonProperty().bind(tabConnect.selectedProperty());
-               
+
         // Pattern tab - populate list of patterns
-        SortedMap<String, Pattern> patternMap = utility.PatternMap.getPatternMap(); // Get patternMap
+        SortedMap<String, Pattern> patternMap = PatternMap.getPatternMap(); // Get patternMap
         CheckBoxTreeItem<String> rootItem = new CheckBoxTreeItem<>("Patterns");
         rootItem.setExpanded(true);
-    
+
         for (Pattern pattern : patternMap.values()) {
-            final CheckBoxTreeItem<String> itemPattern = new CheckBoxTreeItem<>(pattern.name);  // Add checkboxes
+            CheckBoxTreeItem<String> itemPattern = new CheckBoxTreeItem<>(pattern.name);  // Add checkboxes
             itemListPattern.add(itemPattern);
         }
-    
+
         rootItem.getChildren().addAll(itemListPattern);
         treeViewPattern.setRoot(rootItem);
         treeViewPattern.setCellFactory(CheckBoxTreeCell.forTreeView());
@@ -392,30 +395,26 @@ public class Events implements Initializable {
         }
 
         // Pattern tab - description field. The text changes based on the currently selected pattern.
-        treeViewPattern.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<TreeItem<String>>() {
+        treeViewPattern.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, newValue) -> {
 
-            @Override
-            public void changed(ObservableValue<? extends TreeItem<String>> obs, TreeItem<String> old_val, TreeItem<String> new_val) {
+            WebEngine engine = webView.getEngine();
+            engine.setUserStyleSheetLocation("data:,body {font-size: 13px;  font-family: system;  }"); // Set system look-and-feel
 
-                WebEngine engine = webView.getEngine();
-                engine.setUserStyleSheetLocation("data:,body {font-size: 13px;  font-family: system;  }"); // Set system look-and-feel
-
-                if (new_val.getParent() == null) {
-                    engine.loadContent("Select patterns to use.");
-                } else {
-                    String description = patternMap.get(new_val.getValue()).description;
-                    String example = patternMap.get(new_val.getValue()).example;
-                        patternMap.get(new_val.getValue()).initialize(setting);
-                    String sql =  patternMap.get(new_val.getValue()).dialectCode;
-                    description = textToHTML(description);
-                    example = textToHTML(example);
-                    sql = formatSQL(sql);
-                    engine.loadContent("<h3>Description</h3>" + description + "<h3>Example</h3>" + example + "<h3>SQL</h3>" + sql);
-                }
-            
+            if (newValue.getParent() == null) {
+                engine.loadContent("Select patterns to use.");
+            } else {
+                String description = patternMap.get(newValue.getValue()).description;
+                String example = patternMap.get(newValue.getValue()).example;
+                    patternMap.get(newValue.getValue()).initialize(setting);
+                String sql =  patternMap.get(newValue.getValue()).dialectCode;
+                description = textToHTML(description);
+                example = textToHTML(example);
+                sql = formatSQL(sql);
+                engine.loadContent("<h3>Description</h3>" + description + "<h3>Example</h3>" + example + "<h3>SQL</h3>" + sql);
             }
+
         });
-    
+
         // Setting tab
         ValidatorText.addNumericValidation(textLag);
         ValidatorText.addNumericValidation(textLead);
@@ -432,19 +431,16 @@ public class Events implements Initializable {
 
 
     // Set checkboxes in select tab based on the XML
-    // Input (a simplified explanation):
-    //  list of tables
-    //  map of {table, columnList}
-    private void checkTableColumn(SortedMap<String, Table> tableMap, Map<String, SortedMap<String, Column>> tableColumnMap) {
+    private void setTableColumn() {
         // Read from XML
-        DatabasePropertyList databaseList = connection.DatabasePropertyList.unmarshall();
+        DatabasePropertyList databaseList = DatabasePropertyList.unmarshall();
         DatabaseProperty databaseProperty = databaseList.getDatabaseProperties("GUI");
 
         // Parse from XML (the data are stored in SQL-like syntax, not in XML-like syntax)
-        final List<String> whiteListTable = TextParser.string2list(databaseProperty.whiteListTable); // Parsed values
-        final List<String> blackListTable = TextParser.string2list(databaseProperty.blackListTable); // Parsed values
-        final Map<String,List<String>> whiteMapColumn = TextParser.list2map(TextParser.string2list(databaseProperty.whiteListColumn)); // Parsed values
-        final Map<String,List<String>> blackMapColumn = TextParser.list2map(TextParser.string2list(databaseProperty.blackListColumn)); // Parsed values
+        List<String> whiteListTable = TextParser.string2list(databaseProperty.whiteListTable); // Parsed values
+        List<String> blackListTable = TextParser.string2list(databaseProperty.blackListTable); // Parsed values
+        Map<String,List<String>> whiteMapColumn = TextParser.list2map(TextParser.string2list(databaseProperty.whiteListColumn)); // Parsed values
+        Map<String,List<String>> blackMapColumn = TextParser.list2map(TextParser.string2list(databaseProperty.blackListColumn)); // Parsed values
 
 
         // The logic (a hierarchical extension of BlackWhiteList) is following:
@@ -494,13 +490,13 @@ public class Events implements Initializable {
     }
 
     // Get connection and metadata without blocking the GUI
-    private void getMetaData(Setting setting) {
+    private void getMetaData(@NotNull Setting setting) {
 
         // Show progress dialog
         Dialog dialog = ConnectionDialog.progressDialog();
 
         // Start terminable connection attempt
-        ConnectionService task = new ConnectionService();
+        Events.ConnectionService task = new Events.ConnectionService();
         task.start();
 
         // If connection succeeded...
@@ -540,7 +536,7 @@ public class Events implements Initializable {
 
     // Takes a setting, makes a connection, returns the setting
     private class ConnectionService extends Service<Setting> {
-        @Override
+        @NotNull @Override
         protected Task<Setting> createTask() {
             return new Task<Setting>() {
                 @Override
@@ -554,13 +550,13 @@ public class Events implements Initializable {
     // Execute Predictor Factory
     private class RunService extends Service<Void> {
 
-        @Override
+        @Nullable @Override
         protected Task<Void> createTask() {
             return new Task<Void>() {
-                @Override
+                @Nullable @Override
                 protected Void call() throws Exception {
                     String[] arguments = { "GUI", "GUI" };
-                    run.Launcher.main(arguments);
+                    Launcher.main(arguments);
                     //FakeLogger.fakeCalculation();     // For phony runtime experience
                     return null;
                 }
