@@ -6,7 +6,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.SortedMap;
+import java.util.TreeMap;
 
+@SuppressWarnings("unchecked")
 public class BlackWhiteList {
 
 	// Apply black/white lists
@@ -17,14 +19,16 @@ public class BlackWhiteList {
 	// The default behaviour is to return all.
 	@NotNull public static SortedMap filter(@NotNull SortedMap map, @Nullable Collection blackList, @Nullable Collection whiteList) {
 
+		SortedMap result = new TreeMap(map); // Do not modify the original map
+
 		if ((whiteList != null) && !whiteList.isEmpty()) { // If the list is empty, ignore the list
-			map.keySet().retainAll(whiteList);  // If whiteList is used, perform intersect with the available keys
+			result.keySet().retainAll(whiteList);  // If whiteList is used, perform intersect with the available keys
 		}
 		if (blackList != null) {
-			map.keySet().removeAll(blackList); // Remove blackListed keys
+			result.keySet().removeAll(blackList); // Remove blackListed keys
 		}
 
-		return map;
+		return result;
 	}
 
 }

@@ -24,6 +24,10 @@ public class MainApp extends Application {
 
 		System.out.println("All the resources were found: " + ValidatorResource.isResourceAvailable());
 
+		// Setup logging - load the property file. Important for subsequent connection to the database.
+		// SHOULD USE A DIFFERENT CONFIGURATION FILE WITH GUI APPENDER ENABLED
+		Logging.initialization();
+
 		Parent root = FXMLLoader.load(getClass().getResource("/fxml/main.fxml"));
 
 		stage.setTitle("Predictor Factory");
@@ -32,10 +36,5 @@ public class MainApp extends Application {
 		stage.setMinHeight(460);
 		stage.setScene(new Scene(root, 600, 460));
 		stage.show();
-
-		// Setup logging - load the property file. Important for subsequent connection to the database.
-		// SHOULD USE A DIFFERENT CONFIGURATION FILE WITH GUI APPENDER ENABLED
-		Logging.initialization();
-
 	}
 }
