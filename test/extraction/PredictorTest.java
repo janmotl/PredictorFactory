@@ -14,8 +14,8 @@ import java.util.*;
 
 public class PredictorTest {
 
-	@NotNull private Setting setting = new Setting();
-	@NotNull private Pattern pattern = new Pattern();
+	private Setting setting = new Setting();
+	private Pattern pattern = new Pattern();
 	private Predictor predictor;
 		
 	@Before

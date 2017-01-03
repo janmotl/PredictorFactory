@@ -5,7 +5,6 @@ import meta.ForeignConstraint;
 import meta.ForeignConstraintList;
 import meta.Table;
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import run.Setting;
 
 import java.sql.Connection;
@@ -22,7 +21,7 @@ public class Meta {
 	// 1) Get list of all schemas.
 	// POSSIBLY I COULD ASSUME THAT: database = setting.database
 	// HENCE ELIMINATE ONE OF THE PARAMETERS (and we are already passing setting...)
-	@NotNull public static SortedSet<String> collectSchemas(@NotNull Setting setting, String database) {
+	public static SortedSet<String> collectSchemas(Setting setting, String database) {
 
 		// Initialization
 		SortedSet<String> schemaSet = new TreeSet<>(new NaturalOrderComparator());
@@ -80,7 +79,7 @@ public class Meta {
 	}
 
 	// 2) Get all tables and views in the schema.
-	@NotNull public static SortedMap<String, Table> collectTables(@NotNull Setting setting, String database, String schema) {
+	public static SortedMap<String, Table> collectTables(Setting setting, String database, String schema) {
 		// Deal with different combinations of catalog/schema support
 		// MySQL type
 		if (setting.supportsCatalogs && !setting.supportsSchemas) {
@@ -123,7 +122,7 @@ public class Meta {
 	}
 
 	// 3) Get all columns in the table. Return <ColumnName, DataType>.
-	@NotNull public static SortedMap<String, Column> collectColumns(@NotNull Setting setting, String database, String schema, String table) {
+	public static SortedMap<String, Column> collectColumns(Setting setting, String database, String schema, String table) {
 		// Deal with different combinations of catalog/schema support
 		// MySQL type
 		if (setting.supportsCatalogs && !setting.supportsSchemas) {
@@ -176,7 +175,7 @@ public class Meta {
 	}
 
 	// 4) Get all relationships related to the table.
-	@NotNull public static List<ForeignConstraint> collectRelationships(@NotNull Setting setting, String schema, String table) {
+	public static List<ForeignConstraint> collectRelationships(Setting setting, String schema, String table) {
 		List<ForeignConstraint> relationshipList = downloadRelationships(setting, schema, table);
 		List<ForeignConstraint> result = new ArrayList<>();
 
@@ -208,7 +207,7 @@ public class Meta {
 
 	// 5) Get the single primary key (It would be the best if only artificial keys were returned. At least
 	// we are excluding the composite keys).
-	public static String getPrimaryKey(@NotNull Setting setting, String database, String schema, String table) {
+	public static String getPrimaryKey(Setting setting, String database, String schema, String table) {
 		// Deal with different combinations of catalog/schema support
 		// MySQL type
 		if (setting.supportsCatalogs && !setting.supportsSchemas) {
@@ -254,7 +253,7 @@ public class Meta {
 
 	// Subroutine: Get all relationships for the table.
 	// Composite relationships are represented by multiple records with the same "name".
-	@NotNull private static List<ForeignConstraint> downloadRelationships(@NotNull Setting setting, String schema, String table) {
+	private static List<ForeignConstraint> downloadRelationships(Setting setting, String schema, String table) {
 		String database;
 
 		// Deal with catalog/schema less databases
@@ -320,7 +319,7 @@ public class Meta {
 	// Subroutine: SAS JDBC driver doesn't return keys. Use dictionary tables instead.
 	// See: www2.sas.com/proceedings/sugi30/070-30.pdf
 	// HAVE TO CHANGE THE QUERY TO INCLUDE FK_NAME AND SEQUENCE.
-	@NotNull private static List<ForeignConstraint> downloadRelationshipsSAS(@NotNull Setting setting, String schema, String table) {
+	private static List<ForeignConstraint> downloadRelationshipsSAS(Setting setting, String schema, String table) {
 		// Initialization
 		List<ForeignConstraint> relationshipList = new ArrayList<>();
 		String sql = "select t1.memname as FKTABLE_NAME " +

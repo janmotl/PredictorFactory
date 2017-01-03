@@ -13,7 +13,7 @@ import java.util.SortedMap;
 
 public class PatternTest {
 
-	@NotNull private Setting setting = new Setting();
+	private Setting setting = new Setting();
 
 	@Test
 	public void corr() {

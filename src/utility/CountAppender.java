@@ -18,7 +18,7 @@ import java.util.List;
 // Alternatives for Log4j: JAMonAppender
 public class CountAppender extends WriterAppender {
 
-	@NotNull private static List<LoggingEvent> records = new ArrayList<>();
+	private static List<LoggingEvent> records = new ArrayList<>();
 
 	@Override
 	public void append(LoggingEvent loggingEvent) {
@@ -26,7 +26,7 @@ public class CountAppender extends WriterAppender {
 	}
 
 	// Return the count of messages for the given level
-	public static int getCount(@NotNull Level level) {
+	public static int getCount(Level level) {
 		int howMany = 0;
 		for (LoggingEvent record : records) {
 			if (record.getLevel().toInt() == level.toInt()) {

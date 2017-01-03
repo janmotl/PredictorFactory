@@ -5,8 +5,6 @@
 package extraction;
 
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import run.Setting;
 
 import javax.xml.bind.JAXBContext;
@@ -25,14 +23,14 @@ public class Journal {
 	private static final Logger logger = Logger.getLogger(Journal.class.getName());
 
 	private List<Predictor> journal = new ArrayList<>();                  // A complete list of calculated features
-	private int expectedPredictorCount;                 // Useful for tracking the progress
-	private int featureLimitCount;                      // Defines the N in journalTopN
+	private int expectedPredictorCount;                                   // Useful for tracking the progress
+	private int featureLimitCount;                                        // Defines the N in journalTopN
 	private Map<Integer, Predictor> groupIdDuplicate = new HashMap<>();   // Holds the best predictor per each groupId
 	private Map<String, Predictor> valueDuplicate = new HashMap<>();      // Holds the fastest predictor per duplicate group
 
 
 	// Constructor
-	public Journal(@NotNull Setting setting, int expectedSize) {
+	public Journal(Setting setting, int expectedSize) {
 
 		journal = new ArrayList<>(expectedSize); // Not a priority queue because I want to access elements at (N+1) position
 		expectedPredictorCount = expectedSize;
@@ -54,12 +52,12 @@ public class Journal {
 	}
 
 	// Get next predictor's id
-	public int getNextId(@NotNull Setting setting) {
+	public int getNextId(Setting setting) {
 		return setting.predictorStart + journal.size() + 1;
 	}
 
 	// Add predictor
-	public void addPredictor(@NotNull Setting setting, @NotNull Predictor predictor) {
+	public void addPredictor(Setting setting, Predictor predictor) {
 
 		// Update the predictor's "delivered" timestamp
 		predictor.setTimestampDelivered(LocalDateTime.now());
@@ -86,7 +84,7 @@ public class Journal {
 	}
 
 	// Return the best predictors
-	@NotNull public List<Predictor> getTopPredictors() {
+	public List<Predictor> getTopPredictors() {
 		int len = 0;
 
 		for (Predictor predictor : journal) {
@@ -107,7 +105,7 @@ public class Journal {
 
 
 	////// Subroutines
-	private void groupIdDuplicate(@NotNull Setting setting, @NotNull Predictor challenger) {
+	private void groupIdDuplicate(Setting setting, Predictor challenger) {
 
 		// Consider only good predictors
 		if (challenger.getCandidateState() != 1) return;
@@ -135,7 +133,7 @@ public class Journal {
 	}
 
 	// Compare based on the identity of {relevance, rowCount, nullCount}.
-	private void valueDuplicate(@NotNull Setting setting, @NotNull Predictor challenger) {
+	private void valueDuplicate(Setting setting, Predictor challenger) {
 
 		// Consider only good challengers
 		if (challenger.getCandidateState() != 1) return;
@@ -164,7 +162,7 @@ public class Journal {
 		challenger.setDuplicateName(current.getName());
 	}
 
-	private void dropToDrop(@NotNull Setting setting) {
+	private void dropToDrop(Setting setting) {
 
 		// Generate an iterator. Start just after the last element.
 		ListIterator li = journal.listIterator(journal.size());
@@ -192,7 +190,7 @@ public class Journal {
 	////// JAXB
 
 	// Load property list from XML
-	@Nullable public static Journal unmarshall() {
+	public static Journal unmarshall() {
 		Journal list = null;
 
 		try {

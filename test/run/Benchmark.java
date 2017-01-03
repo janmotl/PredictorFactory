@@ -25,7 +25,7 @@ Loop over datasets and:
 */ 
 public class Benchmark {
 
-	@NotNull static String note = "Without id attributes. All feature functions. Bagging.";
+	static String note = "Without id attributes. All feature functions. Bagging.";
 
 	public static void main(String[] args) {
 		// Initialization
@@ -145,7 +145,7 @@ public class Benchmark {
 
 	// Subroutines: Perform modeling on mainSample, which resides in a database.
 	// The performance on the dataset is appended into the log in the database.
-	private static void regression(@NotNull Setting setting) {
+	private static void regression(Setting setting) {
 		double correlation = -1;
 		double correlation_std = -1;
 		double rmse = -1;
@@ -162,7 +162,7 @@ public class Benchmark {
 			relative_error_std = computed.get(PerformanceVector.class).getCriterion("relative_error").getStandardDeviation();
 			rmse = computed.get(PerformanceVector.class).getCriterion("root_mean_squared_error").getAverage();
 			rmse_std = computed.get(PerformanceVector.class).getCriterion("root_mean_squared_error").getStandardDeviation();
-		} catch (@NotNull IOException | XMLException | OperatorException ex) {
+		} catch (IOException | XMLException | OperatorException ex) {
 			ex.printStackTrace();
 		}
 
@@ -185,7 +185,7 @@ public class Benchmark {
 		}
 	}
 
-	private static void binaryClassification(@NotNull Setting setting) {
+	private static void binaryClassification(Setting setting) {
 		Double accuracy = -1.0;
 		double accuracy_std = -1;
 		double auc = -1;
@@ -222,7 +222,7 @@ public class Benchmark {
 			precision_std = computed.get(PerformanceVector.class).getCriterion("precision").getStandardDeviation();
 			recall = computed.get(PerformanceVector.class).getCriterion("recall").getAverage();
 			recall_std = computed.get(PerformanceVector.class).getCriterion("recall").getStandardDeviation();
-		} catch (@NotNull IOException | XMLException | OperatorException ex) {
+		} catch (IOException | XMLException | OperatorException ex) {
 			ex.printStackTrace();
 		}
 
@@ -255,7 +255,7 @@ public class Benchmark {
 		}
 	}
 
-	private static void classification(@NotNull Setting setting) {
+	private static void classification(Setting setting) {
 		double accuracy = -1;
 		double accuracy_std = -1;
 		
@@ -264,7 +264,7 @@ public class Benchmark {
 			IOContainer computed = process.run();
 			accuracy = computed.get(PerformanceVector.class).getCriterion("accuracy").getAverage();
 			accuracy_std = computed.get(PerformanceVector.class).getCriterion("accuracy").getStandardDeviation();
-		} catch (@NotNull IOException | XMLException | OperatorException ex) {
+		} catch (IOException | XMLException | OperatorException ex) {
 			ex.printStackTrace();
 		}
 

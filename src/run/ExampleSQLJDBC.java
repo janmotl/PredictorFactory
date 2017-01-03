@@ -48,7 +48,7 @@ public class ExampleSQLJDBC {
 			// the following statement is used to log any messages
 			logger.info("My first log");
 
-		} catch (@NotNull SecurityException | IOException e) {
+		} catch (SecurityException | IOException e) {
 			e.printStackTrace();
 		}
 

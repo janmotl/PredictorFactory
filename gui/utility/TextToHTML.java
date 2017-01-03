@@ -14,7 +14,7 @@ public class TextToHTML {
 	// Removes heading and tailing whitespaces.
 	// If null is passed, an empty String is returned.
 	// We are lazy and use Markdown processor to do it.
-	@Nullable public static String textToHTML(@Nullable String text) {
+	public static String textToHTML(String text) {
 
 		if (text == null) return "";
 

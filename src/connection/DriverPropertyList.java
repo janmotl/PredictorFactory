@@ -21,10 +21,10 @@ public class DriverPropertyList {
 	private static final Logger logger = Logger.getLogger(DriverPropertyList.class.getName());
 
 	// Private Fields
-	@NotNull private List<DriverProperty> driver = new ArrayList<>();
+	private List<DriverProperty> driver = new ArrayList<>();
 
 	// Get property by name
-	@NotNull public DriverProperty getDriverProperties(String name) {
+	public DriverProperty getDriverProperties(String name) {
 		for (DriverProperty property : driver) {
 			if (property.name.equals(name)) {
 				return property;
@@ -36,7 +36,7 @@ public class DriverPropertyList {
 	}
 
 	// Load property list from XML
-	@NotNull public static DriverPropertyList unmarshall() {
+	public static DriverPropertyList unmarshall() {
 		DriverPropertyList list = new DriverPropertyList();
 
 		try {

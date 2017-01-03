@@ -24,7 +24,7 @@ public final class XML {
 			Schema schema = factory.newSchema(XML.class.getResource(xsdPath));
 			Validator validator = schema.newValidator();
 			validator.validate(new StreamSource(xmlPath));
-		} catch (@NotNull IOException | SAXException e) {
+		} catch (IOException | SAXException e) {
 			logger.warn("Exception: " + e.getMessage());
 			return false;
 		}

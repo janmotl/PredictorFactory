@@ -33,10 +33,10 @@ public class DatabasePropertyList {
 	private static final Logger logger = Logger.getLogger(DatabasePropertyList.class.getName());
 
 	// Private Fields
-	@NotNull private List<DatabaseProperty> database = new ArrayList<>();
+	private List<DatabaseProperty> database = new ArrayList<>();
 
 	// Get property by name
-	@NotNull public DatabaseProperty getDatabaseProperties(String name) {
+	public DatabaseProperty getDatabaseProperties(String name) {
 		for (DatabaseProperty property : database) {
 			if (property.name.equals(name)) {
 				return property;
@@ -48,7 +48,7 @@ public class DatabasePropertyList {
 	}
 
 	// Set property by name
-	public void setDatabaseProperties(@NotNull DatabaseProperty property) {
+	public void setDatabaseProperties(DatabaseProperty property) {
 
 		// Remove the old setting
 		database.removeIf(p -> p.name.equals(property.name));
@@ -58,7 +58,7 @@ public class DatabasePropertyList {
 	}
 
 	// Load property list from XML
-	@NotNull public static DatabasePropertyList unmarshall() {
+	public static DatabasePropertyList unmarshall() {
 		DatabasePropertyList list = new DatabasePropertyList();
 
 		try {
@@ -76,7 +76,7 @@ public class DatabasePropertyList {
 			XMLReader xmlReader = parser.newSAXParser().getXMLReader();
 			SAXSource source = new SAXSource(xmlReader, new InputSource(new FileInputStream("config/database.xml")));
 			list = (DatabasePropertyList) unmarshaller.unmarshal(source);
-		} catch (@NotNull JAXBException | SAXException | FileNotFoundException | ParserConfigurationException e) {
+		} catch (JAXBException | SAXException | FileNotFoundException | ParserConfigurationException e) {
 			logger.warn("Attempt to parse 'config/database.xml' failed. Does the file exist?");
 		}
 

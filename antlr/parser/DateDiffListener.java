@@ -17,7 +17,7 @@ public class DateDiffListener extends SQLBaseListener {
     }
 
     @Override
-    public void enterDatediff(@NotNull SQLParser.DatediffContext ctx) {
+    public void enterDatediff(SQLParser.DatediffContext ctx) {
        
         // Assembly a new dateDiff based on the data
         DateDiffNode newNode = new DateDiffNode(ctx, pattern);

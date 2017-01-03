@@ -15,7 +15,7 @@ public class CopyOfLauncher {
 	// Logging
 	private static final Logger logger = Logger.getLogger(CopyOfLauncher.class.getName());
 
-	public static void main(@NotNull String[] arg) {
+	public static void main(String[] arg) {
 
 		logger.info("#### Predictor Factory was initialized ####");
 

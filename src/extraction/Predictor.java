@@ -4,8 +4,6 @@ package extraction;
 import extraction.Pattern.OptimizeParameters;
 import meta.MetaOutput.OutputTable;
 import org.apache.commons.lang3.text.WordUtils;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import run.Setting;
 
 import javax.xml.bind.annotation.XmlType;
@@ -24,10 +22,10 @@ public class Predictor implements Comparable<Predictor> {
 	private int nullCount;                          // Count of null rows in the predictor's table
 	private String name;                            // Predictor's name abbreviated to comply with vendor's limits
 	private String longName;                        // Predictor's name in it's whole glory
-	@NotNull private final LocalDateTime timestampDesigned;  // When the predictor was defined
+	private final LocalDateTime timestampDesigned;  // When the predictor was defined
 	private LocalDateTime timestampBuilt;           // When the predictor was translated to SQL
 	private LocalDateTime timestampDelivered;       // When the predictor was calculated by the database
-	@NotNull private SortedMap<String, String> parameterMap = new TreeMap<>();   // Map of values used in SQL generation
+	private SortedMap<String, String> parameterMap = new TreeMap<>();   // Map of values used in SQL generation
 	private boolean isInferiorDuplicate = false;    // Decided based on the predictor's values
 	private String duplicateName;                   // The name of the duplicate predictor
 	private int candidateState = 1;                 // The states are: {1=candidate, 0=dropped, -1=toDrop}
@@ -41,16 +39,16 @@ public class Predictor implements Comparable<Predictor> {
 
 	// Composition
 	private OutputTable table;                      // The table with all the columns
-	@NotNull private final Pattern pattern;                  // The used pattern
+	private final Pattern pattern;                  // The used pattern
 
 	// Relevance of the predictor for classification
 	// SHOULD BE AN OBJECT AND CONTAIN: Target, MeasureType, Value
 	// FOR INSPIRATION HOW TO DEAL WITH A MIXTURE OF MEASURES WHERE WE MAXIMIZE AND MINIMIZE A VALUE SEE RAPIDMINER
-	@NotNull private SortedMap<String, Double> relevance = new TreeMap<>();
-	@NotNull private SortedMap<String, Double> conceptDrift = new TreeMap<>();
+	private SortedMap<String, Double> relevance = new TreeMap<>();
+	private SortedMap<String, Double> conceptDrift = new TreeMap<>();
 
 	// Constructor
-	Predictor(@NotNull Pattern p) {
+	Predictor(Pattern p) {
 		if (p == null) {
 			throw new NullPointerException("Pattern is null");
 		}
@@ -92,7 +90,7 @@ public class Predictor implements Comparable<Predictor> {
 	// and we do not need (or want) to change anything in these objects.
 	// Note also that com.rits.cloning.Cloner was failing on cloning Table.Column.uniqueValueSet with StackOverflow
 	// error.
-	protected Predictor(@NotNull Predictor other) {
+	protected Predictor(Predictor other) {
 		groupId = other.groupId;                           // Required copy of the int
 		sql = other.sql;                                   // Required copy of the String
 		table = other.table;                               // Just a copy of the pointer is OK
@@ -128,7 +126,7 @@ public class Predictor implements Comparable<Predictor> {
 	// The expected result is something like: Path_Table_Columns_Pattern_Parameters...
 	// Consider switching to StringBuffer
 	// The time consuming code should be performed just once and stored
-	@NotNull public String getLongNameOnce() {
+	public String getLongNameOnce() {
 		// Path
 		String name = "";
 		for (int i = 1; i < getPropagationPath().size(); i++) {  // Ignore the first table, base table, as it is fixed.
@@ -164,7 +162,7 @@ public class Predictor implements Comparable<Predictor> {
 	}
 
 	// SHOULD INTRODUCE A SHORTER VARIANT IF identifierLengthMax is small: column_pattern_parameter.
-	@NotNull public String getNameOnce(@NotNull Setting setting) {
+	public String getNameOnce(Setting setting) {
 		int identifierLengthMax = setting.identifierLengthMax;
 		// 3 characters are reserved for underscores, 6 characters are for id. Divide into 3 parts (table, column, parameter)
 		int length = (identifierLengthMax - 9)/3;
@@ -208,9 +206,8 @@ public class Predictor implements Comparable<Predictor> {
 
 	// Predictors are sorted by their id in collections like SortedSet
 	@Override
-	public int compareTo(@NotNull Predictor anotherPredictor) {
-		int anotherPredictorId = anotherPredictor.getId();
-		return id - anotherPredictorId;
+	public int compareTo(Predictor anotherPredictor) {
+		return id - anotherPredictor.getId();
 	}
 
 	// Sort first by candidateState in descending order.
@@ -222,7 +219,7 @@ public class Predictor implements Comparable<Predictor> {
 	// NOTE: HAVE TO TEST ON NULLS AND EMPTY RELEVANCE MAPS
 	public static final Comparator<Predictor> RelevanceComparator = new Comparator<Predictor>() {
 		@Override
-		public int compare(@NotNull Predictor o1, @NotNull Predictor o2) {
+		public int compare(Predictor o1, Predictor o2) {
 
 			// Candidate states (predictors that are not OK or are duplicate have candidateState<1)
 			if (o1.getCandidateState() > o2.getCandidateState()) {
@@ -254,7 +251,7 @@ public class Predictor implements Comparable<Predictor> {
 
 
 	/////////// To string ///////////
-	@NotNull @Override
+	@Override
 	public String toString() {
 		return getLongNameOnce() + " " + Collections.max(relevance.values()) + " " + candidateState;
 	}
@@ -322,11 +319,11 @@ public class Predictor implements Comparable<Predictor> {
 		this.timestampDelivered = timestampDelivered;
 	}
 
-	@NotNull public LocalDateTime getTimestampDesigned() {
+	public LocalDateTime getTimestampDesigned() {
 		return timestampDesigned;
 	}
 
-	@NotNull public SortedMap<String, String> getParameterMap() {
+	public SortedMap<String, String> getParameterMap() {
 		return parameterMap;
 	}
 
@@ -350,7 +347,7 @@ public class Predictor implements Comparable<Predictor> {
 		return pattern.dialectParameter;
 	}
 
-	@NotNull public List<OptimizeParameters> getPatternOptimizeParameter() {
+	public List<OptimizeParameters> getPatternOptimizeParameter() {
 		return pattern.optimizeParameter;
 	}
 
@@ -412,7 +409,7 @@ public class Predictor implements Comparable<Predictor> {
 		this.nullCount = nullCount;
 	}
 
-	@NotNull public SortedMap<String, Double> getRelevanceMap() {
+	public SortedMap<String, Double> getRelevanceMap() {
 		return relevance;
 	}
 
@@ -458,7 +455,7 @@ public class Predictor implements Comparable<Predictor> {
 		return table.originalName;
 	}
 
-	@Nullable public String getPropagationDate() {
+	public String getPropagationDate() {
 		return table.temporalConstraint;
 	}
 
@@ -504,5 +501,9 @@ public class Predictor implements Comparable<Predictor> {
 
 	public void setRawDataType(String rawDataType) {
 		this.rawDataType = rawDataType;
+	}
+
+	public Pattern getPattern() {
+		return pattern;
 	}
 }

@@ -4,7 +4,6 @@ import javafx.application.Platform;
 import javafx.scene.control.TextArea;
 import org.apache.log4j.WriterAppender;
 import org.apache.log4j.spi.LoggingEvent;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedList;
@@ -16,10 +15,10 @@ import java.util.List;
  */
 public class TextAreaAppender extends WriterAppender {
 
-	@Nullable private static TextArea textArea;            // The text area
+	private static TextArea textArea;            // The text area
 	private static final int messageCountLimit = 100;   // Maximum lines allowed in the text area. Must be bigger than 1.
-	@NotNull private static String text = "...The log window is limited to the last " + messageCountLimit + " messages. The whole log is in the 'log' directory.\n";
-	@NotNull private static List<Integer> messageLengthList = new LinkedList<>(); // Lengths of messages within the text area
+	private static String text = "...The log window is limited to the last " + messageCountLimit + " messages. The whole log is in the 'log' directory.\n";
+	private static List<Integer> messageLengthList = new LinkedList<>(); // Lengths of messages within the text area
 
 	/**
 	 * Set the target TextArea for the logging information to appear.

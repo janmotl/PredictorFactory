@@ -13,7 +13,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class NetworkTest {
-	@NotNull private Setting setting = new Setting("PostgreSQL", "financial");
+	private Setting setting = new Setting("PostgreSQL", "financial");
 	
 	@Before
 	public void connectToDatabase(){

@@ -12,7 +12,7 @@ public class PatternMap {
 	// Return list of all patterns in the directory.
 	// Note that returned patterns do not have vendor specific code - you still have to call agnostic2dialectCode.
 	// This is because the conversion requires filled Setting object, which may not be always available.
-	@NotNull public static SortedMap<String, Pattern> getPatternMap() {
+	public static SortedMap<String, Pattern> getPatternMap() {
 
 		// Initialize the output
 		SortedMap<String, Pattern> outputMap = new TreeMap<>();

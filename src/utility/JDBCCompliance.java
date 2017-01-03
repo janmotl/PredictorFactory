@@ -10,7 +10,7 @@ import java.sql.SQLException;
 public class JDBCCompliance {
 
 	// Try to estimate the driver's compliance
-	@NotNull public static String getDriverVersion(@NotNull DatabaseMetaData metaData) {
+	public static String getDriverVersion(DatabaseMetaData metaData) {
 
 		// Test presence of a JDBC 2.1 feature
 		try {

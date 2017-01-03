@@ -21,7 +21,7 @@ public class MetaInput {
 
 	// Return map of tables in the input schema
 	// IDS ARE WRONGFULLY IGNORED FROM THE BLACK/WHITE LISTS
-	public static SortedMap<String, Table> getMetaInput(@NotNull Setting setting) {
+	public static SortedMap<String, Table> getMetaInput(Setting setting) {
 
 		// Initialization
 		SortedMap<String, Table> tableMap;                                          // Map of {tableName, tableData}
@@ -186,7 +186,7 @@ public class MetaInput {
 
 
 	// 2) Get list of all supported data types from the database
-	@NotNull private static List<List<String>> getDataTypes(@NotNull Setting setting) {
+	private static List<List<String>> getDataTypes(Setting setting) {
 
 		// Initialization
 		List<List<String>> dataTypeList = new ArrayList<>();

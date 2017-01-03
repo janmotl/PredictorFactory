@@ -20,7 +20,7 @@ public class FromListener extends SQLBaseListener {
     }
 
     @Override
-    public void enterFrom(@NotNull SQLParser.FromContext ctx)  {
+    public void enterFrom(SQLParser.FromContext ctx)  {
 
         // Do we have to transcribe the SQL?
         if (supportsJoinUsing) return;
@@ -57,7 +57,7 @@ public class FromListener extends SQLBaseListener {
     // Note, that we do not deduplicate columns from the returned relation as we should.
     // If we name all columns in the query that we need, we are ok. But we are using stars, we are doomed.
     // Also, if we are grouping based on the join key, we have to, likely, group by the attributes in both relations.
-    private static void transformUsing(@NotNull SQLParser.UsingContext ctx, String name1, String name2) {
+    private static void transformUsing(SQLParser.UsingContext ctx, String name1, String name2) {
 
         // Back up old contexts
         Token using = (Token) ctx.getToken(SQLParser.USING, 0).getPayload();
@@ -90,7 +90,7 @@ public class FromListener extends SQLBaseListener {
     }
 
     // Converts "id1" to "id1=id1" or "," to " AND ". Ignore whitespaces.
-    private static String getSingleText(@NotNull CommonToken token, String name1, String name2) {
+    private static String getSingleText(CommonToken token, String name1, String name2) {
         String input = token.getText();
 
         if (StringUtils.containsWhitespace(input)) return input;
@@ -98,7 +98,7 @@ public class FromListener extends SQLBaseListener {
         return name1 + "." + input + "=" + name2 + "." + input;
     }
 
-    private static String transformColumns(@NotNull CommonToken token, String name1, String name2) {
+    private static String transformColumns(CommonToken token, String name1, String name2) {
         String input = token.getText();
         String text = "";
 

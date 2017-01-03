@@ -17,7 +17,7 @@ public class BlackWhiteList {
 	// because parameters in SAS are read from left to right and only once all the parameters are read, the result is
 	// applied). Hence, if an item is in both, blacklist and whitelist, blacklist has the preference.
 	// The default behaviour is to return all.
-	@NotNull public static SortedMap filter(@NotNull SortedMap map, @Nullable Collection blackList, @Nullable Collection whiteList) {
+	public static SortedMap filter(SortedMap map, Collection blackList, Collection whiteList) {
 
 		SortedMap result = new TreeMap(map); // Do not modify the original map
 

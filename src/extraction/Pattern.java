@@ -1,15 +1,15 @@
 package extraction;
 
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import parser.ANTLR;
 import run.Setting;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import java.io.File;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -33,12 +33,12 @@ public class Pattern {
 	public String cardinality;
 	public boolean requiresBaseDate;
 	public LocalDate date;
-	@NotNull private List<PatternCode> code = new ArrayList<>();
+	private List<PatternCode> code = new ArrayList<>();
 	@XmlTransient public String dialectCode;    // For example std -> stddev_samp
-	@NotNull private List<PatternParameter> parameter = new ArrayList<>();
+	private List<PatternParameter> parameter = new ArrayList<>();
 	@XmlTransient public SortedMap<String, String> dialectParameter = new TreeMap<>();
-	@NotNull private List<PatternOptimize> optimize = new ArrayList<>();
-	@NotNull @XmlTransient public List<OptimizeParameters> optimizeParameter = new ArrayList<>();
+	private List<PatternOptimize> optimize = new ArrayList<>();
+	@XmlTransient public List<OptimizeParameters> optimizeParameter = new ArrayList<>();
 
 	public class OptimizeParameters {
 		String key;
@@ -50,25 +50,25 @@ public class Pattern {
 
 
 	// SHOULD BE MOVED INTO A CONSTRUCTOR OF PREDICTOR (but note we need no-parameter constructor for JAXB)
-	public void initialize(@NotNull Setting setting) {
+	public void initialize(Setting setting) {
 		agnostic2dialectCode(setting);
 		setRequiresBaseDate();
 	}
 
 
 	// Load property list from XML
-	@Nullable public static Pattern unmarshall(@NotNull String path) {
-		Pattern list = null;
+	public static Pattern unmarshall(String path) {
+		Pattern pattern = new Pattern();
 
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(Pattern.class);
 			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-			list = (Pattern) jaxbUnmarshaller.unmarshal(new File(path));
+			pattern = (Pattern) jaxbUnmarshaller.unmarshal(new File(path));
 		} catch (JAXBException ignored) {
 			logger.warn("Pattern " + path + " was not correctly unmarshalled.");
 		}
 
-		return list;
+		return pattern;
 	}
 
 
@@ -76,7 +76,7 @@ public class Pattern {
 	// Convert the database agnostic SQL into vendor's specific SQL.
 	// This conversion is performed just once to safe CPU power.
 	// Do not enforce case sensitivity when we can't force the script designers to follow it (parameter "i").
-	private void agnostic2dialectCode(@NotNull Setting setting) {
+	private void agnostic2dialectCode(Setting setting) {
 		String rawCode = code.get(0).code;  // By default pick the first code
 
 		// Pick the correct code
@@ -110,7 +110,7 @@ public class Pattern {
 	}
 
 	// Subroutine - replace constants with the actual values.
-	private static double variable2value(@NotNull Setting setting, @NotNull String input) {
+	private static double variable2value(Setting setting, String input) {
 
 		if ("@lagMax".equals(input)) return setting.lag;
 		if ("@leadMin".equals(input)) return setting.lead;
@@ -121,7 +121,7 @@ public class Pattern {
 	// Subroutine - get vendor's dialect.
 	// For example std -> stddev_samp.
 	// Protected because of testing
-	protected static String getDialectString(@NotNull Setting setting, @NotNull String agnosticCode) {
+	protected static String getDialectString(Setting setting, String agnosticCode) {
 		// Stddev_samp
 		String dialectCode = agnosticCode.replaceAll("(?i)stdDev_samp", setting.stdDevCommand);
 
@@ -144,7 +144,7 @@ public class Pattern {
 	}
 
 	// Subroutine for getDialectString
-	@NotNull private static String nullIf(@NotNull String dialectCode) {
+	private static String nullIf(String dialectCode) {
 		java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(?is)(.*)(nullif\\()(.*?)(,+)(.*?)(\\))(.*)");
 
 		do {

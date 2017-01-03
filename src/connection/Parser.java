@@ -11,7 +11,7 @@ public class Parser {
 
 	// Transform SELECT...FROM... into SELECT...INTO...FROM...
 	// This transformation is convenient only for MS SQL SERVER/ACCESS
-	@NotNull public static String addIntoClause(@NotNull String sql) {
+	public static String addIntoClause(String sql) {
 		// Initialization
 		Pattern pattern = Pattern.compile("(?i)[^@\\S*]from"); // case insensitive, not with @ at the beginning
 		Matcher matcher = pattern.matcher(sql);
@@ -76,7 +76,7 @@ public class Parser {
 	}
 
 	// Limit the count of returned rows
-	public static String limitResultSet(@NotNull Setting setting, String sql, int rowCount) {
+	public static String limitResultSet(Setting setting, String sql, int rowCount) {
 
 		// Set top (MSSQL)
 		if ("top".equals(setting.limitSyntax)) {
@@ -121,7 +121,7 @@ public class Parser {
 		return sql;
 	}
 
-	public static String expandBase(@NotNull Setting setting, String sql) {
+	public static String expandBase(Setting setting, String sql) {
 		if (setting.targetDate == null) {
 			sql = sql.replaceAll("(\\w+\\.|)(@base\\b)", "$1@baseId, $1@baseTarget");
 		} else {
@@ -131,7 +131,7 @@ public class Parser {
 		return sql;
 	}
 
-	public static String expandBasePartitionBy(@NotNull Setting setting, String sql) {
+	public static String expandBasePartitionBy(Setting setting, String sql) {
 		if (setting.targetDate == null) {
 			sql = sql.replaceAll("(\\w+\\.|)(@basePartitionBy\\b)", "$1@baseId");
 		} else {
@@ -155,7 +155,7 @@ public class Parser {
 	// ORACLE: Oracle supports only WHERE EXISTS, because Oracle does not known a concept of a boolean.
 	//        Reference: http://stackoverflow.com/questions/3726758/is-there-a-boolean-type-in-oracle-databases
 	// PostgreSQL and MariaDB are ok.
-	@NotNull public static String replaceExists(@NotNull Setting setting, @NotNull String sql) {
+	public static String replaceExists(Setting setting, String sql) {
 		if (setting.supportsSelectExists) return sql;
 
 		Pattern pattern = Pattern.compile("(?i)SELECT\\s*EXISTS([\\S\\s]*)");
@@ -176,7 +176,7 @@ public class Parser {
 		return sql.trim();
 	}
 
-	public static String escape(@NotNull Setting setting, String sql) {
+	public static String escape(Setting setting, String sql) {
 		sql = sql.replace("@targetValue", setting.quoteAliasOpen + "@targetValue" + setting.quoteAliasClose);
 
 		return sql;

@@ -15,7 +15,7 @@ public class SystemQualityControl {
 		logger.debug("Predictor Factory Version: " + getPFVersion());
 		logger.debug("Java vendor: " + System.getProperty("java.vendor"));
 		logger.debug("Java version: " + System.getProperty("java.version"));
-		logger.debug("JavaFX Version: " + VersionInfo.getRuntimeVersion());
+		logger.debug("JavaFX version: " + VersionInfo.getRuntimeVersion());
 		logger.debug("OS: " + System.getProperty("os.name"));
 		logger.debug("Architecture: " + System.getProperty("os.arch"));
 	}

@@ -12,7 +12,7 @@ import java.io.IOException;
 
 public class Development extends Application {
 	@Override
-	public void start(@NotNull Stage stage) throws IOException {
+	public void start(Stage stage) throws IOException {
 
 		Parent root = FXMLLoader.load(getClass().getResource("/fxml/development.fxml"));
 

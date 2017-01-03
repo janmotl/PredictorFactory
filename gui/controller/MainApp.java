@@ -20,7 +20,7 @@ public class MainApp extends Application {
 	@Override
 	// Define the GUI. Stage is OS window. Scene is the content of the window.
 	// Note: All network connections are automatically closed on window closing - no need to handle it manually.
-	public void start(@NotNull Stage stage) throws Exception {
+	public void start(Stage stage) throws Exception {
 
 		System.out.println("All the resources were found: " + ValidatorResource.isResourceAvailable());
 

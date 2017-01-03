@@ -16,7 +16,7 @@ import java.util.ArrayList;
 public class SQLParser extends Parser {
     static { RuntimeMetaData.checkVersion("4.5.3", RuntimeMetaData.VERSION); }
 
-    @NotNull protected static final DFA[] _decisionToDFA;
+    protected static final DFA[] _decisionToDFA;
     protected static final PredictionContextCache _sharedContextCache =
         new PredictionContextCache();
     public static final int
@@ -44,7 +44,7 @@ public class SQLParser extends Parser {
     /**
      * @deprecated Use {@link #VOCABULARY} instead.
      */
-    @NotNull @Deprecated
+    @Deprecated
     public static final String[] tokenNames;
     static {
         tokenNames = new String[_SYMBOLIC_NAMES.length];
@@ -60,25 +60,25 @@ public class SQLParser extends Parser {
         }
     }
 
-    @NotNull @Override
+    @Override
     @Deprecated
     public String[] getTokenNames() {
         return tokenNames;
     }
 
-    @NotNull @Override
+    @Override
 
     public Vocabulary getVocabulary() {
         return VOCABULARY;
     }
 
-    @NotNull @Override
+    @Override
     public String getGrammarFileName() { return "SQL.g4"; }
 
-    @NotNull @Override
+    @Override
     public String[] getRuleNames() { return ruleNames; }
 
-    @NotNull @Override
+    @Override
     public String getSerializedATN() { return _serializedATN; }
 
     @Override
@@ -157,7 +157,7 @@ public class SQLParser extends Parser {
         }
     }
 
-    @NotNull public final ExpressionContext expression() throws RecognitionException {
+    public final ExpressionContext expression() throws RecognitionException {
         ExpressionContext _localctx = new ExpressionContext(_ctx, getState());
         enterRule(_localctx, 0, RULE_expression);
         try {
@@ -280,7 +280,7 @@ public class SQLParser extends Parser {
         }
     }
 
-    @NotNull public final BracketContext bracket() throws RecognitionException {
+    public final BracketContext bracket() throws RecognitionException {
         BracketContext _localctx = new BracketContext(_ctx, getState());
         enterRule(_localctx, 2, RULE_bracket);
         try {
@@ -330,7 +330,7 @@ public class SQLParser extends Parser {
         }
     }
 
-    @NotNull public final DatediffContext datediff() throws RecognitionException {
+    public final DatediffContext datediff() throws RecognitionException {
         DatediffContext _localctx = new DatediffContext(_ctx, getState());
         enterRule(_localctx, 4, RULE_datediff);
         try {
@@ -382,7 +382,7 @@ public class SQLParser extends Parser {
         }
     }
 
-    @NotNull public final DatetonumberContext datetonumber() throws RecognitionException {
+    public final DatetonumberContext datetonumber() throws RecognitionException {
         DatetonumberContext _localctx = new DatetonumberContext(_ctx, getState());
         enterRule(_localctx, 6, RULE_datetonumber);
         try {
@@ -434,7 +434,7 @@ public class SQLParser extends Parser {
         }
     }
 
-    @NotNull public final CorrContext corr() throws RecognitionException {
+    public final CorrContext corr() throws RecognitionException {
         CorrContext _localctx = new CorrContext(_ctx, getState());
         enterRule(_localctx, 8, RULE_corr);
         try {
@@ -815,7 +815,7 @@ public class SQLParser extends Parser {
         }
     }
 
-    @NotNull public final TableContext table() throws RecognitionException {
+    public final TableContext table() throws RecognitionException {
         TableContext _localctx = new TableContext(_ctx, getState());
         enterRule(_localctx, 12, RULE_table);
         try {
@@ -852,7 +852,7 @@ public class SQLParser extends Parser {
         }
     }
 
-    @NotNull public final AliasContext alias() throws RecognitionException {
+    public final AliasContext alias() throws RecognitionException {
         AliasContext _localctx = new AliasContext(_ctx, getState());
         enterRule(_localctx, 14, RULE_alias);
         try {
@@ -898,7 +898,7 @@ public class SQLParser extends Parser {
         }
     }
 
-    @NotNull public final UsingContext using() throws RecognitionException {
+    public final UsingContext using() throws RecognitionException {
         UsingContext _localctx = new UsingContext(_ctx, getState());
         enterRule(_localctx, 16, RULE_using);
         int _la;
@@ -995,7 +995,7 @@ public class SQLParser extends Parser {
         }
     }
 
-    @NotNull public final ColumnsContext columns() throws RecognitionException {
+    public final ColumnsContext columns() throws RecognitionException {
         ColumnsContext _localctx = new ColumnsContext(_ctx, getState());
         enterRule(_localctx, 18, RULE_columns);
         int _la;
@@ -1083,7 +1083,7 @@ public class SQLParser extends Parser {
         }
     }
 
-    @NotNull public final OnContext on() throws RecognitionException {
+    public final OnContext on() throws RecognitionException {
         OnContext _localctx = new OnContext(_ctx, getState());
         enterRule(_localctx, 20, RULE_on);
         try {
@@ -1171,7 +1171,7 @@ public class SQLParser extends Parser {
         }
     }
 
-    @NotNull public final PayloadContext payload() throws RecognitionException {
+    public final PayloadContext payload() throws RecognitionException {
         PayloadContext _localctx = new PayloadContext(_ctx, getState());
         enterRule(_localctx, 22, RULE_payload);
         int _la;

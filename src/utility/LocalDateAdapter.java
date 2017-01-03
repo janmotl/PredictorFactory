@@ -9,11 +9,11 @@ import java.time.LocalDate;
 // This class is used in Pattern.java via binding.
 public class LocalDateAdapter extends XmlAdapter<String, LocalDate> {
 
-	public LocalDate unmarshal(@NotNull String v) {
+	public LocalDate unmarshal(String v) {
 		return LocalDate.parse(v);
 	}
 
-	@NotNull public String marshal(@NotNull LocalDate v) {
+	public String marshal(LocalDate v) {
 		return v.toString();
 	}
 

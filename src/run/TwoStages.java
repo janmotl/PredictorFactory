@@ -5,7 +5,6 @@ import connection.DatabasePropertyList;
 import extraction.Journal;
 import extraction.Predictor;
 import meta.ForeignConstraint;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Set;
@@ -14,7 +13,7 @@ import java.util.TreeSet;
 public class TwoStages {
 
 
-	public static void setExploitationPhase(String databasePropertyName, @NotNull Journal journal) {
+	public static void setExploitationPhase(String databasePropertyName, Journal journal) {
 		List<Predictor> predictorList =  journal.getTopPredictors();
 		Set<String> tableSet = new TreeSet<>();
 		Set<String> columnSet = new TreeSet<>();
@@ -27,6 +26,7 @@ public class TwoStages {
 			tableSet.addAll(predictor.getPropagationPath());
 
 			// Get list of useful columns (in table.column format; including the foreign keys)
+			// NOTE: SHOULD INCLUDE PK/FK COLUMNS FROM THE PROPAGATION PATH
 			for (String column : predictor.getColumnMap().values()) {
 				columnSet.add(predictor.getOriginalTable() + "." + column);
 			}

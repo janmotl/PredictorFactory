@@ -17,7 +17,7 @@ public class DateToNumberListener extends SQLBaseListener {
     }
 
     @Override
-    public void enterDatetonumber(@NotNull SQLParser.DatetonumberContext ctx) {
+    public void enterDatetonumber(SQLParser.DatetonumberContext ctx) {
        
         // Assembly a new node (since TerminalNode is not modifiable)
         DateToNumberNode newNode = new DateToNumberNode(ctx, pattern);

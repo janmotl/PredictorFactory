@@ -22,10 +22,10 @@ public class ConnectionPropertyList {
 	private static final Logger logger = Logger.getLogger(ConnectionPropertyList.class.getName());
 
 	// Private Fields. Note that we are using List because it's marshallable by default.
-	@NotNull private List<ConnectionProperty> connection = new ArrayList<>();
+	private List<ConnectionProperty> connection = new ArrayList<>();
 
 	// Get property by name
-	@NotNull public ConnectionProperty getConnectionProperties(@NotNull String name) {
+	public ConnectionProperty getConnectionProperties(String name) {
 		for (ConnectionProperty property : connection) {
 			if (name.equals(property.name)) {
 				return property;
@@ -37,7 +37,7 @@ public class ConnectionPropertyList {
 	}
 
 	// Set property by name
-	public void setConnectionProperties(@NotNull ConnectionProperty property) {
+	public void setConnectionProperties(ConnectionProperty property) {
 
 		// Remove the old setting
 		connection.removeIf(i -> i.name.equals(property.name));
@@ -47,7 +47,7 @@ public class ConnectionPropertyList {
 	}
 
 	// Load property list from XML
-	@NotNull public static ConnectionPropertyList unmarshall() {
+	public static ConnectionPropertyList unmarshall() {
 		ConnectionPropertyList list = new ConnectionPropertyList();
 
 		try {

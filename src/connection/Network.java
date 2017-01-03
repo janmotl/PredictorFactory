@@ -27,7 +27,7 @@ public final class Network {
 	// See: www.mchange.com/projects/c3p0/
 	// NOTE: This function should permit passing of URL to deal with nonstandard situations (like domain login to MSSQL)
 	// Throws runtime exception if the connection can't be established (can be caught thought)
-	@NotNull public static Setting openConnection(@NotNull Setting setting) {
+	public static Setting openConnection(Setting setting) {
 
 		// Build a DataSource
 		setting.dataSource = new HikariDataSource();
@@ -109,12 +109,12 @@ public final class Network {
 	}
 
 	// If we are opening the connection here, we have to close the connection here.
-	public static void closeConnection(@NotNull Setting setting) {
+	public static void closeConnection(Setting setting) {
 		setting.dataSource.close();
 	}
 
 	// Execute update. Returns true if the update was successful. False otherwise.
-	public static boolean executeUpdate(@NotNull DataSource dataSource, String sql) {
+	public static boolean executeUpdate(DataSource dataSource, String sql) {
 		// Parameter checking
 		if (StringUtils.isBlank(sql)) {
 			throw new IllegalArgumentException("SQL statement is required");
@@ -145,7 +145,7 @@ public final class Network {
 	}
 
 	// Get list of strings
-	@NotNull public static List<String> executeQuery(@NotNull DataSource dataSource, String sql) {
+	public static List<String> executeQuery(DataSource dataSource, String sql) {
 		// Parameter checking
 		if (StringUtils.isBlank(sql)) {
 			throw new IllegalArgumentException("SQL statement is required");
@@ -186,7 +186,7 @@ public final class Network {
 	}
 
 	// Get list of strings with the limited amount of results
-	@NotNull public static List<String> executeQuery(@NotNull DataSource dataSource, String sql, int maxRows) {
+	public static List<String> executeQuery(DataSource dataSource, String sql, int maxRows) {
 		// Parameter checking
 		if (StringUtils.isBlank(sql)) {
 			throw new IllegalArgumentException("SQL statement is required");
@@ -230,7 +230,7 @@ public final class Network {
 	// Get a single bool. This a useful convenience function because some databases
 	// return t/f, other true/false and another 1/0. And SAS returns 1.0/0.0.
 	// The only reliable way how to deal with this variety is to use rs.getBoolean().
-	public static boolean isTrue(@NotNull DataSource dataSource, String sql) {
+	public static boolean isTrue(DataSource dataSource, String sql) {
 		// Parameter checking
 		if (StringUtils.isBlank(sql)) {
 			throw new IllegalArgumentException("SQL statement is required");
@@ -270,7 +270,7 @@ public final class Network {
 	}
 
 	// For concept drift - we leave it up to JDBC to (eventually) convert date to datetime.
-	@NotNull public static List<Timestamp> getTimestamp(@NotNull DataSource dataSource, String sql) {
+	public static List<Timestamp> getTimestamp(DataSource dataSource, String sql) {
 		// Parameter checking
 		if (StringUtils.isBlank(sql)) {
 			throw new IllegalArgumentException("SQL statement is required");
@@ -311,7 +311,7 @@ public final class Network {
 	}
 
 	// Return true, if the result set is empty.
-	public static boolean isResultSetEmpty(@NotNull DataSource dataSource, String sql) {
+	public static boolean isResultSetEmpty(DataSource dataSource, String sql) {
 		// Parameter checking
 		if (StringUtils.isBlank(sql)) {
 			throw new IllegalArgumentException("SQL statement is required");
@@ -352,7 +352,7 @@ public final class Network {
 	// This estimate is upper bounded by maxColumnsInTable (e.g. 1600 for PostgreSQL)
 	// and maxRowSize (e.g. 64kB for MySQL). If a passed parameter is null or 0, the relevant
 	// constraint is not applied.
-	private static int estimateFeatureLimitCount(@NotNull Setting setting, @Nullable Integer maxColumnsInTable, @Nullable Integer maxRowSize) {
+	private static int estimateFeatureLimitCount(Setting setting, Integer maxColumnsInTable, Integer maxRowSize) {
 		// Default limit
 		int result = Integer.MAX_VALUE;
 

@@ -8,7 +8,7 @@ public class DateToNumberNode extends TerminalNodeImpl {
 
     private final String text;
 
-    public DateToNumberNode(@NotNull SQLParser.DatetonumberContext context, @NotNull String pattern) {
+    public DateToNumberNode(SQLParser.DatetonumberContext context, String pattern) {
         // Constructor
         super(context.getStart());
 

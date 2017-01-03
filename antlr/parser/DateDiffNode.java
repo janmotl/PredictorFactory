@@ -8,7 +8,7 @@ public class DateDiffNode extends TerminalNodeImpl {
 
     private final String text;
 
-    public DateDiffNode(@NotNull SQLParser.DatediffContext context, String pattern) {
+    public DateDiffNode(SQLParser.DatediffContext context, String pattern) {
         // Constructor
         super(context.getStart());
 
@@ -22,7 +22,7 @@ public class DateDiffNode extends TerminalNodeImpl {
     }
 
     // Return the modified dateDiff
-    private static String modifyDateDiff(@NotNull String dateTo, @NotNull String dateFrom, String pattern) {
+    private static String modifyDateDiff(String dateTo, String dateFrom, String pattern) {
         pattern = pattern.replace("@dateTo", dateTo);
         pattern = pattern.replace("@dateFrom", dateFrom);
 

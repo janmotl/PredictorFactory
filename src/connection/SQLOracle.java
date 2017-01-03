@@ -16,7 +16,7 @@ public final class SQLOracle extends SQL {
 	private static final Logger logger = Logger.getLogger(SQLOracle.class.getName());
 
 	// Returns true if the column contains null.
-	public boolean containsNull(@NotNull Setting setting, String table, String column) {
+	public boolean containsNull(Setting setting, String table, String column) {
 		String sql = "SELECT count(*) FROM @inputTable WHERE @column is null";
 
 		sql = Parser.replaceExists(setting, sql);
@@ -32,7 +32,7 @@ public final class SQLOracle extends SQL {
 	}
 
 	// Returns true if the date column contains a date from the future.
-	public boolean containsFutureDate(@NotNull Setting setting, String table, String column) {
+	public boolean containsFutureDate(Setting setting, String table, String column) {
 		String sql = "SELECT count(*) FROM (SELECT 1 FROM @inputTable WHERE {fn NOW()} < @column)";
 
 		sql = expandName(sql);
@@ -51,7 +51,7 @@ public final class SQLOracle extends SQL {
 	// Get the maximal cardinality of the table in respect to targetId. If the cardinality is 1:1,
 	// we may want to remove the bottom time constrain in base propagation.
 	// Note that we are working with the input tables -> alter commands are forbidden.
-	public boolean isIdUnique(@NotNull Setting setting, @NotNull MetaOutput.OutputTable table) {
+	public boolean isIdUnique(Setting setting, MetaOutput.OutputTable table) {
 		String sql = "SELECT count(*) FROM (" +
 				"SELECT count(*) " +
 				"FROM @inputTable " +
@@ -86,7 +86,7 @@ public final class SQLOracle extends SQL {
 	}
 
 	// Check whether the columns {baseId, baseDate} are unique in the table in the inputSchema.
-	public boolean isTargetTupleUnique(@NotNull Setting setting, String table) {
+	public boolean isTargetTupleUnique(Setting setting, String table) {
 
 		String sql = "SELECT count(*)" +
 				"FROM (" +
@@ -104,7 +104,7 @@ public final class SQLOracle extends SQL {
 
 	// Returns 1 if the baseId in the table in the outputSchema is unique.
 	// It appears this can be disk space demanding (tested in Accidents dataset)
-	public boolean isTargetIdUnique(@NotNull Setting setting, String table) {
+	public boolean isTargetIdUnique(Setting setting, String table) {
 		String sql = "SELECT count(*) FROM (" +
 				"SELECT @baseId FROM @outputTable GROUP BY @baseId HAVING count(*)>1)";
 

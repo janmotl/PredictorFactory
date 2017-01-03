@@ -92,15 +92,15 @@ public class PrefixSelectionCustomizer {
 	private static final String SELECTION_PREFIX_STRING = "selectionPrefixString";
 	private static final Object SELECTION_PREFIX_TASK = "selectionPrefixTask";
 
-	@Nullable private static EventHandler<KeyEvent> handler = new EventHandler<KeyEvent>() {
-		@Nullable private ScheduledExecutorService executorService;
+	private static EventHandler<KeyEvent> handler = new EventHandler<KeyEvent>() {
+		private ScheduledExecutorService executorService;
 
 		@Override
-		public void handle(@NotNull KeyEvent event) {
+		public void handle(KeyEvent event) {
 			keyPressed(event);
 		}
 
-		private <T> void keyPressed(@NotNull KeyEvent event) {
+		private <T> void keyPressed(KeyEvent event) {
 			KeyCode code = event.getCode();
 			if (code.isLetterKey() || code.isDigitKey() || code == KeyCode.SPACE) {
 				String letter = code.impl_getChar();
@@ -120,18 +120,18 @@ public class PrefixSelectionCustomizer {
 			}
 		}
 
-		@Nullable private <T> T getEntryWithKey(@NotNull String letter, @Nullable StringConverter<T> converter, @NotNull ObservableList<T> items, @NotNull Control control) {
+		private <T> T getEntryWithKey(String letter, StringConverter<T> converter, ObservableList<T> items, Control control) {
 			T result = null;
 
 			// The converter is null by default for the ChoiceBox. The ComboBox has a default converter
 			if (converter == null) {
 				converter = new StringConverter<T>() {
-					@Nullable @Override
-					public String toString(@Nullable T t) {
+					@Override
+					public String toString(T t) {
 						return t == null ? null : t.toString();
 					}
 
-					@Nullable @Override
+					@Override
 					public T fromString(String string) {
 						return null;
 					}
@@ -165,7 +165,7 @@ public class PrefixSelectionCustomizer {
 			return result;
 		}
 
-		@Nullable private ScheduledExecutorService getExecutorService() {
+		private ScheduledExecutorService getExecutorService() {
 			if (executorService == null) {
 				executorService = Executors.newScheduledThreadPool(1,
 						runnabble -> {
@@ -190,7 +190,7 @@ public class PrefixSelectionCustomizer {
 	 *
 	 * @see PrefixSelectionCustomizer
 	 */
-	public static void customize(@NotNull ComboBox<?> comboBox) {
+	public static void customize(ComboBox<?> comboBox) {
 		if (!comboBox.isEditable()) {
 			comboBox.addEventHandler(KeyEvent.KEY_PRESSED, handler);
 		}
@@ -212,7 +212,7 @@ public class PrefixSelectionCustomizer {
 	 *
 	 * @see PrefixSelectionCustomizer
 	 */
-	public static void customize(@NotNull ChoiceBox<?> choiceBox) {
+	public static void customize(ChoiceBox<?> choiceBox) {
 		choiceBox.addEventHandler(KeyEvent.KEY_PRESSED, handler);
 	}
 

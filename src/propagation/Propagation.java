@@ -7,7 +7,6 @@ import meta.ForeignConstraint;
 import meta.MetaOutput.OutputTable;
 import meta.Table;
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import run.Setting;
 
 import java.time.LocalDateTime;
@@ -23,7 +22,7 @@ public class Propagation {
 	// THE SEARCH DEPTH SHOULD BE LIMITED
 	// SHOULD CREATE SEVERAL tables if a cycle is present. So far only the farthest table is duplicated.
 	// PROPAGATED TABLES SHOULD HAVE BEEN INDEXED
-	@NotNull public static SortedMap<String, OutputTable> propagateBase(@NotNull Setting setting, @NotNull SortedMap<String, Table> inputMeta) {
+	public static SortedMap<String, OutputTable> propagateBase(Setting setting, SortedMap<String, Table> inputMeta) {
 		// Initialize set of propagated tables and not-propagated samples
 		Set<String> notPropagated = inputMeta.keySet(); // Set of tables to propagate
 		Set<String> propagated = new HashSet<>();       // Set of propagated tables...
@@ -74,7 +73,7 @@ public class Propagation {
 	// Breadth First Search (BFS)
 	// Loop over the current level twice.
 	// The first loop processes all the nodes, the second loop recurses into all the non-leaf nodes.
-	@NotNull private static SortedMap<String, OutputTable> bfs(@NotNull Setting setting, int depth, @NotNull Set<String> propagated, @NotNull Set<String> notPropagated, @NotNull SortedMap<String, Table> metaInput, @NotNull SortedMap<String, OutputTable> metaOutput) {
+	private static SortedMap<String, OutputTable> bfs(Setting setting, int depth, Set<String> propagated, Set<String> notPropagated, SortedMap<String, Table> metaInput, SortedMap<String, OutputTable> metaOutput) {
 
 		// Initialization
 		Set<String> newlyPropagated = new HashSet<>();      // Set of tables propagated at the current depth
@@ -169,8 +168,8 @@ public class Propagation {
 
 	// Trim the length of a table name to the length permitted by the database
 	// but make sure the name is unique.
-	private static String trim(@NotNull Setting setting, String outputTable, int counter) {
-		outputTable = setting.propagatedPrefix + outputTable;
+	private static String trim(Setting setting, String outputTable, int counter) {
+		outputTable = setting.propagatedPrefix + "_" + outputTable;
 		int stringLength = Math.min(outputTable.length(), setting.identifierLengthMax - 4);
 		outputTable = outputTable.substring(0, stringLength);
 		outputTable = outputTable + "_" + String.format("%03d", counter);
@@ -178,7 +177,7 @@ public class Propagation {
 		return outputTable;
 	}
 
-	@NotNull private static List<String> getPropagationPath(@NotNull OutputTable table) {
+	private static List<String> getPropagationPath(OutputTable table) {
 		List<String> path = new ArrayList<>(table.propagationPath);
 		path.add(table.originalName);
 		return path;

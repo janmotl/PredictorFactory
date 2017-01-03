@@ -51,14 +51,14 @@ public class NaturalOrderComparator implements Comparator<String> {
 		this(Locale.getDefault());
 	}
 
-	public NaturalOrderComparator(@NotNull Locale locale) {
+	public NaturalOrderComparator(Locale locale) {
 		DecimalFormatSymbols dfs = new DecimalFormatSymbols(locale);
 		char localeDecimalSeparator = dfs.getDecimalSeparator();
 		// alphaNumChunkPatter initialized here to get correct decimal separator for locale.
 		alphaNumChunkPattern = Pattern.compile("(\\d+\\" + localeDecimalSeparator + "\\d+)|(\\d+)|(\\D+)");
 	}
 
-	public int compare(@NotNull String s1, @NotNull String s2) {
+	public int compare(String s1, String s2) {
 		int compareValue = 0;
 		Matcher s1ChunkMatcher = alphaNumChunkPattern.matcher(s1);
 		Matcher s2ChunkMatcher = alphaNumChunkPattern.matcher(s2);

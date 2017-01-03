@@ -10,7 +10,6 @@ import meta.MetaInput;
 import meta.MetaOutput.OutputTable;
 import meta.Table;
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import propagation.Propagation;
 import utility.Logging;
 import utility.SystemQualityControl;
@@ -24,7 +23,7 @@ public class Launcher {
 
 
 	// Where everything starts and ends...
-	public static void main(@NotNull String[] arg) {
+	public static void main(String[] arg) {
 
 		// Connect to the following server and database:
 		String connectionProperty = "PostgreSQL";   // Host identification as specified in resources/connection.xml
@@ -87,6 +86,8 @@ public class Launcher {
 		///////// SANDBOX
 
 		if (setting.useTwoStages && setting.sampleCount<Integer.MAX_VALUE) {
+			Journal.marshall(journal);  // It is not necessary to write whole journal. It is enough to write just the top
+
 			TwoStages.setExploitationPhase(databaseProperty, journal);
 			logger.info("Predictor count: " + journal.getTopPredictors().size());
 			logger.info("The exploration stage finished. Starting the exploitation phase.");

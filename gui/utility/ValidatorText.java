@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 public class ValidatorText {
 
 	// Add numeric validation into a textField. Use red highlight if the entered value is wrong.
-	public static void addNumericValidation(@NotNull TextField textField, int maxValue) {
+	public static void addNumericValidation(TextField textField, int maxValue) {
 		textField.textProperty().addListener(new ChangeListener<String>() {
 			@Override
 			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
@@ -26,14 +26,14 @@ public class ValidatorText {
 		});
 	}
 
-	public static void addNumericValidation(@NotNull TextField textField) {
+	public static void addNumericValidation(TextField textField) {
 		addNumericValidation(textField, Integer.MAX_VALUE);
 	}
 
 	// Subroutine: validate the text.
 	// Empty string is ok. An integer in range 0..Integer.MAX_VALUE is ok.
 	// maxValue constraint is considered only if maxValue is bigger than 0.
-	private static boolean isOk(@Nullable String text, int maxValue) {
+	private static boolean isOk(String text, int maxValue) {
 		try {
 			if (text == null || text.trim().isEmpty()) return true;
 			int value = Integer.parseInt(text);

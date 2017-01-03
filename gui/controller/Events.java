@@ -19,8 +19,6 @@ import javafx.scene.web.WebView;
 import meta.Column;
 import meta.Table;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import run.Launcher;
 import run.Setting;
 import utility.*;
@@ -44,10 +42,10 @@ public class Events implements Initializable {
 
 	// Global variables
     private Setting setting = new Setting("GUI", "GUI");
-    @NotNull private List<CheckBoxTreeItem<String>> itemListTable = new ArrayList<>();
-    @NotNull private List<CheckBoxTreeItem<String>> itemListColumn = new ArrayList<>();
-    @NotNull private List<CheckBoxTreeItem<String>> itemListPattern = new ArrayList<>();
-    @NotNull private Events.RunService runService = new Events.RunService();
+    private List<CheckBoxTreeItem<String>> itemListTable = new ArrayList<>();
+    private List<CheckBoxTreeItem<String>> itemListColumn = new ArrayList<>();
+    private List<CheckBoxTreeItem<String>> itemListPattern = new ArrayList<>();
+    private Events.RunService runService = new Events.RunService();
 
     // Define GUI elements. The values are automatically initialized by FXMLLoader.
     @FXML private Button buttonConnect;
@@ -287,7 +285,7 @@ public class Events implements Initializable {
             try {
                 URI uri = new URI("mailto:jan.motl@fit.cvut.cz");
                 desktop.mail(uri);
-            } catch (@NotNull IOException | URISyntaxException e) {
+            } catch (IOException | URISyntaxException e) {
                 e.printStackTrace();
             }
         }
@@ -300,7 +298,7 @@ public class Events implements Initializable {
             try {
                 URI uri = new URI("http://predictorfactory.com/");
                 desktop.browse(uri);
-            } catch (@NotNull IOException | URISyntaxException e) {
+            } catch (IOException | URISyntaxException e) {
                 e.printStackTrace();
             }
         }
@@ -490,7 +488,7 @@ public class Events implements Initializable {
     }
 
     // Get connection and metadata without blocking the GUI
-    private void getMetaData(@NotNull Setting setting) {
+    private void getMetaData(Setting setting) {
 
         // Show progress dialog
         Dialog dialog = ConnectionDialog.progressDialog();
@@ -536,7 +534,7 @@ public class Events implements Initializable {
 
     // Takes a setting, makes a connection, returns the setting
     private class ConnectionService extends Service<Setting> {
-        @NotNull @Override
+        @Override
         protected Task<Setting> createTask() {
             return new Task<Setting>() {
                 @Override
@@ -550,10 +548,10 @@ public class Events implements Initializable {
     // Execute Predictor Factory
     private class RunService extends Service<Void> {
 
-        @Nullable @Override
+        @Override
         protected Task<Void> createTask() {
             return new Task<Void>() {
-                @Nullable @Override
+                @Override
                 protected Void call() throws Exception {
                     String[] arguments = { "GUI", "GUI" };
                     Launcher.main(arguments);

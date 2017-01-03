@@ -9,7 +9,7 @@ public class CorrNode extends TerminalNodeImpl {
 
     private final String text;
 
-    public CorrNode(@NotNull CorrContext context, String corrPattern) {
+    public CorrNode(CorrContext context, String corrPattern) {
         // Constructor
         super(context.getStart());
 
@@ -23,7 +23,7 @@ public class CorrNode extends TerminalNodeImpl {
     }
 
     // Returns the modified corr
-    private static String modifyCorr(@NotNull String col1, @NotNull String col2, String corrPattern) {
+    private static String modifyCorr(String col1, String col2, String corrPattern) {
         corrPattern = corrPattern.replace("@column1", col1);
         corrPattern = corrPattern.replace("@column2", col2);
 

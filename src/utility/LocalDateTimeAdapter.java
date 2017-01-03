@@ -9,11 +9,11 @@ import java.time.LocalDateTime;
 // This class is used in Predictor.java via binding.
 public class LocalDateTimeAdapter extends XmlAdapter<String, LocalDateTime> {
 
-	public LocalDateTime unmarshal(@NotNull String v) {
+	public LocalDateTime unmarshal(String v) {
 		return LocalDateTime.parse(v);
 	}
 
-	@NotNull public String marshal(@NotNull LocalDateTime v) {
+	public String marshal(LocalDateTime v) {
 		return v.toString();
 	}
 

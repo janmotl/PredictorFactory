@@ -10,7 +10,7 @@ import run.Setting;
 
 public class ANTLRTest {
 
-	@NotNull private Setting setting = new Setting("MySQL", "financial");
+	private Setting setting = new Setting("MySQL", "financial");
 
 	@Before
 	public void initialization() {

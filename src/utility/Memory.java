@@ -1,7 +1,6 @@
 package utility;
 
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -52,20 +51,20 @@ public class Memory {
 
 
 	// Subroutines
-	private static double usedMemory(@NotNull Runtime runtime) {
+	private static double usedMemory(Runtime runtime) {
 		long totalMemory = runtime.totalMemory();
 		long freeMemory = runtime.freeMemory();
 		double usedMemory = (double) (totalMemory - freeMemory) / (double) (1024 * 1024);
 		return usedMemory;
 	}
 
-	private static double maxMemory(@NotNull Runtime runtime) {
+	private static double maxMemory(Runtime runtime) {
 		long maxMemory = runtime.maxMemory();
 		double memory = (double) maxMemory / (double) (1024 * 1024);
 		return memory;
 	}
 
-	private static double reservedMemory(@NotNull Runtime runtime) {
+	private static double reservedMemory(Runtime runtime) {
 		long reservedMemory = runtime.totalMemory();
 		double memory = (double) reservedMemory / (double) (1024 * 1024);
 		return memory;

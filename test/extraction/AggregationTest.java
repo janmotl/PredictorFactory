@@ -11,10 +11,10 @@ import run.Setting;
 import java.util.*;
 
 public class AggregationTest {
-	@NotNull private Setting setting = new Setting("PostgreSQL", "financial");
-	@NotNull private Pattern pattern = new Pattern();
+	private Setting setting = new Setting("PostgreSQL", "financial");
+	private Pattern pattern = new Pattern();
 	private Predictor predictor;
-	@NotNull private SortedMap<String, OutputTable> tableMetadata = new TreeMap<>();
+	private SortedMap<String, OutputTable> tableMetadata = new TreeMap<>();
 	
 	@Before
 	public void initialize(){

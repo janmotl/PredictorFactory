@@ -1,7 +1,6 @@
 package meta;
 
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import run.Setting;
 
 import java.util.*;
@@ -28,7 +27,7 @@ public class Table {
 	// These getters are not the most efficiently implemented. Feel free to replace it with a multi-key map.
 	// Or we may keep private string lists for each type.
 	// We are returning sets, hence, it is easy to get unique columns that are nominal OR numerical...
-	@NotNull public SortedSet<Column> getColumns(@NotNull Setting setting, StatisticalType statisticalType) {
+	public SortedSet<Column> getColumns(Setting setting, StatisticalType statisticalType) {
 		SortedSet<Column> result = new TreeSet<>();
 
 		for (Column column : columnMap.values()) {
@@ -47,7 +46,7 @@ public class Table {
 	}
 
 	// Return all columns that were not blacklisted
-	@NotNull public SortedSet<Column> getColumns() {
+	public SortedSet<Column> getColumns() {
 		return (SortedSet<Column>) columnMap.values();
 	}
 
@@ -63,7 +62,7 @@ public class Table {
 	// However, if we are performing classification, uniqueList will contain all unique
 	// values regardless of target's data type (can be String as well as Integer)
 	// SHOULD BE EVALUATED LAZILY AND MEMOIZED
-	public void addUniqueValues(@NotNull Setting setting) {
+	public void addUniqueValues(Setting setting) {
 
 		// Get setting.valueCount most frequent distinct values for each nominal column.
 		// The unique values will be used in patterns like "WoE" or "Existential count".
@@ -74,7 +73,7 @@ public class Table {
 	}
 
 	// Get numerical, nominal and time columns.
-	public void categorizeColumns(@NotNull Setting setting) {
+	public void categorizeColumns(Setting setting) {
 		// Parameter control
 		if (columnMap == null || columnMap.isEmpty()) {
 			logger.info("Table: " + name + " doesn't contain any column beside ids.");
@@ -141,7 +140,7 @@ public class Table {
 		}
 	}
 
-	@NotNull @Override
+	@Override
 	public String toString() {
 		return (name + ": " + getColumns());
 	}

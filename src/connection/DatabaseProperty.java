@@ -29,16 +29,16 @@ public class DatabaseProperty implements Cloneable{
 	@XmlAttribute public String targetColumn;
 	@XmlAttribute public String task;
 	@XmlAttribute public String whiteListPattern;
-	@Nullable @XmlAttribute public String blackListPattern;
+	@XmlAttribute public String blackListPattern;
 	@XmlAttribute public String whiteListTable;
-	@Nullable @XmlAttribute public String blackListTable;
+	@XmlAttribute public String blackListTable;
 	@XmlAttribute public String whiteListColumn;
-	@Nullable @XmlAttribute public String blackListColumn;
+	@XmlAttribute public String blackListColumn;
 	@XmlAttribute public String unit;   // The items {unit, lag, lead, sampleCount and task} should be somewhere else
-	@Nullable @XmlAttribute public Integer lag;
-	@Nullable @XmlAttribute public Integer lead;
-	@Nullable @XmlAttribute public Integer sampleCount;
-	@Nullable @XmlAttribute public Integer predictorMax;
+	@XmlAttribute public Integer lag;
+	@XmlAttribute public Integer lead;
+	@XmlAttribute public Integer sampleCount;
+	@XmlAttribute public Integer predictorMax;
 	@XmlAttribute public Boolean useIdAttributes;
 	@XmlAttribute public Boolean useTwoStages;
 

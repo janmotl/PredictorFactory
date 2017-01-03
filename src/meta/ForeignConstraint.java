@@ -1,9 +1,6 @@
 package meta;
 
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
@@ -38,7 +35,7 @@ public class ForeignConstraint implements Comparable<ForeignConstraint> {
 
 	// Required for assembling of composite keys (function collectRelationships)
 	@Override
-	public int compareTo(@NotNull ForeignConstraint that) {
+	public int compareTo(ForeignConstraint that) {
 		final int BEFORE = -1;
 		final int EQUAL = 0;
 		final int AFTER = 1;
@@ -46,18 +43,18 @@ public class ForeignConstraint implements Comparable<ForeignConstraint> {
 		// This optimization is usually worthwhile, and can always be added
 		if (this == that) return EQUAL;
 
-		int comparison = this.table.compareTo(that.table);
+		int comparison = table.compareTo(that.table);
 		if (comparison != EQUAL) return comparison;
 
-		comparison = this.fTable.compareTo(that.fTable);
+		comparison = fTable.compareTo(that.fTable);
 		if (comparison != EQUAL) return comparison;
 
-		comparison = this.name.compareTo(that.name);
+		comparison = name.compareTo(that.name);
 		if (comparison != EQUAL) return comparison;
 
 		// Primitive numbers follow this form
-		if (this.sequence < that.sequence) return BEFORE;
-		if (this.sequence > that.sequence) return AFTER;
+		if (sequence < that.sequence) return BEFORE;
+		if (sequence > that.sequence) return AFTER;
 
 		return EQUAL;
 	}
@@ -65,7 +62,7 @@ public class ForeignConstraint implements Comparable<ForeignConstraint> {
 	// Required for assembling of composite keys (function collectRelationships)
 	// Compares based on {table, fTable, name} and intentionally ignores {sequence, column, fColumn}
 	@Override
-	public boolean equals(@Nullable Object o) {
+	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
@@ -84,7 +81,7 @@ public class ForeignConstraint implements Comparable<ForeignConstraint> {
 		return result;
 	}
 
-	@NotNull @Override
+	@Override
 	public String toString() {
 		return "FC{" +
 				"name='" + name + "'\n" +

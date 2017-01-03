@@ -8,8 +8,6 @@ calls like nullability or uniqueness validation tests. Hence, these properties a
 calls and memoized.
 */
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import run.Setting;
 
 import java.util.LinkedHashSet;
@@ -21,7 +19,7 @@ public class Column implements Comparable<Column> {
 	public String dataTypeName;     // Data type name as defined by database
 	public boolean isNullable;      // From JDBC
 	public boolean isUnique;        // From JDBC
-	@NotNull public String name;             // We have name field even though Column object is in a Map because it allows an easy iteration over the Columns (and not over that ugly Entry).
+	public String name;             // We have name field even though Column object is in a Map because it allows an easy iteration over the Columns (and not over that ugly Entry).
 	public Set<String> uniqueValueSet = new LinkedHashSet<>();    // Top n most frequent values. The n is defined by setting.
 
 	// An integer column with low cardinality (<100) can be both, numerical and nominal.
@@ -38,7 +36,7 @@ public class Column implements Comparable<Column> {
 
 
 	// Constructors
-	public Column(@NotNull String name) {
+	public Column(String name) {
 		if (name == null) {
 			throw new NullPointerException("The column name is null");
 		}
@@ -52,7 +50,7 @@ public class Column implements Comparable<Column> {
 
 	// Does the column contain a null value?
 	// NOTE: Would not a better place for this in Meta?
-	public Boolean containsNull(@NotNull Setting setting, String tableName) {
+	public Boolean containsNull(Setting setting, String tableName) {
 		// Memoized
 		if (containsNull == null) {
 			if (isNullable) {
@@ -65,7 +63,7 @@ public class Column implements Comparable<Column> {
 	}
 
 	// Does the column contain an event that is in the future?
-	public Boolean containsFutureDate(@NotNull Setting setting, String tableName) {
+	public Boolean containsFutureDate(Setting setting, String tableName) {
 		// Memoized
 		if (containsFutureDate == null) {
 			containsFutureDate = setting.dialect.containsFutureDate(setting, tableName, name);
@@ -74,11 +72,11 @@ public class Column implements Comparable<Column> {
 	}
 
 	@Override
-	public int compareTo(@NotNull Column other) {
+	public int compareTo(Column other) {
 		return name.compareToIgnoreCase(other.name);
 	}
 
-	@Nullable @Override
+	@Override
 	public String toString() {
 		return name;
 	}

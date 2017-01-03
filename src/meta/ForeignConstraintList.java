@@ -28,7 +28,7 @@ public class ForeignConstraintList {
 
 	// More specific getter. Return all FC related to the table.
 	// But if there is a self-referencing FC, include that FC just once.
-	@NotNull public List<ForeignConstraint> getForeignConstraintList(String tableName) {
+	public List<ForeignConstraint> getForeignConstraintList(String tableName) {
 
 		// Initialisation
 		List<ForeignConstraint> result = new ArrayList<>();
@@ -51,7 +51,7 @@ public class ForeignConstraintList {
 
 
 	// Load property list from XML
-	@NotNull public static ForeignConstraintList unmarshall(String fileName) {
+	public static ForeignConstraintList unmarshall(String fileName) {
 		ForeignConstraintList list = new ForeignConstraintList();
 
 		// Ignore absence of the file

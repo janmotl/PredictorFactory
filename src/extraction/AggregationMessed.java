@@ -19,22 +19,24 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
-public class Aggregation {
+public class AggregationMessed {
 	// Logging
-	private static final Logger logger = Logger.getLogger(Aggregation.class.getName());
+	private static final Logger logger = Logger.getLogger(AggregationMessed.class.getName());
+
 
 	public static Journal run(Setting setting, SortedMap<String, OutputTable> tableMetadata) {
 		// Reuse journal.xml OR create everything from scratch?
 		if (setting.useTwoStages && setting.sampleCount == Integer.MAX_VALUE) {
 			List<Predictor> topPredictors = Journal.unmarshall().getTopPredictors();
 			Journal journal = new Journal(setting, topPredictors.size());
-			return fromXML(setting, journal, topPredictors);
+			return materializePredictors(setting, journal, topPredictors);
 		} else {
 			return fromScratch(setting, tableMetadata);
 		}
 	}
 
-	private static Journal fromScratch(Setting setting, SortedMap<String, OutputTable> tableMetadata ) {
+
+	private static Journal fromScratch(Setting setting, SortedMap<String, OutputTable> tableMetadata) {
 
 		// Initialization
 		Journal journal;    // Log of all predictors
@@ -95,30 +97,16 @@ public class Aggregation {
 			groupId++; // GroupId is unique per optimization group
 		}
 
-
-		// 8) Execute the SQL & log the result
-		int maxRowLimit = setting.dialect.getRowCount(setting, setting.outputSchema, setting.baseSampled);
+		// 8) Prepare ((((((the Journal with))))))) the predictors
+		// HAVE TO BE EDITED - the getNextID does not work as expected
+		List<Predictor> predictorList8 = new ArrayList<>();
 		journal = new Journal(setting, predictorList7.size());
-
 		for (Predictor predictor : predictorList7) {
-			materializePredictor(setting, journal, predictor, maxRowLimit);
-			journal.addPredictor(setting, predictor);
+			predictorList8.add(preparePredictor(setting, journal, predictor));
 		}
 
-		return journal;
-	}
-
-	private static Journal fromXML(Setting setting, Journal journal, List<Predictor> topPredictors) {
-		// 8) Execute the SQL & log the result
-		int maxRowLimit = setting.dialect.getRowCount(setting, setting.outputSchema, setting.baseSampled);
-
-		for (Predictor predictor : topPredictors) {
-			predictor.getPattern().initialize(setting); // NOT THE NICEST...
-			materializePredictor2(setting, journal, predictor, maxRowLimit);
-			journal.addPredictor(setting, predictor);
-		}
-
-		return journal;
+		// 9) Execute the SQL & log the result
+		return materializePredictors(setting, journal, predictorList8);
 	}
 
 
@@ -158,7 +146,7 @@ public class Aggregation {
 	// Subroutine 2: Populate @targetValue (based on unique values in the target column in the target window) and set SQL.
 	// If we are performing regression, remove patterns that are using target value, as these patterns are not applicable.
 	// CURRENTLY IMPLEMENTED ONLY FOR THE FIRST VALUE -> IT RETURNS JUST A SINGLE PREDICTOR
-	protected static List<Predictor> addTargetValue(Setting setting, Predictor predictor, Set<String> uniqueValueSet){
+	protected static List<Predictor> addTargetValue(Setting setting, Predictor predictor, Set<String> uniqueValueSet) {
 
 		boolean isClassification = "classification".equals(setting.task);
 		boolean containsTargetValue = predictor.getPatternCode().contains("@targetValue");
@@ -278,11 +266,16 @@ public class Aggregation {
 			SortedSet<Column> columnValueSet = new TreeSet<>();
 
 			// Matches: Case insensitive plus suffix with any number of digits
-			if (columnKey.matches("(?i)@NUMERICALCOLUMN\\d*")) columnValueSet = table.getColumns(setting, StatisticalType.NUMERICAL);
-			else if (columnKey.matches("(?i)@NOMINALCOLUMN\\d*")) columnValueSet = table.getColumns(setting, StatisticalType.NOMINAL);
-			else if (columnKey.matches("(?i)@TIMECOLUMN\\d*")) columnValueSet = table.getColumns(setting, StatisticalType.TEMPORAL);
-			else if (columnKey.matches("(?i)@IDCOLUMN\\d*")) columnValueSet = table.getColumns(setting, StatisticalType.ID);
-			else logger.warn("The term: " + columnKey +  " in pattern: " + predictor.getPatternName() + " is not recognized as a valid column identifier. Expected terms are: {numericalColumn, nominalColumn, timeColumn, idColumn}.");
+			if (columnKey.matches("(?i)@NUMERICALCOLUMN\\d*"))
+				columnValueSet = table.getColumns(setting, StatisticalType.NUMERICAL);
+			else if (columnKey.matches("(?i)@NOMINALCOLUMN\\d*"))
+				columnValueSet = table.getColumns(setting, StatisticalType.NOMINAL);
+			else if (columnKey.matches("(?i)@TIMECOLUMN\\d*"))
+				columnValueSet = table.getColumns(setting, StatisticalType.TEMPORAL);
+			else if (columnKey.matches("(?i)@IDCOLUMN\\d*"))
+				columnValueSet = table.getColumns(setting, StatisticalType.ID);
+			else
+				logger.warn("The term: " + columnKey + " in pattern: " + predictor.getPatternName() + " is not recognized as a valid column identifier. Expected terms are: {numericalColumn, nominalColumn, timeColumn, idColumn}.");
 
 			// Bind the columnKey to the actual columnValue.
 			for (Column columnValue : columnValueSet) {
@@ -365,7 +358,7 @@ public class Aggregation {
 		for (Predictor predictor : predictorList) {
 			// CURRENTLY JUST SWEEP OVER THE VALUES. USE A REAL OPTIMISATION TOOLBOX.
 			for (int i = 0; i < parameter.iterationLimit; i++) {
-				double value = parameter.min + i * (parameter.max-parameter.min)/(parameter.iterationLimit-1);
+				double value = parameter.min + i * (parameter.max - parameter.min) / (parameter.iterationLimit - 1);
 				Predictor clonedPredictor = new Predictor(predictor);
 				clonedPredictor.setParameter(parameter.key, String.valueOf(value));
 				outputList.add(clonedPredictor);
@@ -376,12 +369,12 @@ public class Aggregation {
 	}
 
 
-	// Subroutine 8: Create predictor with index and QC.
-	private static void materializePredictor(Setting setting, Journal journal, Predictor predictor, int maxRowLimit) {
+	// Subroutine 8: Prepare the predictor
+	private static Predictor preparePredictor(Setting setting, Journal journal, Predictor predictor) {
 
 		// Set predictor's id & table name
 		predictor.setId(journal.getNextId(setting));
-		predictor.setOutputTable(setting.predictorPrefix + predictor.getId());
+		predictor.setOutputTable(setting.predictorPrefix + (predictor.getId()));
 
 		// Set predictor's names
 		predictor.setName(predictor.getNameOnce(setting));
@@ -396,73 +389,21 @@ public class Aggregation {
 		// Set timestamp_build
 		predictor.setTimestampBuilt(LocalDateTime.now());
 
-		// Execute the SQL
-		predictor.setOk(Network.executeUpdate(setting.dataSource, predictor.getSql()));
-
-		// If the execution failed, stop.
-		if (!predictor.isOk()) return;
-
-		// Add Primary Key constrain.
-		// This is not because of speeding things up (indeed it has a negative impact on total runtime because only
-		// a small proportion of the predictors gets into MainSample) but because it validates uniqueness of the tuples.
-		// Azure requires not-null constraint -> skip it for MSSQL.
-		if (!"Microsoft SQL Server".equals(setting.databaseVendor)) {
-			if (!setting.dialect.setPrimaryKey(setting, predictor.getOutputTable())) {
-				logger.warn("Primary key constrain failed");
-				return;
-			}
-		}
-
-		// Add row count
-		predictor.setRowCount(setting.dialect.getRowCount(setting, setting.outputSchema, predictor.getOutputTable()));
-		if (predictor.getRowCount()==0) return;
-		if (predictor.getRowCount()>maxRowLimit) {
-			logger.warn("Predictor " + predictor.getName() + " has " + predictor.getRowCount() + " rows. But base table has only " + maxRowLimit + " rows.");
-			return;
-		}
-
-		// Add null count
-		predictor.setNullCount(predictor.getRowCount() - setting.dialect.getNotNullCount(setting, setting.outputSchema, predictor.getOutputTable(), predictor.getName()));
-		if (predictor.getNullCount()==predictor.getRowCount()) return;
-
-		// Get the predictor's data type
-		getPredictorType(setting, predictor);
-
-		// Add univariate relevance estimate
-		if ("classification".equalsIgnoreCase(setting.task)) {
-			predictor.setRelevance(setting.baseTarget, setting.dialect.getChi2(setting, predictor));
-		} else {
-			predictor.setRelevance(setting.baseTarget, setting.dialect.getR2(setting, predictor));
-		}
-
-		// Add concept drift (so far just for nominal labels & if targetDate exists)
-		if ("classification".equalsIgnoreCase(setting.task) && setting.targetDate!=null) {
-			predictor.setConceptDrift(setting.baseTarget, setting.dialect.getConceptDrift(setting, predictor));
-		}
-
+		return predictor;
 	}
 
 
-	// Subroutine 8: Create predictor with index and QC.
-	// CHANGES: skipping SQL creation
-	private static void materializePredictor2(Setting setting, Journal journal, Predictor predictor, int maxRowLimit) {
+	// Subroutine 9: Create predictor with index and QC.
+	private static Journal materializePredictors(Setting setting, Journal journal, List<Predictor> predictorList) {
+		int maxRowLimit = setting.dialect.getRowCount(setting, setting.outputSchema, setting.baseSampled); // Real sample size
+		for (Predictor predictor : predictorList) {
+			materializePredictor(setting, predictor, maxRowLimit);
+			journal.addPredictor(setting, predictor);
+		}
+		return journal;
+	}
 
-		// Set predictor's id & table name
-//		predictor.setId(journal.getNextId(setting));
-//		predictor.setOutputTable(setting.predictorPrefix + predictor.getId());
-//
-//		// Set predictor's names
-//		predictor.setName(predictor.getNameOnce(setting));
-//		predictor.setLongName(predictor.getLongNameOnce());
-//
-//		// Set default relevance value for the target.
-//		predictor.setRelevance(setting.baseTarget, 0.0);
-//
-//		// Convert pattern to SQL
-//		predictor.setSql(setting.dialect.getPredictor(setting, predictor));
-
-		// Set timestamp_build
-		predictor.setTimestampBuilt(LocalDateTime.now());
+	private static void materializePredictor(Setting setting, Predictor predictor, int maxRowLimit) {
 
 		// Execute the SQL
 		predictor.setOk(Network.executeUpdate(setting.dataSource, predictor.getSql()));
@@ -483,15 +424,15 @@ public class Aggregation {
 
 		// Add row count
 		predictor.setRowCount(setting.dialect.getRowCount(setting, setting.outputSchema, predictor.getOutputTable()));
-		if (predictor.getRowCount()==0) return;
-		if (predictor.getRowCount()>maxRowLimit) {
+		if (predictor.getRowCount() == 0) return;
+		if (predictor.getRowCount() > maxRowLimit) {
 			logger.warn("Predictor " + predictor.getName() + " has " + predictor.getRowCount() + " rows. But base table has only " + maxRowLimit + " rows.");
 			return;
 		}
 
 		// Add null count
 		predictor.setNullCount(predictor.getRowCount() - setting.dialect.getNotNullCount(setting, setting.outputSchema, predictor.getOutputTable(), predictor.getName()));
-		if (predictor.getNullCount()==predictor.getRowCount()) return;
+		if (predictor.getNullCount() == predictor.getRowCount()) return;
 
 		// Get the predictor's data type
 		getPredictorType(setting, predictor);
@@ -504,7 +445,7 @@ public class Aggregation {
 		}
 
 		// Add concept drift (so far just for nominal labels & if targetDate exists)
-		if ("classification".equalsIgnoreCase(setting.task) && setting.targetDate!=null) {
+		if ("classification".equalsIgnoreCase(setting.task) && setting.targetDate != null) {
 			predictor.setConceptDrift(setting.baseTarget, setting.dialect.getConceptDrift(setting, predictor));
 		}
 

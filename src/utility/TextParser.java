@@ -13,7 +13,7 @@ public class TextParser {
 	private static final Logger logger = Logger.getLogger(TextParser.class.getName());
 
 	// Convert comma delimited string to list
-	@NotNull public static List<String> string2list(@Nullable String string) {
+	public static List<String> string2list(String string) {
 		// Initialization
 		List<String> result = new ArrayList<>();
 
@@ -31,7 +31,7 @@ public class TextParser {
 
 	// Convert dot delimited list to map
 	// Example: table.column -> key=table, value=column
-	@NotNull public static Map<String, List<String>> list2map(@NotNull List<String> list) {
+	public static Map<String, List<String>> list2map(List<String> list) {
 		Map<String, List<String>> result = new HashMap<>();
 
 		for (String tuple : list) {

@@ -17,7 +17,7 @@ public class CorrListener extends SQLBaseListener {
     }
 
     @Override
-    public void enterCorr(@NotNull SQLParser.CorrContext ctx) {
+    public void enterCorr(SQLParser.CorrContext ctx) {
        
         // Assembly a new block based on the data
         CorrNode newCorr = new CorrNode(ctx, pattern);

@@ -7,7 +7,6 @@ import com.google.common.base.MoreObjects;
 import com.zaxxer.hikari.HikariDataSource;
 import connection.*;
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
 import utility.TextParser;
 
 import java.sql.Timestamp;
@@ -69,7 +68,7 @@ public final class Setting {
 	// WHITELISTS AND BLACKLISTS SHOULD BE ARRAYLISTS
 	// ALSO TARGETID AND TARGET COLUMN SHOULD BE LISTS
 	public List<String> targetIdList = new ArrayList<>();   // The id column (like IdCustomer).
-	@Nullable public String targetDate;       // The date column. Used only for base construction.
+	public String targetDate;       // The date column. Used only for base construction.
 	public String targetColumn;     // The target column. Used only for base construction.
 	public String targetTable;      // The table with the target column. Used only for base construction.
 	public String whiteListTable;   // List of used tables.
@@ -98,7 +97,7 @@ public final class Setting {
 	public final String journalPattern = "journal_pattern"; // The name of the list of patterns.
 	public final String journalRun = "journal_run";         // The name of the list of runs.
 	public final String bkpPrefix = "bkp_";                 // To be able to recover the old work.
-	public final String propagatedPrefix = "propagated_";   // For single schema databases.
+	public final String propagatedPrefix = "propagated";    // For single schema databases.
 	public final String predictorPrefix = "PREDICTOR";      // Tables with predictors have uniform prefix.
 	public final int predictorStart = 100000;               // Convenience for "natural sorting".
 
@@ -234,7 +233,9 @@ public final class Setting {
 	private void prettyPrint() {
 		logger.debug("Lag: " + lag);
 		logger.debug("Lead: " + lead);
-		logger.debug("Sample count: " + sampleCount);
+		logger.debug("Sample count limit: " + sampleCount);
+		logger.debug("Predictor count limit: " + predictorMax);
+		logger.debug("Use two stages: " + useTwoStages);
 		logger.debug("Use ids: " + useIdAttributes);
 		logger.debug("Target schema: " + targetSchema);
 		logger.debug("Target table: " + targetTable);

@@ -10,7 +10,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import parser.ANTLR;
 import run.Setting;
 import utility.CountAppender;
@@ -36,7 +35,7 @@ public class SQL {
 	private static final Logger logger = Logger.getLogger(SQL.class.getName());
 
 	// Subroutine 1: Add "Create table as" sequence into the pattern. Moved from private -> protected for unit testing.
-	protected static String addCreateTableAs(@NotNull Setting setting, String sql) {
+	protected static String addCreateTableAs(Setting setting, String sql) {
 
 		// MSSQL syntax?
 		if (!setting.supportsCreateTableAs) {
@@ -77,7 +76,7 @@ public class SQL {
 	}
 
 	// Subroutine 2.2: Expand tables based on list (like: Table -> Schema.Table)
-	private static String expandNameList(String sql, @NotNull List<String> list) {
+	private static String expandNameList(String sql, List<String> list) {
 
 		// While MySQL doesn't implement "true" schemas, it implements information_schema
 		// and places it next to the database (instead of inside the database).
@@ -90,7 +89,7 @@ public class SQL {
 	}
 
 	// Subroutine 3.1: Replace & escape the entities present in setting
-	protected static String escapeEntity(@NotNull Setting setting, String sql, String outputTable) {
+	protected static String escapeEntity(Setting setting, String sql, String outputTable) {
 		// Test parameters
 		if (setting.targetIdList == null || setting.targetIdList.isEmpty()) {
 			throw new IllegalArgumentException("Target ID list is required");
@@ -174,7 +173,7 @@ public class SQL {
 	// problem. The problem is explained at:
 	//      https://www.owasp.org/index.php/Preventing_SQL_Injection_in_Java
 	// A possible solution could be to completely switch to FluentJdbc.
-	private static String escapeEntityPredictor(@NotNull Setting setting, String sql, @NotNull Predictor predictor) {
+	private static String escapeEntityPredictor(Setting setting, String sql, Predictor predictor) {
 		// Test parameters
 		if (StringUtils.isBlank(sql)) {
 			throw new IllegalArgumentException("Code is required");
@@ -204,7 +203,7 @@ public class SQL {
 
 	// Subroutine 3.3: Replace & escape the entities from map
 	// IT COULD CALL escapeEntity to avoid the necessity to call 2 different escapeEntity*
-	protected static String escapeEntityMap(@NotNull Setting setting, String sql, @NotNull Map<String, String> fieldMap) {
+	protected static String escapeEntityMap(Setting setting, String sql, Map<String, String> fieldMap) {
 		// Test parameters
 		if (StringUtils.isBlank(sql)) {
 			throw new IllegalArgumentException("Code is required");
@@ -222,7 +221,7 @@ public class SQL {
 		return sql;
 	}
 
-	protected static String escapeEntityTable(@NotNull Setting setting, String sql, @NotNull MetaOutput.OutputTable table) {
+	protected static String escapeEntityTable(Setting setting, String sql, MetaOutput.OutputTable table) {
 		// Get escape characters
 		String QL = setting.quoteEntityOpen;
 		String QR = setting.quoteEntityClose;
@@ -236,7 +235,7 @@ public class SQL {
 		return sql;
 	}
 
-	@NotNull private static String escapeEntity(@NotNull Setting setting, String entity) {
+	private static String escapeEntity(Setting setting, String entity) {
 		// Get escape characters
 		String QL = setting.quoteEntityOpen;
 		String QR = setting.quoteEntityClose;
@@ -247,13 +246,13 @@ public class SQL {
 
 
 	// Subroutine: Get escaped alias. Oracle is using double quotes. MySQL single quotes...
-	@NotNull private static String escapeAlias(@NotNull Setting setting, String alias) {
+	private static String escapeAlias(Setting setting, String alias) {
 		return setting.quoteAliasOpen + alias + setting.quoteAliasClose;
 	}
 
 
 	// Drop command
-	public static boolean dropTable(@NotNull Setting setting, String outputTable) {
+	public static boolean dropTable(Setting setting, String outputTable) {
 		// Test parameters
 		if (StringUtils.isBlank(outputTable)) {
 			throw new IllegalArgumentException("Output table is required");
@@ -268,7 +267,7 @@ public class SQL {
 	}
 
 	// Drop command
-	public static boolean dropView(@NotNull Setting setting, String outputTable) {
+	public static boolean dropView(Setting setting, String outputTable) {
 		// Test parameters
 		if (StringUtils.isBlank(outputTable)) {
 			throw new IllegalArgumentException("Output table is required");
@@ -285,9 +284,9 @@ public class SQL {
 	// Back up a table in the output schema
 	// Note: We copy the table instead of renaming the table because each database is using a different syntax.
 	// And we already have a working procedure for creating tables from other tables.
-	private static void bkpTable(@NotNull Setting setting, @NotNull Map<String, Table> tableMap, String tableName) {
+	private static void bkpTable(Setting setting, Map<String, Table> tableMap, String tableName) {
 		// Initialization
-		String bkpName = setting.bkpPrefix + setting.inputSchema + "_" + tableName;
+		String bkpName = setting.bkpPrefix + "_" + setting.inputSchema + "_" + tableName;
 
 		// Conditionally drop the old back up
 		if (tableMap.containsKey(bkpName)) dropTable(setting, bkpName);
@@ -319,7 +318,7 @@ public class SQL {
 	// But first check that it is going to work in SAS.
 	// Note: We have to delete the tables/views in the reverse order of their creation because of dependencies if views
 	// are used.
-	public static void prepareOutputSchema(@NotNull Setting setting) {
+	public static void prepareOutputSchema(Setting setting) {
 		// Get list of tables
 		Map<String, Table> tableMap = Meta.collectTables(setting, setting.database, setting.outputSchema);
 
@@ -364,7 +363,7 @@ public class SQL {
 	//      For a simple index, the index name must be the same as the column name.
 	//      Literature: http://support.sas.com/documentation/cdl/en/proc/61895/HTML/default/viewer.htm#a002473673.htm
 	//     But PostgreSQL requires a unique index name per schema -> collisions could then happen.
-	public static boolean addIndex(@NotNull Setting setting, @NotNull String outputTable) {
+	public static boolean addIndex(Setting setting, String outputTable) {
 
 		// With SAS skip the indexing to avoid the need to comply with their naming convention
 		if ("SAS".equals(setting.databaseVendor)) {
@@ -404,7 +403,7 @@ public class SQL {
 	// Of the two options, creating the primary key (and its associated index) after data is loaded will probably be faster.
 	// Alternatives in MySQL, Snowflake,... include CREATE TABLE LIKE. But that does not permit modification
 	// of the table content.
-	public static boolean setPrimaryKey(@NotNull Setting setting, String outputTable) {
+	public static boolean setPrimaryKey(Setting setting, String outputTable) {
 		String columns = "(@baseId)";
 		if (setting.targetDate != null) {
 			columns = "(@baseId, @baseDate)";
@@ -432,7 +431,7 @@ public class SQL {
 	// Get rowCount for a table in the output schema.
 	// SHOULD BE IN META OR USE BOOLEAN useInputSchema
 	// IS NOT USING SYSTEM ESCAPING
-	public static int getRowCount(@NotNull Setting setting, String schema, String table) {
+	public static int getRowCount(Setting setting, String schema, String table) {
 		String entity = setting.quoteEntityOpen + schema + setting.quoteEntityClose;
 		entity = entity + "." + setting.quoteEntityOpen + table + setting.quoteEntityClose;
 		String sql = "SELECT count(*) FROM " + entity;
@@ -455,7 +454,7 @@ public class SQL {
 	// Returns the minimum and maximum date a column in a form of a number stored as string.
 	// It may be ugly, but by converting the dates into a number we don't have to deal with timestamps, datetimes...
 	// NOTE: It is intended for collection of time values. Maybe it would be better to create a table in the database?
-	public static List<String> getDateRange(@NotNull Setting setting, String table, String column) {
+	public static List<String> getDateRange(Setting setting, String table, String column) {
 
 		// Sometimes databases return t/f sometimes 1/0...
 		String sql = "SELECT dateToNumber(min(@column)) FROM @outputTable UNION ALL SELECT dateToNumber(max(@column)) FROM @outputTable";
@@ -478,7 +477,7 @@ public class SQL {
 	// Useful for QC of the predictors
 	// SHOULD BE IN META OR USE BOOLEAN useInputSchema
 	// IS NOT USING SYSTEM ESCAPING
-	public static int getNotNullCount(@NotNull Setting setting, String schema, String table, String column) {
+	public static int getNotNullCount(Setting setting, String schema, String table, String column) {
 		String entity = setting.quoteEntityOpen + schema + setting.quoteEntityClose;
 		entity = entity + "." + setting.quoteEntityOpen + table + setting.quoteEntityClose;
 
@@ -502,7 +501,7 @@ public class SQL {
 
 	// Returns true if the column contains null.
 	// Overwritten in SQLOracle.
-	public boolean containsNull(@NotNull Setting setting, String table, String column) {
+	public boolean containsNull(Setting setting, String table, String column) {
 
 		String sql = "SELECT exists(SELECT 1 FROM @inputTable WHERE @column is null)";
 
@@ -521,7 +520,7 @@ public class SQL {
 	// Returns true if the date column contains a date from the future.
 	// NOTE: May fail on a timestamp or different database dialect.
 	// Overwritten in SQLOracle.
-	public boolean containsFutureDate(@NotNull Setting setting, String table, String column) {
+	public boolean containsFutureDate(Setting setting, String table, String column) {
 
 		// The good thing on "current_date" is that it is a standard. The bad thing is that it does not work in MSSQL.
 		// Hence we use ODBC standard of "{fn NOW()}", which should be automatically replaced in the JDBC driver to the
@@ -548,7 +547,7 @@ public class SQL {
 	// This is an optimistic estimate based on max(targetDate) and min(targetDate).
 	// NOTE: It may fail on Oracle if we use month unit because we are using "interval".
 	// If we used add_month, it would work.
-	public static int countUsableDates(@NotNull Setting setting, String table, String column) {
+	public static int countUsableDates(Setting setting, String table, String column) {
 
 		// First the upper bound (lead)
 		String timeConstraint = " dateToNumber(" + setting.dateAddSyntax + ") <= " + setting.baseDateRange.get(1);
@@ -586,7 +585,7 @@ public class SQL {
 	// Note that we are working with the input tables -> alter commands are forbidden.
 	// IS NOT USING SYSTEM ESCAPING
 	// Overwritten in SQLOracle.
-	public boolean isIdUnique(@NotNull Setting setting, @NotNull MetaOutput.OutputTable table) {
+	public boolean isIdUnique(Setting setting, MetaOutput.OutputTable table) {
 
 		// Note: Following query, which does not use exist, is ~twice as fast on unique columns but ~twice as slow
 		// non-unique columns on PostgreSQL:
@@ -630,7 +629,7 @@ public class SQL {
 
 	// Check whether the columns {baseId, baseDate} are unique in the table in the inputSchema.
 	// Overwritten in SQLOracle.
-	public boolean isTargetTupleUnique(@NotNull Setting setting, String table) {
+	public boolean isTargetTupleUnique(Setting setting, String table) {
 		// We could have used possibly faster: "ALTER TABLE @outputTable ADD UNIQUE (@baseId, @baseDate)".
 		// But it would not work in Netezza as Netezza doesn't support constraint checking and referential integrity.
 		String sql = "SELECT exists(" +
@@ -650,7 +649,7 @@ public class SQL {
 	// Returns 1 if the baseId in the table in the outputSchema is unique.
 	// It appears this can be disk space demanding (tested in Accidents dataset)
 	// Overwritten in SQLOracle.
-	public boolean isTargetIdUnique(@NotNull Setting setting, String table) {
+	public boolean isTargetIdUnique(Setting setting, String table) {
 
 		String sql = "SELECT exists(" +
 				"SELECT @baseId FROM @outputTable GROUP BY @baseId HAVING count(*)>1)";
@@ -671,7 +670,7 @@ public class SQL {
 	// NOTE: If min==max, return warning?
 	// NOTE: Branch for SAS.
 	// Note: Mid-ranges like 1996-03-21 23:30:00 are to be expected as Java is taking into account daylight changes.
-	@NotNull public static Timestamp getPivotDate(@NotNull Setting setting, int dateDataType) {
+	public static Timestamp getPivotDate(Setting setting, int dateDataType) {
 		// SAS requires informat. NOTE: NOT TESTED ON DATETIME AND TIME!
 		String informat = "";
 		if ("SAS".equals(setting.databaseVendor)) {
@@ -705,7 +704,7 @@ public class SQL {
 	// This function is useful for example for dummy coding of nominal attributes.
 	// NOTE: IT WOULD BE NICE IF THE COUNT OF RETURNED SAMPLES WAS SORTED AND LIMITED -> a subquery?
 	// NOTE: It would be nice, if a vector of occurrences was also returned (to skip rare configurations).
-	public static List<String> getUniqueRecords(@NotNull Setting setting, String tableName, String columnName, boolean useInputSchema) {
+	public static List<String> getUniqueRecords(Setting setting, String tableName, String columnName, boolean useInputSchema) {
 		String table = "@outputTable";
 		if (useInputSchema) {
 			table = "@inputTable";
@@ -732,7 +731,7 @@ public class SQL {
 	// NOTE: It would be nice, if a vector of frequencies was also returned (to skip rare values
 	// in absolute measure, not only relative - handy when the attribute's cardinality is small).
 	// NOTE: Maybe I should consider null values as a legit category.
-	public static List<String> getTopUniqueRecords(@NotNull Setting setting, String tableName, String columnName) {
+	public static List<String> getTopUniqueRecords(Setting setting, String tableName, String columnName) {
 		String table = "@inputTable";
 
 		// A query without an aggregate function in ORDER BY clause because of the following limitation of SAS:
@@ -757,9 +756,9 @@ public class SQL {
 
 	// Could the two columns in the table describe a symmetric relation (like in borderLength(c1, c2))?
 	// DEVELOPMENTAL AND LIKELY USELESS...
-	public static boolean isSymmetric(@NotNull Setting setting, @NotNull Map<String, String> map) {
+	public static boolean isSymmetric(Setting setting, Map<String, String> map) {
 		String sql = "SELECT exists("
-				+ "SELECT @lagColumn, @column FROM @inputTable"
+				+ "SELECT @lagColumn, @column FROM @inputTable "
 				+ "EXCEPT "
 				+ "SELECT @column, @lagColumn FROM @inputTable"
 				+ ")";
@@ -775,7 +774,7 @@ public class SQL {
 	// Get R2. For discrete variables, following method is used:
 	// http://stats.stackexchange.com/questions/119835/correlation-between-a-nominal-iv-and-a-continuous-dv-variable
 	// R2 is normalized by the count of non-null samples of the predictor to penalize for sparse predictors.
-	public static double getR2(@NotNull Setting setting, @NotNull Predictor predictor) {
+	public static double getR2(Setting setting, Predictor predictor) {
 		// Initialization
 		String sql;
 
@@ -789,7 +788,7 @@ public class SQL {
 					"FROM @outputTable " +
 					"GROUP BY @column " +
 					") t2 " +
-					"ON t1.@column = t2.@column" +
+					"ON t1.@column = t2.@column " +
 					"where t1.@column is not null AND t1.@baseTarget is not null";
 		} else if ("numerical".equals(predictor.getRawDataType())) {
 			sql = "SELECT count(@column)*power(corr(@column, @baseTarget), 2) " +
@@ -838,7 +837,7 @@ public class SQL {
 	// The calculation could be streamlined as described in:
 	//  Study of feature selection algorithms for text-categorization.
 	// SHOULD BE EXTENDED TO SUPPORT BOOLEANS
-	public static double getChi2(@NotNull Setting setting, @NotNull Predictor predictor) {
+	public static double getChi2(Setting setting, Predictor predictor) {
 		// Initialization
 		String sql;
 
@@ -991,7 +990,7 @@ public class SQL {
 	// them to Predictor Factory (it is necessary to limit the length of the histogram for nominal attributes)
 	// and calculate Chi2 in Concept Drift in Java? This way we could also easily calculate CFS...
 	// Note: Calculate it only if Chi2 is big enough to get into the output table.
-	public static double getConceptDriftPostgre(@NotNull Setting setting, @NotNull Predictor predictor) {
+	public static double getConceptDriftPostgre(Setting setting, Predictor predictor) {
 
 		String sql;
 
@@ -1155,7 +1154,7 @@ public class SQL {
 	// Note: Concept drift is so far just for nominal labels. Should be extended to continuous label
 	// Note: If the targetDate is a constant, we should not perform concept drift (at least not by time).
 	// NOTE: THIS IMPLEMENTATION INCREASES RUNTIME BY ~30%
-	public static double getConceptDrift(@NotNull Setting setting, @NotNull Predictor predictor) {
+	public static double getConceptDrift(Setting setting, Predictor predictor) {
 
 		String fromDual = "";
 		if ("Oracle".equals(setting.databaseVendor)) fromDual = " from dual ";
@@ -1309,7 +1308,7 @@ public class SQL {
 
 
 	// QC patterns based on produced predictors
-	private static List<String> qcPredictors(@NotNull Setting setting) {
+	private static List<String> qcPredictors(Setting setting) {
 		String sql = "SELECT pattern_name " +
 				"FROM @outputTable " +
 				"GROUP BY pattern_name " +
@@ -1323,7 +1322,7 @@ public class SQL {
 	}
 
 
-	public static boolean getJournalRun(@NotNull Setting setting) {
+	public static boolean getJournalRun(Setting setting) {
 		logger.debug("# Setting up journal table for runtime summary #");
 
 		// An important limitation: Oracle limits name length of an identifier to 30 characters
@@ -1371,7 +1370,7 @@ public class SQL {
 	// Log the result of Predictor Factory run
 	// ADD: column with count of produced predictors & whether PF finished successfully & setting.
 	// Note: We are using preparedStatement because Oracle is sensitive on the format in which TimesTamp is passed.
-	public static boolean addJournalRun(@NotNull Setting setting, long elapsedTime) {
+	public static boolean addJournalRun(Setting setting, long elapsedTime) {
 
 		// Log the time in a nice-to-read format
 		logger.debug("Time of finishing: " + LocalDate.now() + " " + LocalTime.now());
@@ -1412,7 +1411,7 @@ public class SQL {
 	// 1a) Return create journal_predictor table command
 	// Return true if the journal table was successfully created.
 	// Note: Default values are not supported on SAS data sets -> avoid them.
-	public static boolean getJournalPredictor(@NotNull Setting setting) {
+	public static boolean getJournalPredictor(Setting setting) {
 		logger.debug("# Setting up journal table #");
 
 		// The primary key is set directly behind the column name, not at the end, because SAS supports only the first declaration.
@@ -1450,7 +1449,7 @@ public class SQL {
 
 	// 1b) Add record into the journal_predictor
 	// Return true if the journal table was successfully updated.
-	public static boolean addToJournalPredictor(@NotNull Setting setting, @NotNull Predictor predictor) {
+	public static boolean addToJournalPredictor(Setting setting, Predictor predictor) {
 
 		// Convert bool to int
 		int isOk = predictor.isOk() ? 1 : 0;
@@ -1493,7 +1492,7 @@ public class SQL {
 		return Network.executeUpdate(setting.dataSource, sql);
 	}
 
-	public static boolean getJournalTable(@NotNull Setting setting) {
+	public static boolean getJournalTable(Setting setting) {
 		logger.debug("# Setting up journal table for propagated tables #");
 
 		// An important limitation: Oracle limits name length of an identifier to 30 characters
@@ -1524,7 +1523,7 @@ public class SQL {
 		return Network.executeUpdate(setting.dataSource, sql);
 	}
 
-	public static boolean addToJournalTable(@NotNull Setting setting, @NotNull MetaOutput.OutputTable table) {
+	public static boolean addToJournalTable(Setting setting, MetaOutput.OutputTable table) {
 
 		// Convert bool to int
 		int isSuccessfullyExecuted = table.isSuccessfullyExecuted ? 1 : 0;
@@ -1569,7 +1568,7 @@ public class SQL {
 	}
 
 
-	public static boolean getJournalPattern(@NotNull Setting setting) {
+	public static boolean getJournalPattern(Setting setting) {
 		String sql = "CREATE TABLE @outputTable (" +
 				"name varchar(255) PRIMARY KEY, " +
 				"author varchar(255), " +
@@ -1589,7 +1588,7 @@ public class SQL {
 	}
 
 	// NOT NICE TO OPEN A CONNECTION HERE
-	public static boolean addToJournalPattern(@NotNull Setting setting, @NotNull Collection<Predictor> predictorCollection) {
+	public static boolean addToJournalPattern(Setting setting, Collection<Predictor> predictorCollection) {
 
 		// Initialization
 		String sql = "insert into @outputTable " +
@@ -1634,7 +1633,7 @@ public class SQL {
 	}
 
 	// Does the substring appear in the code or parameter of the pattern?
-	private static int contains(@NotNull Predictor predictor, @NotNull String substring) {
+	private static int contains(Predictor predictor, String substring) {
 		boolean result = predictor.getPatternCode().contains(substring);
 		if (result) return 1;
 
@@ -1647,7 +1646,7 @@ public class SQL {
 
 
 	// NOTE: IN PROGRESS OF CONSTRUCTION
-	public static boolean getJournalTemporal(@NotNull Setting setting) {
+	public static boolean getJournalTemporal(Setting setting) {
 		logger.debug("# Setting up journal table for temporal constraints #");
 
 		// An important limitation: Oracle limits name length of an identifier to 30 characters
@@ -1671,7 +1670,7 @@ public class SQL {
 	}
 
 	// NOTE: IN PROGRESS OF CONSTRUCTION
-	public static boolean addToJournalTemporal(@NotNull Setting setting, @NotNull MetaOutput.OutputTable table) {
+	public static boolean addToJournalTemporal(Setting setting, MetaOutput.OutputTable table) {
 
 
 		Column column = table.getColumn("");
@@ -1701,7 +1700,7 @@ public class SQL {
 	// The base table could be practical, because we may simply add random sample column.
 	// Return true if the base table was successfully created.
 	// IS NOT USING SYSTEM ESCAPING
-	public static boolean getBase(@NotNull Setting setting) {
+	public static boolean getBase(Setting setting) {
 		logger.debug("# Setting up base table #");
 
 		String sql;
@@ -1757,7 +1756,7 @@ public class SQL {
 						"FROM @targetTable t1 LEFT JOIN (" +
 						"SELECT @targetId, @targetDate FROM @targetTable GROUP BY @targetId, @targetDate HAVING count(*)>1 " +
 						") t2 " +
-						"ON t1.@targetId = t2.@targetId AND t1.@targetDate = t2.@targetDate" +
+						"ON t1.@targetId = t2.@targetId AND t1.@targetDate = t2.@targetDate " +
 						"WHERE t2.@targetId is null AND t1.@targetDate is not null"; // TargetDate should never be null
 			}
 		}
@@ -1781,7 +1780,7 @@ public class SQL {
 
 	// Sample base table based on target class.
 	// Note: The selection is not guaranteed to be random.
-	public static void getSubSampleClassification(@NotNull Setting setting, @NotNull SortedMap<String, Table> metaInput) {
+	public static void getSubSampleClassification(Setting setting, SortedMap<String, Table> metaInput) {
 
 		// Initialization
 		String sql = "";
@@ -1814,7 +1813,7 @@ public class SQL {
 
 	// Subsample base table.
 	// Note: The selection is not guaranteed to be random.
-	public static void getSubSampleRegression(@NotNull Setting setting) {
+	public static void getSubSampleRegression(Setting setting) {
 
 		// Initialize
 		String sql = Parser.limitResultSet(setting, "SELECT * FROM @baseTable", setting.sampleCount);
@@ -1836,7 +1835,7 @@ public class SQL {
 	// Technical note: We have to return SQL string, because these things are logged and exported for the user
 	// as the "scoring code" for predictors.
 	// IS NOT USING SYSTEM ESCAPING
-	public static String propagateID(@NotNull Setting setting, @NotNull MetaOutput.OutputTable table) {
+	public static String propagateID(Setting setting, MetaOutput.OutputTable table) {
 		// Get escape characters
 		String QL = setting.quoteEntityOpen;
 		String QR = setting.quoteEntityClose;
@@ -1889,7 +1888,7 @@ public class SQL {
 	}
 
 	// 4) Get predictor
-	public static String getPredictor(@NotNull Setting setting, @NotNull Predictor predictor) {
+	public static String getPredictor(Setting setting, Predictor predictor) {
 		String sql = predictor.getSql();
 
 		sql = Parser.expandBase(setting, sql);
@@ -1911,7 +1910,7 @@ public class SQL {
 	// Note: The current implementation stores only up to ~3600 predictors. So far the limit is acceptable as column
 	// count in a table is commonly limited (1600 columns in PostgreSQL and 1000 columns in Oracle).
 	// UNSYSTEMATIC ESCAPING
-	public static void getMainSample(@NotNull Setting setting, @NotNull Collection<Predictor> predictorList) {
+	public static void getMainSample(Setting setting, Collection<Predictor> predictorList) {
 
 		// Extract table and column names.
 		// ASSUMING THAT THE MATCH IS 1:1!
@@ -2067,7 +2066,7 @@ public class SQL {
 	}
 
 	// Subroutine - transform java date to SQL date
-	private static String date2query(@NotNull Setting setting, @NotNull LocalDateTime date) {
+	private static String date2query(Setting setting, LocalDateTime date) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
 		String template = setting.insertTimestampSyntax;

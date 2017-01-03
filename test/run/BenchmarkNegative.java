@@ -72,7 +72,7 @@ public class BenchmarkNegative {
 			Process process = new Process(new File("/Users/jan/.RapidMiner5/repositories/Local Repository/processes/Predictor Factory/PostgreSQL - just accuracy.rmp"));
 			//Process process = new Process(new File("/Users/jan/.RapidMiner5/repositories/Local Repository/processes/QuickAndDirt.rmp"));
 			accuracy = process.run().get(PerformanceVector.class).getCriterion("accuracy").getAverage();
-		} catch (@NotNull IOException | XMLException | OperatorException ex) {
+		} catch (IOException | XMLException | OperatorException ex) {
 			ex.printStackTrace();
 		}
 		

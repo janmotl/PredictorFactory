@@ -18,7 +18,7 @@ public class TemporalConstraint {
 
 	// Sets the most likely time constraint. If no time constraint is found, table.constraintDate remains null.
 	// The function sets: {constraintDate, temporalConstraintJustification, temporalConstraintRowCountOptimistic, isIdUnique}.
-	@NotNull public static MetaOutput.OutputTable find(@NotNull Setting setting, @NotNull MetaOutput.OutputTable table) {
+	public static MetaOutput.OutputTable find(Setting setting, MetaOutput.OutputTable table) {
 
 		// 1) If setting.targetDate is not defined, stop. Leave null in the table.constraintDate.
 		if (setting.targetDate == null) {

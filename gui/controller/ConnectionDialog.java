@@ -14,7 +14,7 @@ import java.io.StringWriter;
 public class ConnectionDialog {
 
 	// Show a dialog with an error
-	public static void exceptionDialog(@NotNull Exception ex) {
+	public static void exceptionDialog(Exception ex) {
 		Alert alert = new Alert(Alert.AlertType.ERROR);
 		alert.setTitle("Predictor Factory");
 		alert.setHeaderText(null);
@@ -49,7 +49,7 @@ public class ConnectionDialog {
 	}
 
 	// Show a dialog with a connection progress bar and a cancel button
-	@NotNull public static Dialog progressDialog() {
+	public static Dialog progressDialog() {
 		Dialog<Pair<String, String>> dialog = new Dialog<>();
 		dialog.setTitle("Connecting to the server...");
 
