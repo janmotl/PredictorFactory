@@ -98,6 +98,13 @@ public class Journal {
 		return journal.subList(0, len);
 	}
 
+	// Preserve only the best predictors. Useful in combination with marshaling. Destructive.
+	public void trim() {
+		journal = getTopPredictors();
+		groupIdDuplicate = new HashMap<>();
+		valueDuplicate = new HashMap<>();
+	}
+
 	///// Generic getters and setters
 	public int getExpectedPredictorCount() {
 		return expectedPredictorCount;
@@ -185,6 +192,8 @@ public class Journal {
 			overflower.setCandidateState(0);
 		}
 	}
+
+
 
 
 	////// JAXB

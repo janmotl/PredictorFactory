@@ -12,8 +12,9 @@ import java.util.TreeSet;
 
 public class TwoStages {
 
-
-	public static void setExploitationPhase(String databasePropertyName, Journal journal) {
+	// Note: The only thing that has any effect is tableSet. columnSet and patternSet do not affect propagation.
+	// Predictor setting is read directly from XML.
+	public static void setExploitationPhase(Setting setting, String databasePropertyName, Journal journal) {
 		List<Predictor> predictorList =  journal.getTopPredictors();
 		Set<String> tableSet = new TreeSet<>();
 		Set<String> columnSet = new TreeSet<>();
@@ -32,10 +33,10 @@ public class TwoStages {
 			}
 			for (ForeignConstraint fc : predictor.getTable().foreignConstraintList) {
 				for (String column : fc.column) {
-					columnSet.add(fc.table + "." + column);
+					if (tableSet.contains(fc.table)) columnSet.add(fc.table + "." + column);
 				}
 				for (String fColumn : fc.fColumn) {
-					columnSet.add(fc.fTable + "." + fColumn);
+					if (tableSet.contains(fc.fTable)) columnSet.add(fc.fTable + "." + fColumn);
 				}
 			}
 
@@ -43,6 +44,15 @@ public class TwoStages {
 			patternSet.add(predictor.getPatternName());
 		}
 
+		// Exclude generated base_sampled. Include special columns.
+		tableSet.remove(setting.baseSampled);
+		columnSet.add(setting.targetTable + "." + setting.targetColumn);
+		if (setting.targetDate != null) {
+			columnSet.add(setting.targetTable + "." + setting.targetDate);
+		}
+		for (String id : setting.targetIdList) {
+			columnSet.add(setting.targetTable + "." + id);
+		}
 
 		// Modify the current databaseProperty to use only the useful {tables, columns, patterns}
 		DatabasePropertyList propertyList = DatabasePropertyList.unmarshall();

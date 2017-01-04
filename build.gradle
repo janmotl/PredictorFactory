@@ -98,6 +98,7 @@ task deploy(dependsOn: 'jar') {
         copy {
             from 'config'
             into "$buildDir/output/config"
+            exclude 'journal.xml'
         }
         copy {
             from 'config/log4j.properties'

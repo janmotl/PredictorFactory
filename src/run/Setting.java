@@ -96,7 +96,7 @@ public final class Setting {
 	public final String journalTemporal = "journal_temporal";// The name of temporal constraints' journal table.
 	public final String journalPattern = "journal_pattern"; // The name of the list of patterns.
 	public final String journalRun = "journal_run";         // The name of the list of runs.
-	public final String bkpPrefix = "bkp_";                 // To be able to recover the old work.
+	public final String bkpPrefix = "bkp";                  // To be able to recover the old work.
 	public final String propagatedPrefix = "propagated";    // For single schema databases.
 	public final String predictorPrefix = "PREDICTOR";      // Tables with predictors have uniform prefix.
 	public final int predictorStart = 100000;               // Convenience for "natural sorting".

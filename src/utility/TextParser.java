@@ -1,8 +1,6 @@
 package utility;
 
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -31,6 +29,7 @@ public class TextParser {
 
 	// Convert dot delimited list to map
 	// Example: table.column -> key=table, value=column
+	// Note: Hope that no one gets the brilliant idea to use dots in the names...
 	public static Map<String, List<String>> list2map(List<String> list) {
 		Map<String, List<String>> result = new HashMap<>();
 

@@ -26,8 +26,8 @@ public class Launcher {
 	public static void main(String[] arg) {
 
 		// Connect to the following server and database:
-		String connectionProperty = "MariaDB";   // Host identification as specified in resources/connection.xml
-		String databaseProperty = "financial";       // Dataset identification as specified in resources/database.xml
+		String connectionProperty = "PostgreSQL";   // Host identification as specified in resources/connection.xml
+		String databaseProperty = "mutagenesis";       // Dataset identification as specified in resources/database.xml
 
 		// Read command line parameters if they are present (and overwrite the defaults).
 		if (arg.length == 1 || arg.length > 2) {
@@ -86,9 +86,9 @@ public class Launcher {
 		///////// SANDBOX
 
 		if (setting.useTwoStages && setting.sampleCount<Integer.MAX_VALUE) {
-			Journal.marshall(journal);  // It is not necessary to write whole journal. It is enough to write just the top
-
-			TwoStages.setExploitationPhase(databaseProperty, journal);
+			journal.trim();
+			Journal.marshall(journal);
+			TwoStages.setExploitationPhase(setting, databaseProperty, journal);
 			logger.info("Predictor count: " + journal.getTopPredictors().size());
 			logger.info("The exploration stage finished. Starting the exploitation phase.");
 			main(new String[]{connectionProperty, "exploitationStage"});
