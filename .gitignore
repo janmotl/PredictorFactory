@@ -14,11 +14,32 @@ Desktop.ini		# Windows - folder personalisation
 # IDE related #
 ###############
 .gradle/				# Gradle
-.idea/					# Idea project directory
-PredictorFactory.iml	# Idea project file
-/local.properties		# Local configuration file (sdk path, etc)
 .classpath				# Eclipse project file
 .project 				# Eclipse project file
+
+
+# IDEA project #
+################
+
+# User-specific files:
+.idea/workspace.xml
+.idea/tasks.xml
+
+# Sensitive or high-churn files:
+.idea/dataSources/
+.idea/dataSources.ids
+.idea/dataSources.xml
+.idea/dataSources.local.xml
+.idea/sqlDataSources.xml
+.idea/dynamic.xml
+.idea/uiDesigner.xml
+
+# Gradle:
+.idea/gradle.xml
+.idea/libraries
+
+# File-based project format:
+*.iws
 
 # Eclipse plugins #
 ###################
@@ -29,6 +50,7 @@ PredictorFactory.iml	# Idea project file
 bin/			# Not necessary to create the directory with the bytecode
 build/			# Not necessary to create the directory with the bytecode
 log/			# May contain sensitive information
+config/journal.xml  # A (potentially) big auto-generated file
 src/benchmark	# A directory for evaluation of Predictor Factory
 *.bkp			# Ad hoc backup files
 CopyOf*			# Ad hoc development files

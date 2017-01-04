@@ -285,8 +285,12 @@ public class SQL {
 	// Note: We copy the table instead of renaming the table because each database is using a different syntax.
 	// And we already have a working procedure for creating tables from other tables.
 	private static void bkpTable(Setting setting, Map<String, Table> tableMap, String tableName) {
+		// Abbreviate the known names to conform the strict limit on count of chars
+		String abbreviatedName = tableName.replace("journal", "j");
+		abbreviatedName = abbreviatedName.replace("MAINSAMPLE", "MS");
+
 		// Initialization
-		String bkpName = setting.bkpPrefix + "_" + setting.inputSchema + "_" + tableName;
+		String bkpName = setting.bkpPrefix + "_" + setting.inputSchema + "_" + abbreviatedName;
 
 		// Conditionally drop the old back up
 		if (tableMap.containsKey(bkpName)) dropTable(setting, bkpName);
