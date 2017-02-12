@@ -200,6 +200,7 @@ public class Events implements Initializable {
         databaseProperty.lead = parseInteger(textLead.getText());
         databaseProperty.task = comboBoxTask.getValue();
         databaseProperty.useIdAttributes = checkBoxUseId.isSelected();
+        databaseProperty.useTwoStages = checkBoxUseTwoStages.isSelected();
         databaseProperty.sampleCount = parseInteger(textSampleCount.getText());
         databaseProperty.predictorMax = parseInteger(textPredictorMax.getText());
 
@@ -519,7 +520,7 @@ public class Events implements Initializable {
             comboBoxTask.setValue(setting.task);
 
             // Update the text in the setting tab
-            textPredictorMax.setPromptText("database limit ≈" + setting.predictorMaxTheory);
+            textPredictorMax.setPromptText("database limit ≈ " + setting.predictorMaxTheory);
         });
 
         // If failed...

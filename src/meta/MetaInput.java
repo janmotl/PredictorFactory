@@ -1,7 +1,6 @@
 package meta;
 
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import run.Setting;
 import utility.BlackWhiteList;
 import utility.Meta;

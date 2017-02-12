@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Moment</name>
+	<description>Sample skewness.
+
+		To get at least somehow reliable estimation of skewness and kurtosis requires at least 10 samples. To get a
+		usable estimate, you need hundreds of samples. Reference:
+			https://www.spcforexcel.com/knowledge/basic-statistics/are-skewness-and-kurtosis-useful-statistics
+
+		NOTE: We return an estimate, only if the standard deviation exists (requires at least 2 samples) and is non-zero.
+		This behaviour is consistent with the behaviour of skewness command in MATLAB.
+		NOTE: Kurtosis will be added once support for multiple columns in the result will be implemented.
+
+		The implementation is from: http://www.experts-exchange.com/Database/MS_Access/A_2529-Median-Mode-Skewness-and-Kurtosis-in-MS-Access.html
+
+		Note: Clipping of the data could be detected with a ratio of extreme values (a range close to min/max)
+		to the count of values in another pattern.
+	</description>
+	<example>
+		Skewness can be a sign of data truncation. For example, balance withdrawn from an ATM can be skewed
+		because of too low limit on the credit card.
+	</example>
+	<author>Jan Motl</author>
+	<date>2014-12-22</date>
+	<code compatibility="MySQL,Microsoft SQL Server,Oracle,PostgreSQL">SELECT t1.@base
+		   , avg(power((t1.@numericalColumn - z.TheAvg)/z.TheStd, 3)) AS @columnName
+		FROM @propagatedTable t1
+		JOIN (
+			SELECT @basePartitionBy
+				 , avg(@numericalColumn) TheAvg
+				 , stddev_samp(@numericalColumn) TheStd
+			FROM @propagatedTable
+			GROUP BY @basePartitionBy
+		) z
+		USING(@basePartitionBy)
+		WHERE TheStd > 0
+		GROUP BY t1.@base
+	</code>
+	<cardinality>n</cardinality>
+</pattern>

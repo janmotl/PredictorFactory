@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Time KSP</name>
+	<description>
+		This pattern converts date into a continuous number (which is an interval measure). Hence, the result is
+		processable with machines. But the number still retains a more-or-less readable form (e.g. in comparison to
+		UNIX time).
+
+		Reference: Introduction to Data Mining for the Life Sciences (Rob Sullivan)
+
+		Note: To determine, whether a given year is a leap year, the query asks the database for December 31.
+		Note: Does not work for PostgreSQL.
+	</description>
+	<example>
+
+	</example>
+	<author>Matej Polak</author>
+	<date>2017-02-02</date>
+	<code compatibility="MySQL">SELECT @base
+			, YEAR(@timeColumn) + ((DAYOFYEAR(@timeColumn) - 0.5) / DAYOFYEAR( CONCAT( YEAR (@timeColumn), '-12-31' ))) AS @columnName
+		FROM @propagatedTable
+	</code>
+	<cardinality>1</cardinality>
+</pattern>

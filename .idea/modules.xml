@@ -3,9 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/PredictorFactory.iml" filepath="$PROJECT_DIR$/.idea/modules/PredictorFactory.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/PredictorFactory.iml" filepath="$PROJECT_DIR$/.idea/modules/PredictorFactory.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/PredictorFactory_main.iml" filepath="$PROJECT_DIR$/.idea/modules/PredictorFactory_main.iml" group="PredictorFactory" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/PredictorFactory_test.iml" filepath="$PROJECT_DIR$/.idea/modules/PredictorFactory_test.iml" group="PredictorFactory" />
     </modules>
   </component>
 </project>

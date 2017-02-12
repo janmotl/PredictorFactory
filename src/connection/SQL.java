@@ -389,6 +389,9 @@ public class SQL {
 			name = "ix" + outputTable.substring(setting.mainTable.length(), outputTable.length());
 		}
 
+		// Table names can use ridiculous symbols like "-" or spaces. Hence we must quote the index name.
+		name = escapeEntity(setting, name);
+
 		String sql = "CREATE INDEX " + name + " ON @outputTable " + columns;
 
 		sql = expandName(sql);

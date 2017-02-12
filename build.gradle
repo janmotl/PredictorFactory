@@ -1,7 +1,7 @@
 apply plugin: 'java'
 
 group 'PredictorFactory'
-version '3.3.5'
+version '3.3.6'
 sourceCompatibility = 1.8
 
 
@@ -39,6 +39,7 @@ dependencies {
     runtime fileTree(dir: 'lib/jdbc-driver/vertica', include: '*.jar')
 
     compile fileTree(dir: 'lib/sqlformatter', include: '*.jar') // But fails on "mode" in postgre sql...
+    compile fileTree(dir: 'lib/SQLinForm', include: '*.jar') // Ok
     compile fileTree(dir: 'lib', include: '*.jar')
 
     testCompile fileTree(dir: 'lib/rapidminer', include: '*.jar')

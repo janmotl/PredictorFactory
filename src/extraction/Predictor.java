@@ -7,6 +7,7 @@ import org.apache.commons.lang3.text.WordUtils;
 import run.Setting;
 
 import javax.xml.bind.annotation.XmlType;
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -164,18 +165,19 @@ public class Predictor implements Comparable<Predictor> {
 	// SHOULD INTRODUCE A SHORTER VARIANT IF identifierLengthMax is small: column_pattern_parameter.
 	public String getNameOnce(Setting setting) {
 		int identifierLengthMax = setting.identifierLengthMax;
+
 		// 3 characters are reserved for underscores, 6 characters are for id. Divide into 3 parts (table, column, parameter)
 		int length = (identifierLengthMax - 9)/3;
 
 		// Add table name
-		String name = getOriginalTable().substring(0, Math.min(getOriginalTable().length(), length));
+		String name = trimTo(getOriginalTable(), length);
 
 		// Add column names
 		for (String columnName : getColumnMap().values()) {
 			name = name + "_" + columnName;
 		}
 
-		name = name.substring(0, Math.min(name.length(), 2 * length + 1));
+		name = trimTo(name, 2*length+1);
 
 		// Replace special characters with spaces
 		String patternName = pattern.name.replaceAll("[^a-zA-Z0-9_\\s]", " ");
@@ -188,18 +190,37 @@ public class Predictor implements Comparable<Predictor> {
 
 		name = name + "_" + patternName;
 
-		// Add parameters. Ignore all special symbols (particularly "@" from "@column" parameters)
+		// Add parameters. Ignore special symbols (particularly "@" from "@column" parameters)
+		// But preserve unicode letters, numbers, underscores.
 		for (String parameter : parameterMap.keySet()) {
-			name = name + "_" + parameterMap.get(parameter).replaceAll(" ", "").replaceAll("[^a-zA-Z0-9_]", "");
+			name = name + "_" + parameterMap.get(parameter).replaceAll(" ", "").replaceAll("[^\\p{L}0-9_]", "");
 		}
 
-		name = name.substring(0, Math.min(name.length(), 3 * length + 2));
+		name = trimTo(name, 3*length+2);
 
 		// Add id with zero padding from left
 		name = name + "_" + id;
 
 		return name;
 	}
+
+	// Account for non-ascii characters taking possibly more than 1 byte.
+	// This is important for PostgreSQL, which has a limit in bytes (not characters).
+	// If the whole char does not fit completely into the limit it returns a shorter sequence rather
+	// than returning a string with a broken character at the end.
+	// We assume UTF-8 encoding, as it is a reasonably safe bet. Still, UTF-16 can produce a longer array.
+	static protected String trimTo(String name, int byteLength) {
+		int i = 0;
+		try {
+			while ((i+1) <= name.length() && name.substring(0, i+1).getBytes("UTF-8").length <= byteLength) {
+				i++;
+			}
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		return name.substring(0, i);
+	}
+
 
 
 	////////////// Comparators ////////////////

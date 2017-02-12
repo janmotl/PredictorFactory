@@ -2,14 +2,15 @@ package extraction;
 
 
 import meta.MetaOutput;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
 import run.Setting;
 
-import java.util.*;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 
 public class PredictorTest {
@@ -20,11 +21,11 @@ public class PredictorTest {
 		
 	@Before
 	public void init() {
-		pattern.name = "patternName";
+		pattern.name = "Pattern name";
 		pattern.dialectCode = "select 3";
 		pattern.author = "Thorough Tester";
 		pattern.description = "Once upon a time...";
-		pattern.cardinality = "1";		
+		pattern.cardinality = "1";
 	}
 	
 	@Test
@@ -35,7 +36,6 @@ public class PredictorTest {
 		Assert.assertEquals("select 3", predictor.getPatternCode());
 		Assert.assertEquals("value4", predictor.getParameterMap().get("key2"));
 	}
-	
 
 	@Test
 	public void comparatorTwoDoubles() {
@@ -57,6 +57,42 @@ public class PredictorTest {
 		
 		Assert.assertEquals(2, predictorList.get(0).getId());
 		Assert.assertEquals(1, predictorList.get(1).getId());
+	}
+
+
+	@Test
+	public void trimTo() throws UnsupportedEncodingException {
+		int limit = 4;
+		String actual = Predictor.trimTo("_čččččččččččččččč", limit);
+
+		System.out.println(actual);
+		System.out.println(actual.length());
+		System.out.println(actual.getBytes("UTF-8").length);
+		Assert.assertTrue(actual.length() <= limit);
+		Assert.assertTrue(actual.getBytes("UTF-8").length <= limit);
+	}
+
+	@Test
+	public void nameLength_unicode() throws UnsupportedEncodingException {
+		// Initialization
+		setting.identifierLengthMax = 64;
+
+		predictor = new Predictor(pattern);
+		predictor.setId(1);
+		MetaOutput.OutputTable table = new MetaOutput.OutputTable();
+		table.originalName = "tabčččččččččččččččččččččččččččččččččččččččččččččč";
+		predictor.setTable(table);
+		predictor.setParameter("par1", "valřřřřřřřřřřřřřřřřřřřřřřřř");
+		predictor.setParameter("par2", "valžžžžžžžžžžžžžžžžžžžžžžžž");
+
+		// Run
+		String actual = predictor.getNameOnce(setting);
+
+		System.out.println(actual);
+		System.out.println(actual.length());
+		System.out.println(actual.getBytes("UTF8").length);
+		Assert.assertTrue(actual.length() <= setting.identifierLengthMax);
+		Assert.assertTrue(actual.getBytes("UTF8").length <= setting.identifierLengthMax);
 	}
 	
 	@Test
@@ -147,8 +183,8 @@ public class PredictorTest {
 		System.out.println(actual);
 		System.out.println(actual.length());
 		Assert.assertTrue(actual.length() <= setting.identifierLengthMax);
-	}	
-	
+	}
+
 
 	@Test
 	public void nameLength_30_2parameters() {

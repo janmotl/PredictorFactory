@@ -21,7 +21,13 @@
 		Laplacean correction is from: http://shigglesblog.blogspot.com/2013/07/weight-of-evidence.html
 
 		A different correction schema:
-		http://support.sas.com/documentation/cdl/en/prochp/66704/HTML/default/viewer.htm#prochp_hpbin_details02.htm
+			http://support.sas.com/documentation/cdl/en/prochp/66704/HTML/default/viewer.htm#prochp_hpbin_details02.htm
+		Based on the empirical comparison performed by Maros Spak, the implemented correction schema performs on average
+		by 0.5% better than the correction implemented by SAS. This difference was consistent across
+		different models (decision tree, logistic regression, naive Bayes), different metrics (classification accuracy,
+		f-measure, AUC) and different datasets (7 datasets). From the theoretical point of view, the implemented
+		correction produces scores that can be interpreted as a probability (e.g. they sum to 1), while the SAS score
+		cannot be interpreted as a probability because the scores do not sum to 1 (at least for finite count of samples).
 
 		The empirical evidence suggests that Laplacean correction improves AUC by 5 percent points.
 			See: http://papers.ssrn.com/sol3/papers.cfm?abstract_id=1918410

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Matej Harmonic Mean</name>
+	<description>
+		We use 1.0 instead of 1 in the nominator to enforce non-integer division.
+
+		If the set contains a zero, the harmonic mean is equal zero:
+			http://stats.stackexchange.com/questions/37628/harmonic-mean-with-zero-value
+		However, we just ignore zeros!!!
+	</description>
+	<example>
+
+	</example>
+	<author>Matej Polak</author>
+	<date>2017-01-16</date>
+	<code compatibility="MySQL,PostgreSQL">
+		SELECT @base,
+			COUNT(@numericalColumn)/SUM(1.0/@numericalColumn) AS @columnName
+		FROM @propagatedTable
+		WHERE @numericalColumn &lt;&gt;  0
+		GROUP BY @base
+	</code>
+	<cardinality>n</cardinality>
+</pattern>
