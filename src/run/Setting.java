@@ -220,6 +220,9 @@ public final class Setting {
 			case "Oracle":
 				dialect = new SQLOracle();
 				break;
+			case "Teradata":
+				dialect = new SQLOracle();		// DEVELOPMENTAL HACK
+				break;
 			default:
 				dialect = new SQL();
 		}

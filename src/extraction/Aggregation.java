@@ -405,8 +405,8 @@ public class Aggregation {
 		// Add Primary Key constrain.
 		// This is not because of speeding things up (indeed it has a negative impact on total runtime because only
 		// a small proportion of the predictors gets into MainSample) but because it validates uniqueness of the tuples.
-		// Azure requires not-null constraint -> skip it for MSSQL.
-		if (!"Microsoft SQL Server".equals(setting.databaseVendor)) {
+		// Azure and Teradata require not-null constraint -> skip it for MSSQL and Teradata.
+		if (!"Microsoft SQL Server".equals(setting.databaseVendor) && !"Teradata".equals(setting.databaseVendor)) {
 			if (!setting.dialect.setPrimaryKey(setting, predictor.getOutputTable())) {
 				logger.warn("Primary key constrain failed");
 				return;
@@ -473,8 +473,8 @@ public class Aggregation {
 		// Add Primary Key constrain.
 		// This is not because of speeding things up (indeed it has a negative impact on total runtime because only
 		// a small proportion of the predictors gets into MainSample) but because it validates uniqueness of the tuples.
-		// Azure requires not-null constraint -> skip it for MSSQL.
-		if (!"Microsoft SQL Server".equals(setting.databaseVendor)) {
+		// Azure and Teradata require not-null constraint -> skip it for MSSQL and Teradata.
+		if (!"Microsoft SQL Server".equals(setting.databaseVendor) && !"Teradata".equals(setting.databaseVendor)) {
 			if (!setting.dialect.setPrimaryKey(setting, predictor.getOutputTable())) {
 				logger.warn("Primary key constrain failed");
 				return;

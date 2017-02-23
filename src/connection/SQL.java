@@ -39,17 +39,17 @@ public class SQL {
 
 		// MSSQL syntax?
 		if (!setting.supportsCreateTableAs) {
-			sql = Parser.addIntoClause(sql);
-		} else {
-			sql = "CREATE TABLE @outputTable AS " + sql;
+			return Parser.addIntoClause(sql);
 		}
 
-		// MonetDB syntax?
+		// MonetDB/Teradata syntax?
+		// The brackets are required by Teradata.
+		// Without the select methods like getSubSampleClassification would not work in Teradata.
 		if (setting.supportsWithData) {
-			sql = sql + " WITH DATA";
+			return "CREATE TABLE @outputTable AS (SELECT * FROM (" + sql + ") _ ) WITH DATA";
 		}
 
-		return sql;
+		return "CREATE TABLE @outputTable AS " + sql;
 	}
 
 	// Subroutine 1.1: Add "Create table as" sequence into the pattern. Moved from private -> protected for unit testing.
@@ -369,8 +369,9 @@ public class SQL {
 	//     But PostgreSQL requires a unique index name per schema -> collisions could then happen.
 	public static boolean addIndex(Setting setting, String outputTable) {
 
-		// With SAS skip the indexing to avoid the need to comply with their naming convention
-		if ("SAS".equals(setting.databaseVendor)) {
+		// With SAS skip the indexing to avoid the need to comply with their naming convention.
+		// With Teradata skip the indexing as it interferes with the primary index (which is by default the first column).
+		if ("SAS".equals(setting.databaseVendor) || "Teradata".equals(setting.databaseVendor)) {
 			return true;
 		}
 
@@ -853,6 +854,8 @@ public class SQL {
 		// But Oracle does not accept "as" keyword in front of the table alias. See:
 		//   http://www.techonthenet.com/oracle/alias.php
 		// Hence use following syntax: (SELECT col1 from table t1) t2.
+		// Technical: We attempt to not use reserved keywords as aliases as we do not quote them.
+		// Hence the counts are called "cnt" and not "count".
 		// Technical: Oracle and MSSQL do not permit aliases of generated attributes in ORDER BY clause. See:
 		//   http://stackoverflow.com/questions/497241/how-do-i-perform-a-group-by-on-an-aliased-column-in-ms-sql-server
 		//   http://stackoverflow.com/questions/2681494/why-doesnt-oracle-sql-allow-us-to-use-column-aliases-in-group-by-clauses
@@ -868,10 +871,10 @@ public class SQL {
 			// Use categorical column directly
 			sql = "SELECT sum(chi2)/count(distinct(bin)) " // Linearly regularized against columns with high cardinality
 					+ "FROM ( "
-					+ " SELECT (expected.expected-measured.count) * (expected.expected-measured.count) / expected.expected AS chi2"
+					+ " SELECT (expected.expected-measured.cnt) * (expected.expected-measured.cnt) / expected.expected AS chi2"
 					+ " , expected.bin AS bin"
 					+ " FROM ( "
-					+ "     SELECT expected_bin.count*expected_target.prob AS expected "
+					+ "     SELECT expected_bin.cnt*expected_target.prob AS expected "
 					+ "          , bin "
 					+ "          , target "
 					+ "     FROM ( "
@@ -883,7 +886,7 @@ public class SQL {
 					+ "         ) t2 "
 					+ "         GROUP BY @baseTarget "
 					+ "     ) expected_target, ( "
-					+ "         SELECT count(*) AS count "
+					+ "         SELECT count(*) AS cnt "
 					+ "              , @column AS bin "
 					+ "         FROM @outputTable "
 					+ "         GROUP BY @column "
@@ -891,7 +894,7 @@ public class SQL {
 					+ " ) expected "
 					+ " INNER JOIN ( "
 					+ "     SELECT @baseTarget AS target "
-					+ "          , count(*) AS count "
+					+ "          , count(*) AS cnt "
 					+ "          , @column AS bin "
 					+ "     FROM @outputTable "
 					+ "     GROUP BY @column, @baseTarget "
@@ -909,9 +912,9 @@ public class SQL {
 			//      https://technet.microsoft.com/en-us/library/aa224898(v=sql.80).aspx
 			sql = "SELECT sum(chi2)/10 " // To match regularization of nominal columns
 					+ "FROM ( "
-					+ " SELECT (expected.expected-measured.count) * (expected.expected-measured.count) / expected.expected AS chi2 "
+					+ " SELECT (expected.expected-measured.cnt) * (expected.expected-measured.cnt) / expected.expected AS chi2 "
 					+ " FROM ( "
-					+ "     SELECT expected_bin.count*expected_target.prob AS expected "
+					+ "     SELECT expected_bin.cnt*expected_target.prob AS expected "
 					+ "          , bin "
 					+ "          , target "
 					+ "     FROM ( "
@@ -924,7 +927,7 @@ public class SQL {
 					+ "         GROUP BY @baseTarget "
 					+ "     ) expected_target, ( "
 					+ "         SELECT bin "
-					+ "              , count(*) AS count "
+					+ "              , count(*) AS cnt "
 					+ "         FROM ( "
 					+ "             SELECT floor((@column-t2.min_value) / t2.bin_width) AS bin "
 					+ "             FROM @outputTable, ( "
@@ -939,7 +942,7 @@ public class SQL {
 					+ " INNER JOIN ( "
 					+ "     SELECT target "
 					+ "          , bin "
-					+ "          , count(*) AS count "
+					+ "          , count(*) AS cnt "
 					+ "     FROM ( "
 					+ "         SELECT @baseTarget AS target "
 					+ "                , floor((@column-t2.min_value) / t2.bin_width) AS bin "
@@ -1166,6 +1169,7 @@ public class SQL {
 		String fromDual = "";
 		if ("Oracle".equals(setting.databaseVendor)) fromDual = " from dual ";
 		if ("SAS".equals(setting.databaseVendor)) fromDual = " from dictionary.libnames where libname = 'WORK' ";
+		if ("Teradata".equals(setting.databaseVendor)) fromDual = " FROM SYS_CALENDAR.CALENDAR WHERE CALENDAR_DATE = DATE ";
 
 		String histogram;
 
@@ -1275,14 +1279,14 @@ public class SQL {
 				") posterior ";
 
 		String minmax = " ( " +
-				"    select min(probability) as minimum " +
-				"        , max(probability) as maximum " +
+				"    select min(probability) as minimum_v " +
+				"        , max(probability) as maximum_v " +
 				"    from " + posterior +
 				"    GROUP BY @baseTarget, @column " +
 				") minmax ";
 
 		String sql =
-				"select sum(minimum)/sum(maximum) as jaccard_index " + // The problem is that 0 does not correspond to the random distribution; Ruzicka 1958. But if combined with CHi2, this adjustment is not necessary, as Chi2 includes correction for observation by chance.
+				"select sum(minimum_v)/sum(maximum_v) as jaccard_index " + // The problem is that 0 does not correspond to the random distribution; Ruzicka 1958. But if combined with CHi2, this adjustment is not necessary, as Chi2 includes correction for observation by chance.
 						"from " + minmax;
 
 		// Replace, but do not escape
@@ -1334,7 +1338,7 @@ public class SQL {
 
 		// An important limitation: Oracle limits name length of an identifier to 30 characters
 		String sql = "CREATE TABLE @outputTable (" +
-				"finish_time " + setting.typeTimestamp + " PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
+				"finish_time " + setting.typeTimestamp + " NOT NULL PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
 				"schema_name " + setting.typeVarchar + "(255), " +
 				"run_time " + setting.typeDecimal + "(18,3), " +
 				"memory " + setting.typeDecimal + "(18,3), " +
@@ -1422,8 +1426,9 @@ public class SQL {
 		logger.debug("# Setting up journal table #");
 
 		// The primary key is set directly behind the column name, not at the end, because SAS supports only the first declaration.
+		// We define the primary key to be not null because Teradata requires after us to write it down.
 		String sql = "CREATE TABLE @outputTable (" +
-				"predictor_id " + setting.typeInteger + " PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
+				"predictor_id " + setting.typeInteger + " NOT NULL PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
 				"group_id " + setting.typeInteger + ", " +
 				"start_time " + setting.typeTimestamp + ", " +
 				"run_time " + setting.typeDecimal + "(18,3), " +  // Old MySQL and SQL92 do not have/require support for fractions of a second.
@@ -1504,7 +1509,7 @@ public class SQL {
 
 		// An important limitation: Oracle limits name length of an identifier to 30 characters
 		String sql = "CREATE TABLE @outputTable (" +
-				"table_id " + setting.typeInteger + " PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
+				"table_id " + setting.typeInteger + " NOT NULL PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
 				"start_time " + setting.typeTimestamp + ", " +
 				"run_time " + setting.typeDecimal + "(18,3), " +
 				"table_name " + setting.typeVarchar + "(255), " +
@@ -1577,7 +1582,7 @@ public class SQL {
 
 	public static boolean getJournalPattern(Setting setting) {
 		String sql = "CREATE TABLE @outputTable (" +
-				"name varchar(255) PRIMARY KEY, " +
+				"name varchar(255) NOT NULL PRIMARY KEY, " +
 				"author varchar(255), " +
 				"is_aggregate integer, " +
 				"is_multivariate integer, " +
@@ -1658,7 +1663,7 @@ public class SQL {
 
 		// An important limitation: Oracle limits name length of an identifier to 30 characters
 		String sql = "CREATE TABLE @outputTable (" +
-				"temporal_constraint_id " + setting.typeInteger + " PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
+				"temporal_constraint_id " + setting.typeInteger + " NOT NULL PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
 				"table_name " + setting.typeVarchar + "(255), " +
 				"column_name " + setting.typeVarchar + "(255), " +
 				"data_type " + setting.typeVarchar + "(255), " +
@@ -1870,6 +1875,9 @@ public class SQL {
 		// Add time condition if dateColumn is present
 		// The comparison "t2.@dateColumn <= t1.@baseDate" has to use <= to get
 		// the data from "the current date" when lead is 0.
+		// Because Teradata has a strange syntax for negative values (the minus sign must be outside the apostrophes
+		// enclosing the numerical value @amount), we may want to avoid negative @amount. But that would make
+		// joins slower as it would disable index utilization.
 		if (table.temporalConstraint != null) {
 			// First the upper bound (lead)
 			sql = sql + " WHERE t2.@dateColumn <= " + setting.dateAddSyntax;

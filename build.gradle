@@ -36,6 +36,7 @@ dependencies {
     runtime fileTree(dir: 'lib/jdbc-driver/postgresql', include: '*.jar')
     runtime fileTree(dir: 'lib/jdbc-driver/postgresql-ng', include: '*.jar')
     runtime fileTree(dir: 'lib/jdbc-driver/sas', include: '*.jar')
+    runtime fileTree(dir: 'lib/jdbc-driver/teradata', include: '*.jar')
     runtime fileTree(dir: 'lib/jdbc-driver/vertica', include: '*.jar')
 
     compile fileTree(dir: 'lib/sqlformatter', include: '*.jar') // But fails on "mode" in postgre sql...

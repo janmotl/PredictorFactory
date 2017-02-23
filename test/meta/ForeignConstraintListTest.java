@@ -65,4 +65,33 @@ public class ForeignConstraintListTest {
 
 	}
 
+	@Test
+	public void equal() {
+		ForeignConstraint foreignConstraint = new ForeignConstraint();
+		foreignConstraint.table = "table";
+		foreignConstraint.fTable = "fTable";
+		foreignConstraint.column = new ArrayList<>();
+		foreignConstraint.column.add("col1_1");
+		foreignConstraint.column.add("col1_2");
+		foreignConstraint.fColumn = new ArrayList<>();
+		foreignConstraint.fColumn.add("col1_1");
+		foreignConstraint.fColumn.add("col1_2");
+
+		ForeignConstraint foreignConstraint2 = new ForeignConstraint();
+		foreignConstraint2.table = "table";
+		foreignConstraint2.fTable = "fTable";
+		foreignConstraint2.column = new ArrayList<>();
+		foreignConstraint2.column.add("col2_1");
+		foreignConstraint2.column.add("col2_2");
+		foreignConstraint2.fColumn = new ArrayList<>();
+		foreignConstraint2.fColumn.add("col2_1");
+		foreignConstraint2.fColumn.add("col2_2");
+
+		Assert.assertFalse(foreignConstraint.equals(foreignConstraint2));
+		foreignConstraint.name="name";
+		Assert.assertFalse(foreignConstraint.equals(foreignConstraint2));
+		Assert.assertFalse(foreignConstraint2.equals(foreignConstraint));
+		foreignConstraint2.name="name";
+		Assert.assertTrue(foreignConstraint.equals(foreignConstraint2));
+	}
 }
