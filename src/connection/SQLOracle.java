@@ -31,8 +31,9 @@ public final class SQLOracle extends SQL {
 	}
 
 	// Returns true if the date column contains a date from the future.
+	// Each derived column in Teradata must have an implicit name.
 	public boolean containsFutureDate(Setting setting, String table, String column) {
-		String sql = "SELECT count(*) FROM (SELECT 1 FROM @inputTable WHERE {fn NOW()} < @column)";
+		String sql = "SELECT count(*) FROM (SELECT 1 AS col1 FROM @inputTable WHERE {fn NOW()} < @column) t";
 
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, table);
@@ -50,13 +51,14 @@ public final class SQLOracle extends SQL {
 	// Get the maximal cardinality of the table in respect to targetId. If the cardinality is 1:1,
 	// we may want to remove the bottom time constrain in base propagation.
 	// Note that we are working with the input tables -> alter commands are forbidden.
+	// Each derived column in Teradata must have an implicit name.
 	public boolean isIdUnique(Setting setting, MetaOutput.OutputTable table) {
 		String sql = "SELECT count(*) FROM (" +
-				"SELECT count(*) " +
+				"SELECT count(*) AS cnt " +
 				"FROM @inputTable " +
 				"GROUP BY @idCommaSeparated " +
 				"HAVING count(*)>1" +
-				")";
+				") t";
 
 		// Get escape characters
 		String QL = setting.quoteEntityOpen;
@@ -105,7 +107,7 @@ public final class SQLOracle extends SQL {
 	// It appears this can be disk space demanding (tested in Accidents dataset)
 	public boolean isTargetIdUnique(Setting setting, String table) {
 		String sql = "SELECT count(*) FROM (" +
-				"SELECT @baseId FROM @outputTable GROUP BY @baseId HAVING count(*)>1)";
+				"SELECT @baseId FROM @outputTable GROUP BY @baseId HAVING count(*)>1) t";
 
 
 		sql = expandName(sql);

@@ -1,6 +1,9 @@
 package meta;
 
 
+import org.jetbrains.annotations.NotNull;
+import utility.NullSafeComparator;
+
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
@@ -34,8 +37,9 @@ public class ForeignConstraint implements Comparable<ForeignConstraint> {
 	}
 
 	// Required for assembling of composite keys (function collectRelationships)
+	// Order by {table, fTable, name, sequence}. Name is nullable.
 	@Override
-	public int compareTo(ForeignConstraint that) {
+	public int compareTo(@NotNull ForeignConstraint that) {
 		final int BEFORE = -1;
 		final int EQUAL = 0;
 		final int AFTER = 1;
@@ -43,13 +47,14 @@ public class ForeignConstraint implements Comparable<ForeignConstraint> {
 		// This optimization is usually worthwhile, and can always be added
 		if (this == that) return EQUAL;
 
+		// String comparisons
 		int comparison = table.compareTo(that.table);
 		if (comparison != EQUAL) return comparison;
 
 		comparison = fTable.compareTo(that.fTable);
 		if (comparison != EQUAL) return comparison;
 
-		comparison = name.compareTo(that.name);
+		comparison = NullSafeComparator.nullSafeStringComparator(name, that.name);
 		if (comparison != EQUAL) return comparison;
 
 		// Primitive numbers follow this form
@@ -59,8 +64,10 @@ public class ForeignConstraint implements Comparable<ForeignConstraint> {
 		return EQUAL;
 	}
 
-	// Required for assembling of composite keys (function collectRelationships)
-	// Compares based on {table, fTable, name} and intentionally ignores {sequence, column, fColumn}
+	// Required for assembling of composite keys (function collectRelationships).
+	// Compares based on {table, fTable, name} and intentionally ignores {sequence, column, fColumn}.
+	// If name is null (name is nullable by JDBC), return false (as simple FKs are more common than compound FKs).
+	// 	Name is frequently null in Teradata. Sadly, it means we do not currently support compound FKs in Teradata.
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
@@ -70,7 +77,7 @@ public class ForeignConstraint implements Comparable<ForeignConstraint> {
 
 		if (table != null ? !table.equals(that.table) : that.table != null) return false;
 		if (fTable != null ? !fTable.equals(that.fTable) : that.fTable != null) return false;
-		return !(name != null ? !name.equals(that.name) : that.name != null);
+		return (name != null && name.equals(that.name));
 	}
 
 	@Override

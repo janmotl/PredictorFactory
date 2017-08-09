@@ -17,7 +17,7 @@ Description of the fields:
 	SupportsCatalogs: By default true. False in SAS... (COULD BE DETECTED WITH JDBC DRIVER)
 	SupportsSchemas: By default true. False in MySQL... (COULD BE DETECTED WITH JDBC DRIVER)
 	SupportsCreateTableAs: By default true. False in MS SQL...
-	SupportsWithData: By default false. Has to be true for MonetDB... (SHOULD BE NAMED LIKE "DEFAULT_IS_WITHOUT_DATA")
+	SupportsWithData: By default false. Has to be true for MonetDB and Teradata... (SHOULD BE NAMED LIKE "DEFAULT_IS_WITHOUT_DATA")
 	SupportsSelectExists: By default false. Useful for PostgreSQL and MySQL.
 	corrSyntax: Optional. Define the command for correlation if the database provides such command.
 	DateAddSyntax: Because we want to be able to express time ranges. This syntax doesn't deal with leap years. Replaceable with {fn TIMESTAMPADD}.
@@ -268,6 +268,7 @@ Description of the fields:
 		dateAddMonth="add_months(@baseDate, @amount)"
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="cast(@column as int)"
+		supportsWithData="true"
 		charLengthCommand="character_length"
 		limitSyntax="ROW_NUMBER"
 		randomCommand="RANDOM(0, 1000)/1000"
