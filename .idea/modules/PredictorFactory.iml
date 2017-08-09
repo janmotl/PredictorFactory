@@ -19,130 +19,63 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Gradle: org.antlr:antlr4:4.5.3" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: info.solidsoft.spock:spock-global-unroll:0.5.0" level="project" />
-    <orderEntry type="module-library" scope="TEST">
-      <library name="Gradle: vldocking">
+    <orderEntry type="library" name="Gradle: org.codehaus.groovy:groovy-all:2.4.10" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.spockframework:spock-core:1.1-groovy-2.4" level="project" />
+    <orderEntry type="module-library">
+      <library name="Gradle: SQLinFormFXpro_5.1.25">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/rapidminer/vldocking.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/SQLinForm/SQLinFormFXpro_5.1.25.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library" scope="TEST">
-      <library name="Gradle: rapidminer">
+    <orderEntry type="module-library">
+      <library name="Gradle: dbvis">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/rapidminer/rapidminer.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/dbvis.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library" scope="TEST">
-      <library name="Gradle: launcher">
+    <orderEntry type="library" name="Gradle: org.apache.commons:commons-lang3:3.5" level="project" />
+    <orderEntry type="library" name="Gradle: com.google.guava:guava:20.0" level="project" />
+    <orderEntry type="library" name="Gradle: com.zaxxer:HikariCP:2.5.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.slf4j:slf4j-log4j12:1.7.21" level="project" />
+    <orderEntry type="library" name="Gradle: log4j:log4j:1.2.17" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.rjeschke:txtmark:0.13" level="project" />
+    <orderEntry type="library" name="Gradle: com.intellij:annotations:12.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.hibernate:hibernate-core:5.2.5.Final" level="project" />
+    <orderEntry type="library" name="Gradle: com.atlassian.commonmark:commonmark:0.8.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.slf4j:slf4j-api:1.7.21" level="project" />
+    <orderEntry type="library" name="Gradle: org.jboss.logging:jboss-logging:3.3.0.Final" level="project" />
+    <orderEntry type="library" name="Gradle: org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final" level="project" />
+    <orderEntry type="library" name="Gradle: org.javassist:javassist:3.20.0-GA" level="project" />
+    <orderEntry type="library" name="Gradle: antlr:antlr:2.7.7" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.geronimo.specs:geronimo-jta_1.1_spec:1.1.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.jboss:jandex:2.0.3.Final" level="project" />
+    <orderEntry type="library" name="Gradle: com.fasterxml:classmate:1.3.0" level="project" />
+    <orderEntry type="library" name="Gradle: dom4j:dom4j:1.6.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.hibernate.common:hibernate-commons-annotations:5.0.1.Final" level="project" />
+    <orderEntry type="library" name="Gradle: javax.enterprise:cdi-api:1.1" level="project" />
+    <orderEntry type="library" name="Gradle: javax.el:el-api:2.2" level="project" />
+    <orderEntry type="library" name="Gradle: org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.1_spec:1.0.0.Beta1" level="project" />
+    <orderEntry type="library" name="Gradle: javax.annotation:jsr250-api:1.0" level="project" />
+    <orderEntry type="library" name="Gradle: javax.inject:javax.inject:1" level="project" />
+    <orderEntry type="module-library">
+      <library name="Gradle: gsp">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/rapidminer/launcher.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="library" scope="TEST" name="Gradle: org.hamcrest:hamcrest-core:1.3" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: junit:junit:4.12" level="project" />
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: vertica-jdbc-7.2.3-0">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/vertica/vertica-jdbc-7.2.3-0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: sas.intrnet.javatools">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/sas/sas.intrnet.javatools.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: sas.core">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/sas/sas.core.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: pgjdbc-ng-0.6">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/postgresql-ng/pgjdbc-ng-0.6.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/sqlformatter/gsp.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: netty-all-4.1.1.Final">
+      <library name="Gradle: hsqldb">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/postgresql-ng/netty-all-4.1.1.Final.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: javassist">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/postgresql-ng/javassist.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: postgresql-9.4.1212">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/postgresql/postgresql-9.4.1212.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: ojdbc7">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/oracle/ojdbc7.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: mysql-connector-java-5.1.34-bin">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/mysql/mysql-connector-java-5.1.34-bin.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: sqljdbc42">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/mssql/sqljdbc42.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: monetdb-jdbc-2.14">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/monetdb/monetdb-jdbc-2.14.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/hsqldb/hsqldb.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -158,66 +91,133 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: hsqldb">
+      <library name="Gradle: monetdb-jdbc-2.14">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/hsqldb/hsqldb.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/monetdb/monetdb-jdbc-2.14.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
-      <library name="Gradle: gsp">
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library name="Gradle: sqljdbc42">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/sqlformatter/gsp.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/mssql/sqljdbc42.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="Gradle: javax.inject:javax.inject:1" level="project" />
-    <orderEntry type="library" name="Gradle: javax.annotation:jsr250-api:1.0" level="project" />
-    <orderEntry type="library" name="Gradle: org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.1_spec:1.0.0.Beta1" level="project" />
-    <orderEntry type="library" name="Gradle: javax.el:el-api:2.2" level="project" />
-    <orderEntry type="library" name="Gradle: javax.enterprise:cdi-api:1.1" level="project" />
-    <orderEntry type="library" name="Gradle: org.hibernate.common:hibernate-commons-annotations:5.0.1.Final" level="project" />
-    <orderEntry type="library" name="Gradle: dom4j:dom4j:1.6.1" level="project" />
-    <orderEntry type="library" name="Gradle: com.fasterxml:classmate:1.3.0" level="project" />
-    <orderEntry type="library" name="Gradle: org.jboss:jandex:2.0.3.Final" level="project" />
-    <orderEntry type="library" name="Gradle: org.apache.geronimo.specs:geronimo-jta_1.1_spec:1.1.1" level="project" />
-    <orderEntry type="library" name="Gradle: antlr:antlr:2.7.7" level="project" />
-    <orderEntry type="library" name="Gradle: org.javassist:javassist:3.20.0-GA" level="project" />
-    <orderEntry type="library" name="Gradle: org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final" level="project" />
-    <orderEntry type="library" name="Gradle: org.jboss.logging:jboss-logging:3.3.0.Final" level="project" />
-    <orderEntry type="library" name="Gradle: org.slf4j:slf4j-api:1.7.21" level="project" />
-    <orderEntry type="library" name="Gradle: com.atlassian.commonmark:commonmark:0.8.0" level="project" />
-    <orderEntry type="library" name="Gradle: org.hibernate:hibernate-core:5.2.5.Final" level="project" />
-    <orderEntry type="library" name="Gradle: com.intellij:annotations:12.0" level="project" />
-    <orderEntry type="library" name="Gradle: com.github.rjeschke:txtmark:0.13" level="project" />
-    <orderEntry type="library" name="Gradle: log4j:log4j:1.2.17" level="project" />
-    <orderEntry type="library" name="Gradle: org.slf4j:slf4j-log4j12:1.7.21" level="project" />
-    <orderEntry type="library" name="Gradle: com.zaxxer:HikariCP:2.5.1" level="project" />
-    <orderEntry type="library" name="Gradle: com.google.guava:guava:20.0" level="project" />
-    <orderEntry type="library" name="Gradle: org.apache.commons:commons-lang3:3.5" level="project" />
-    <orderEntry type="module-library">
-      <library name="Gradle: dbvis">
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library name="Gradle: mysql-connector-java-5.1.34-bin">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/dbvis.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/mysql/mysql-connector-java-5.1.34-bin.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
-      <library name="Gradle: SQLinFormFXpro_5.1.25">
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library name="Gradle: ojdbc7">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/SQLinForm/SQLinFormFXpro_5.1.25.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/oracle/ojdbc7.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" scope="TEST" name="Gradle: org.spockframework:spock-core:1.1-groovy-2.4" level="project" />
-    <orderEntry type="library" name="Gradle: org.codehaus.groovy:groovy-all:2.4.10" level="project" />
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library name="Gradle: postgresql-9.4.1212">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/postgresql/postgresql-9.4.1212.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library name="Gradle: javassist">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/postgresql-ng/javassist.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library name="Gradle: netty-all-4.1.1.Final">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/postgresql-ng/netty-all-4.1.1.Final.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library name="Gradle: pgjdbc-ng-0.6">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/postgresql-ng/pgjdbc-ng-0.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library name="Gradle: sas.core">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/sas/sas.core.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library name="Gradle: sas.intrnet.javatools">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/sas/sas.intrnet.javatools.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library name="Gradle: vertica-jdbc-7.2.3-0">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/vertica/vertica-jdbc-7.2.3-0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" scope="TEST" name="Gradle: junit:junit:4.12" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.hamcrest:hamcrest-core:1.3" level="project" />
+    <orderEntry type="module-library" scope="TEST">
+      <library name="Gradle: launcher">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../lib/rapidminer/launcher.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="TEST">
+      <library name="Gradle: rapidminer">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../lib/rapidminer/rapidminer.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="TEST">
+      <library name="Gradle: vldocking">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../lib/rapidminer/vldocking.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" scope="TEST" name="Gradle: info.solidsoft.spock:spock-global-unroll:0.5.0" level="project" />
   </component>
 </module>
