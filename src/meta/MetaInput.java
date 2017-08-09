@@ -105,7 +105,7 @@ public class MetaInput {
 				table.getColumn(pk).isUnique = true;
 			}
 
-			// Store numericalColumn, nominalColumn and timeColumn
+			// Store numericalColumn, nominalColumn and temporalColumn
 			table.categorizeColumns(setting);
 
 			// Get the most frequent unique values for each nominal attribute.
@@ -116,12 +116,24 @@ public class MetaInput {
 
 		}
 
+		// QC that label is numerical if performing regression.
+		if ("regression".equals(setting.task)) {
+			for (String targetColumn : setting.targetColumnList) {
+				Column column = tableMap.get(setting.targetTable).getColumn(targetColumn);
+				if (!column.isNumerical) {
+					logger.warn("Target column '" + targetColumn + "' is " + column.dataTypeName + ". But a numerical data type was expected since regression task is set.");
+				}
+			}
+		}
+
 		// Do not use targetColumn as an input attribute if we work with a static dataset.
 		// But use the targetColumn in dynamic datasets.
 		if (setting.targetDate == null) {
-			tableMap.get(setting.targetTable).getColumn(setting.targetColumn).isNominal = false;
-			tableMap.get(setting.targetTable).getColumn(setting.targetColumn).isNumerical = false;
-			tableMap.get(setting.targetTable).getColumn(setting.targetColumn).isTemporal = false;
+			for (String targetColumn : setting.targetColumnList) {
+				tableMap.get(setting.targetTable).getColumn(targetColumn).isNominal = false;
+				tableMap.get(setting.targetTable).getColumn(targetColumn).isNumerical = false;
+				tableMap.get(setting.targetTable).getColumn(targetColumn).isTemporal = false;
+			}
 		}
 
 		// QC that TargetDate is temporal
@@ -142,15 +154,6 @@ public class MetaInput {
 			setting.pivotDate = setting.dialect.getPivotDate(setting, dateDataType);
 		}
 
-
-		// QC that label is numerical if performing regression
-		if ("regression".equals(setting.task)) {
-			Column column = tableMap.get(setting.targetTable).getColumn(setting.targetColumn);
-			if (!column.isNumerical) {
-				logger.warn("Target column '" + setting.targetColumn + "' is " + column.dataTypeName + ". But a numerical data type was expected.");
-			}
-		}
-
 		// QC that relationships were extracted
 		int relationshipCount = 0;
 		for (Table table : tableMap.values()) {
@@ -159,6 +162,9 @@ public class MetaInput {
 		if (relationshipCount == 0) {
 			logger.warn("No relationships were detected. You may either define Foreign Key Constrains in the database. Or you may create and put foreignConstraint.xml into config directory (note: entity names in the xml must exactly match the entity names in the database, EVEN if the database is case insensitive, because comparisons are performed locally, not at the server).");
 		}
+
+		// Cache target values
+		setting.targetUniqueValueMap = getUniqueValueMap(setting, tableMap);
 
 		return tableMap;
 	}
@@ -206,4 +212,20 @@ public class MetaInput {
 		return dataTypeList;
 	}
 
+	// Return sets of unique values in the target columns
+	// The returned map contains: targetColumn -> set(values)
+	private static Map<String, Set<String>> getUniqueValueMap(Setting setting, SortedMap<String, Table> tableMap) {
+
+		Map<String, Set<String>> uniqueValueMap = new HashMap<>();
+		for (Table table : tableMap.values()) {
+			if (setting.targetTable.equals(table.name)) {
+				for (String targetColumn : setting.targetColumnList) {
+					uniqueValueMap.put(targetColumn, table.getColumn(targetColumn).uniqueValueSet);
+				}
+				break; // No need to continue
+			}
+		}
+
+		return uniqueValueMap;
+	}
 }

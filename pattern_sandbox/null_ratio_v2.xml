@@ -40,6 +40,6 @@
 		) t2
 		ON t1.@baseId = t2.@baseId AND t1.@baseDate = t2.@baseDate
 	</code>
-	<parameter key="@column" value="@nominalColumn, @numericalColumn, @timeColumn"/>
+	<parameter key="@column" value="@nominalColumn, @numericalColumn, @temporalColumn"/>
 	<cardinality>n</cardinality>
 </pattern>

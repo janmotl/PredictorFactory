@@ -13,6 +13,7 @@ import utility.Meta;
 import utility.PatternMap;
 import utility.TextParser;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.Map.Entry;
@@ -23,10 +24,16 @@ public class Aggregation {
 	// Logging
 	private static final Logger logger = Logger.getLogger(Aggregation.class.getName());
 
+	private static int id = 0;  // Each predictor has a unique id
+
 	public static Journal run(Setting setting, SortedMap<String, OutputTable> tableMetadata) {
+		id = setting.predictorStart;
+
 		// Reuse journal.xml OR create everything from scratch?
+		// WE SHOULD really introduce something like: if(setting.isSecondStage) to avoid accidental reading unrelated XML
+		// AND we should check that the {inputSchema, outputSchema, databaseVendor} are the same.
 		if (setting.useTwoStages && setting.sampleCount == Integer.MAX_VALUE) {
-			List<Predictor> topPredictors = Journal.unmarshall().getTopPredictors();
+			List<Predictor> topPredictors = Journal.unmarshall().getAllTopPredictors();
 			Journal journal = new Journal(setting, topPredictors.size());
 			return fromXML(setting, journal, topPredictors);
 		} else {
@@ -48,21 +55,10 @@ public class Aggregation {
 		setting.dialect.addToJournalPattern(setting, predictorList);
 
 		// 2) Set @targetValue
-		// First, get the cached list of unique values in the target column
-		Set<String> uniqueValueSet = new HashSet<>();
-		for (OutputTable table : tableMetadata.values()) {
-			if (setting.targetTable.equals(table.originalName)) {
-				uniqueValueSet = table.getColumn(setting.targetColumn).uniqueValueSet;
-				break; // No need to continue
-			}
-		}
-
-		// Second, Loop over all the predictors
 		List<Predictor> predictorList2 = new ArrayList<>();
 		for (Predictor predictor : predictorList) {
-			predictorList2.addAll(addTargetValue(setting, predictor, uniqueValueSet));
+			predictorList2.addAll(addTargetValue(setting, predictor));
 		}
-
 
 		// 3) Loop over parameters
 		List<Predictor> predictorList3 = new ArrayList<>();
@@ -101,7 +97,7 @@ public class Aggregation {
 		journal = new Journal(setting, predictorList7.size());
 
 		for (Predictor predictor : predictorList7) {
-			materializePredictor(setting, journal, predictor, maxRowLimit);
+			materializePredictor(setting, predictor, maxRowLimit);
 			journal.addPredictor(setting, predictor);
 		}
 
@@ -114,7 +110,7 @@ public class Aggregation {
 
 		for (Predictor predictor : topPredictors) {
 			predictor.getPattern().initialize(setting); // NOT THE NICEST...
-			materializePredictor2(setting, journal, predictor, maxRowLimit);
+			materializePredictor2(setting, predictor, maxRowLimit);
 			journal.addPredictor(setting, predictor);
 		}
 
@@ -158,23 +154,26 @@ public class Aggregation {
 	// Subroutine 2: Populate @targetValue (based on unique values in the target column in the target window) and set SQL.
 	// If we are performing regression, remove patterns that are using target value, as these patterns are not applicable.
 	// CURRENTLY IMPLEMENTED ONLY FOR THE FIRST VALUE -> IT RETURNS JUST A SINGLE PREDICTOR
-	protected static List<Predictor> addTargetValue(Setting setting, Predictor predictor, Set<String> uniqueValueSet){
-
+	protected static List<Predictor> addTargetValue(Setting setting, Predictor predictor){
+		List<Predictor> result = new ArrayList<>();
 		boolean isClassification = "classification".equals(setting.task);
 		boolean containsTargetValue = predictor.getPatternCode().contains("@targetValue");
 
-		// If the pattern uses target value...
-		if (containsTargetValue) {
-			if (isClassification) {
-				predictor.setParameter("@targetValue", uniqueValueSet.iterator().next()); // Just some random item
-			} else {
-				return new ArrayList<>();
+		// If the pattern uses target value and we are performing classification...
+		if (containsTargetValue && isClassification) {
+			for (int i = 0; i < setting.baseTargetList.size(); i++) {
+				String baseTarget = setting.baseTargetList.get(i);
+				String targetColumn = setting.targetColumnList.get(i);
+				Set uniqueValueSet = setting.targetUniqueValueMap.get(targetColumn);
+				Predictor cloned = new Predictor(predictor);
+				cloned.setBaseTarget(baseTarget);
+				cloned.setTargetColumn(targetColumn);
+				cloned.setParameter("@targetValue", (String) uniqueValueSet.iterator().next()); // Just some random item
+				result.add(cloned);
 			}
+		} else {
+			result.add(predictor);
 		}
-
-		// Add that one predictor into a list
-		List<Predictor> result = new ArrayList<>();
-		result.add(predictor);
 
 		return result;
 	}
@@ -195,7 +194,7 @@ public class Aggregation {
 		// Apply the parameters to SQL
 		// This is necessary because some parameters can define columns.
 		for (Predictor pred : predictorList) {
-			pred = addSQL(pred, pred.getPatternCode());
+			addSQL(pred, pred.getPatternCode());
 		}
 
 		return predictorList;
@@ -280,9 +279,9 @@ public class Aggregation {
 			// Matches: Case insensitive plus suffix with any number of digits
 			if (columnKey.matches("(?i)@NUMERICALCOLUMN\\d*")) columnValueSet = table.getColumns(setting, StatisticalType.NUMERICAL);
 			else if (columnKey.matches("(?i)@NOMINALCOLUMN\\d*")) columnValueSet = table.getColumns(setting, StatisticalType.NOMINAL);
-			else if (columnKey.matches("(?i)@TIMECOLUMN\\d*")) columnValueSet = table.getColumns(setting, StatisticalType.TEMPORAL);
+			else if (columnKey.matches("(?i)@TEMPORALCOLUMN\\d*")) columnValueSet = table.getColumns(setting, StatisticalType.TEMPORAL);
 			else if (columnKey.matches("(?i)@IDCOLUMN\\d*")) columnValueSet = table.getColumns(setting, StatisticalType.ID);
-			else logger.warn("The term: " + columnKey +  " in pattern: " + predictor.getPatternName() + " is not recognized as a valid column identifier. Expected terms are: {numericalColumn, nominalColumn, timeColumn, idColumn}.");
+			else logger.warn("The term: " + columnKey +  " in pattern: " + predictor.getPatternName() + " is not recognized as a valid column identifier. Expected terms are: {numericalColumn, nominalColumn, temporalColumn, idColumn}.");
 
 			// Bind the columnKey to the actual columnValue.
 			for (Column columnValue : columnValueSet) {
@@ -324,7 +323,7 @@ public class Aggregation {
 
 			// Apply the new parameters to SQL
 			for (Predictor pred : predictorList) {
-				pred = addSQL(pred, pred.getSql());
+				addSQL(pred, pred.getSql());
 			}
 		} else {
 			predictorList.add(predictor);
@@ -347,7 +346,7 @@ public class Aggregation {
 
 		// Apply the parameters to SQL (Just like in Parameter section)
 		for (Predictor pred : outputList) {
-			pred = addSQL(pred, pred.getPatternCode());
+			addSQL(pred, pred.getPatternCode());
 		}
 
 		// Set predictor's group id
@@ -377,18 +376,15 @@ public class Aggregation {
 
 
 	// Subroutine 8: Create predictor with index and QC.
-	private static void materializePredictor(Setting setting, Journal journal, Predictor predictor, int maxRowLimit) {
+	private static void materializePredictor(Setting setting, Predictor predictor, int maxRowLimit) {
 
 		// Set predictor's id & table name
-		predictor.setId(journal.getNextId(setting));
+		predictor.setId(++id);
 		predictor.setOutputTable(setting.predictorPrefix + predictor.getId());
 
 		// Set predictor's names
 		predictor.setName(predictor.getNameOnce(setting));
 		predictor.setLongName(predictor.getLongNameOnce());
-
-		// Set default relevance value for the target.
-		predictor.setRelevance(setting.baseTarget, 0.0);
 
 		// Convert pattern to SQL
 		predictor.setSql(setting.dialect.getPredictor(setting, predictor));
@@ -397,7 +393,11 @@ public class Aggregation {
 		predictor.setTimestampBuilt(LocalDateTime.now());
 
 		// Execute the SQL
-		predictor.setOk(Network.executeUpdate(setting.dataSource, predictor.getSql()));
+		try {
+			predictor.setOk(Network.executeUpdate(setting.dataSource, predictor.getSql(), setting.secondMax));
+		} catch (SQLException e) {
+			predictor.setException(e);
+		}
 
 		// If the execution failed, stop.
 		if (!predictor.isOk()) return;
@@ -428,24 +428,15 @@ public class Aggregation {
 		// Get the predictor's data type
 		getPredictorType(setting, predictor);
 
-		// Add univariate relevance estimate
-		if ("classification".equalsIgnoreCase(setting.task)) {
-			predictor.setRelevance(setting.baseTarget, setting.dialect.getChi2(setting, predictor));
-		} else {
-			predictor.setRelevance(setting.baseTarget, setting.dialect.getR2(setting, predictor));
-		}
-
-		// Add concept drift (so far just for nominal labels & if targetDate exists)
-		if ("classification".equalsIgnoreCase(setting.task) && setting.targetDate!=null) {
-			predictor.setConceptDrift(setting.baseTarget, setting.dialect.getConceptDrift(setting, predictor));
-		}
-
+		// Calculate Chi2+conceptDrift for each targetColumn
+		predictor.setRelevanceObject(Relevance.calculate(setting, predictor));
 	}
 
 
 	// Subroutine 8: Create predictor with index and QC.
 	// CHANGES: skipping SQL creation
-	private static void materializePredictor2(Setting setting, Journal journal, Predictor predictor, int maxRowLimit) {
+	// HAVE TO EXTRACT A METHOD or something...
+	private static void materializePredictor2(Setting setting, Predictor predictor, int maxRowLimit) {
 
 		// Set predictor's id & table name
 //		predictor.setId(journal.getNextId(setting));
@@ -465,7 +456,11 @@ public class Aggregation {
 		predictor.setTimestampBuilt(LocalDateTime.now());
 
 		// Execute the SQL
-		predictor.setOk(Network.executeUpdate(setting.dataSource, predictor.getSql()));
+		try {
+			predictor.setOk(Network.executeUpdate(setting.dataSource, predictor.getSql(), setting.secondMax));
+		} catch (SQLException e) {
+			predictor.setException(e);
+		}
 
 		// If the execution failed, stop.
 		if (!predictor.isOk()) return;
@@ -496,24 +491,13 @@ public class Aggregation {
 		// Get the predictor's data type
 		getPredictorType(setting, predictor);
 
-		// Add univariate relevance estimate
-		if ("classification".equalsIgnoreCase(setting.task)) {
-			predictor.setRelevance(setting.baseTarget, setting.dialect.getChi2(setting, predictor));
-		} else {
-			predictor.setRelevance(setting.baseTarget, setting.dialect.getR2(setting, predictor));
-		}
-
-		// Add concept drift (so far just for nominal labels & if targetDate exists)
-		if ("classification".equalsIgnoreCase(setting.task) && setting.targetDate!=null) {
-			predictor.setConceptDrift(setting.baseTarget, setting.dialect.getConceptDrift(setting, predictor));
-		}
-
+		// Calculate Chi2+conceptDrift for each targetColumn
+		predictor.setRelevanceObject(Relevance.calculate(setting, predictor));
 	}
 
 
 	// Sub-Subroutine: Reflect settings in columnMap & parameterMap into SQL
-	protected static Predictor addSQL(Predictor predictor, String sql) {
-
+	protected static void addSQL(Predictor predictor, String sql) {
 		for (String parameterName : predictor.getParameterMap().keySet()) {
 			// Only whole words! Otherwise "@column" would also match "@name".
 			String oldString = parameterName.substring(1); // remove the at-sign as it is not considered as a part of word in regex
@@ -521,14 +505,15 @@ public class Aggregation {
 			sql = sql.replaceAll("@\\b" + oldString + "\\b", newString);
 		}
 		predictor.setSql(sql);
-
-		return predictor;
 	}
 
 	// Subroutine: Is the predictor a string or a number? Just ask the database.
 	// The answer is returned by modifying Predictor's fields.
+	// The result is then used in getChi2() and getConceptDrift().
 	// Note: The data type could be predicted from the pattern and pattern parameters. But the implemented
 	// method is foolproof, though slow.
+	// Note: An exception is a direct field where we want to treat an integer column once like numerical and once like
+	// nominal
 	private static void getPredictorType(Setting setting, Predictor predictor) {
 
 		Table table = new Table();
@@ -540,16 +525,32 @@ public class Aggregation {
 		predictor.setDataType(column.dataType);
 		predictor.setDataTypeName(column.dataTypeName);
 
-		// NOTE: WE DO NOT WANT STATISTICAL TYPE, WE WANT RAW TYPE!
-		if (column.dataType == -7) {   // We treat here boolean data type as nominal, not numerical!
-			predictor.setRawDataType("nominal");
-		} else if (column.isTemporal) {
-			predictor.setRawDataType("temporal");
-		} else if (column.isNumerical) {
-			predictor.setRawDataType("numerical");
+		// Exception for direct field pattern
+		if ("Direct field".equals(predictor.getPatternName())) {
+			String statisticalType = getColumnStatisticalType(predictor.getColumnMap().firstKey());
+			predictor.setDataTypeCategory(statisticalType);
+			return;
 		}
 
-		predictor.setRawDataType("nominal");
+		// NOTE: WE DO NOT WANT STATISTICAL TYPE, WE WANT RAW TYPE!
+		if (column.dataType == -7) {   // We treat here boolean data type as nominal, not numerical!
+			predictor.setDataTypeCategory("nominal");
+		} else if (column.isTemporal) {
+			predictor.setDataTypeCategory("temporal");
+		} else if (column.isNumerical) {
+			predictor.setDataTypeCategory("numerical");
+		} else {
+			predictor.setDataTypeCategory("nominal");
+		}
+	}
+
+	private static String getColumnStatisticalType(String keyValue) {
+		if (keyValue.contains("nominal")) return "nominal";
+		if (keyValue.contains("numerical")) return "numerical";
+		if (keyValue.contains("temporal")) return "temporal";
+		String type = keyValue.substring(1, keyValue.length()-6);
+		logger.warn("Unknown type encountered: " + type);
+		return type;
 	}
 
 }

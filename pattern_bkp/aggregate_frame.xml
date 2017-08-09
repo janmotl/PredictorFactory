@@ -29,8 +29,8 @@
 	<code>SELECT @base
 			   , @aggregateFunction(@numericalColumn) AS @columnName
 	      FROM @propagatedTable
-	      WHERE DATEDIFF(@baseDate, @timeColumn) &lt; @lag 
-	      	AND DATEDIFF(@baseDate, @timeColumn) &gt; ((@leadFraction)*@lag)  
+	      WHERE DATEDIFF(@baseDate, @temporalColumn) &lt; @lag
+	      	AND DATEDIFF(@baseDate, @temporalColumn) &gt; ((@leadFraction)*@lag)
 	      GROUP BY @base
 	</code>
     <parameter key="@aggregateFunction" value="stddev_samp, avg, min, max, sum"/>

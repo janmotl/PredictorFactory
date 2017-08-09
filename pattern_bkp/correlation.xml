@@ -17,12 +17,12 @@
 	<author>Jan Motl</author>
 	<date>2014-12-22</date>
 	<code compatibility="Default,Oracle,PostgreSQL">SELECT @base
-	           , corr(dateToNumber(@timeColumn), @numericalColumn) AS @columnName
+	           , corr(dateToNumber(@temporalColumn), @numericalColumn) AS @columnName
 	      FROM @propagatedTable
 	      GROUP BY @base
 	</code>
 	<code compatibility="MySQL">SELECT @base
-	           , (Avg(@numericalColumn * @timeColumn) - Avg(@numericalColumn) * Avg(@timeColumn)) / (StdDev_Samp(@numericalColumn) * StdDev_Samp(@timeColumn)) AS @columnName
+	           , (Avg(@numericalColumn * @temporalColumn) - Avg(@numericalColumn) * Avg(@temporalColumn)) / (StdDev_Samp(@numericalColumn) * StdDev_Samp(@temporalColumn)) AS @columnName
 	      FROM @propagatedTable
 	      GROUP BY @base
 	</code>

@@ -24,6 +24,6 @@
 	<code>SELECT @base
 			   , @column AS @columnName
 		  FROM @propagatedTable</code>
-	<parameter key="@column" value="@nominalColumn, @numericalColumn, @timeColumn"/>
+	<parameter key="@column" value="@nominalColumn, @numericalColumn, @temporalColumn"/>
 	<cardinality>1</cardinality>
 </pattern>

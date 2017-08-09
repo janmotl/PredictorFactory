@@ -35,6 +35,6 @@
 	      FROM @propagatedTable
 	      GROUP BY @base
 	</code>
-	<parameter key="@column" value="@nominalColumn, @numericalColumn, @timeColumn"/>
+	<parameter key="@column" value="@nominalColumn, @numericalColumn, @temporalColumn"/>
 	<cardinality>n</cardinality>
 </pattern>

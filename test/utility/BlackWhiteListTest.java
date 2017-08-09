@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+// Passed Zester test
 public class BlackWhiteListTest {
 
 	@Test

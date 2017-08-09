@@ -2,7 +2,6 @@ package connection;
 
 import meta.MetaOutput;
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import parser.ANTLR;
 import run.Setting;
 

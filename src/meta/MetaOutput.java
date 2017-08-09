@@ -1,9 +1,7 @@
 package meta;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 // Table metadata
@@ -17,7 +15,7 @@ public class MetaOutput {
 		public Integer temporalConstraintRowCountOptimistic; // An optimistic estimate of propagated rows.
 		public String sql;                      // SQL code used for creation of the propagated.
 		public String propagationTable;         // This is the name of the outputTable, from which we collect {targetId,...}.
-		public List<String> propagationPath;    // In the case of loops this makes the difference.
+		public List<String> propagationPath = new ArrayList<>();    // In the case of loops this makes the difference.
 		public int propagationOrder;            // The order, in which tables are propagated.
 		public Integer rowCount;                // Count of tuples in the calculated feature.
 		public boolean dateBottomBounded;       // Related to time window NOT PROPERLY USED!

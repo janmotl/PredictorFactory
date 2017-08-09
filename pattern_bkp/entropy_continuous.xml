@@ -7,6 +7,8 @@
 			http://www.slideshare.net/DataRobot/featurizing-log-data-before-xgboost
 
 		To avoid integer division, we multiply the "sum" by 1.0 to cast it to numerical.
+
+		Note: We may get error that we cannot take logarithm of zero.
 	</description>
 	<example>
 

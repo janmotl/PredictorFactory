@@ -1,8 +1,6 @@
 package connection;
 
 
-import org.jetbrains.annotations.Nullable;
-
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
@@ -39,6 +37,7 @@ public class DatabaseProperty implements Cloneable{
 	@XmlAttribute public Integer lead;
 	@XmlAttribute public Integer sampleCount;
 	@XmlAttribute public Integer predictorMax;
+	@XmlAttribute public Integer secondMax;
 	@XmlAttribute public Boolean useIdAttributes;
 	@XmlAttribute public Boolean useTwoStages;
 

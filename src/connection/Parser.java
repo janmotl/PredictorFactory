@@ -1,9 +1,10 @@
 package connection;
 
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
+import parser.ANTLR;
 import run.Setting;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -95,6 +96,7 @@ public class Parser {
 		// Warning: works only with tables. Fails on views.
 		// Also, SAS "eats" line breaks without replacing them with a space -> accidental concats may render the
 		// query invalid.
+		// Solution: We apply the limit at the JDBC level (of course, it applies only on the result set...)
 		if ("obs".equals(setting.limitSyntax)) {
 //            Pattern pattern = Pattern.compile("(?i)\\b(.*FROM\\s+\\S+)(.*)");
 //            Matcher matcher = pattern.matcher(sql);
@@ -141,6 +143,32 @@ public class Parser {
 		return sql;
 	}
 
+	// Expand to lists while duplicating the prefix:
+	//  "t1".@baseId -> "t1"."id1", "t1"."id2"
+	public static String expandToList(Setting setting, String sql, String keyword, List<String> tokens) {
+		String result = "";
+		Matcher m = Pattern.compile("(\\w+\\.|)(" + keyword + "\\b)(\\w*)").matcher(sql);
+		int start = 0;
+		while (m.find()) {
+			result += sql.substring(start, m.start()) + escapePrefixedList(setting, m.group(1), tokens);
+			start = m.end();
+		}
+		result += sql.substring(start);
+
+		return result;
+	}
+
+	// Escape each item in the list and add the provided prefix in front of each item.
+	private static String escapePrefixedList(Setting setting, String prefix, List<String> tokens) {
+		String result = "";
+		for (String token : tokens) {
+			result = result + ", " + prefix + setting.quoteEntityOpen + token + setting.quoteEntityClose;
+		}
+		result = result.substring(2); // Remove the first two symbols
+
+		return result;
+	}
+
 	// Replace:
 	//      SELECT EXISTS (...)
 	// with:
@@ -170,7 +198,7 @@ public class Parser {
 
 		// SAS and the rest
 		if (matcher.find()) {
-			sql = "SELECT COUNT(*)>0 FROM " + matcher.group(1);
+			sql = "SELECT COUNT(*)>0 FROM " + matcher.group(1); // MonetDB requires named subselect, but that may result in the table name clash
 		}
 
 		return sql.trim();
@@ -181,4 +209,56 @@ public class Parser {
 
 		return sql;
 	}
+
+	// Returns vendor's dialect SQL.
+	public static String getDialectCode(Setting setting, String agnosticCode) {
+		// Expand dateDiff, dateToNumber, corr...
+		String dialectCode = ANTLR.parseSQL(setting, agnosticCode);
+
+		// Stddev_samp
+		dialectCode = dialectCode.replaceAll("(?i)stdDev_samp", setting.stdDevSampCommand);
+
+		// Stddev_pop
+		dialectCode = dialectCode.replaceAll("(?i)stdDev_pop", setting.stdDevPopCommand);
+
+		// charLengthCommand
+		dialectCode = dialectCode.replaceAll("(?i)char_length", setting.charLengthCommand);
+
+		// Timestamp
+		dialectCode = dialectCode.replaceAll("(?i)timestamp", setting.typeTimestamp);
+
+
+
+		// NullIf (SAS doesn't support nullIf command in SQL over JDBC, rewrite nullIf with basic commands)
+		if ("SAS".equals(setting.databaseVendor)) {
+			dialectCode = nullIf(dialectCode);
+		}
+
+		return dialectCode;
+	}
+
+	// Subroutine for getDialectCode
+	private static String nullIf(String dialectCode) {
+		java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(?is)(.*)(nullif\\()(.*?)(,+)(.*?)(\\))(.*)");
+
+		do {
+			Matcher matcher = pattern.matcher(dialectCode);
+			if (matcher.find()) {
+				// Extract the keywords
+				String what = matcher.group(3);
+				String value = matcher.group(5);
+
+				// Replace
+				String caseWhen = "CASE WHEN @what = @value THEN null ELSE @what END";
+				caseWhen = caseWhen.replace("@what", what);
+				caseWhen = caseWhen.replace("@value", value);
+				dialectCode = matcher.group(1) + caseWhen + matcher.group(7);
+			} else {
+				break;
+			}
+		} while (true);
+
+		return dialectCode;
+	}
+
 }

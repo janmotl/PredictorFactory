@@ -32,11 +32,11 @@
 	<author>Jan Motl</author>
 	<date>2015-04-16</date>
 	<code compatibility="PostgreSQL, MySQL, Oracle">SELECT @base
-	           , EXTRACT(@field from @timeColumn) AS @columnName
+	           , EXTRACT(@field from @temporalColumn) AS @columnName
 	      FROM @propagatedTable
 	</code>
 	<code compatibility="Microsoft SQL Server">SELECT @base
-	           , DATEPART(@field, @timeColumn) AS @columnName
+	           , DATEPART(@field, @temporalColumn) AS @columnName
 	      FROM @propagatedTable
 	</code>
 	<parameter key="@field" value="hour, day, dow, month"/>

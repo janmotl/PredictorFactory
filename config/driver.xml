@@ -26,8 +26,12 @@ Description of the fields:
 	DateToNumber: EXPERIMENTAL. SHOULD BE SUBSTITUTED WITH DATEDIFF SYNTAX AND CONSTANT
 		But then we would have to support: dateDiff(date, date) and dateDiff(date, constant as string). Replaceable with {fn CONVERT SQL_INTEGER}
 	InsertTimestampSyntax: Syntax for timestamp (it's used for creation of journal table). Because of SAS it generally has to be in single quotes.
-	StdDevCommand: The command for calculation of sample standard deviation.
+	StdDevSampCommand: The command for calculation of sample standard deviation.
+	StdDevPopCommand: The command for calculation of population standard deviation.
 	CharLengthCommand: The command for calculation of string length. Replaceable with {fn LENGTH(string)}.
+	IndexNameSyntax: Use "idx_table_column" or "column"?
+	RandomCommand: Command to use for generating a decimal number in range 0..1.
+	TestQuery: The validation query for drivers that do not provide isValid() method. Do not set it for JDBC 4.0 compliant drivers as it would slow them down.
 -->
 
 
@@ -38,6 +42,23 @@ Description of the fields:
 		driverClass="com.ibm.db2.jcc.DB2Driver" 
 		defaultPort="50000"
 		urlPrefix="jdbc:db2://"
+		dbNameSeparator="/"
+		dateAddSyntax="(@baseDate + INTERVAL '@amount @datePart')"
+		dateAddMonth="(@baseDate + INTERVAL '@amount month')"
+		dateDiffSyntax="(@dateTo - @dateFrom)"
+		dateToNumber="extract(epoch from @column)"
+		charLengthCommand="char_length"
+		randomCommand="random()"
+	/>
+
+	<!-- Draft, useful for unit testing (the db is in the JDK and is in memory -> it is portable and fast) -->
+	<!-- See: https://www.javacodegeeks.com/2013/07/java-db-embedded-mode.html -->
+	<driver
+		name="Derby"
+		driverClass="org.apache.derby.jdbc.EmbeddedDriver"
+		defaultPort="1527"
+		urlPrefix="jdbc:derby://"
+		urlSuffix=";create=true"
 		dbNameSeparator="/"
 		dateAddSyntax="(@baseDate + INTERVAL '@amount @datePart')"
 		dateAddMonth="(@baseDate + INTERVAL '@amount month')"
@@ -66,7 +87,8 @@ Description of the fields:
 		dbNameSeparator=";databaseName="
 		supportsCreateTableAs="false"
 		dateToNumber="cast(datediff(hour,'1990-1-1', @column) as decimal(38, 10))"
-		stdDevCommand="stdev"
+		stdDevSampCommand="stdev"
+		stdDevPopCommand="stdevp"
 		charLengthCommand="len"
 		typeTimestamp="DATETIME"
 		limitSyntax="top"
@@ -82,13 +104,15 @@ Description of the fields:
 		dbNameSeparator=";databaseName="
 		supportsCreateTableAs="false"
 		dateToNumber="cast(datediff(hour,'1990-1-1', @column) as decimal(38, 10))"
-		stdDevCommand="stdev"
+		stdDevSampCommand="stdev"
+		stdDevPopCommand="stdevp"
 		charLengthCommand="len"
 		typeTimestamp="DATETIME"
 		limitSyntax="top"
 		randomCommand="RAND(CONVERT(varbinary, NEWID()))"
 	/>
-	
+
+	<!-- MonetDB does not support LIMIT in subqueries -> it would be a lot of work to get it working. -->
 	<driver
 		name="MonetDB"
 		driverClass="nl.cwi.monetdb.jdbc.MonetDriver"
@@ -98,7 +122,8 @@ Description of the fields:
 		supportsWithData="true"
 		supportsJoinUsing="true"
 		dateToNumber="(@column - date '1970-01-01')"
-		stdDevCommand="SYS.STDDEV_SAMP "
+		stdDevSampCommand="SYS.STDDEV_SAMP "
+		stdDevPopCommand="SYS.STDDEV_POP "
 		charLengthCommand="LENGTH"
 		randomCommand="rand()"
 	/>
@@ -199,12 +224,13 @@ Description of the fields:
 		randomCommand="random()"
 	/>
 	
-	<!-- In progress. Changed so far: {dateAddMonth, dateToNumber, stdDevCommand, randomCommand, charLengthCommand, dateDiff} -->
+	<!-- In progress. Changed so far: {dateAddMonth, dateToNumber, stdDevSampCommand, randomCommand, charLengthCommand, dateDiff} -->
 	<!-- Entity quoting: https://communities.sas.com/t5/SAS-Enterprise-Guide/dealing-with-space-in-variable/td-p/136173 -->
 	<!-- Alias quoting can be done similarly (or do not escape - SAS driver offers a not usable space): "example alias with a space"n  -->
 	<!-- Appname can be up to 8 characters long. -->
 	<!-- SAS only has 2 data types, character and numeric (dates are numeric). -->
-    <!-- INTNX function needs optional alignment parameter 'SAME'-->
+    <!-- INTNX function needs optional alignment parameter 'SAME' -->
+	<!-- We approximate stdDevPopCommand with sample standard deviation (we could have used sqrt(uss(col)-avg(col)) but that requires writing a parsing rule -->
 	<driver
 		name="SAS"
 		driverClass="com.sas.net.sharenet.ShareNetDriver"
@@ -222,7 +248,8 @@ Description of the fields:
 		dateDiffSyntax="(@dateTo - @dateFrom)"
 		dateToNumber="@column"
 		insertTimestampSyntax="%sysfunc(inputn(@timestamp, ymddttm20.3))"
-		stdDevCommand="std"
+		stdDevSampCommand="std"
+		stdDevPopCommand="std"
 		charLengthCommand="length"
 		limitSyntax="obs"
 		indexNameSyntax="column"

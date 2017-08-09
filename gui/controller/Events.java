@@ -73,6 +73,7 @@ public class Events implements Initializable {
     @FXML private TextField textLead;
     @FXML private TextField textSampleCount;
     @FXML private TextField textPredictorMax;
+	@FXML private TextField textSecondMax;
     @FXML private TextArea textAreaConsole;
     @FXML private WebView webView;
     @FXML private TreeView<String> treeViewSelect;
@@ -169,10 +170,16 @@ public class Events implements Initializable {
         setting.targetTable = comboBoxTargetTable.getValue();
 
         // Target tab
-        Set<String> columnList = Meta.collectColumns(setting, setting.database, setting.inputSchema, setting.targetTable).keySet();
-        comboBoxTargetColumn.getItems().setAll(columnList);
-        comboBoxTargetId.getItems().setAll(columnList);
-        comboBoxTargetTimestamp.getItems().setAll(columnList);
+        SortedMap<String, Column> columnMap = Meta.collectColumns(setting, setting.database, setting.inputSchema, setting.targetTable);
+        comboBoxTargetColumn.getItems().setAll(columnMap.keySet());
+        comboBoxTargetId.getItems().setAll(columnMap.keySet());
+	    List<String> temporalColumns = new ArrayList<>();
+	    temporalColumns.add("");    // Permits "no temporal constraint"
+	    for (Map.Entry<String, Column> entry : columnMap.entrySet()) {
+		    int dataType = entry.getValue().dataType;
+		    if (dataType == 91 || dataType == 92 || dataType == 93 || dataType == 2013 || dataType == 2014) temporalColumns.add(entry.getKey());
+	    }
+        comboBoxTargetTimestamp.getItems().setAll(temporalColumns);
     }
 
     @FXML private void runAction() {
@@ -203,6 +210,10 @@ public class Events implements Initializable {
         databaseProperty.useTwoStages = checkBoxUseTwoStages.isSelected();
         databaseProperty.sampleCount = parseInteger(textSampleCount.getText());
         databaseProperty.predictorMax = parseInteger(textPredictorMax.getText());
+        databaseProperty.secondMax = parseInteger(textSecondMax.getText());
+
+	    // If the target timestamp is empty, replace it with null
+	    if ("".equals(databaseProperty.targetDate)) databaseProperty.targetDate = null;
 
         // BlackList tables
         List<String> blackListTable = new ArrayList<>();
@@ -352,6 +363,7 @@ public class Events implements Initializable {
          try {textSampleCount.setText(databaseProperty.sampleCount.toString());} catch (NullPointerException ignored) {}
          try {comboBoxTask.setValue(databaseProperty.task);} catch (NullPointerException ignored) {}
          try {textPredictorMax.setText(databaseProperty.predictorMax.toString());} catch (NullPointerException ignored) {}
+	     try {textSecondMax.setText(databaseProperty.secondMax.toString());} catch (NullPointerException ignored) {}
          try {checkBoxUseId.setSelected(databaseProperty.useIdAttributes);} catch (NullPointerException ignored) {}
 	     try {checkBoxUseTwoStages.setSelected(databaseProperty.useTwoStages);} catch (NullPointerException ignored) {}
          try {blackListPattern = TextParser.string2list(databaseProperty.blackListPattern);} catch (NullPointerException ignored) {}
@@ -419,6 +431,7 @@ public class Events implements Initializable {
         ValidatorText.addNumericValidation(textLead);
         ValidatorText.addNumericValidation(textSampleCount);
         ValidatorText.addNumericValidation(textPredictorMax, setting.predictorMaxTheory);
+	    ValidatorText.addNumericValidation(textSecondMax, setting.secondMax);
 
 	    // Run tab
 	    buttonRun.defaultButtonProperty().bind(tabRun.selectedProperty());
@@ -514,7 +527,7 @@ public class Events implements Initializable {
             comboBoxInputSchema.setValue(setting.inputSchema);
             comboBoxOutputSchema.setValue(setting.outputSchema);
             comboBoxTargetTable.setValue(setting.targetTable);
-            comboBoxTargetColumn.setValue(setting.targetColumn);
+            comboBoxTargetColumn.setValue(setting.targetColumnList.get(0));
             comboBoxTargetId.setValue(setting.targetIdList.get(0));
             comboBoxTargetTimestamp.setValue(setting.targetDate);
             comboBoxTask.setValue(setting.task);

@@ -1,7 +1,9 @@
 package connection;
 
+import extraction.Predictor;
 import meta.ForeignConstraint;
 import meta.MetaOutput;
+import mother.PredictorMother;
 import org.apache.log4j.Level;
 import org.junit.Assert;
 import org.junit.Before;
@@ -42,7 +44,7 @@ public   class SQLTest {
 
         // Test
         String actual =  setting.dialect.propagateID(setting, table);
-        String expected = "SELECT t1.[propagated_id1], t1.[propagated_date], t1.[propagated_target], t1.[propagated_fold], t2.* INTO [predictor_factory].[propagated_trans] FROM [predictor_factory].[propagated_account] t1 INNER JOIN [financial].[trans] t2 ON t1.[account_id] = t2.[account_id]";
+        String expected = "SELECT t1.[propagated_id1], t1.[propagated_date], t1.[propagated_target1], t1.[propagated_fold], t2.* INTO [predictor_factory].[propagated_trans] FROM [predictor_factory].[propagated_account] t1 INNER JOIN [financial].[trans] t2 ON t1.[account_id] = t2.[account_id]";
         Assert.assertEquals(expected, actual);
     }
 
@@ -64,7 +66,7 @@ public   class SQLTest {
 
         // Test
         String actual =  setting.dialect.propagateID(setting, table);
-        String expected = "SELECT t1.[propagated_id1], t1.[propagated_id2], t1.[propagated_date], t1.[propagated_target], t1.[propagated_fold], t2.* INTO [predictor_factory].[propagated_trans] FROM [predictor_factory].[propagated_account] t1 INNER JOIN [financial].[trans] t2 ON t1.[account_id1] = t2.[account_id2] AND t1.[account_id3] = t2.[account_id4]";
+        String expected = "SELECT t1.[propagated_id1], t1.[propagated_id2], t1.[propagated_date], t1.[propagated_target1], t1.[propagated_fold], t2.* INTO [predictor_factory].[propagated_trans] FROM [predictor_factory].[propagated_account] t1 INNER JOIN [financial].[trans] t2 ON t1.[account_id1] = t2.[account_id2] AND t1.[account_id3] = t2.[account_id4]";
         Assert.assertEquals(expected, actual);
     }
 
@@ -206,6 +208,84 @@ public   class SQLTest {
         setting.dialect.addJournalRun(setting, 100L); // Assumes journal_run is already there
 
         Assert.assertTrue(utility.CountAppender.getCount(Level.WARN) == 0);
+
+        Network.closeConnection(setting);
+    }
+
+    @Test
+    public void getChi2() {
+        // Setting
+        Setting setting = new Setting("MariaDB", "mutagenesis");
+	    setting.outputSchema = "financial";
+        Network.openConnection(setting);
+		Predictor predictor = PredictorMother.aggregateAvg();
+
+	    // Char
+	    predictor.setOutputTable("order");
+		predictor.setName("k_symbol");
+	    predictor.setDataTypeCategory("nominal");
+	    double chi2 = 5*SQL.getChi2(setting, predictor, "bank_to"); // k_symbol has 5 categories
+        Assert.assertEquals(51.31649200007232, chi2, 0.0001); // Measured against RapidMiner
+
+	    // Integer with a few distinct values
+	    predictor.setOutputTable("loan");
+		predictor.setName("duration");
+	    predictor.setDataTypeCategory("numerical");
+	    chi2 = 10*SQL.getChi2(setting, predictor, "status"); // Binning into 10 bins (regardless of the unique count)
+        Assert.assertEquals(246.51818703480066, chi2, 0.01); // Measured against RapidMiner
+	    // The calculator at http://www.quantpsy.org/chisq/chisq.htm says: 246.518
+	    // Conclusion: Some small error is present.
+
+	    // Integer with many distinct values, some empirical counts are zero
+	    predictor.setOutputTable("loan");
+		predictor.setName("amount");
+	    predictor.setDataTypeCategory("numerical");
+	    chi2 = 10*SQL.getChi2(setting, predictor, "status"); // Binning into 10 bins
+        Assert.assertEquals(125.2037214042268, chi2, 0.01); // RapidMiner is also using equal width binning, the histograms exactly match -> have to match
+	    // The calculator at http://www.quantpsy.org/chisq/chisq.htm says: 125.204
+
+	    // Date
+	    predictor.setOutputTable("loan");
+		predictor.setName("date");
+	    predictor.setDataTypeCategory("temporal");
+	    chi2 = 10*SQL.getChi2(setting, predictor, "status"); // Binning into 10 bins
+        Assert.assertEquals(274.75594924317306, chi2, 0.01); // RapidMiner reference
+
+        // Time
+	    setting.outputSchema = "geneea";
+	    predictor.setOutputTable("hl_hlasovani");
+		predictor.setName("cas");
+	    predictor.setDataTypeCategory("temporal");
+	    chi2 = 10*SQL.getChi2(setting, predictor, "vysledek"); // Binning into 10 bins
+        Assert.assertEquals(58.205060470034205, chi2, 0.001); // RapidMiner reference
+
+	    // Timestamp
+	    setting.outputSchema = "AdventureWorks2014";
+	    predictor.setOutputTable("EmployeePayHistory");
+		predictor.setName("ModifiedDate");
+	    predictor.setDataTypeCategory("temporal");
+	    chi2 = 10*SQL.getChi2(setting, predictor, "PayFrequency"); // Binning into 10 bins
+        Assert.assertEquals(21.856300708852554, chi2, 0.001); // RapidMiner reference
+
+	    // Enum, blob, binary, text
+
+        Network.closeConnection(setting);
+    }
+
+	@Test
+    public void getR2() {
+        // Setting
+        Setting setting = new Setting("MariaDB", "Biodegradability");
+	    setting.outputSchema = "Biodegradability";
+        Network.openConnection(setting);
+		Predictor predictor = PredictorMother.aggregateAvg();
+
+	    // Numeric
+	    predictor.setOutputTable("molecule");
+		predictor.setName("logp");
+	    predictor.setDataTypeCategory("numerical");
+	    double chi2 = SQL.getR2(setting, predictor, "activity");
+        Assert.assertEquals(68.4447497804554, chi2, 0.0001); // Measured against PostgreSQL: SELECT corr(activity, logp)^2 * count(*)
 
         Network.closeConnection(setting);
     }

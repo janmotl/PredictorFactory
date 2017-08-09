@@ -27,11 +27,11 @@ public class Launcher {
 
 		// Connect to the following server and database:
 		String connectionProperty = "PostgreSQL";   // Host identification as specified in resources/connection.xml
-		String databaseProperty = "financial_sample";       // Dataset identification as specified in resources/database.xml
+		String databaseProperty = "Biodegradability";       // Dataset identification as specified in resources/database.xml
 
-		// Read command line parameters if they are present (and overwrite the defaults).
+		// Read command line parameters iff they are present (and overwrite the defaults).
 		if (arg.length == 1 || arg.length > 2) {
-			throw new IllegalArgumentException("The valid arguments are: connectionName databaseName.");
+			throw new IllegalArgumentException("Exactly two arguments are expected: connectionName databaseName");
 		}
 		if (arg.length == 2) {
 			connectionProperty = arg[0];
@@ -65,9 +65,6 @@ public class Launcher {
 		setting.dialect.prepareOutputSchema(setting);
 		logger.info("#### Prepared the output schema ####");
 
-		// Setup journal of propagated tables
-		setting.dialect.getJournalTable(setting);
-
 		// Make base table
 		setting.dialect.getBase(setting);
 		if ("classification".equals(setting.task)) {
@@ -83,13 +80,12 @@ public class Launcher {
 		// Calculate features
 		Journal journal = Aggregation.run(setting, outputMeta);
 
-		///////// SANDBOX
-
+		// Two-stage processing
 		if (setting.useTwoStages && setting.sampleCount<Integer.MAX_VALUE) {
-			journal.trim();
 			Journal.marshall(journal);
 			TwoStages.setExploitationPhase(setting, databaseProperty, journal);
-			logger.info("Predictor count: " + journal.getTopPredictors().size());
+			logger.info("Evaluated predictor count: " + journal.getEvaluationCount());
+			logger.info("Preserved predictor count: " + journal.getAllTopPredictors().size());
 			logger.info("The exploration stage finished. Starting the exploitation phase.");
 			main(new String[]{connectionProperty, "exploitationStage"});
 
@@ -99,8 +95,7 @@ public class Launcher {
 
 
 		// Make MainSample
-		setting.dialect.getMainSample(setting, journal.getTopPredictors());
-		logger.info("#### Produced " + setting.outputSchema + "." + setting.mainTable + " with " + journal.getTopPredictors().size() + " most predictive predictors from " + journal.size() + " evaluated. Duplicate or unsuccessfully calculated predictors are not passed into the output table. ####");
+		setting.dialect.getAllMainSamples(setting, journal);
 
 		// Write the status into journal_run table
 		long stopTime = System.currentTimeMillis();

@@ -11,7 +11,7 @@
 	<author>Jan Motl</author>
 	<date>2015-04-16</date>
 	<code>SELECT @base
-	           , DATEDIFF(@timeColumn1, @timeColumn2) AS @columnName
+	           , DATEDIFF(@temporalColumn1, @temporalColumn2) AS @columnName
 	      FROM @propagatedTable
 	</code>
 	<cardinality>1</cardinality>

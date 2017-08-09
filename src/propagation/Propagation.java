@@ -43,8 +43,10 @@ public class Propagation {
 		temporalColumn.isTemporal = true;
 		base.columnMap.put(setting.baseDate, temporalColumn);
 
-		Column targetColumn = new Column(setting.baseTarget);
-		base.columnMap.put(setting.baseTarget, targetColumn);
+		for (String columnName : setting.baseTargetList) {  // We can have multiple targets
+			Column column = new Column(columnName);
+			base.columnMap.put(columnName, column);
+		}
 
 		ForeignConstraint fc = new ForeignConstraint("FK_baseTable_targetTable", setting.baseSampled, setting.targetTable, setting.baseIdList, setting.targetIdList);
 		base.foreignConstraintList.add(fc);

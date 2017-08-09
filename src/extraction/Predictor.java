@@ -14,7 +14,6 @@ import java.util.*;
 
 @XmlType(name = "predictor")
 public class Predictor implements Comparable<Predictor> {
-
 	private int id;                                 // Unique number. SHOULD BE FINAL.
 	private int groupId;                            // Id of the optimisation group
 	private String sql;                             // SQL code
@@ -32,7 +31,10 @@ public class Predictor implements Comparable<Predictor> {
 	private int candidateState = 1;                 // The states are: {1=candidate, 0=dropped, -1=toDrop}
 	private String outputTable;                     // The name of the constructed predictor table
 	private SortedMap<String, String> columnMap = new TreeMap<>();   // Contains {@nominalColumn=gender,...}
-	private String rawDataType;                     // Not a statistical type. Contains {Nominal, Numerical, Temporal}
+	private Exception exception;                    // As thrown from the database
+	private String baseTarget;                      // The single baseTarget column name for patterns like WOE
+	private String targetColumn;                    // The single targetColumn (the original name) for reporting. For WOE. Null for aggregates
+	private String dataTypeCategory;                // Not a statistical type. Contains {Nominal, Numerical, Temporal}
 
 	// Note: Could have used Table.Column or OutputTable.Column for storage...
 	private int dataType;                           // Data type as defined by JDBC
@@ -41,15 +43,13 @@ public class Predictor implements Comparable<Predictor> {
 	// Composition
 	private OutputTable table;                      // The table with all the columns
 	private final Pattern pattern;                  // The used pattern
+	private Relevance relevance;                    // The storage for the measured predictor's relevance
 
 	// Relevance of the predictor for classification
-	// SHOULD BE AN OBJECT AND CONTAIN: Target, MeasureType, Value
-	// FOR INSPIRATION HOW TO DEAL WITH A MIXTURE OF MEASURES WHERE WE MAXIMIZE AND MINIMIZE A VALUE SEE RAPIDMINER
-	private SortedMap<String, Double> relevance = new TreeMap<>();
-	private SortedMap<String, Double> conceptDrift = new TreeMap<>();
+	private String chosenBaseTarget;                    // A single target (and relevance) based on which the predictor is ranked
 
 	// Constructor
-	Predictor(Pattern p) {
+	public Predictor(Pattern p) {
 		if (p == null) {
 			throw new NullPointerException("Pattern is null");
 		}
@@ -77,12 +77,16 @@ public class Predictor implements Comparable<Predictor> {
 
 		timestampDesigned = LocalDateTime.now();
 		pattern = p;
+		table = new OutputTable();
+		relevance = new Relevance();
 	}
 
 	// Constructor for JAXB (as Journal is marshaled)
 	public Predictor() {
 		timestampDesigned = LocalDateTime.now(); // Will be overwritten as we are using field access to the variables.
 		pattern = new Pattern();
+		table = new OutputTable();
+		relevance = new Relevance();
 	}
 
 	// Copy constructor
@@ -91,33 +95,33 @@ public class Predictor implements Comparable<Predictor> {
 	// and we do not need (or want) to change anything in these objects.
 	// Note also that com.rits.cloning.Cloner was failing on cloning Table.Column.uniqueValueSet with StackOverflow
 	// error.
-	protected Predictor(Predictor other) {
+	public Predictor(Predictor other) {
 		groupId = other.groupId;                           // Required copy of the int
 		sql = other.sql;                                   // Required copy of the String
+		baseTarget = other.baseTarget;                     // Required copy of the String
 		table = other.table;                               // Just a copy of the pointer is OK
 		pattern = other.pattern;                           // Just a copy of the pointer is OK
 		timestampDesigned = LocalDateTime.now();           // Newly created
 		parameterMap = new TreeMap<>(other.parameterMap);  // Shallow copy of the Map is OK
 		columnMap = new TreeMap<>(other.columnMap);        // Shallow copy of the Map is OK
+		relevance = new Relevance(other.relevance);        // Deep copy
 
-		// TO DELETE
-//        this.id = other.id;
-//        this.outputTable = other.outputTable;
-//        this.name = other.name;
-//        this.longName = other.longName;
-//        this.timestampBuilt = other.timestampBuilt;
-//        this.timestampDelivered = other.timestampDelivered;
-//        this.isOk = other.isOk;
-//        this.rowCount = other.rowCount;
-//        this.nullCount = other.nullCount;
-//        this.isInferiorDuplicate = other.isInferiorDuplicate;
-//        this.duplicateName = other.duplicateName;
-//        this.candidateState = other.candidateState;
-//        this.rawDataType = other.rawDataType;
-//        this.dataType = other.dataType;
-//        this.dataTypeName = other.dataTypeName;
-//        this.relevance = other.relevance;
-//        this.conceptDrift = other.conceptDrift;
+		// For proper working of the journal
+		id = other.id;
+		outputTable = other.outputTable;                   // Required copy of the String
+        name = other.name;
+        longName = other.longName;
+        timestampBuilt = other.timestampBuilt;
+        timestampDelivered = other.timestampDelivered;
+        isOk = other.isOk;
+        rowCount = other.rowCount;
+        nullCount = other.nullCount;
+        isInferiorDuplicate = other.isInferiorDuplicate;
+        duplicateName = other.duplicateName;
+        candidateState = other.candidateState;
+        dataTypeCategory = other.dataTypeCategory;
+        dataType = other.dataType;
+        dataTypeName = other.dataTypeName;
 	}
 
 	// Get column name.
@@ -231,50 +235,64 @@ public class Predictor implements Comparable<Predictor> {
 		return id - anotherPredictor.getId();
 	}
 
-	// Sort first by candidateState in descending order.
-	// Then sort by relevance in descending order (higher values are better).
-	// If relevance is calculated for multiple targets, compare based on the maximum relevance.
-	// NOTE: This is not ideal - what if prediction of some target is tougher than prediction of another target?
-	// NOTE: I should have journalTopN for each target and produce mainSample for each target!
-	// In case of tie, sort by runtime in ascending order (smaller values are better).
-	// NOTE: HAVE TO TEST ON NULLS AND EMPTY RELEVANCE MAPS
-	public static final Comparator<Predictor> RelevanceComparator = new Comparator<Predictor>() {
-		@Override
-		public int compare(Predictor o1, Predictor o2) {
-
-			// Candidate states (predictors that are not OK or are duplicate have candidateState<1)
-			if (o1.getCandidateState() > o2.getCandidateState()) {
-				return -1;
-			} else if (o1.getCandidateState() < o2.getCandidateState()) {
-				return 1;
-			}
-
-			// Get maximum relevance, if necessary
-			Double relevance1 = Collections.max(o1.getRelevanceMap().values());
-			Double relevance2 = Collections.max(o2.getRelevanceMap().values());
-
-			// Compare based on the maximum relevance
-			if (relevance1.compareTo(relevance2) > 0) {
-				return -1;
-			} else if (relevance1.compareTo(relevance2) < 0) {
-				return 1;
-			}
-
-			// Compare based on the runtime, if necessary
-			if (o1.getRuntime() < o2.getRuntime()) {
-				return -1;
-			} else if (o1.getRuntime() > o2.getRuntime()) {
-				return 1;
-			}
-			return 0;
+	// Sort by {isCandidate desc, chosenRelevance desc, runtime asc, id asc}.
+	// Justification: we prefer predictors that are ok, are highly relevant and fast to calculate.
+	// As a tie breaker, we return predictors that were calculated early (have low id).
+	public static final Comparator<Predictor> SingleRelevanceComparator = (o1, o2) -> {
+		// Candidate states (predictors that are not OK or are duplicate have candidateState<1)
+		if (o1.candidateState > o2.candidateState) {
+			return -1;
+		} else if (o1.candidateState < o2.candidateState) {
+			return 1;
 		}
+
+		// Compare based on the chosen relevance
+		if (o1.getChosenWeightedRelevance() > o2.getChosenWeightedRelevance()) {
+			return -1;
+		} else if (o1.getChosenWeightedRelevance() < o2.getChosenWeightedRelevance()) {
+			return 1;
+		}
+
+		// Compare based on the runtime
+		if (o1.getRuntime() < o2.getRuntime()) {
+			return -1;
+		} else if (o1.getRuntime() > o2.getRuntime()) {
+			return 1;
+		}
+
+		// Compare based on the id, if necessary
+		if (o1.id < o2.id) {
+			return -1;
+		} else if (o1.id > o2.id) {
+			return 1;
+		}
+		return 0;
 	};
 
+
+	/////////// Equal, HashCode ///////////
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Predictor predictor = (Predictor) o;
+		return id == predictor.id;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id);
+	}
 
 	/////////// To string ///////////
 	@Override
 	public String toString() {
-		return getLongNameOnce() + " " + Collections.max(relevance.values()) + " " + candidateState;
+		return "Predictor{" +
+				"id=" + id +
+				", name='" + name + '\'' +
+				", candidateState='" + candidateState + '\'' +
+				relevance +
+				'}';
 	}
 
 
@@ -283,27 +301,40 @@ public class Predictor implements Comparable<Predictor> {
 		parameterMap.put(key, value);
 	}
 
-	public Double getRelevance(String target) {
-		return relevance.get(target);
+	public double getWeightedRelevance(String baseTarget) {
+		return relevance.getWeightedRelevance(baseTarget);
 	}
 
-	public void setRelevance(String target, Double value) {
-		relevance.put(target, value);
+	public double getRelevance(String baseTarget) {
+		return relevance.getRelevance(baseTarget);
 	}
 
-	public Double getConceptDrift(String target) {
-		return conceptDrift.get(target);
+	public void setRelevance(String baseTarget, Double value) {
+		relevance.setRelevance(baseTarget, value);
 	}
 
-	public void setConceptDrift(String target, Double value) {
-		conceptDrift.put(target, value);
+	public double getConceptDrift(String baseTarget) {
+		return relevance.getConceptDrift(baseTarget);
 	}
 
+	public void setConceptDrift(String baseTarget, Double value) {
+		relevance.setConceptDrift(baseTarget, value);
+	}
+
+	public double getChosenWeightedRelevance() {
+		return relevance.getWeightedRelevance(chosenBaseTarget);
+	}
 
 	public double getRuntime() {
 		// Runtime in seconds with three decimal values. Assumes that start time and end time are available.
 		return timestampBuilt.until(timestampDelivered, ChronoUnit.MILLIS) / 1000.0;
 	}
+
+	public String getExceptionMessage() {
+		if (exception!=null) return exception.getMessage();
+		return null;
+	}
+
 
 
 	/////////// Generic setters and getters /////////////
@@ -430,10 +461,6 @@ public class Predictor implements Comparable<Predictor> {
 		this.nullCount = nullCount;
 	}
 
-	public SortedMap<String, Double> getRelevanceMap() {
-		return relevance;
-	}
-
 	public boolean isInferiorDuplicate() {
 		return isInferiorDuplicate;
 	}
@@ -516,15 +543,52 @@ public class Predictor implements Comparable<Predictor> {
 		this.dataType = dataType;
 	}
 
-	public String getRawDataType() {
-		return rawDataType;
+	public String getDataTypeCategory() {
+		return dataTypeCategory;
 	}
 
-	public void setRawDataType(String rawDataType) {
-		this.rawDataType = rawDataType;
+	public void setDataTypeCategory(String dataTypeCategory) {
+		this.dataTypeCategory = dataTypeCategory;
 	}
 
 	public Pattern getPattern() {
 		return pattern;
 	}
+
+	public void setException(Exception exception) {
+		this.exception = exception;
+	}
+
+	public Relevance getRelevanceObject() {
+		return relevance;
+	}
+
+	public void setRelevanceObject(Relevance relevance) {
+		this.relevance = relevance;
+	}
+
+	public String getBaseTarget() {
+		return baseTarget;
+	}
+
+	public void setBaseTarget(String baseTarget) {
+		this.baseTarget = baseTarget;
+	}
+
+	public String getTargetColumn() {
+		return targetColumn;
+	}
+
+	public void setTargetColumn(String targetColumn) {
+		this.targetColumn = targetColumn;
+	}
+
+	public String getChosenBaseTarget() {
+		return chosenBaseTarget;
+	}
+
+	public void setChosenBaseTarget(String chosenBaseTarget) {
+		this.chosenBaseTarget = chosenBaseTarget;
+	}
+
 }

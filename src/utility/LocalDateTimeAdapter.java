@@ -1,7 +1,5 @@
 package utility;
 
-import org.jetbrains.annotations.NotNull;
-
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import java.time.LocalDateTime;
 

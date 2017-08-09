@@ -1,8 +1,6 @@
 package utility;
 
 
-import org.jetbrains.annotations.NotNull;
-
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;

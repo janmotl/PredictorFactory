@@ -28,8 +28,8 @@
 		  FROM @propagatedTable t1
 		  INNER JOIN (
 				SELECT @nominalColumn
-					 , avg(case when @baseTarget = '@targetValue' then 1 else 0 end)+1 as a
-					 , avg(case when @baseTarget &lt;&gt; '@targetValue' then 1 else 0 end)+1 as b
+					 , avg(case when @targetName = '@targetValue' then 1 else 0 end)+1 as a
+					 , avg(case when @targetName &lt;&gt; '@targetValue' then 1 else 0 end)+1 as b
 				FROM @propagatedTable
 				GROUP BY @nominalColumn
 			) t2

@@ -1,7 +1,6 @@
 package connection;
 
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;

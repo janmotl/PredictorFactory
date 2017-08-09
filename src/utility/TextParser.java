@@ -11,6 +11,8 @@ public class TextParser {
 	private static final Logger logger = Logger.getLogger(TextParser.class.getName());
 
 	// Convert comma delimited string to list
+	// Note: Hope that no one is using commas in the names...
+	// Solution: Refactor XML to not use attributes but fields. With that we will be able to properly model lists.
 	public static List<String> string2list(String string) {
 		// Initialization
 		List<String> result = new ArrayList<>();

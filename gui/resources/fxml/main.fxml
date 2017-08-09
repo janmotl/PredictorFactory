@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.web.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
@@ -131,7 +134,7 @@
                   </ComboBox>
                </VBox>
                <VBox>
-                  <Label text="Target Table">
+                  <Label text="Target table">
                      <padding>
                         <Insets bottom="3.0" />
                      </padding>
@@ -310,7 +313,7 @@
             </Label>
             <TextField fx:id="textSampleCount" maxWidth="170.0" promptText="use all samples">
                <tooltip>
-                  <Tooltip text="Sample count per target class (missing values are treated as another class).&#10;Must be smaller 2 147 483 647." />
+                  <Tooltip text="Sample count per target class (missing values are treated as another class).&#10;If regression task is selected, it is the total sample count.&#10;The count must be smaller 2 147 483 647." />
                </tooltip>
             </TextField>
          </VBox>
@@ -332,11 +335,23 @@
                </tooltip>
             </TextField>
          </VBox>
-         <Separator maxWidth="180.0">
-            <padding>
-               <Insets bottom="8.0" top="3.0" />
-            </padding>
-         </Separator>
+         <VBox minHeight="57.0">
+            <children>
+               <Label text="Predictor calculation timeout in seconds">
+                  <VBox.margin>
+                     <Insets left="4.0" />
+                  </VBox.margin>
+                  <padding>
+                     <Insets bottom="3.0" />
+                  </padding>
+               </Label>
+               <TextField fx:id="textSecondMax" maxWidth="170.0" promptText="no timeout">
+                  <tooltip>
+                     <Tooltip text="If the timeout is crossed, the calculation of the predictor is canceled." />
+                  </tooltip>
+               </TextField>
+            </children>
+         </VBox>
          <VBox minHeight="30.0">
             <CheckBox fx:id="checkBoxUseId" mnemonicParsing="false" text="Calculate predictors from identifiers">
                <tooltip>
@@ -348,14 +363,12 @@
             </CheckBox>
          </VBox>
           <VBox minHeight="30.0">
-              <CheckBox fx:id="checkBoxUseTwoStages" mnemonicParsing="false"
-                        text="Permit two-stage processing (exploration, exploitation)">
+              <CheckBox fx:id="checkBoxUseTwoStages" mnemonicParsing="false" text="Permit two-stage processing (exploration, exploitation)">
                  <tooltip>
-                     <Tooltip
-                             text="Identify promising predictors on &quot;Sample count&quot;.&#10;Then calculate the best predictors for whole target table."/>
+                     <Tooltip text="Identify promising predictors on &quot;Sample count&quot;.&#10;Then calculate the best predictors for whole target table." />
                  </tooltip>
                  <VBox.margin>
-                     <Insets left="4.0"/>
+                     <Insets left="4.0" />
                  </VBox.margin>
               </CheckBox>
           </VBox>

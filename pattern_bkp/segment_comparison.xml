@@ -19,6 +19,10 @@
 		samples should be used. If you have a lot of samples, balanced classes and no outliers the practical 
 		effect of data leakage should be minimal. But beware of extreme scenarios!
 
+		Note: If the @numericalColumn is an integer, it may happen that @numericalColumn=@nominalColumn (as
+		predictor factory treats integers once as numerical and once as nominal).
+		In that case the pattern intentionally fails.
+
 		This pattern is producing great predictors with reasonable speed.
 	</description>
 	<example>

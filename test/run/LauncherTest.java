@@ -19,8 +19,8 @@ public class LauncherTest {
 
         Setting setting = new Setting("Azure", "financial_test_setting");
         Network.openConnection(setting);
-        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
-        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, setting.mainTable);
+        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTablePrefix);
+        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, setting.mainTablePrefix);
         Network.closeConnection(setting);
 
         Assert.assertTrue(columnList.containsKey("trans_amount_aggregate_avg_100002"));
@@ -36,8 +36,8 @@ public class LauncherTest {
 
         Setting setting = new Setting("HSQLDB", "financial_test_setting");
         Network.openConnection(setting);
-        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
-        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, setting.mainTable);
+        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTablePrefix);
+        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, setting.mainTablePrefix);
         Network.closeConnection(setting);
 
         Assert.assertTrue(columnList.containsKey("trans_amount_aggregate_avg_100002"));
@@ -53,8 +53,8 @@ public class LauncherTest {
 
         Setting setting = new Setting("MonetDB", "financial_test_setting");
         Network.openConnection(setting);
-        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
-        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, setting.mainTable);
+        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTablePrefix);
+        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, setting.mainTablePrefix);
         Network.closeConnection(setting);
 
         Assert.assertTrue(columnList.containsKey("trans_amount_aggregate_avg_100002"));
@@ -70,14 +70,14 @@ public class LauncherTest {
 
         Setting setting = new Setting("MariaDB", "financial_test_setting");
         Network.openConnection(setting);
-        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
-        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, setting.mainTable);
+        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTablePrefix);
+        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, setting.mainTablePrefix);
         Network.closeConnection(setting);
 
-        Assert.assertTrue(columnList.containsKey("trans_amount_aggregate_avg_100002"));
-        Assert.assertTrue(columnList.containsKey("loan_amount_directField_numericalColumn_100006"));
+        Assert.assertTrue(columnList.containsKey("trans_amount_aggregate_avg_100004"));
+        Assert.assertTrue(columnList.containsKey("loan_amount_directField_numericalColumn_100014"));
         Assert.assertEquals(120, rowCount);
-        Assert.assertEquals(11, columnList.size());
+        Assert.assertEquals(14, columnList.size());
     }
 
     @Test
@@ -87,8 +87,8 @@ public class LauncherTest {
 
         Setting setting = new Setting("Oracle", "financial_xe_test_setting");
         Network.openConnection(setting);
-        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
-        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, setting.mainTable);
+        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTablePrefix);
+        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, setting.mainTablePrefix);
         Network.closeConnection(setting);
 
         Assert.assertTrue(columnList.containsKey("order_amount_aggregate__100002"));
@@ -103,26 +103,26 @@ public class LauncherTest {
         Launcher.main(arguments);
 
         Setting setting = new Setting("PostgreSQL", "financial_test_setting");
+        String mainSample = setting.mainTablePrefix + "_" + setting.targetColumnList.get(0);
         Network.openConnection(setting);
-        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, setting.mainTable);
+        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, mainSample);
         String sql = "select column_name " +
                 "from information_schema.columns " +
                 "where table_schema = 'predictor_factory' " +
-                "and table_name = 'mainSample'";
+                "and table_name = '" + mainSample + "'";
         List<String> columnList = Network.executeQuery(setting.dataSource, sql);
-        sql = "select date_constrain " +
+        sql = "select temporal_constraint " +
                 "from predictor_factory.journal_table " +
                 "where original_name = 'trans'";
-        List<String> constrainColumn = Network.executeQuery(setting.dataSource, sql);
+        List<String> constraintColumn = Network.executeQuery(setting.dataSource, sql);
         Network.closeConnection(setting);
 
-        Assert.assertTrue(columnList.contains("trans_amount_aggregate_avg_100002"));
-        Assert.assertTrue(columnList.contains("loan_amount_directField_numericalColumn_100006"));
-        Assert.assertEquals("loan_date_directField_timeColumn_100008", columnList.get(3)); // Sorted in desc. order by relevance
-        Assert.assertEquals("trans_amount_aggregate_min_100003", columnList.get(10)); // Sorted in desc. order by relevance
-        Assert.assertEquals("date", constrainColumn.get(0));    // Was time constrain applied?
-        Assert.assertEquals(120, rowCount);
-        Assert.assertEquals(11, columnList.size());
+        Assert.assertTrue(columnList.contains("trans_amount_aggregate_avg_100004"));
+        Assert.assertTrue(columnList.contains("loan_amount_directField_numericalColumn_100014"));
+        Assert.assertEquals("loan_date_directField_temporalColumn_100016", columnList.get(3)); // Sorted in desc. order by relevance
+        Assert.assertEquals("date", constraintColumn.get(0));    // Was time constrain applied?
+        Assert.assertEquals(120, rowCount);     // SampleSize is 30, 4 classes -> 120 samples
+        Assert.assertEquals(14, columnList.size()); // 11 features + 3 base
     }
 
 
@@ -134,15 +134,16 @@ public class LauncherTest {
         Launcher.main(arguments);
 
         Setting setting = new Setting("Azure", "financial_test_setting_regression");
+	    String mainSample = setting.mainTablePrefix + "_" + setting.targetColumnList.get(0);
         Network.openConnection(setting);
-        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
-        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, setting.mainTable);
+        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, mainSample);
+        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, mainSample);
         Network.closeConnection(setting);
 
-        Assert.assertTrue(columnList.containsKey("trans_amount_aggregate_avg_100002"));
-        Assert.assertTrue(columnList.containsKey("loan_status_directField_nominalColumn_100006"));
-        Assert.assertEquals(30, rowCount);
-        Assert.assertEquals(11, columnList.size());
+        Assert.assertTrue(columnList.containsKey("trans_amount_aggregate_avg_100004"));
+        Assert.assertTrue(columnList.containsKey("loan_status_directField_nominalColumn_100011"));
+        Assert.assertEquals(30, rowCount);          // sampleCount=30 (it is regression -> 30 in total)
+        Assert.assertEquals(15, columnList.size()); // 12 successful predictors + 3 base
     }
 
     @Test
@@ -151,15 +152,16 @@ public class LauncherTest {
         Launcher.main(arguments);
 
         Setting setting = new Setting("MariaDB", "financial_test_setting_regression");
+	    String mainSample = setting.mainTablePrefix + "_" + setting.targetColumnList.get(0);
         Network.openConnection(setting);
-        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
-        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, setting.mainTable);
+        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, mainSample);
+        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, mainSample);
         Network.closeConnection(setting);
 
-        Assert.assertTrue(columnList.containsKey("trans_amount_aggregate_avg_100002"));
-        Assert.assertTrue(columnList.containsKey("loan_status_directField_nominalColumn_100006"));
-        Assert.assertEquals(30, rowCount);
-        Assert.assertEquals(11, columnList.size());
+        Assert.assertTrue(columnList.containsKey("trans_amount_aggregate_avg_100004"));
+        Assert.assertTrue(columnList.containsKey("loan_status_directField_nominalColumn_100011"));
+        Assert.assertEquals(30, rowCount);          // sampleCount=30 (it is regression -> 30 in total)
+        Assert.assertEquals(15, columnList.size()); // 12 successful predictors + 3 base
     }
 
     @Test
@@ -168,14 +170,15 @@ public class LauncherTest {
         Launcher.main(arguments);
 
         Setting setting = new Setting("Oracle", "financial_xe_test_setting_regression");
-        Network.openConnection(setting);
-        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
-        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, setting.mainTable);
+        String mainSample = setting.mainTablePrefix + "_" + setting.targetColumnList.get(0);
+	    Network.openConnection(setting);
+        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, mainSample);
+        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, mainSample);
         Network.closeConnection(setting);
 
         Assert.assertTrue(columnList.containsKey("order_amount_aggregate__100002"));
         Assert.assertTrue(columnList.containsKey("loan_status_directField_100006"));
-        Assert.assertEquals(30, rowCount);
+        Assert.assertEquals(30, rowCount);              // sampleCount=30 (it is regression -> 30 in total)
         Assert.assertEquals(11, columnList.size());
     }
 
@@ -185,21 +188,22 @@ public class LauncherTest {
         Launcher.main(arguments);
 
         Setting setting = new Setting("PostgreSQL", "financial_test_setting_regression");
-        Network.openConnection(setting);
-        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, setting.mainTable);
+        String mainSample = setting.mainTablePrefix + "_" + setting.targetColumnList.get(0);
+	    Network.openConnection(setting);
+        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, mainSample);
         String sql = "select column_name " +
                 "from information_schema.columns " +
                 "where table_schema = 'predictor_factory' " +
-                "and table_name = 'mainSample'";
+                "and table_name = '" + mainSample + "'";
         List<String> columnList = Network.executeQuery(setting.dataSource, sql);
         Network.closeConnection(setting);
 
-        Assert.assertTrue(columnList.contains("trans_amount_aggregate_avg_100002"));
-        Assert.assertTrue(columnList.contains("loan_status_directField_nominalColumn_100006"));
-        Assert.assertEquals("loan_date_directField_timeColumn_100008", columnList.get(8)); // Sorted in desc. order by relevance
-        Assert.assertEquals("trans_amount_aggregate_sum_100005", columnList.get(7)); // Sorted in desc. order by relevance
-        Assert.assertEquals(30, rowCount);
-        Assert.assertEquals(11, columnList.size());
+        Assert.assertTrue(columnList.contains("trans_amount_aggregate_avg_100004"));
+        Assert.assertTrue(columnList.contains("loan_status_directField_nominalColumn_100011"));
+        Assert.assertEquals("loan_date_directField_temporalColumn_100016", columnList.get(3)); // Sorted in desc. order by relevance
+        Assert.assertEquals("trans_amount_aggregate_sum_100010", columnList.get(11)); // Sorted in desc. order by relevance
+        Assert.assertEquals(30, rowCount);          // sampleCount=30 (it is regression -> 30 in total)
+        Assert.assertEquals(15, columnList.size()); // 12 successful predictors + 3 base
     }
 
 
@@ -209,17 +213,20 @@ public class LauncherTest {
         String[] arguments = {"PostgreSQL", "voc_test_setting"};
         Launcher.main(arguments);
 
+        // Collect validation data
         Setting setting = new Setting("PostgreSQL", "voc_test_setting");
+        String mainSample = setting.mainTablePrefix + "_" + setting.targetColumnList.get(0);
         Network.openConnection(setting);
-        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, setting.mainTable);
-        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, mainSample);
+        SortedMap<String, Column> columnMap = Meta.collectColumns(setting, setting.database, setting.outputSchema, mainSample);
         Network.closeConnection(setting);
 
-        Assert.assertTrue(columnList.containsKey("total_death_during_voyage_directField_numericalColumn_100002"));
-        Assert.assertTrue(columnList.containsKey("voyages_master_directField_nominalColumn_100001"));
-        Assert.assertTrue(columnList.containsKey("voyages_cape_departure_timeSinceDirect_100006"));
-        Assert.assertEquals(637, rowCount);
-        Assert.assertEquals(10, columnList.size());
+        // Assert
+        Assert.assertTrue(columnMap.containsKey("total_death_during_voyage_directField_numericalColumn_100005"));
+        Assert.assertTrue(columnMap.containsKey("voyages_master_directField_nominalColumn_100003"));
+        Assert.assertTrue(columnMap.containsKey("voyages_cape_departure_timeSince_100011"));
+        Assert.assertEquals(520, rowCount);     // Since valueCount=20 only the most common target values make it. Also, sampleCount=30.
+        Assert.assertEquals(15, columnMap.size());  // 11 successful predictors + 4 base
     }
 
     // Test Mutagenesis dataset
@@ -228,17 +235,19 @@ public class LauncherTest {
         String[] arguments = {"PostgreSQL", "mutagenesis_test_setting"};
         Launcher.main(arguments);
 
+        // Collect validation data
         Setting setting = new Setting("PostgreSQL", "mutagenesis_test_setting");
+        String mainSample = setting.mainTablePrefix + "_" + setting.targetColumnList.get(0);
         Network.openConnection(setting);
-        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, setting.mainTable);
-        SortedMap<String, Column> columnList = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTable);
+        int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, mainSample);
+        SortedMap<String, Column> columnMap = Meta.collectColumns(setting, setting.database, setting.outputSchema, mainSample);
         Network.closeConnection(setting);
 
-        Assert.assertTrue(columnList.containsKey("bond_type_aggregate_max_100015"));
-        Assert.assertTrue(columnList.containsKey("molecule_logp_directField_numericalColumn_100023"));
-        Assert.assertTrue(columnList.containsKey("atom_charge_aggregate_sum_100017"));
-        Assert.assertEquals(188, rowCount);
-        Assert.assertEquals(26, columnList.size());
+        // Assert
+        Assert.assertTrue(columnMap.containsKey("atom_charge_aggregate_min_100009"));
+        Assert.assertTrue(columnMap.containsKey("molecule_logp_directField_numericalColumn_100024"));
+        Assert.assertEquals(188, rowCount);         // All rows
+        Assert.assertEquals(19, columnMap.size());  // 16 successful predictors + 3 base
     }
 
 }

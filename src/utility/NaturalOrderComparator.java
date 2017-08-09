@@ -29,8 +29,6 @@ package utility;
 //      Treats nicely repeated spaces, but is difficult to modify to give the case low priority
 
 
-import org.jetbrains.annotations.NotNull;
-
 import java.text.Collator;
 import java.text.DecimalFormatSymbols;
 import java.util.Comparator;
@@ -47,6 +45,7 @@ public class NaturalOrderComparator implements Comparator<String> {
 
 	private Pattern alphaNumChunkPattern;
 
+	// If no locale is passed, use the system default
 	public NaturalOrderComparator() {
 		this(Locale.getDefault());
 	}

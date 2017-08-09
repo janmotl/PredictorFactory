@@ -29,7 +29,8 @@ public class DriverProperty {
 	@XmlAttribute public String dateDiffSyntax;
 	@XmlAttribute public String dateToNumber;
 	@XmlAttribute public String insertTimestampSyntax;
-	@XmlAttribute public String stdDevCommand;
+	@XmlAttribute public String stdDevSampCommand;
+	@XmlAttribute public String stdDevPopCommand;
 	@XmlAttribute public String charLengthCommand;
 	@XmlAttribute public String typeVarchar;
 	@XmlAttribute public String typeInteger;

@@ -3,7 +3,6 @@ package utility;
 import org.apache.log4j.Level;
 import org.apache.log4j.WriterAppender;
 import org.apache.log4j.spi.LoggingEvent;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +25,9 @@ public class CountAppender extends WriterAppender {
 	}
 
 	// Return the count of messages for the given level
+	// Note: I believe this method should not be static - it causes troubles during the testing as the record List is shared...
+	// But how to get the handle to the CountAppender? logger.getAppender("CNT") does not work.
+	// Neither logger.getParent().getAppender("CNT") works...
 	public static int getCount(Level level) {
 		int howMany = 0;
 		for (LoggingEvent record : records) {
@@ -35,5 +37,4 @@ public class CountAppender extends WriterAppender {
 		}
 		return howMany;
 	}
-
 }

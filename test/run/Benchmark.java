@@ -7,7 +7,6 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.performance.PerformanceVector;
 import com.rapidminer.tools.XMLException;
 import connection.Network;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -129,7 +128,7 @@ public class Benchmark {
 			if ("regression".equals(setting.task)) {
 				regression(setting);
 			} else {
-				List<String> uniqueRecords = setting.dialect.getUniqueRecords(setting, setting.targetTable, setting.targetColumn, true);
+				List<String> uniqueRecords = setting.dialect.getUniqueRecords(setting, setting.targetTable, setting.targetColumnList.get(0), true);
 
 				if (uniqueRecords.size() == 2) binaryClassification(setting);
 				else classification(setting);

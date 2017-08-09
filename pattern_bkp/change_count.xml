@@ -12,7 +12,7 @@
 		This may not be a desirable behaviour. A solution of the problem could be to use following equality test:
 			(A = B) OR (ISNULL(A, B) IS NULL)
 
-		NOTE: The ordering by @timeColumn may not be unique - for example, if @timeColumn is a date attribute and
+		NOTE: The ordering by @temporalColumn may not be unique - for example, if @temporalColumn is a date attribute and
 		multiple events happen during a day. Consequently, it may always return slightly different result.
 
 		NOTE: Pattern nominal_change was a duplicate -> removed nominal_change.
@@ -26,7 +26,7 @@
 				 , sum(is_change) AS @columnName
 			FROM (
 			   SELECT @base
-					, (CASE WHEN lag(@column) OVER (ORDER BY @timeColumn) != @column
+					, (CASE WHEN lag(@column) OVER (ORDER BY @temporalColumn) != @column
 							THEN 1
 							ELSE 0
 						END) is_change

@@ -11,7 +11,7 @@
 	<author>Jan Motl</author>
 	<date>2015-01-25</date>
 	<code>SELECT @base
-			   , @aggregateFunction(DATETONUMBER(@timeColumn)) AS @columnName
+			   , @aggregateFunction(DATETONUMBER(@temporalColumn)) AS @columnName
 	      FROM @propagatedTable
 	      GROUP BY @base
 	</code>

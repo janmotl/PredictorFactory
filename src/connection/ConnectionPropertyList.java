@@ -1,7 +1,6 @@
 package connection;
 
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -55,7 +54,9 @@ public class ConnectionPropertyList {
 			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 			list = (ConnectionPropertyList) jaxbUnmarshaller.unmarshal(new File("config/connection.xml"));
 		} catch (JAXBException e) {
+			System.out.println("User Working Directory = " + System.getProperty("user.dir"));
 			logger.warn("Attempt to parse 'config/connection.xml' failed. Does the file exist?");
+			logger.warn("User Working Directory = " + System.getProperty("user.dir"));
 		}
 
 		return list;

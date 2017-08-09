@@ -15,7 +15,7 @@ public class TwoStages {
 	// Note: The only thing that has any effect is tableSet. columnSet and patternSet do not affect propagation.
 	// Predictor setting is read directly from XML.
 	public static void setExploitationPhase(Setting setting, String databasePropertyName, Journal journal) {
-		List<Predictor> predictorList =  journal.getTopPredictors();
+		List<Predictor> predictorList =  journal.getAllTopPredictors();
 		Set<String> tableSet = new TreeSet<>();
 		Set<String> columnSet = new TreeSet<>();
 		Set<String> patternSet = new TreeSet<>();
@@ -46,12 +46,14 @@ public class TwoStages {
 
 		// Exclude generated base_sampled. Include special columns.
 		tableSet.remove(setting.baseSampled);
-		columnSet.add(setting.targetTable + "." + setting.targetColumn);
+		for (String targetColumn : setting.targetColumnList) {
+			columnSet.add(setting.targetTable + "." + targetColumn);
+		}
+		for (String targetId : setting.targetIdList) {
+			columnSet.add(setting.targetTable + "." + targetId);
+		}
 		if (setting.targetDate != null) {
 			columnSet.add(setting.targetTable + "." + setting.targetDate);
-		}
-		for (String id : setting.targetIdList) {
-			columnSet.add(setting.targetTable + "." + id);
 		}
 
 		// Modify the current databaseProperty to use only the useful {tables, columns, patterns}

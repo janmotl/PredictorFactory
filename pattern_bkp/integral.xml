@@ -14,9 +14,9 @@
 	<code compatibility="PostgreSQL">WITH intermediate AS (
 			SELECT @base
 				 , @numericalColumn nowValue
-				 , @timeColumn nowTime
-				 , LAG(@numericalColumn) OVER (PARTITION BY @basePartitionBy ORDER BY @timeColumn) AS lagValue
-				 , LAG(@timeColumn) OVER (PARTITION BY @basePartitionBy ORDER BY @timeColumn) AS lagTime
+				 , @temporalColumn nowTime
+				 , LAG(@numericalColumn) OVER (PARTITION BY @basePartitionBy ORDER BY @temporalColumn) AS lagValue
+				 , LAG(@temporalColumn) OVER (PARTITION BY @basePartitionBy ORDER BY @temporalColumn) AS lagTime
 			FROM @propagatedTable
 		  )
 		  SELECT @base

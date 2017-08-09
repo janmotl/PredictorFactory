@@ -121,7 +121,7 @@ public class Meta {
 		return tableMap;
 	}
 
-	// 3) Get all columns in the table. Return <ColumnName, DataType>.
+	// 3) Get all columns in the table.
 	public static SortedMap<String, Column> collectColumns(Setting setting, String database, String schema, String table) {
 		// Deal with different combinations of catalog/schema support
 		// MySQL type
@@ -374,6 +374,5 @@ public class Meta {
 
 		return relationshipList;
 	}
-
 
 }

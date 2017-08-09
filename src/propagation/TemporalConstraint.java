@@ -4,7 +4,6 @@ import meta.Column;
 import meta.MetaOutput;
 import meta.StatisticalType;
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import run.Setting;
 
 import java.util.NavigableMap;

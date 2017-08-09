@@ -39,25 +39,25 @@
 				FROM (
 					SELECT @column, count(*) as tp
 					FROM @propagatedTable
-					WHERE @baseTarget = '@targetValue'
+					WHERE @targetName = '@targetValue'
 					GROUP BY @column
 				) tp
 				FULL JOIN (
 					SELECT @column, count(*) as fp
 					FROM @propagatedTable
-					WHERE @baseTarget &lt;&gt; '@targetValue'
+					WHERE @targetName &lt;&gt; '@targetValue'
 					GROUP BY @column
 				) fp
 				ON tp.@column = fp.@column
 				, (
 					SELECT count(*) as negative
 					FROM @propagatedTable
-					WHERE @baseTarget &lt;&gt; '@targetValue'
+					WHERE @targetName &lt;&gt; '@targetValue'
 				) negative
 				, (
 					SELECT count(*) as positive
 					FROM @propagatedTable
-					WHERE @baseTarget = '@targetValue'
+					WHERE @targetName = '@targetValue'
 				) positive
 			) counts
 		) odds

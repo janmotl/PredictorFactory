@@ -35,9 +35,9 @@ public class ValidatorResource {
 			return false;
 		}
 
-		location = ValidatorResource.class.getResource("/fxml/Main.fxml");
+		location = ValidatorResource.class.getResource("/fxml/main.fxml");
 		if (location == null) {
-			System.out.println("Fxml.Main.fxml resource is missing.");
+			System.out.println("The file fxml/main.fxml is missing.");
 			return false;
 		}
 

@@ -1,7 +1,7 @@
 package extraction;
 
+import connection.Parser;
 import org.apache.log4j.Logger;
-import parser.ANTLR;
 import run.Setting;
 
 import javax.xml.bind.JAXBContext;
@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
 
 
 @XmlRootElement(name = "pattern")
@@ -87,11 +86,11 @@ public class Pattern {
 		}
 
 		// Translate the code
-		dialectCode = getDialectString(setting, rawCode);
+		dialectCode = Parser.getDialectCode(setting, rawCode);
 
 		// Translate the parameters
 		for (PatternParameter patternParameter : parameter) {
-			dialectParameter.put(patternParameter.key, getDialectString(setting, patternParameter.value));
+			dialectParameter.put(patternParameter.key, Parser.getDialectCode(setting, patternParameter.value));
 		}
 
 		// Convert constants in "optimize" into numbers
@@ -118,54 +117,6 @@ public class Pattern {
 		return Double.parseDouble(input);
 	}
 
-	// Subroutine - get vendor's dialect.
-	// For example std -> stddev_samp.
-	// Protected because of testing
-	protected static String getDialectString(Setting setting, String agnosticCode) {
-		// Stddev_samp
-		String dialectCode = agnosticCode.replaceAll("(?i)stdDev_samp", setting.stdDevCommand);
-
-		// charLengthCommand
-		dialectCode = dialectCode.replaceAll("(?i)char_length", setting.charLengthCommand);
-
-		// Timestamp
-		dialectCode = dialectCode.replaceAll("(?i)timestamp", setting.typeTimestamp);
-
-		// DateDiff, dateToNumber...
-		dialectCode = ANTLR.parseSQL(setting, dialectCode);
-
-		// NullIf (SAS doesn't support nullIf command in SQL over JDBC, rewrite nullIf with basic commands)
-		if ("SAS".equals(setting.databaseVendor)) {
-			dialectCode = nullIf(dialectCode);
-		}
-
-
-		return dialectCode;
-	}
-
-	// Subroutine for getDialectString
-	private static String nullIf(String dialectCode) {
-		java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(?is)(.*)(nullif\\()(.*?)(,+)(.*?)(\\))(.*)");
-
-		do {
-			Matcher matcher = pattern.matcher(dialectCode);
-			if (matcher.find()) {
-				// Extract the keywords
-				String what = matcher.group(3);
-				String value = matcher.group(5);
-
-				// Replace
-				String caseWhen = "CASE WHEN @what = @value THEN null ELSE @what END";
-				caseWhen = caseWhen.replace("@what", what);
-				caseWhen = caseWhen.replace("@value", value);
-				dialectCode = matcher.group(1) + caseWhen + matcher.group(7);
-			} else {
-				break;
-			}
-		} while (true);
-
-		return dialectCode;
-	}
 
 	private void setRequiresBaseDate() {
 		requiresBaseDate = dialectCode.contains("@baseDate");

@@ -2,7 +2,6 @@ package extraction;
 
 import meta.Column;
 import meta.MetaOutput.OutputTable;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,7 +17,14 @@ public class AggregationTest {
 	
 	@Before
 	public void initialize(){
-		
+
+		// Initialize setting
+		setting.targetUniqueValueMap = new HashMap<>();
+		Set<String> uniqueSet = new LinkedHashSet<>();
+		uniqueSet.add("value55");
+		setting.targetUniqueValueMap.put("status", uniqueSet);
+
+
 		// Initialize pattern
 		SortedMap<String, String> parameter = new TreeMap<>();
 		parameter.put("parameterName1", "parameterValue1,parameterValue2");
@@ -29,9 +35,8 @@ public class AggregationTest {
 		pattern.author = "Majestic Tester";
 		pattern.cardinality = "1";
 		pattern.description = "Once upon a time...";
-		
 
-		
+
 		// Initialize tableMetadata
 		OutputTable outputTable = new OutputTable();
 		outputTable.name = "propagatedName1";
@@ -54,14 +59,13 @@ public class AggregationTest {
 		outputTable2.name = "propagatedName2";
 		tableMetadata.put("propagatedTable2", outputTable2);
 
+
 		// Initialize predictor
 		predictor = new Predictor(pattern);
 		predictor.setSql("select * from t1 where propagated_target = '@targetValue'");
 		predictor.setTable(outputTable);
 		predictor.getColumnMap().put("@nominalColumn", "column1");
 		predictor.setParameter("@value", "value1");
-		
-
 	}
 	
 	@Test
@@ -74,9 +78,7 @@ public class AggregationTest {
 		
 	@Test
 	public void addTargetValue() {
-		Set<String> uniqueSet = new HashSet<>();
-		uniqueSet.add("value55");
-		List<Predictor> list = Aggregation.addTargetValue(setting, predictor, uniqueSet);
+		List<Predictor> list = Aggregation.addTargetValue(setting, predictor);
 
 		Assert.assertTrue(list.get(0).getParameterMap().containsKey("@targetValue"));
 		Assert.assertTrue(list.get(0).getParameterMap().containsValue("value55"));
@@ -117,9 +119,9 @@ public class AggregationTest {
 	
 	@Test
 	public void addSQL() {
-		Predictor result = Aggregation.addSQL(predictor, predictor.getPatternCode());
+		Aggregation.addSQL(predictor, predictor.getPatternCode());
 		
-		Assert.assertEquals("select @nominalColumn from t1 where col1 = 'value1' and col2 = '@targetValue'", result.getSql());
+		Assert.assertEquals("select @nominalColumn from t1 where col1 = 'value1' and col2 = '@targetValue'", predictor.getSql());
 	}
 	
 	@Test

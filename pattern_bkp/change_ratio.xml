@@ -18,11 +18,11 @@
 				 , (sum(change_up)+1) / (sum(change_down)+1) AS @columnName
 			FROM (
 			   SELECT @base
-					, (CASE WHEN lag(@column) OVER (ORDER BY @timeColumn) &lt; @column
+					, (CASE WHEN lag(@column) OVER (ORDER BY @temporalColumn) &lt; @column
 							THEN 1
 							ELSE 0
 						END) change_up
-					, (CASE WHEN lag(@column) OVER (ORDER BY @timeColumn) &gt; @column
+					, (CASE WHEN lag(@column) OVER (ORDER BY @temporalColumn) &gt; @column
 							THEN 1
 							ELSE 0
 						END) change_down

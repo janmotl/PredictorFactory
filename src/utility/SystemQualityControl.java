@@ -18,6 +18,7 @@ public class SystemQualityControl {
 		logger.debug("JavaFX version: " + VersionInfo.getRuntimeVersion());
 		logger.debug("OS: " + System.getProperty("os.name"));
 		logger.debug("Architecture: " + System.getProperty("os.arch"));
+		logger.debug("User working directory: " + System.getProperty("user.dir"));
 	}
 
 	// Read the version from the manifest file. If executed from IDE, return "Development".

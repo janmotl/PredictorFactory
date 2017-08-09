@@ -16,12 +16,12 @@
 	<author>Jan Motl</author>
 	<date>2014-12-22</date>
 	<code compatibility="MySQL">SELECT @base
-	           , ((sum(@timeColumn) * sum(@timeColumn * @numericalColumn)) - (sum(@numericalColumn) * sum(power(@timeColumn, 2)))) / (power(sum(@timeColumn), 2) - count(@numericalColumn) * sum(power(@timeColumn, 2))) AS @columnName
+	           , ((sum(@temporalColumn) * sum(@temporalColumn * @numericalColumn)) - (sum(@numericalColumn) * sum(power(@temporalColumn, 2)))) / (power(sum(@temporalColumn), 2) - count(@numericalColumn) * sum(power(@temporalColumn, 2))) AS @columnName
 	      FROM @propagatedTable
 	      GROUP BY @base
 	</code>
 	<code compatibility="PostgreSQL,Oracle">SELECT @base
-	           , regr_intercept(@numericalColumn, dateToNumber(@timeColumn)) AS @columnName
+	           , regr_intercept(@numericalColumn, dateToNumber(@temporalColumn)) AS @columnName
 	      FROM @propagatedTable
 	      GROUP BY @base
 	</code>

@@ -10,7 +10,7 @@
 	<author>Jan Motl</author>
 	<date>2015-01-25</date>
 	<code>SELECT @base
-	           , DATEDIFF(max(@timeColumn), min(@timeColumn)) AS @columnName
+	           , DATEDIFF(max(@temporalColumn), min(@temporalColumn)) AS @columnName
 	      FROM @propagatedTable
 	      GROUP BY @base
 	</code>

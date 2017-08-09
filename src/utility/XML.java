@@ -1,7 +1,6 @@
 package utility;
 
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;

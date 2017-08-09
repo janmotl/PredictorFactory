@@ -15,7 +15,7 @@
 	<author>Jan Motl</author>
 	<date>2015-01-10</date>
 	<code>SELECT @base
-	           , @aggregateFunction(DATEDIFF(@baseDate, @timeColumn)) AS @columnName
+	           , @aggregateFunction(DATEDIFF(@baseDate, @temporalColumn)) AS @columnName
 	      FROM @propagatedTable
 		  WHERE @nominalColumn='@value'
 		  GROUP BY @base

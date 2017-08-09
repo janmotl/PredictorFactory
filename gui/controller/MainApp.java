@@ -1,12 +1,13 @@
 package controller;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-import org.jetbrains.annotations.NotNull;
+import run.Launcher;
 import utility.Logging;
 import utility.ValidatorResource;
 
@@ -21,6 +22,15 @@ public class MainApp extends Application {
 	// Define the GUI. Stage is OS window. Scene is the content of the window.
 	// Note: All network connections are automatically closed on window closing - no need to handle it manually.
 	public void start(Stage stage) throws Exception {
+
+		// If command line arguments are passed to the GUI, pass them to PredictorFactory core and exit.
+		String[] parameters = getParameters().getRaw().toArray(new String[0]);
+		if (parameters.length>0) {
+			Launcher.main(parameters);
+			stage.close();
+			Platform.exit();
+			return;
+		}
 
 		System.out.println("All the resources were found: " + ValidatorResource.isResourceAvailable());
 

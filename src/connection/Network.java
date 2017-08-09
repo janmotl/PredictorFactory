@@ -5,8 +5,6 @@ import com.google.common.base.MoreObjects;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import run.Setting;
 import utility.JDBCCompliance;
 
@@ -139,6 +137,39 @@ public final class Network {
 		} catch (SQLException e) {
 			sql = sql.replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ");
 			logger.warn(e.getMessage() + " | " + sql);
+		}
+
+		return isOk;
+	}
+
+	// We propagate the exception to see why the query failed and to log the reason
+	public static boolean executeUpdate(DataSource dataSource, String sql, int secondMax) throws SQLException {
+		// Parameter checking
+		if (StringUtils.isBlank(sql)) {
+			throw new IllegalArgumentException("SQL statement is required");
+		}
+
+		// Check interruption flag
+		isInterrupted();
+
+		// Initialization
+		boolean isOk = false;
+
+		// Query using try-with-resources
+		try (Connection connection = dataSource.getConnection();
+		     Statement stmt = connection.createStatement()) {
+
+			stmt.setQueryTimeout(secondMax);
+			stmt.executeUpdate(sql);
+			isOk = true;
+
+			// Remove line breaks and collapse all "whitespace substrings" longer than one character.
+			sql = sql.replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ");
+			logger.debug(sql);
+		} catch (SQLException e) {
+			sql = sql.replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ");
+			logger.warn(e.getMessage() + " | " + sql);
+			throw e;
 		}
 
 		return isOk;

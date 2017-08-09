@@ -24,7 +24,7 @@
                 END AS @columnName
         FROM (
             SELECT @base
-                 , { fn HOUR(@timeColumn)} AS hour
+                 , { fn HOUR(@temporalColumn)} AS hour
             FROM @propagatedTable
         ) t
     </code>
@@ -37,7 +37,7 @@
 					END AS @columnName
 			FROM (
 				SELECT @base
-					, EXTRACT(HOUR FROM @timeColumn) AS hour
+					, EXTRACT(HOUR FROM @temporalColumn) AS hour
 				FROM @propagatedTable
 			) t
 	</code>

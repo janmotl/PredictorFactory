@@ -11,7 +11,7 @@ import java.util.regex.Matcher;
 
 public class PatternMapTest {
 
-	//@Test
+	// This is only for reporting purposes
 	public static void main(String[] arg ) {
     	SortedMap<String, Pattern> map = PatternMap.getPatternMap();
 		Setting setting = new Setting("PostgreSQL", "financial");
@@ -39,15 +39,15 @@ public class PatternMapTest {
 			for (String parameter : pattern.dialectParameter.values()) {
 				numerical = parameter.contains("@numericalColumn");
 				nominal = parameter.contains("@nominalColumn");
-				time = parameter.contains("@timeColumn");
-				columnCount =+  ((parameter.contains("@numericalColumn") || parameter.contains("@nominalColumn") || parameter.contains("@timeColumn")) ? 1:0);
+				time = parameter.contains("@temporalColumn");
+				columnCount =+  ((parameter.contains("@numericalColumn") || parameter.contains("@nominalColumn") || parameter.contains("@temporalColumn")) ? 1:0);
 			}
 
 			System.out.println(pattern.name
 					+ "\t" + pattern.cardinality
 					+ "\t" + (pattern.dialectCode.contains("@numericalColumn") || numerical)
 					+ "\t" + (pattern.dialectCode.contains("@nominalColumn")  || nominal)
-					+ "\t" + (pattern.dialectCode.contains("@timeColumn")  || time)
+					+ "\t" + (pattern.dialectCode.contains("@temporalColumn")  || time)
 					+ "\t" + (set.size() + columnCount)
 					+ "\t" + pattern.dialectCode.contains("@targetValue")
 					+ "\t" + pattern.requiresBaseDate);

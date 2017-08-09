@@ -5,9 +5,11 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+// Passes Zester test
 public class NaturalOrderComparatorTest {
 
 	@Test
@@ -48,7 +50,6 @@ public class NaturalOrderComparatorTest {
 		Assert.assertArrayEquals(new String[] {"m11", "m12", "m12 a", "m12 b", "m13"}, strings);
 	}
 
-
 	@Test
 	public void notEqualTest() {
 		SortedSet<String> set = new TreeSet<>(new NaturalOrderComparator());
@@ -58,6 +59,13 @@ public class NaturalOrderComparatorTest {
 		Assert.assertEquals(2, set.size());
 	}
 
+	@Test
+	public void differentLengths() {
+		Comparator<String> comparator = new NaturalOrderComparator();
+		// We expect that "apple" < "apple32" because we give preference to shorter strings
+		Assert.assertEquals(comparator.compare("apple", "apple32"), -1);  // The left string is < the right string
+		Assert.assertEquals(comparator.compare("apple32", "apple"), 1);
+	}
 
 
 }

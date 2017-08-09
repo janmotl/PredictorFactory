@@ -37,9 +37,9 @@ public class Table {
 			if (statisticalType == StatisticalType.TEMPORAL && column.isTemporal) result.add(column);
 		}
 
-		// Use ids for feature calculation? Nevertheless, always allow targetColumn.
+		// Use ids for feature calculation? Nevertheless, always allow targetColumns.
 		if (!setting.useIdAttributes) {
-			result.removeIf(column -> column.isId && !(setting.targetColumn.equals(column.name) && setting.targetTable.equals(name)));
+			result.removeIf(column -> column.isId && !(setting.targetColumnList.contains(column.name) && setting.targetTable.equals(name)));
 		}
 
 		return result;
@@ -107,15 +107,10 @@ public class Table {
 
 		// If we are performing classification, treat the target column differently
 		if ("classification".equals(setting.task) && setting.targetTable.equals(name)) {
-
-			// If the target is a String, store the information.
-			// NOTE: I AM NOT SURE I NEED THIS INFORMATION
-			if (columnMap.get(setting.targetColumn).isNominal) {
-				setting.isTargetString = true;
+			// Target columns shall always be considered nominal when doing classification (useful for patterns like "WoE").
+			for (String target : setting.targetColumnList) {
+				columnMap.get(target).isNominal = true;
 			}
-
-			// Target column shall always be considered nominal when doing classification (useful for patterns like "WoE").
-			columnMap.get(setting.targetColumn).isNominal = true;
 		}
 
 		// Output quality control

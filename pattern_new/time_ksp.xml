@@ -18,7 +18,7 @@
 	<author>Matej Polak</author>
 	<date>2017-02-02</date>
 	<code compatibility="MySQL">SELECT @base
-			, YEAR(@timeColumn) + ((DAYOFYEAR(@timeColumn) - 0.5) / DAYOFYEAR( CONCAT( YEAR (@timeColumn), '-12-31' ))) AS @columnName
+			, YEAR(@temporalColumn) + ((DAYOFYEAR(@temporalColumn) - 0.5) / DAYOFYEAR( CONCAT( YEAR (@temporalColumn), '-12-31' ))) AS @columnName
 		FROM @propagatedTable
 	</code>
 	<cardinality>1</cardinality>

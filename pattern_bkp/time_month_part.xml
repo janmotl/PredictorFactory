@@ -19,8 +19,8 @@
 			, CEIL(day/days_in_month*3) AS @columnName
 		FROM (
 			SELECT @base
-				, extract(day FROM @timeColumn) AS day
-				, add_months(trunc(@timeColumn,'MM'),1) - trunc(@timeColumn,'MM') AS days_in_month
+				, extract(day FROM @temporalColumn) AS day
+				, add_months(trunc(@temporalColumn,'MM'),1) - trunc(@temporalColumn,'MM') AS days_in_month
 			FROM @propagatedTable
 		) t
 	</code>
@@ -28,10 +28,10 @@
 			<!--, CEIL(day/days_in_month*3) AS @columnName-->
 		<!--FROM (-->
 			<!--SELECT @base-->
-				<!--, { fn DAYOFMONTH(@timeColumn) } AS day-->
+				<!--, { fn DAYOFMONTH(@temporalColumn) } AS day-->
 				<!--, { fn DAYOFMONTH(-->
 					<!--{ fn TIMESTAMPADD(SQL_TSI_DAY, -1,-->
-						<!--{ fn TIMESTAMPADD(SQL_TSI_MONTH, 1, @timeColumn) } ) } ) } AS days_in_month-->
+						<!--{ fn TIMESTAMPADD(SQL_TSI_MONTH, 1, @temporalColumn) } ) } ) } AS days_in_month-->
 			<!--FROM @propagatedTable-->
 		<!--) t-->
 	<!--</code>-->
@@ -39,9 +39,9 @@
 			     , CEIL(day/days_in_month*3) AS @columnName
 			FROM (
 				SELECT @base
-					, EXTRACT(DAY FROM @timeColumn) AS day 
+					, EXTRACT(DAY FROM @temporalColumn) AS day
 					, DATE_PART('day', 
-				        DATE_TRUNC('MONTH', @timeColumn) 
+				        DATE_TRUNC('MONTH', @temporalColumn)
 				        + '1 MONTH'::INTERVAL 
 				        - '1 DAY'::interval
 			    	) AS days_in_month

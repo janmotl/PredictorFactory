@@ -17,6 +17,7 @@ public class PropagationTest {
 		utility.Logging.initialization();
 
 		Setting setting = new Setting("PostgreSQL", "mutagenesis");
+		setting.sampleCount = 10000;
 
 		setting = Network.openConnection(setting);
 		setting.dialect.prepareOutputSchema(setting);
@@ -34,7 +35,7 @@ public class PropagationTest {
 		SortedMap<String, Column> meta = Meta.collectColumns(setting, setting.database, setting.outputSchema, "propagated_molecule_001");
 		Network.closeConnection(setting);
 		Assert.assertTrue(meta.containsKey("propagated_id1"));
-		Assert.assertTrue(meta.containsKey("propagated_target"));
+		Assert.assertTrue(meta.containsKey("propagated_target1"));
 		Assert.assertTrue(meta.containsKey("lumo"));
 	}
 }

@@ -20,6 +20,7 @@
                                 <attribute type="decimal" name="lead"/>
                                 <attribute type="int" name="sampleCount"/>
                                 <attribute type="int" name="predictorMax"/>
+                                <attribute type="int" name="secondMax"/>
                                 <attribute type="boolean" name="useIdAttributes" default="true"/>
                                 <attribute type="boolean" name="useTwoStages" default="true"/>
                                 <attribute name="task">
