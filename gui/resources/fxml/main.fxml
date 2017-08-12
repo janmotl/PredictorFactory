@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import javafx.scene.text.*?>
-<?import javafx.scene.web.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Text?>
 <?import javafx.scene.web.WebView?>
-
+<?import org.controlsfx.control.CheckComboBox?>
 <TabPane fx:id="tabPane" prefHeight="470.0" prefWidth="800.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.Events">
    <Tab fx:id="tabConnect" text="Connect">
       <graphic>
@@ -151,11 +148,11 @@
                         <Insets bottom="3.0" />
                      </padding>
                   </Label>
-                  <ComboBox fx:id="comboBoxTargetColumn" prefWidth="170.0" visibleRowCount="12">
+                  <CheckComboBox fx:id="comboBoxTargetColumn" prefWidth="170.0">
                      <tooltip>
                         <Tooltip text="Which column to predict. The column can be nominal or continuous." />
                      </tooltip>
-                  </ComboBox>
+                  </CheckComboBox>
                </VBox>
                <VBox>
                   <Label text="Target ID">
@@ -163,11 +160,11 @@
                         <Insets bottom="3.0" />
                      </padding>
                   </Label>
-                  <ComboBox fx:id="comboBoxTargetId" prefWidth="170.0" visibleRowCount="12">
+                  <CheckComboBox fx:id="comboBoxTargetId" prefWidth="170.0">
                      <tooltip>
                         <Tooltip text="This column identifies subject, for which to make the prediction. Note that target ID doesn't have to be unique - for example, a customer may want to buy the product several times." />
                      </tooltip>
-                  </ComboBox>
+                  </CheckComboBox>
                </VBox>
                <VBox>
                   <Label text="Target timestamp">

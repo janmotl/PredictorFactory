@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'PredictorFactory'
-version '3.3.8'
+version '3.3.9'
 sourceCompatibility = 1.8
 
 
@@ -29,6 +29,7 @@ dependencies {
     compile 'org.hibernate:hibernate-core:5.2.5.Final' // Experimental for SQL formatting (but exports only into plaintext, does not play well with postgre's "mode")
     compile 'com.atlassian.commonmark:commonmark:0.8.0' // Experimental Markdown
     compile "org.codehaus.groovy:groovy-all:2.4.10" // Have to be in compile section for Spock
+    compile "org.controlsfx:controlsfx:8.40.13"    // For CheckComboBox in GUI
 
 
     runtime fileTree(dir: 'lib/jdbc-driver/hsqldb', include: '*.jar')   // The search is not recursive -> list all directories
@@ -128,8 +129,9 @@ task zip(type: Zip, dependsOn: 'deploy') {
 }
 
 
+// Mutation testing
 pitest {
-    targetClasses = ['extraction.Journal']  //by default "${project.group}.*" --> linkifier.*
+    targetClasses = ['extraction.Journal']
     targetTests = ['extraction.JournalTest']
     threads = 4
     excludedMethods = ['toString']

@@ -24,7 +24,7 @@ public class MainApp extends Application {
 	public void start(Stage stage) throws Exception {
 
 		// If command line arguments are passed to the GUI, pass them to PredictorFactory core and exit.
-		String[] parameters = getParameters().getRaw().toArray(new String[0]);
+		String[] parameters = getParameters().getRaw().toArray(new String[getParameters().getNamed().size()]);
 		if (parameters.length>0) {
 			Launcher.main(parameters);
 			stage.close();

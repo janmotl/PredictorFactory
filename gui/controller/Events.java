@@ -19,6 +19,7 @@ import javafx.scene.web.WebView;
 import meta.Column;
 import meta.Table;
 import org.apache.commons.lang3.StringUtils;
+import org.controlsfx.control.CheckComboBox;
 import run.Launcher;
 import run.Setting;
 import utility.*;
@@ -59,8 +60,8 @@ public class Events implements Initializable {
     @FXML private ComboBox<String> comboBoxInputSchema;
     @FXML private ComboBox<String> comboBoxOutputSchema;
     @FXML private ComboBox<String> comboBoxTargetTable;
-    @FXML private ComboBox<String> comboBoxTargetColumn;
-    @FXML private ComboBox<String> comboBoxTargetId;
+    @FXML private CheckComboBox<String> comboBoxTargetColumn;
+    @FXML private CheckComboBox<String> comboBoxTargetId;
     @FXML private ComboBox<String> comboBoxTargetTimestamp;
     @FXML private ComboBox<String> comboBoxTask;
     @FXML private ComboBox<String> comboBoxUnit;
@@ -171,7 +172,7 @@ public class Events implements Initializable {
 
         // Target tab
         SortedMap<String, Column> columnMap = Meta.collectColumns(setting, setting.database, setting.inputSchema, setting.targetTable);
-        comboBoxTargetColumn.getItems().setAll(columnMap.keySet());
+	    comboBoxTargetColumn.getItems().setAll(columnMap.keySet());
         comboBoxTargetId.getItems().setAll(columnMap.keySet());
 	    List<String> temporalColumns = new ArrayList<>();
 	    temporalColumns.add("");    // Permits "no temporal constraint"
@@ -199,8 +200,8 @@ public class Events implements Initializable {
         databaseProperty.inputSchema = comboBoxInputSchema.getValue();
         databaseProperty.outputSchema = comboBoxOutputSchema.getValue();
         databaseProperty.targetTable = comboBoxTargetTable.getValue();
-        databaseProperty.targetColumn = comboBoxTargetColumn.getValue();
-        databaseProperty.targetId = comboBoxTargetId.getValue();
+        databaseProperty.targetColumn = String.join(",", comboBoxTargetColumn.getCheckModel().getCheckedItems());
+        databaseProperty.targetId = String.join(",", comboBoxTargetId.getCheckModel().getCheckedItems());
         databaseProperty.targetDate = comboBoxTargetTimestamp.getValue();
         databaseProperty.unit = comboBoxUnit.getValue();
         databaseProperty.lag = parseInteger(textLag.getText());
@@ -370,11 +371,10 @@ public class Events implements Initializable {
          try {whiteListPattern = TextParser.string2list(databaseProperty.whiteListPattern);} catch (NullPointerException ignored) {}
 
 
-        // Add ability to select an item in a combobox with a key stroke
+        // Add ability to select an item in a combobox with a key stroke.
+	    // Note: It is too tough to add it for ComboBoxMulti (comboBoxTargetColumn, comboBoxTargetId).
         PrefixSelectionCustomizer.customize(comboBoxInputSchema);
         PrefixSelectionCustomizer.customize(comboBoxOutputSchema);
-        PrefixSelectionCustomizer.customize(comboBoxTargetColumn);
-        PrefixSelectionCustomizer.customize(comboBoxTargetId);
         PrefixSelectionCustomizer.customize(comboBoxTargetTable);
         PrefixSelectionCustomizer.customize(comboBoxTargetTimestamp);
         PrefixSelectionCustomizer.customize(comboBoxTask);
@@ -527,8 +527,12 @@ public class Events implements Initializable {
             comboBoxInputSchema.setValue(setting.inputSchema);
             comboBoxOutputSchema.setValue(setting.outputSchema);
             comboBoxTargetTable.setValue(setting.targetTable);
-            comboBoxTargetColumn.setValue(setting.targetColumnList.get(0));
-            comboBoxTargetId.setValue(setting.targetIdList.get(0));
+	        for (String targetColumn : setting.targetColumnList) {
+		        comboBoxTargetColumn.getCheckModel().check(targetColumn);
+	        }
+	        for (String targetId : setting.targetIdList) {
+		        comboBoxTargetId.getCheckModel().check(targetId);
+	        }
             comboBoxTargetTimestamp.setValue(setting.targetDate);
             comboBoxTask.setValue(setting.task);
 

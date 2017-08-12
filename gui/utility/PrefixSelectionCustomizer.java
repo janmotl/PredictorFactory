@@ -36,8 +36,6 @@ import javafx.scene.control.Control;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.util.StringConverter;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -100,6 +98,10 @@ public class PrefixSelectionCustomizer {
 			keyPressed(event);
 		}
 
+		// We have to avoid reacting to TAB and other keyEvents that are used for navigation -> we filter the keyEvents.
+		// The current implementation skips to the first item begining with the char -> repeated pressing of the
+		// same key does not result into traversing the list!
+		// On the other end, it reacts correctly on a sequence of rapidly fired keywords.
 		private <T> void keyPressed(KeyEvent event) {
 			KeyCode code = event.getCode();
 			if (code.isLetterKey() || code.isDigitKey() || code == KeyCode.SPACE) {
@@ -215,5 +217,4 @@ public class PrefixSelectionCustomizer {
 	public static void customize(ChoiceBox<?> choiceBox) {
 		choiceBox.addEventHandler(KeyEvent.KEY_PRESSED, handler);
 	}
-
 }

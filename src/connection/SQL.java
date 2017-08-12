@@ -669,7 +669,8 @@ public class SQL {
 	// The temporal logic is done in Java for portability across databases.
 	// NOTE: If min==max, return warning?
 	// NOTE: Branch for SAS.
-	// Note: Mid-ranges like 1996-03-21 23:30:00 are to be expected as Java is taking into account daylight changes.
+	// Note: Mid-ranges for dates like 1996-03-21 23:30:00 are expected as Java is taking into account daylight changes.
+	// Note: MidRange is sensitive to outlier values. Used to cause problems in VOC dataset before the data were fixed.
 	public static Timestamp getPivotDate(Setting setting, int dateDataType) {
 		// SAS requires informat. NOTE: NOT TESTED ON DATETIME AND TIME!
 		String informat = "";
@@ -2102,11 +2103,12 @@ public class SQL {
 		}
 
 		// Make SQL from the pattern
+		String mainTable = setting.mainTablePrefix + "_" + targetColumn; // NOTE: The table name can be too long...
 		String pattern_code = stringBuffer.toString();
 		pattern_code = addCreateTableAs(setting, pattern_code);
 		pattern_code = expandName(pattern_code);
 		pattern_code = expandNameList(pattern_code, tempTableList);
-		pattern_code = escapeEntity(setting, pattern_code, setting.mainTablePrefix + "_" + targetColumn); // NOTE: Can be too long...
+		pattern_code = escapeEntity(setting, pattern_code, mainTable);
 
 		// Escape table & column entities (tables can't be escaped in definition because they have to be first expanded...)
 		Map<String, String> map = new HashMap<>(61);
@@ -2128,8 +2130,12 @@ public class SQL {
 			logger.warn("Following patterns always failed: " + suspiciousPatternList.toString());
 		}
 
-		int columnCount = Meta.collectColumns(setting, setting.database, setting.outputSchema, setting.mainTablePrefix).size();
-		logger.debug("Table " + setting.mainTablePrefix + " contains: " + columnCount + " columns");
+		int columnCount = Meta.collectColumns(setting, setting.database, setting.outputSchema, mainTable).size();
+		if (columnCount < 3) {
+			logger.warn("Table " + mainTable + " contains: " + columnCount + " columns"); // We expect at least: {targetId, targetColumn, 1 predictor}
+		} else {
+			logger.debug("Table " + mainTable + " contains: " + columnCount + " columns");
+		}
 	}
 
 	// Subroutine - transform java date to SQL date
