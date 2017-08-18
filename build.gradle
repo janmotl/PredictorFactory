@@ -31,7 +31,6 @@ dependencies {
     compile "org.codehaus.groovy:groovy-all:2.4.10" // Have to be in compile section for Spock
     compile "org.controlsfx:controlsfx:8.40.13"    // For CheckComboBox in GUI
 
-
     runtime fileTree(dir: 'lib/jdbc-driver/hsqldb', include: '*.jar')   // The search is not recursive -> list all directories
     runtime fileTree(dir: 'lib/jdbc-driver/jtds', include: '*.jar')
     runtime fileTree(dir: 'lib/jdbc-driver/monetdb', include: '*.jar')
@@ -43,6 +42,7 @@ dependencies {
     runtime fileTree(dir: 'lib/jdbc-driver/sas', include: '*.jar')
     runtime fileTree(dir: 'lib/jdbc-driver/teradata', include: '*.jar')
     runtime fileTree(dir: 'lib/jdbc-driver/vertica', include: '*.jar')
+    runtime fileTree(dir: 'lib/jdbc-driver/voltdb', include: '*.jar')
 
     compile fileTree(dir: 'lib/sqlformatter', include: '*.jar') // But fails on "mode" in postgre sql...
     compile fileTree(dir: 'lib/SQLinForm', include: '*.jar') // Ok
@@ -50,7 +50,7 @@ dependencies {
 
     testCompile fileTree(dir: 'lib/rapidminer', include: '*.jar')
     testCompile 'junit:junit:4.12'
-    testCompile 'info.solidsoft.spock:spock-global-unroll:0.5.0'    // https://solidsoft.wordpress.com/tag/mutation-testing/
+    testCompile 'info.solidsoft.spock:spock-global-unroll:0.5.0'    // Automatic unrolling of spock tests: https://solidsoft.wordpress.com/tag/mutation-testing/
     testCompile 'org.spockframework:spock-core:1.1-groovy-2.4'
 
 }

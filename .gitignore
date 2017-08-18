@@ -33,8 +33,6 @@ Desktop.ini		# Windows - folder personalisation
 .idea/sqlDataSources.xml
 .idea/dynamic.xml
 .idea/uiDesigner.xml
-
-# Gradle:
 .idea/gradle.xml
 .idea/libraries
 
@@ -44,6 +42,12 @@ Desktop.ini		# Windows - folder personalisation
 # Eclipse plugins #
 ###################
 .codepro/		# Code Pro
+
+
+# Gradle #
+##########
+.gradle/
+
 
 # Project related #
 ###################

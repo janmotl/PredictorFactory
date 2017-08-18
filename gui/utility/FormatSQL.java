@@ -19,8 +19,6 @@ public class FormatSQL {
 			return "";
 		}
 
-		long startTime = System.currentTimeMillis();
-
 		TGSqlParser sqlparser = new TGSqlParser(EDbVendor.dbvgeneric);  // The first generation of this class takes 1s.
 		sql = sql.replace("@", "____"); // This parser dislikes @. Hence, we replace it with something neutral.
 
@@ -35,10 +33,6 @@ public class FormatSQL {
 		sql = FormatterFactory.pp(sqlparser, option);
 
 		sql = sql.replace("____", "@"); // Replace back
-
-		long stopTime = System.currentTimeMillis();
-		long elapsedTime = stopTime - startTime;
-		System.out.println(elapsedTime);
 
 		return sql;
 	}
