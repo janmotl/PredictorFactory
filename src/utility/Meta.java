@@ -1,9 +1,6 @@
 package utility;
 
-import meta.Column;
-import meta.ForeignConstraint;
-import meta.ForeignConstraintList;
-import meta.Table;
+import meta.*;
 import org.apache.log4j.Logger;
 import run.Setting;
 
@@ -194,12 +191,20 @@ public class Meta {
 		}
 
 		// Add relevant relationships from an XML file, if available.
-		// It is ugly that we read and parse the XML repeatedly. But should not be a bottleneck.
+		// It is ugly that we read and parse the XML repeatedly. But it should not be a bottleneck.
 		List<ForeignConstraint> relationshipXML = ForeignConstraintList.unmarshall("foreignConstraint.xml").getForeignConstraintList(table);
 		if (!relationshipXML.isEmpty()) {
 			// NOTE: Could replace list with a LinkedHasSet to avoid duplicates (use: Refactor | Type Migration)
 			result.addAll(relationshipXML);
 			logger.info("Table " + table + " has " + relationshipXML.size() + " relationships defined in the XML file.");
+		}
+
+		// Iff a DDL is available, return the relevant relationships from the DDL file.
+		// It is ugly that we read and parse the DDL repeatedly. But it should not be a bottleneck.
+		List<ForeignConstraint> relationshipDDL = ForeignConstraintDDL.getForeignConstraintList("foreignConstraint.xml", table);
+		if (!relationshipDDL.isEmpty()) {
+			logger.info("Table " + table + " has " + relationshipDDL.size() + " relationships defined in the DDL file.");
+			return relationshipDDL;
 		}
 
 		return result;

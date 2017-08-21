@@ -19,10 +19,8 @@ public class ForeignConstraintList {
 
 	// Private Fields. Note that we are using List because it's marshallable by default.
 	public List<ForeignConstraint> foreignConstraint;
-	@XmlAttribute
-	public String databaseName;   // Optional metadata just for users
-	@XmlAttribute
-	public String schemaName;     // Optional metadata just for users
+	@XmlAttribute public String databaseName;   // Optional metadata just for users
+	@XmlAttribute public String schemaName;     // Optional metadata just for users
 
 
 	// More specific getter. Return all FC related to the table.
