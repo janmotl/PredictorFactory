@@ -1,6 +1,6 @@
 package connection;
 
-import meta.MetaOutput;
+import meta.OutputTable;
 import org.apache.log4j.Logger;
 import parser.ANTLR;
 import run.Setting;
@@ -52,7 +52,7 @@ public final class SQLOracle extends SQL {
 	// we may want to remove the bottom time constrain in base propagation.
 	// Note that we are working with the input tables -> alter commands are forbidden.
 	// Each derived column in Teradata must have an implicit name.
-	public boolean isIdUnique(Setting setting, MetaOutput.OutputTable table) {
+	public boolean isIdUnique(Setting setting, OutputTable table) {
 		String sql = "SELECT count(*) FROM (" +
 				"SELECT count(*) AS cnt " +
 				"FROM @inputTable " +
@@ -86,7 +86,7 @@ public final class SQLOracle extends SQL {
 		return result;
 	}
 
-	// Check whether the columns {baseId, baseDate} are unique in the table in the inputSchema.
+	// Check whether the columns {baseId, baseDate} are unique in the table in the inputSchemaList.
 	public boolean isTargetTupleUnique(Setting setting, String table) {
 
 		String sql = "SELECT count(*)" +

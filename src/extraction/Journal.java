@@ -68,6 +68,12 @@ public class Journal {
 
 		// Add the predictor into the correct queue (iff the predictor is a candidate).
 		// Note: The implementation is not memory friendly as we make copies of large objects.
+		// Before optimizing, check: Data Structures in Multi-Objective Evolutionary Algorithms (Altwaijry, 2012).
+		// The conclusion is that for less than ~2500 items a simple linear array is faster than a tree.
+		// Furthermore, if just two objectives are important, linear arrays are superior once again.
+		// Hence, if we need to save memory, just implement it with an array (I know your programmer soul wants a
+		// solution, which scale, but these are the data). Proposal: Have a list with the objects (Predictors) and an
+		// array with the fitness. This way it is testable as we pass the Object together with the fitness vector.
 		String baseTarget = predictor.getBaseTarget();
 		List<Predictor> evictionList = new ArrayList<>();
 

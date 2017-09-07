@@ -5,7 +5,9 @@
                 <element name="foreignConstraint" minOccurs="1" maxOccurs="unbounded">
                     <complexType>
                         <sequence>
+                            <element type="string" name="schema" minOccurs="0" maxOccurs="1"/>
                             <element type="string" name="table" minOccurs="1" maxOccurs="1"/>
+                            <element type="string" name="fSchema" minOccurs="0" maxOccurs="1"/>
                             <element type="string" name="fTable" minOccurs="1" maxOccurs="1"/>
                             <element type="string" name="column" minOccurs="1" maxOccurs="unbounded"/>
                             <element type="string" name="fColumn" minOccurs="1" maxOccurs="unbounded"/>

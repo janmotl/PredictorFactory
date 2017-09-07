@@ -6,15 +6,14 @@ package run;
 import connection.Network;
 import extraction.Aggregation;
 import extraction.Journal;
-import meta.MetaInput;
-import meta.MetaOutput.OutputTable;
-import meta.Table;
+import meta.Database;
+import meta.OutputTable;
 import org.apache.log4j.Logger;
 import propagation.Propagation;
 import utility.Logging;
 import utility.SystemQualityControl;
 
-import java.util.SortedMap;
+import java.util.List;
 
 
 public class Launcher {
@@ -27,7 +26,7 @@ public class Launcher {
 
 		// Connect to the following server and database:
 		String connectionProperty = "PostgreSQL";   // Host identification as specified in resources/connection.xml
-		String databaseProperty = "mutagenesis";       // Dataset identification as specified in resources/database.xml
+		String databaseProperty = "crossSchema";       // Dataset identification as specified in resources/database.xml
 
 		// Read command line parameters iff they are present (and overwrite the defaults).
 		if (arg.length == 1 || arg.length > 2) {
@@ -57,8 +56,8 @@ public class Launcher {
 		// Connect to the server
 		setting = Network.openConnection(setting);
 
-		// Collect information about tables, columns and relations in the database
-		SortedMap<String, Table> metaInput = MetaInput.getMetaInput(setting);
+		// Collect information about schemas, tables, columns and relations in the database
+		Database metaInput = new Database(setting);
 		logger.info("#### Collected metadata about the database ####");
 
 		// Remove all the tables from the previous run
@@ -74,11 +73,11 @@ public class Launcher {
 		}
 
 		// Propagate base table
-		SortedMap<String, OutputTable> outputMeta = Propagation.propagateBase(setting, metaInput);
-		logger.info("#### Propagated the base table into " + outputMeta.size() + " tables in total ####");
+		List<OutputTable> outputTables = Propagation.propagateBase(setting, metaInput);
+		logger.info("#### Propagated the base table into " + outputTables.size() + " tables in total ####");
 
 		// Calculate features
-		Journal journal = Aggregation.run(setting, outputMeta);
+		Journal journal = Aggregation.run(setting, outputTables);
 
 		// Two-stage processing
 		if (setting.useTwoStages && setting.sampleCount<Integer.MAX_VALUE) {

@@ -34,7 +34,7 @@ public class CopyOfLauncher {
 		setting = Network.openConnection(setting);
 
 		// Get tables
-		SortedMap<String, Table> tableSet = utility.Meta.collectTables(setting, setting.database, setting.inputSchema);
+		SortedMap<String, Table> tableSet = utility.Meta.collectTables(setting, setting.database, setting.inputSchemaList.get(0));
 
 		for (String table : tableSet.keySet()) {
 			// Get relationships

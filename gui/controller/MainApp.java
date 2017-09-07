@@ -41,7 +41,7 @@ public class MainApp extends Application {
 		Parent root = FXMLLoader.load(getClass().getResource("/fxml/main.fxml"));
 
 		stage.setTitle("Predictor Factory");
-		stage.getIcons().add(new Image("/img/ios7-gear-24.png"));
+		stage.getIcons().add(new Image("/img/gear-24.png"));
 		stage.setMinWidth(600);
 		stage.setMinHeight(460);
 		stage.setScene(new Scene(root, 600, 460));

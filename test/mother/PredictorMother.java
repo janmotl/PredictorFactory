@@ -21,7 +21,7 @@ public abstract class PredictorMother {
 	public static Predictor woeMutagenic() {
 		Predictor predictor = new Predictor(PatternMother.woe());
 
-		predictor.setRelevance(mutagenic, 0.5);   // We give the baseTarget nice names - it is not targetTable
+		predictor.setRelevance(mutagenic, 0.5);
 		predictor.setBaseTarget(mutagenic);
 		predictor.setTargetColumn("mutagenic");
 		predictor.setTimestampBuilt(LocalDateTime.now());

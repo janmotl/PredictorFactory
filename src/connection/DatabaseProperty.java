@@ -9,7 +9,7 @@ import javax.xml.bind.annotation.XmlType;
     This file is separate from connection.xml as the properties can be set after the connection to the database.
     The tags in the XML are case sensitive!
     If the database doesn't support schemas (like MySQL), do not use {inputDatabase, outputDatabase}
-    but use {inputSchema, outputSchema}. It's schizophrenic. But that's how MySQL implemented information_schema:
+    but use {inputSchemaList, outputSchema}. It's schizophrenic. But that's how MySQL implemented information_schema:
     database names are in "TABLE_SCHEMA". And "TABLE_CATALOG" is filled with a constant: "def". Similarly jdbc
     supports getSchema for all databases but getCatalog only for some. 
 */
@@ -28,6 +28,8 @@ public class DatabaseProperty implements Cloneable{
 	@XmlAttribute public String task;
 	@XmlAttribute public String whiteListPattern;
 	@XmlAttribute public String blackListPattern;
+	@XmlAttribute public String whiteListSchema;
+	@XmlAttribute public String blackListSchema;
 	@XmlAttribute public String whiteListTable;
 	@XmlAttribute public String blackListTable;
 	@XmlAttribute public String whiteListColumn;

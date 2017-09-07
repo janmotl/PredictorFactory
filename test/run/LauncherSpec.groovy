@@ -1,7 +1,6 @@
 package run
 
 import connection.Network
-import meta.Column
 import org.apache.log4j.Level
 import spock.lang.Specification
 import utility.CountAppender
@@ -19,18 +18,17 @@ class LauncherSpec extends Specification {
         Setting setting = new Setting(connection, database);
         String mainSample = setting.mainTablePrefix + "_" + setting.targetColumnList.get(0);
         Network.openConnection(setting);
-        SortedMap<String, Column> columnMap = Meta.collectColumns(setting, setting.database, setting.outputSchema, mainSample);
+        Collection<String> columns = Meta.collectColumns(setting, setting.database, setting.outputSchema, mainSample).keySet();
         int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, mainSample);
 
-        columnMap.any {it.key.matches("trans_amount_aggregate.*100004")};   // The column name lengths can differ
-        columnMap.any {it.key.matches("loan_amount_directField.*100014")};
+        columns.any {it.matches("trans_amount_aggregate.*")};   // The column name lengths can differ and order of evaluation can differ -> regex
+        columns.any {it.matches("loan_amount_directField.*")};
         rowCount == 682;                            // We use all the data for comparable results
-        columnMap.size() == 13;                     // 10 good features + 3 base
+        columns.size() == 13;                       // 10 good features + 3 base
         CountAppender.getCount(Level.INFO) > 0;     // We have to make sure the CountAppender is working
         CountAppender.getCount(Level.WARN) == 0;
         CountAppender.getCount(Level.ERROR) == 0;
 
-        cleanup: "the database connection"
         Network.closeConnection(setting);
 
         where:
@@ -53,18 +51,17 @@ class LauncherSpec extends Specification {
         Setting setting = new Setting(connection, database);
         String mainSample = setting.mainTablePrefix + "_" + setting.targetColumnList.get(0);
         Network.openConnection(setting);
-        SortedMap<String, Column> columnMap = Meta.collectColumns(setting, setting.database, setting.outputSchema, mainSample);
+        Collection<String> columns = Meta.collectColumns(setting, setting.database, setting.outputSchema, mainSample).keySet();
         int rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, mainSample);
 
-        columnMap.any {it.key.matches("trans_amount_aggregate.*100004")};   // The column name lengths can differ
-        columnMap.any {it.key.matches("loan_status_directField.*100011")};
+        columns.any {it.matches("trans_amount_aggregate.*")};   // The column name lengths can differ
+        columns.any {it.matches("loan_status_directField.*")};
         rowCount == 30;                             // sampleCount=30 (it is regression -> 30 in total)
-        columnMap.size() == 14;                     // 11 successful predictors + 3 base
+        columns.size() == 14;                       // 11 successful predictors + 3 base
         CountAppender.getCount(Level.INFO) > 0;     // We have to make sure the CountAppender is working
         CountAppender.getCount(Level.WARN) == 0;
         CountAppender.getCount(Level.ERROR) == 0;
 
-        cleanup: "the database connection"
         Network.closeConnection(setting);
 
         where:
@@ -87,15 +84,14 @@ class LauncherSpec extends Specification {
         Setting setting = new Setting("PostgreSQL", database);
         String mainSample = setting.mainTablePrefix + "_" + setting.targetColumnList.get(0);
         Network.openConnection(setting);
-        SortedMap<String, Column> columnMap = Meta.collectColumns(setting, setting.database, setting.outputSchema, mainSample);
+        Collection<String> columns = Meta.collectColumns(setting, setting.database, setting.outputSchema, mainSample).keySet();
 
         setting.dialect.getRowCount(setting, setting.outputSchema, mainSample) == rowCount;
-        columnMap.size() == columnCount;
+        columns.size() == columnCount;
         CountAppender.getCount(Level.INFO) > 0;     // We have to make sure the CountAppender is working
         CountAppender.getCount(Level.WARN) <= 1;    // VOC generates 1 warning - it is a property of the dataset
         CountAppender.getCount(Level.ERROR) == 0;
 
-        cleanup: "the database connection"
         Network.closeConnection(setting);
 
         where:

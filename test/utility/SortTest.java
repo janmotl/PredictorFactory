@@ -1,7 +1,8 @@
 package utility;
 
-import org.junit.Assert;
 import org.junit.Test;
+
+import static org.junit.Assert.assertArrayEquals;
 
 public class SortTest {
 
@@ -11,8 +12,8 @@ public class SortTest {
 
 		Integer[] actual = Sort.findIndexInSortedArray(data);
 
-		Integer[] expected =  {1, 0, 2, 3};
-		Assert.assertArrayEquals(expected, actual);
+		Integer[] expected = {1, 0, 2, 3};
+		assertArrayEquals(expected, actual);
 	}
 
 	@Test
@@ -21,8 +22,8 @@ public class SortTest {
 
 		Integer[] actual = Sort.findIndexInSortedArray(data);
 
-		Integer[] expected =  {1, 0, 2, 3};
-		Assert.assertArrayEquals(expected, actual);
+		Integer[] expected = {1, 0, 2, 3};
+		assertArrayEquals(expected, actual);
 	}
 
 	@Test
@@ -31,7 +32,25 @@ public class SortTest {
 
 		int[] actual = Sort.findIndexInSortedArray(data);
 
-		int[] expected =  {1, 0, 2, 3};
-		Assert.assertArrayEquals(expected, actual);
+		int[] expected = {1, 0, 2, 3};
+		assertArrayEquals(expected, actual);
+	}
+
+	@Test
+	public void emptyArray() {
+		double[] empty = {};
+		assertArrayEquals(new int[]{}, Sort.findIndexInSortedArray(empty));
+	}
+
+	@Test
+	public void isStable() {
+		double[] zeros = {0, 0, 0, 0};
+		assertArrayEquals(new int[]{0, 1, 2, 3}, Sort.findIndexInSortedArray(zeros));
+	}
+
+	@Test
+	public void strings() {
+		String[] strings = {"cherry", "apple", "banana"};
+		assertArrayEquals(new Integer[]{1, 2, 0}, Sort.findIndexInSortedArray(strings));
 	}
 }

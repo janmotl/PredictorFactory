@@ -172,8 +172,8 @@ public class PredictorTest {
 	@Test
 	public void weightedRelevance() {
 		Predictor predictor = PredictorMother.woeInd1();
-		predictor.setChosenBaseTarget("ind1");
-		assertEquals(0.8, predictor.getWeightedRelevance("ind1"), 0.0001);
+		predictor.setChosenBaseTarget("propagated_target2");
+		assertEquals(0.8, predictor.getWeightedRelevance("propagated_target2"), 0.0001);
 	}
 
 

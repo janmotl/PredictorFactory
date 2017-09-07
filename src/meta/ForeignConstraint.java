@@ -15,25 +15,27 @@ import java.util.List;
 public class ForeignConstraint implements Comparable<ForeignConstraint> {
 	@XmlAttribute
 	public String name;       // Optional in the input XML. More like a comment.
-	public String table;
+	public String fSchema;
 	public String fTable;
-	public List<String> column = new ArrayList<>();
+	public String schema;
+	public String table;
 	public List<String> fColumn = new ArrayList<>();
+	public List<String> column = new ArrayList<>();
 	@XmlTransient
 	public int sequence;      // Composite keys in the input XML use multiple column and fColumn fields.
 
-	////////////////// Boring stuff //////////////
-
-	// Constructor
+	// Constructors
 	public ForeignConstraint() {
 	}
 
-	public ForeignConstraint(String name, String table, String fTable, List<String> column, List<String> fColumn) {
+	public ForeignConstraint(String name, String fSchema, String fTable, String schema, String table, List<String> fColumn, List<String> column) {
 		this.name = name;
-		this.table = table;
+		this.fSchema = fSchema;
 		this.fTable = fTable;
-		this.column = column;
+		this.schema = schema;
+		this.table = table;
 		this.fColumn = fColumn;
+		this.column = column;
 	}
 
 	// Required for assembling of composite keys (function collectRelationships)
@@ -90,14 +92,7 @@ public class ForeignConstraint implements Comparable<ForeignConstraint> {
 
 	@Override
 	public String toString() {
-		return "FC{" +
-				"name='" + name + "'\n" +
-				", table='" + table + "'\n" +
-				", fTable='" + fTable + "'\n" +
-				", column='" + column + "'\n" +
-				", fColumn='" + fColumn + "'\n" +
-				", seq='" + sequence + "'" +
-				"}";
+		return fSchema + "." + fTable + " --> " + schema + "." + table;
 	}
 
 }

@@ -6,7 +6,8 @@ import java.util.stream.IntStream;
 // See: https://stackoverflow.com/questions/951848/java-array-sort-quick-way-to-get-a-sorted-list-of-indices-of-an-array
 public class Sort {
 
-	// Equivalent of Matlab's sort, which returns indexes as the second return value
+	// Equivalent of Matlab's sort, which returns indexes as the second return value.
+	// The input may not be null.
 	public static Integer[] findIndexInSortedArray(Comparable[] data) {
 		// Make ascending vector: 0..vector.length
 		Integer[] index = new Integer[data.length];

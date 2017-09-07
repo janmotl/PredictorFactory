@@ -102,9 +102,11 @@ public class ForeignConstraintDDLTest {
 		List<ForeignConstraint> obtained = extract(input);
 
 		assertEquals(1, obtained.size());
-		assertEquals("hr.hire_date", obtained.get(0).fTable);
+		assertEquals("hire_date", obtained.get(0).fTable);
+		assertEquals("hr", obtained.get(0).fSchema);
 		assertEquals("EVEN THIS & THAT!", obtained.get(0).fColumn.get(0));
-		assertEquals("database.schema.table", obtained.get(0).table);
+		assertEquals("table", obtained.get(0).table);
+		assertEquals("schema", obtained.get(0).schema);
 		assertEquals("a_very_long_and_valid_name", obtained.get(0).column.get(0));
 	}
 

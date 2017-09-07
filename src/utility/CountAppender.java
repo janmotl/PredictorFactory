@@ -17,7 +17,12 @@ import java.util.List;
 // Alternatives for Log4j: JAMonAppender
 public class CountAppender extends WriterAppender {
 
-	private static List<LoggingEvent> records = new ArrayList<>();
+	private static List<LoggingEvent> records;      // Static to make it easier to call getCount()
+
+	// We have to clear the list between each run (important for UnitTesting, where static variables are initialized just once)
+	public CountAppender() {
+		records = new ArrayList<>();
+	}
 
 	@Override
 	public void append(LoggingEvent loggingEvent) {

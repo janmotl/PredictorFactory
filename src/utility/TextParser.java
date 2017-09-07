@@ -4,7 +4,7 @@ import org.apache.log4j.Logger;
 
 import java.util.*;
 
-
+// Note: We really ought to refactor XML schema and use a true hierarchical structure in the XML.
 public class TextParser {
 
 	// Logging
@@ -32,25 +32,73 @@ public class TextParser {
 	// Convert dot delimited list to map
 	// Example: table.column -> key=table, value=column
 	// Note: Hope that no one gets the brilliant idea to use dots in the names...
-	public static Map<String, List<String>> list2map(List<String> list) {
+	public static Map<String, List<String>> list2map(List<String> list, String defaultSchema) {
 		Map<String, List<String>> result = new HashMap<>();
+		String schema;
+		String table;
 
 		for (String tuple : list) {
 			String[] tableColumn = tuple.split("\\."); // Dot, but escaped for regex
-			if (tableColumn.length != 2) {  // Take care of empty strings...
-				logger.warn("Expected string in the form table.column but obtained: " + tuple);
-				continue;
-			}
-			String table = tableColumn[0];
-			String column = tableColumn[1];
-
-			if (result.containsKey(table)) {
-				result.get(table).add(column); // Add column into a present table
+			if (tableColumn.length == 2) {
+				schema = tableColumn[0];
+				table = tableColumn[1];
+			} else if (tableColumn.length == 1) {
+				schema = defaultSchema;
+				table = tableColumn[0];
+				logger.debug("Expected string in the form schema.table but obtained: " + tuple + " Target schema name was used as the prefix.");
 			} else {
-				result.put(table, new LinkedList<>(Arrays.asList(column))); // Make a new table with the column
+				logger.warn("Expected string in the form schema.table but obtained: " + tuple);
+				continue;   // Skip the record
+			}
+
+			if (result.containsKey(schema)) {
+				result.get(schema).add(table); // Add table into a present schema
+			} else {
+				result.put(schema, new LinkedList<>(Arrays.asList(table))); // Make a new schema with the table
 			}
 		}
 
 		return result;
+	}
+
+	public static Map<String, Map<String, List<String>>> list2mapMap(List<String> list, String defaultSchema) {
+		Map<String, Map<String, List<String>>> result = new HashMap<>();
+		String schema;
+		String table;
+		String column;
+
+		for (String tuple : list) {
+			String[] schemaTableColumn = tuple.split("\\."); // Dot, but escaped for regex
+			if (schemaTableColumn.length == 3) {
+				schema = schemaTableColumn[0];
+				table = schemaTableColumn[1];
+				column = schemaTableColumn[2];
+			} else if (schemaTableColumn.length == 2) {
+				schema = defaultSchema;
+				table = schemaTableColumn[0];
+				column = schemaTableColumn[1];
+				logger.debug("Expected string in the form schema.table.column but obtained: " + tuple + " Target schema name was used as the prefix.");
+			} else {
+				logger.warn("Expected string in the form schema.table.column but obtained: " + tuple);
+				continue;   // Skip the record
+			}
+
+			if (!result.containsKey(schema)) {
+				result.put(schema, new HashMap<>()); // Create a new schema
+			}
+
+			addTable(result, schema, table, column);
+		}
+
+		return result;
+	}
+
+	// Subroutine
+	private static void addTable(Map<String, Map<String, List<String>>> result, String schema, String table, String column) {
+		if (result.get(schema).containsKey(table)) {
+			result.get(schema).get(table).add(column); // Add column into a present table
+		} else {
+			result.get(schema).put(table, new LinkedList<>(Arrays.asList(column))); // Make a new table with the column
+		}
 	}
 }

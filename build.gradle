@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'PredictorFactory'
-version '3.3.9'
+version '4.0.0'
 sourceCompatibility = 1.8
 
 
@@ -28,8 +28,9 @@ dependencies {
     compile 'com.intellij:annotations:12.0'         // Not null annotation
     compile 'org.hibernate:hibernate-core:5.2.5.Final' // Experimental for SQL formatting (but exports only into plaintext, does not play well with postgre's "mode")
     compile 'com.atlassian.commonmark:commonmark:0.8.0' // Experimental Markdown
-    compile "org.codehaus.groovy:groovy-all:2.4.10" // Have to be in compile section for Spock
-    compile "org.controlsfx:controlsfx:8.40.13"    // For CheckComboBox in GUI
+    compile "org.controlsfx:controlsfx:8.40.13"     // For CheckComboBox in GUI
+
+//    compileOnly 'org.projectlombok:lombok:1.16.18'  // Necessary only during the compilation phase -> do not deploy it
 
     runtime fileTree(dir: 'lib/jdbc-driver/hsqldb', include: '*.jar')   // The search is not recursive -> list all directories
     runtime fileTree(dir: 'lib/jdbc-driver/jtds', include: '*.jar')
@@ -48,11 +49,12 @@ dependencies {
     compile fileTree(dir: 'lib/SQLinForm', include: '*.jar') // Ok
     compile fileTree(dir: 'lib', include: '*.jar')
 
-    testCompile fileTree(dir: 'lib/rapidminer', include: '*.jar')
+    testCompile fileTree(dir: 'lib/rapidminer', include: '*.jar')   // For classification and regression
     testCompile 'junit:junit:4.12'
-    testCompile 'info.solidsoft.spock:spock-global-unroll:0.5.0'    // Automatic unrolling of spock tests: https://solidsoft.wordpress.com/tag/mutation-testing/
-    testCompile 'org.spockframework:spock-core:1.1-groovy-2.4'
-
+    testCompile 'org.spockframework:spock-core:1.1-groovy-2.4'      // Spock testing framework
+    testCompile "org.codehaus.groovy:groovy-all:2.4.10"             // Required by Spock
+    testCompile 'info.solidsoft.spock:spock-global-unroll:0.5.0'    // Automatic unrolling of Spock tests: https://solidsoft.wordpress.com/tag/mutation-testing/
+    testCompile 'org.evosuite:evosuite-standalone-runtime:1.0.5'    // Evolutionary creation of unit tests
 }
 
 
@@ -128,11 +130,17 @@ task zip(type: Zip, dependsOn: 'deploy') {
     version = null
 }
 
+// Display more details when unit tests fail (equivalent to "gradle test --info" without the irrelevant noise)
+test {
+    testLogging {
+        exceptionFormat = 'full'
+    }
+}
 
 // Mutation testing
 pitest {
-    targetClasses = ['extraction.Journal']
-    targetTests = ['extraction.JournalTest']
+    targetClasses = ['propagation.Propagation']
+    targetTests = ['propagation.PropagationTest']
     threads = 4
     excludedMethods = ['toString']
     timestampedReports = false

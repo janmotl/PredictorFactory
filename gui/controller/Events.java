@@ -39,14 +39,14 @@ import static utility.SystemQualityControl.getPFVersion;
 import static utility.TextToHTML.textToHTML;
 
 
+
 public class Events implements Initializable {
 
 	// Global variables
     private Setting setting = new Setting("GUI", "GUI");
-    private List<CheckBoxTreeItem<String>> itemListTable = new ArrayList<>();
-    private List<CheckBoxTreeItem<String>> itemListColumn = new ArrayList<>();
     private List<CheckBoxTreeItem<String>> itemListPattern = new ArrayList<>();
     private Events.RunService runService = new Events.RunService();
+    private SortedSet<String> schemaSet;  // All schemas in the database (we cache it to load it just once)
 
     // Define GUI elements. The values are automatically initialized by FXMLLoader.
     @FXML private Button buttonConnect;
@@ -57,7 +57,7 @@ public class Events implements Initializable {
     @FXML private TextField textUsername;
     @FXML private TextField textPassword;
     @FXML private ComboBox<String> comboBoxVendor;
-    @FXML private ComboBox<String> comboBoxInputSchema;
+    @FXML private ComboBox<String> comboBoxTargetSchema;
     @FXML private ComboBox<String> comboBoxOutputSchema;
     @FXML private ComboBox<String> comboBoxTargetTable;
     @FXML private CheckComboBox<String> comboBoxTargetColumn;
@@ -121,57 +121,43 @@ public class Events implements Initializable {
         getMetaData(setting);
     }
 
-    @FXML private void inputSchemaAction() {
+    @FXML private void targetSchemaAction() {
+        // Reset dependent controls.
+        // Note that CheckComboBox requires clearing of both, selections AND items,
+        // otherwise an erratic behaviour can be observed in the GUI.
+        comboBoxTargetColumn.getCheckModel().clearChecks();
+		comboBoxTargetId.getCheckModel().clearChecks();
+		comboBoxTargetTimestamp.getSelectionModel().clearSelection();
+		comboBoxTargetTable.getSelectionModel().clearSelection();
 
-        // Initialization
-        SortedMap<String, Table> tableMap;      // From metadata
-        SortedMap<String, Column> columnMap;    // From metadata
-        Map<String, SortedMap<String, Column>> tableColumnMap = new HashMap<>();    // Cached results
-
-        // Store the new value
-        setting.inputSchema = comboBoxInputSchema.getValue();
+		comboBoxTargetColumn.getItems().clear();
+		comboBoxTargetId.getItems().clear();
+		comboBoxTargetTimestamp.getItems().clear();
+		comboBoxTargetTable.getItems().clear();
 
         // Target tab
-        tableMap = Meta.collectTables(setting, setting.database, setting.inputSchema);
+        SortedMap<String, Table> tableMap = Meta.collectTables(setting, setting.database, comboBoxTargetSchema.getValue());
         comboBoxTargetTable.getItems().setAll(tableMap.keySet());
 
         // Select tab
-        CheckBoxTreeItem<String> rootItem = new CheckBoxTreeItem<>("Tables and their columns");
-        rootItem.setExpanded(true);
-        itemListTable.clear();
-        itemListColumn.clear();
-
-        for (String table : tableMap.keySet()) {
-            CheckBoxTreeItem<String> itemTable = new CheckBoxTreeItem<>(table);
-            itemListTable.add(itemTable);
-
-            // Add columns
-            List<CheckBoxTreeItem<String>> localItemListColumn = new ArrayList<>();
-            columnMap = Meta.collectColumns(setting, setting.database, setting.inputSchema, table);
-            tableColumnMap.put(table, columnMap);
-            for (String column : columnMap.keySet()) {
-                CheckBoxTreeItem<String> itemColumn = new CheckBoxTreeItem<>(column);
-                localItemListColumn.add(itemColumn);
-            }
-            itemTable.getChildren().setAll(localItemListColumn);
-            itemListColumn.addAll(localItemListColumn);
-        }
-
-        rootItem.getChildren().setAll(itemListTable);
-        treeViewSelect.setRoot(rootItem);
-        treeViewSelect.setCellFactory(CheckBoxTreeCell.forTreeView());
-
+        Tree.initialize(treeViewSelect, setting, schemaSet, tableMap, comboBoxTargetSchema.getValue());
         setTableColumn();     // Check checkboxes based on XML
 
     }
 
     @FXML private void targetTableAction() {
 
-        // Store the new value
-        setting.targetTable = comboBoxTargetTable.getValue();
+        // Reset dependent controls
+        comboBoxTargetColumn.getCheckModel().clearChecks();
+		comboBoxTargetId.getCheckModel().clearChecks();
+		comboBoxTargetTimestamp.getSelectionModel().clearSelection();
+
+		comboBoxTargetColumn.getItems().clear();
+		comboBoxTargetId.getItems().clear();
+		comboBoxTargetTimestamp.getItems().clear();
 
         // Target tab
-        SortedMap<String, Column> columnMap = Meta.collectColumns(setting, setting.database, setting.inputSchema, setting.targetTable);
+        SortedMap<String, Column> columnMap = Meta.collectColumns(setting, setting.database, comboBoxTargetSchema.getValue(), comboBoxTargetTable.getValue());
 	    comboBoxTargetColumn.getItems().setAll(columnMap.keySet());
         comboBoxTargetId.getItems().setAll(columnMap.keySet());
 	    List<String> temporalColumns = new ArrayList<>();
@@ -197,8 +183,8 @@ public class Events implements Initializable {
         // 2) Create a new database
         DatabaseProperty databaseProperty = new DatabaseProperty();
         databaseProperty.name = "GUI";
-        databaseProperty.inputSchema = comboBoxInputSchema.getValue();
         databaseProperty.outputSchema = comboBoxOutputSchema.getValue();
+        databaseProperty.targetSchema = comboBoxTargetSchema.getValue();
         databaseProperty.targetTable = comboBoxTargetTable.getValue();
         databaseProperty.targetColumn = String.join(",", comboBoxTargetColumn.getCheckModel().getCheckedItems());
         databaseProperty.targetId = String.join(",", comboBoxTargetId.getCheckModel().getCheckedItems());
@@ -213,37 +199,28 @@ public class Events implements Initializable {
         databaseProperty.predictorMax = parseInteger(textPredictorMax.getText());
         databaseProperty.secondMax = parseInteger(textSecondMax.getText());
 
-	    // If the target timestamp is empty, replace it with null
-	    if ("".equals(databaseProperty.targetDate)) databaseProperty.targetDate = null;
+        // If the target timestamp is empty, replace it with null
+	    if ("".equals(databaseProperty.targetDate)) {
+            databaseProperty.targetDate = null;
+        }
+
+        // Input schema
+        List<String> inputSchemas = new ArrayList<>();
+        for (TreeItem<String> treeItem : treeViewSelect.getRoot().getChildren()) {
+            CheckBoxTreeItem<String> schema = (CheckBoxTreeItem) treeItem;
+            if (schema.isSelected() || schema.isIndeterminate()) {
+                inputSchemas.add(schema.getValue());
+            }
+        }
+        databaseProperty.inputSchema = String.join(",", inputSchemas);
+
 
         // BlackList tables
-        List<String> blackListTable = new ArrayList<>();
-
-        for (CheckBoxTreeItem<String> treeItem : itemListTable) {
-            if (!treeItem.isSelected() && !treeItem.isIndeterminate()) {  // Only if the whole table is disabled
-                blackListTable.add(treeItem.getValue());
-            }
-        }
-
-        databaseProperty.blackListTable = StringUtils.join(blackListTable, ',');
-        if (databaseProperty.blackListTable.isEmpty()) {
-            databaseProperty.blackListTable = null; // If empty, do not write the attribute into the XML
-        }
+        databaseProperty.blackListTable = BlackWhite.tableOut(treeViewSelect);
 
         // BlackList columns
-        List<String> blackListColumn = new ArrayList<>();
+        databaseProperty.blackListColumn = BlackWhite.columnOut(treeViewSelect);
 
-        for (CheckBoxTreeItem<String> treeItem : itemListColumn) {
-            CheckBoxTreeItem parent = (CheckBoxTreeItem) treeItem.getParent();
-            if (!treeItem.isSelected() && parent.isIndeterminate()) {   // If table is indeterminate and column is disabled
-                blackListColumn.add(treeItem.getParent().getValue() + "." + treeItem.getValue());
-            }
-        }
-
-        databaseProperty.blackListColumn = StringUtils.join(blackListColumn, ',');
-        if (databaseProperty.blackListColumn.isEmpty()) {
-            databaseProperty.blackListColumn = null; // If empty, do not write the attribute into the XML
-        }
         // BlackList patterns
         List<String> blackListPattern = new ArrayList<>();
 
@@ -370,11 +347,12 @@ public class Events implements Initializable {
          try {blackListPattern = TextParser.string2list(databaseProperty.blackListPattern);} catch (NullPointerException ignored) {}
          try {whiteListPattern = TextParser.string2list(databaseProperty.whiteListPattern);} catch (NullPointerException ignored) {}
 
-
         // Add ability to select an item in a combobox with a key stroke.
 	    // Note: It is too tough to add it for ComboBoxMulti (comboBoxTargetColumn, comboBoxTargetId).
-        PrefixSelectionCustomizer.customize(comboBoxInputSchema);
+        // Note: CheckComboBox does not display tooltips correctly:
+        //  https://bitbucket.org/controlsfx/controlsfx/issues/488/tooltips-beneath-checkcombobox-popup-are
         PrefixSelectionCustomizer.customize(comboBoxOutputSchema);
+        PrefixSelectionCustomizer.customize(comboBoxTargetSchema);
         PrefixSelectionCustomizer.customize(comboBoxTargetTable);
         PrefixSelectionCustomizer.customize(comboBoxTargetTimestamp);
         PrefixSelectionCustomizer.customize(comboBoxTask);
@@ -449,55 +427,72 @@ public class Events implements Initializable {
         DatabaseProperty databaseProperty = databaseList.getDatabaseProperties("GUI");
 
         // Parse from XML (the data are stored in SQL-like syntax, not in XML-like syntax)
-        List<String> whiteListTable = TextParser.string2list(databaseProperty.whiteListTable); // Parsed values
-        List<String> blackListTable = TextParser.string2list(databaseProperty.blackListTable); // Parsed values
-        Map<String,List<String>> whiteMapColumn = TextParser.list2map(TextParser.string2list(databaseProperty.whiteListColumn)); // Parsed values
-        Map<String,List<String>> blackMapColumn = TextParser.list2map(TextParser.string2list(databaseProperty.blackListColumn)); // Parsed values
-
+        List<String> whiteListSchema = TextParser.string2list(databaseProperty.whiteListSchema); 
+        List<String> blackListSchema = TextParser.string2list(databaseProperty.blackListSchema);
+        Map<String,List<String>> whiteMapTable = TextParser.list2map(TextParser.string2list(databaseProperty.whiteListTable), setting.targetSchema);
+        Map<String,List<String>> blackMapTable = TextParser.list2map(TextParser.string2list(databaseProperty.blackListTable), setting.targetSchema);
+        Map<String, Map<String,List<String>>> whiteMapColumn = TextParser.list2mapMap(TextParser.string2list(databaseProperty.whiteListColumn), setting.targetSchema);
+        Map<String, Map<String,List<String>>> blackMapColumn = TextParser.list2mapMap(TextParser.string2list(databaseProperty.blackListColumn), setting.targetSchema);
 
         // The logic (a hierarchical extension of BlackWhiteList) is following:
-        //  1) whiteTable, whiteColumn -> check
-        //  2) if (whiteTable.isEmpty() && whiteColumn.isEmpty()) -> check all
-        //  3) blackTable, blackColumn -> uncheck
+        //  1) whiteSchema, whiteTable, whiteColumn -> check
+        //  2) if (whiteSchema.isEmpty() && whiteTable.isEmpty() && whiteColumn.isEmpty()) -> check the inputSchema (a reasonable default)
+        //  3) blackSchema, blackTable, blackColumn -> uncheck
 
 
-        // 1) If whiteTableList contains the tableName, check it
-        for (CheckBoxTreeItem<String> table : itemListTable) {
-            if (whiteListTable.contains(table.getValue())) {
-                table.setSelected(true);    // Check the table
+        // 1) White lists
+        for (TreeItem<String> schema : treeViewSelect.getRoot().getChildren()) {
+            if (whiteListSchema.contains(schema.getValue())) {
+                CheckBoxTreeItem schemaCheckBox = (CheckBoxTreeItem) schema;
+                schemaCheckBox.setSelected(true);    // Check the schema
             }
         }
 
-        for (CheckBoxTreeItem<String> column : itemListColumn) {
-            String tableName = column.getParent().getValue();
-            List<String> whiteListColumn = whiteMapColumn.getOrDefault(tableName, new ArrayList<>());
-
-            if (whiteListColumn.contains(column.getValue())) {
-                column.setSelected(true);   // Check the column
+        for (TreeItem<String> schema : treeViewSelect.getRoot().getChildren()) {
+            List<String> whiteTables = whiteMapTable.get(schema.getValue());
+            if (whiteTables != null) {
+                for (TreeItem<String> table : schema.getChildren()) {
+                    if (whiteTables.contains(table.getValue())) {
+                        CheckBoxTreeItem tableCheckBox = (CheckBoxTreeItem) table;
+                        tableCheckBox.setSelected(true);   // Check the table
+                    }
+                }
             }
         }
+        
+        BlackWhite.column(treeViewSelect, whiteMapColumn, true);  // Check the table
 
-        // 2) If both, whiteTableList and whiteColumnList are empty, check all
-        if (whiteListTable.isEmpty() && whiteMapColumn.isEmpty()) {
-            CheckBoxTreeItem root = (CheckBoxTreeItem)treeViewSelect.getRoot();
-            root.setSelected(true);
+        // 2) If whiteSchemaList, whiteTableMap and whiteColumnList are empty, check the target schema
+        if (whiteListSchema.isEmpty() && whiteMapTable.isEmpty() && whiteMapColumn.isEmpty()) {
+            for (TreeItem<String> schema : treeViewSelect.getRoot().getChildren()) {
+                if (schema.getValue().equals(comboBoxTargetSchema.getValue())) {
+                    CheckBoxTreeItem schemaCheckBox = (CheckBoxTreeItem) schema;
+                    schemaCheckBox.setSelected(true);
+                }
+            }
         }
 
         // 3) If blackTableList contains the tableName, uncheck it
-        for (CheckBoxTreeItem<String> table : itemListTable) {
-            if (blackListTable.contains(table.getValue())) {
-                table.setSelected(false);    // Uncheck the table
+        for (TreeItem<String> schema : treeViewSelect.getRoot().getChildren()) {
+            if (blackListSchema.contains(schema.getValue())) {
+                CheckBoxTreeItem schemaCheckBox = (CheckBoxTreeItem) schema;
+                schemaCheckBox.setSelected(false);    // Uncheck the schema
             }
         }
 
-        for (CheckBoxTreeItem<String> column : itemListColumn) {
-            String tableName = column.getParent().getValue();
-            List<String> blackListColumn = blackMapColumn.getOrDefault(tableName, new ArrayList<>());
-
-            if (blackListColumn.contains(column.getValue())) {
-                column.setSelected(false);  // Uncheck the column
+        for (TreeItem<String> schema : treeViewSelect.getRoot().getChildren()) {
+            List<String> blackTables = blackMapTable.get(schema.getValue());
+            if (blackTables != null) {
+                for (TreeItem<String> table : schema.getChildren()) {
+                    if (blackTables.contains(table.getValue())) {
+                        CheckBoxTreeItem tableCheckBox = (CheckBoxTreeItem) table;
+                        tableCheckBox.setSelected(false);   // Uncheck the table
+                    }
+                }
             }
         }
+
+        BlackWhite.column(treeViewSelect, blackMapColumn, false);  // Uncheck the column
 
     }
 
@@ -519,13 +514,13 @@ public class Events implements Initializable {
             this.setting = task.getValue();     // Store the setting with the open connection
 
             // Populate the database tab (based on the database content)
-            SortedSet<String> schemaList = Meta.collectSchemas(setting, setting.database);
-            comboBoxInputSchema.getItems().setAll(schemaList);
-            comboBoxOutputSchema.getItems().setAll(schemaList);
+            schemaSet = Meta.collectSchemas(setting, setting.database);
+            comboBoxTargetSchema.getItems().setAll(schemaSet);
+            comboBoxOutputSchema.getItems().setAll(schemaSet);
 
             // Populate the database tab (based on the past setting)
-            comboBoxInputSchema.setValue(setting.inputSchema);
             comboBoxOutputSchema.setValue(setting.outputSchema);
+            comboBoxTargetSchema.setValue(setting.targetSchema);
             comboBoxTargetTable.setValue(setting.targetTable);
 	        for (String targetColumn : setting.targetColumnList) {
 		        comboBoxTargetColumn.getCheckModel().check(targetColumn);

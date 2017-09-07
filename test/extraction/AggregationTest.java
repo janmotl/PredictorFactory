@@ -1,7 +1,6 @@
 package extraction;
 
-import meta.Column;
-import meta.MetaOutput.OutputTable;
+import meta.*;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,7 +12,7 @@ public class AggregationTest {
 	private Setting setting = new Setting("PostgreSQL", "financial");
 	private Pattern pattern = new Pattern();
 	private Predictor predictor;
-	private SortedMap<String, OutputTable> tableMetadata = new TreeMap<>();
+	private List<OutputTable> tableMetadata = new ArrayList<>();
 	
 	@Before
 	public void initialize(){
@@ -41,23 +40,20 @@ public class AggregationTest {
 		OutputTable outputTable = new OutputTable();
 		outputTable.name = "propagatedName1";
 		Column column = new Column("column1");
-		Set<String> unique = new HashSet<>();
-		unique.add("unique1");
-		unique.add("unique2");
-		column.uniqueValueSet = unique;
-		outputTable.columnMap.put("column1", column);
 		Column nominalColumn1 = new Column("nominalColumn1");
 		nominalColumn1.isNominal = true;
 		Column nominalColumn2 = new Column("nominalColumn2");
 		nominalColumn2.isNominal = true;
+		outputTable.columnMap.put("column1", column);
 		outputTable.columnMap.put("nominalColumn1", nominalColumn1);
 		outputTable.columnMap.put("nominalColumn2", nominalColumn2);
 		outputTable.isTargetIdUnique = true;
-		tableMetadata.put("propagatedTable1", outputTable);
+
+		tableMetadata.add(outputTable);
 		OutputTable outputTable2 = new OutputTable();
 		outputTable2.isTargetIdUnique = true;
 		outputTable2.name = "propagatedName2";
-		tableMetadata.put("propagatedTable2", outputTable2);
+		tableMetadata.add(outputTable2);
 
 
 		// Initialize predictor
@@ -100,7 +96,6 @@ public class AggregationTest {
 	
 	@Test
 	public void loopTables() {
-		System.out.println("");
 		List<Predictor> list = Aggregation.loopTables(predictor, tableMetadata);
 		
 		Assert.assertEquals(2, list.size());
@@ -122,14 +117,5 @@ public class AggregationTest {
 		Aggregation.addSQL(predictor, predictor.getPatternCode());
 		
 		Assert.assertEquals("select @nominalColumn from t1 where col1 = 'value1' and col2 = '@targetValue'", predictor.getSql());
-	}
-	
-	@Test
-	public void addValue() {
-		List<Predictor> list = Aggregation.addValue(predictor);
-		
-		Assert.assertEquals(2, list.size());
-		Assert.assertEquals("unique1", list.get(0).getParameterMap().get("@value"));
-		Assert.assertEquals("unique2", list.get(1).getParameterMap().get("@value"));
 	}
 }

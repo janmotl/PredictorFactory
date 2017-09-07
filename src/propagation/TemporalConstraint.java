@@ -1,7 +1,7 @@
 package propagation;
 
 import meta.Column;
-import meta.MetaOutput;
+import meta.OutputTable;
 import meta.StatisticalType;
 import org.apache.log4j.Logger;
 import run.Setting;
@@ -17,7 +17,7 @@ public class TemporalConstraint {
 
 	// Sets the most likely time constraint. If no time constraint is found, table.constraintDate remains null.
 	// The function sets: {constraintDate, temporalConstraintJustification, temporalConstraintRowCountOptimistic, isIdUnique}.
-	public static MetaOutput.OutputTable find(Setting setting, MetaOutput.OutputTable table) {
+	public static OutputTable find(Setting setting, OutputTable table) {
 
 		// 1) If setting.targetDate is not defined, stop. Leave null in the table.constraintDate.
 		if (setting.targetDate == null) {
@@ -45,7 +45,7 @@ public class TemporalConstraint {
 		// 4) Get columns without nulls (there isn't any good reason why a timestamp should be missing).
 		// NOTE: if there is a not null constraint, automatically could trust it (unless it is Netezza...)
 		SortedSet<Column> candidateSet = table.getColumns(setting, StatisticalType.TEMPORAL);
-		candidateSet.removeIf(column -> column.containsNull(setting, table.originalName));
+		candidateSet.removeIf(column -> column.containsNull(setting));
 
 		if (candidateSet.isEmpty()) {
 			table.temporalConstraintJustification = "All candidates contain null values. An attribute with the date of entering the data should never be empty.";
@@ -53,7 +53,7 @@ public class TemporalConstraint {
 		}
 
 		// 5) Get columns without any date in the future (relative to database's current time)
-		candidateSet.removeIf(column -> column.containsFutureDate(setting, table.originalName));
+		candidateSet.removeIf(column -> column.containsFutureDate(setting));
 
 		if (candidateSet.isEmpty()) {
 			table.temporalConstraintJustification = "All candidates either contain null values or dates in the future. An attribute with a future date can't be a date of record entry.";
@@ -90,7 +90,7 @@ public class TemporalConstraint {
 		NavigableMap<Integer, String> treeMap = new TreeMap<>();
 
 		for (Column column : candidateSet) {
-			int count = setting.dialect.countUsableDates(setting, table.originalName, column.name);
+			int count = setting.dialect.countUsableDates(setting, table.schemaName, table.originalName, column.name);
 			treeMap.put(count, column.name);
 			logger.debug("Column " + table.originalName + "." + column.name + " has " + count + " rows that may satisfy the time constraint.");
 		}

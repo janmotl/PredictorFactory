@@ -5,6 +5,8 @@ import run.Setting;
 
 import java.util.*;
 
+import static java.util.Objects.*;
+
 
 // Define struct.
 // Always create collections to avoid null pointer exception and need to create collections at many places.
@@ -16,12 +18,21 @@ public class Table {
 	// Logging
 	private static final Logger logger = Logger.getLogger(Table.class.getName());
 
-
 	public String name;                                         // To make Table self-sufficient even outside the map
+	public String schemaName;
 	public SortedMap<String, Column> columnMap = new TreeMap<>();   // All columns (but eventually blacklisted)
 	public List<ForeignConstraint> foreignConstraintList = new ArrayList<>();   // NOTE: Should we create a single ForeignConstraintList?
-	public boolean isTargetIdUnique;                                // Does combination {baseId, baseDate} repeat?
 
+	// Constructors
+	public Table() {
+	}
+
+	public Table(String schemaName, String name) {
+		requireNonNull(schemaName, "Schema name cannot be null");
+		requireNonNull(name, "Table name cannot be null");
+		this.schemaName = schemaName;
+		this.name = name;
+	}
 
 	// It makes sens to store columns in a single collection to avoid duplication.
 	// These getters are not the most efficiently implemented. Feel free to replace it with a multi-key map.
@@ -47,32 +58,41 @@ public class Table {
 
 	// Return all columns that were not blacklisted
 	public SortedSet<Column> getColumns() {
-		return (SortedSet<Column>) columnMap.values();
+		SortedSet<Column> result = new TreeSet<>(columnMap.values());
+		return result;
 	}
 
 	// If the column is not in the map, raise an exception
 	public Column getColumn(String columnName) {
 		// Could extract the value and check for NULL for speed up (http://stackoverflow.com/questions/3626752/key-existence-check-in-hashmap)
 		if (!columnMap.containsKey(columnName))
-			throw new NullPointerException("The column " + columnName + " was not found in table " + name);
+			throw new IllegalArgumentException("The column " + columnName + " was not found in table " + name);
 		return columnMap.get(columnName);
 	}
 
-	// Get the top N most frequent unique values for each nominal attribute.
-	// However, if we are performing classification, uniqueList will contain all unique
-	// values regardless of target's data type (can be String as well as Integer)
-	// SHOULD BE EVALUATED LAZILY AND MEMOIZED
-	public void addUniqueValues(Setting setting) {
+	// NOTE: PF assumes that foreignConstraints are undirected (when PF loads FKCs from jdbc.metadatabase, it
+	// automatically creates duplicates in the reverse direction). But I am not sure this happens when we are loading
+	// data from DDL or XML. There are two options. Either create reversed duplicates everywhere. Or nowhere.
+	public List<ForeignConstraint> getMatchingFKCs(Table table2) {
+		List<ForeignConstraint> result = new ArrayList<>();
 
-		// Get setting.valueCount most frequent distinct values for each nominal column.
-		// The unique values will be used in patterns like "WoE" or "Existential count".
-		for (Column column : getColumns(setting, StatisticalType.NOMINAL)) {
-			column.uniqueValueSet.addAll(setting.dialect.getTopUniqueRecords(setting, name, column.name));
+		// Note that foreignConstraints in PF are undirected -> we match only based on fTable
+		for (ForeignConstraint fc : foreignConstraintList) {
+			requireNonNull(table2.name, "Table name cannot be null");
+			requireNonNull(table2.schemaName, "Schema name cannot be null");
+			requireNonNull(fc.fTable, "Table name cannot be null");
+			requireNonNull(fc.fSchema, "Schema name cannot be null");
+
+			if ( fc.fTable.equals(table2.name) && fc.fSchema.equals(table2.schemaName) ) {
+				result.add(fc);
+			}
 		}
 
+		return result;
 	}
 
 	// Get numerical, nominal and time columns.
+	// NOTE: Shouldn't it be done either lazily or during the construction?
 	public void categorizeColumns(Setting setting) {
 		// Parameter control
 		if (columnMap == null || columnMap.isEmpty()) {
@@ -137,6 +157,20 @@ public class Table {
 
 	@Override
 	public String toString() {
-		return (name + ": " + getColumns());
+		return name;
+	}
+
+	@Override // Used in Propagation class
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Table table = (Table) o;
+		return Objects.equals(name, table.name) &&
+				Objects.equals(schemaName, table.schemaName);
+	}
+
+	@Override
+	public int hashCode() {
+		return hash(name, schemaName);
 	}
 }

@@ -1,5 +1,7 @@
 package meta;
 
+import org.apache.log4j.Logger;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -13,18 +15,21 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ForeignConstraintDDL {
-
+	// Logging
+	private static final Logger logger = Logger.getLogger(ForeignConstraintDDL.class.getName());
 
 	public static List<ForeignConstraint> unmarshall(String fileName) {
 		List<ForeignConstraint> result = new ArrayList<>();
 		Path path = Paths.get("config", fileName);
 
-		try {
-			byte[] encoded = Files.readAllBytes(path);
-			String sql = new String(encoded, StandardCharsets.UTF_8);
-			result = extract(sql);
-		} catch (IOException e) {
-			e.printStackTrace();
+		if (Files.exists(path)) {   // Ignore absence of the file
+			try {
+				byte[] encoded = Files.readAllBytes(path);
+				String sql = new String(encoded, StandardCharsets.UTF_8);
+				result = extract(sql);
+			} catch (IOException e) {
+				logger.warn("Attempt to parse 'config/" + fileName + "' failed.");
+			}
 		}
 
 		return result;
@@ -43,7 +48,18 @@ public class ForeignConstraintDDL {
 
 		Matcher matcher = pattern.matcher(sql);
 		while (matcher.find()) {
-			String fTable = matcher.group(1).trim();
+			// Note: Will fail if a comma is used in a name (we should respect the quotation marks)
+			String fTable = "";
+			String fSchema = "";
+			String[] foreign = matcher.group(1).trim().split("\\."); // Split on dot, if possible
+			if (foreign.length==0) {
+				fTable = matcher.group(1).trim();
+			} else if (foreign.length==1) {
+				fTable = foreign[0];
+			} else if (foreign.length>=2) {
+				fTable = foreign[foreign.length-1]; // The last item
+				fSchema = foreign[foreign.length-2]; // The second from the end
+			}
 
 			// Name is optional
 			String name = null;
@@ -54,12 +70,23 @@ public class ForeignConstraintDDL {
 			// Note: Comma in a quoted name will cause troubles...
 			List<String> fColumns = Arrays.stream(matcher.group(3).split(",")).map(String::trim).map(ForeignConstraintDDL::trimQuotes).collect(Collectors.toList());
 
-			String table = matcher.group(4).trim();
+			// Note: Will fail if a comma is used in a name (we should respect the quotation marks)
+			String table = "";
+			String schema = "";
+			String[] local = matcher.group(4).trim().split("\\.");
+			if (local.length==0) {
+				table = matcher.group(4).trim();
+			} else if (local.length==1) {
+				table = local[0];
+			} else if (local.length>=2) {
+				table = local[local.length-1]; // The last item
+				schema = local[local.length-2]; // The second from the end
+			}
 
 			// Note: Comma in a quoted name will cause troubles...
 			List<String> columns = Arrays.stream(matcher.group(5).split(",")).map(String::trim).map(ForeignConstraintDDL::trimQuotes).collect(Collectors.toList());
 
-			ForeignConstraint fc = new ForeignConstraint(name, table, fTable, columns, fColumns);
+			ForeignConstraint fc = new ForeignConstraint(name, fSchema, fTable, schema, table, fColumns, columns);
 			result.add(fc);
 		}
 

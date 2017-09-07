@@ -73,13 +73,15 @@ public final class Setting {
 	public String targetDate;       // The date column. Used only for base construction.
 	public List<String> targetColumnList = new ArrayList<>();   // List of target columns. Use it only for base construction and reporting. Everything in between should use baseTargetList!
 	public String targetTable;      // The table with the target column. Used only for base construction.
+	public String whiteListSchema;   // List of used schemas.
+	public String blackListSchema;   // List of ignored schemas. The syntax is like: ('schemaName1', 'schemaName2')
 	public String whiteListTable;   // List of used tables.
-	public String blackListTable;   // List of ignored tables. The syntax is like: ('tableName1', 'tableName2')
+	public String blackListTable;   // List of ignored tables. The syntax is like: ('schemaName1.tableName1', 'schemaName2.tableName2')
 	public String whiteListColumn;  // List of used columns.
-	public String blackListColumn;  // List of ignored columns.The syntax is like: ('table1.column1', 'table2.column2')
+	public String blackListColumn;  // List of ignored columns.The syntax is like: ('schemaName1.table1.column1', 'schemaName2.table2.column2')
 
 	// Database logic
-	public String inputSchema;
+	public List<String> inputSchemaList;
 	public String outputSchema;
 
 	// Names for entities created by Predictor Factory
@@ -112,7 +114,7 @@ public final class Setting {
 	public final int predictorStart = 100000;               // Convenience for "natural sorting".
 
 	// Parameters
-	public final int propagationDepthMax = 10;      // The maximal depth of base table propagation. Smaller value will result into faster propagation.
+	public int propagationDepthMax = 10;            // The maximal depth of base table propagation. Smaller value will result into faster propagation.
 	public String unit;                             // In which units to measure lag and lead
 	public Integer lag;                             // The amount of data history we allow the model to use when making the prediction.
 	public Integer lead;                            // The period of time between the last data point the model can use to predict and the first data point the model actually predicts.
@@ -122,7 +124,7 @@ public final class Setting {
 	public String blackListPattern;                 // Ignore some of the patterns. Should be a list.
 	public List<String> baseDateRange = new ArrayList<>(); // The range of baseDate (for time constraint estimation).
 	//public boolean sample = true;                 // If true, sample during propagation
-	public final int valueCount = 20;               // Count of discrete values to consider in feature functions.
+	public int valueCount = 20;                     // Count of discrete values to consider in feature functions.
 	// missingValues (had to be implemented)
 	public String targetSchema;                     // Target table can be either in the input schema or output schema.
 	public int secondMax;                           // Timeout on predictor calculation in seconds.
@@ -175,12 +177,13 @@ public final class Setting {
 		quoteEntityClose = driverProperty.quoteEntityClose;
 
 		// Load database properties
-		inputSchema = databaseProperty.inputSchema;
+		inputSchemaList = TextParser.string2list(databaseProperty.inputSchema); // Permits input data in multiple schemas. In theory the default value could be targetSchema once XML is modified.
 		outputSchema = databaseProperty.outputSchema;
+		targetSchema = databaseProperty.targetSchema;
+		targetTable = databaseProperty.targetTable;
 		targetIdList = TextParser.string2list(databaseProperty.targetId); // Permits composite id
 		targetDate = databaseProperty.targetDate;
 		targetColumnList = TextParser.string2list(databaseProperty.targetColumn); // Permits multiple targets at once
-		targetTable = databaseProperty.targetTable;
 		predictorMax = databaseProperty.predictorMax;
 
 		// Load optional (null-able) properties. Always set appropriate default values.
@@ -221,11 +224,12 @@ public final class Setting {
 		sampleCount = MoreObjects.firstNonNull(databaseProperty.sampleCount, Integer.MAX_VALUE);
 		blackListPattern = MoreObjects.firstNonNull(databaseProperty.blackListPattern, "");
 		whiteListPattern = MoreObjects.firstNonNull(databaseProperty.whiteListPattern, "");
+		whiteListSchema = MoreObjects.firstNonNull(databaseProperty.whiteListSchema, "");
+		blackListSchema = MoreObjects.firstNonNull(databaseProperty.blackListSchema, "");
 		whiteListTable = MoreObjects.firstNonNull(databaseProperty.whiteListTable, "");
 		blackListTable = MoreObjects.firstNonNull(databaseProperty.blackListTable, "");
 		whiteListColumn = MoreObjects.firstNonNull(databaseProperty.whiteListColumn, "");
 		blackListColumn = MoreObjects.firstNonNull(databaseProperty.blackListColumn, "");
-		targetSchema = MoreObjects.firstNonNull(databaseProperty.targetSchema, inputSchema); // What if inputSchema is not set?
 		useIdAttributes = databaseProperty.useIdAttributes; // The default is set in xsd
 		useTwoStages = databaseProperty.useTwoStages; // The default is set in xsd -> However, it always writes the value into XML -> not nice
 		secondMax = MoreObjects.firstNonNull(databaseProperty.secondMax, 0); // If zero, no timeout is applied
@@ -272,6 +276,7 @@ public final class Setting {
 		logger.debug("Target columns: " + targetColumnList);
 		logger.debug("Target ids: " + targetIdList);
 		logger.debug("Target timestamp: " + targetDate);
+		logger.debug("Input schemas: " + inputSchemaList);
 		logger.debug("Output schema: " + outputSchema);
 	}
 }

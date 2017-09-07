@@ -2,7 +2,7 @@ package extraction;
 
 
 import extraction.Pattern.OptimizeParameters;
-import meta.MetaOutput.OutputTable;
+import meta.OutputTable;
 import org.apache.commons.lang3.text.WordUtils;
 import run.Setting;
 

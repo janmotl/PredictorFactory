@@ -2,36 +2,34 @@ package propagation;
 
 
 import connection.Network;
-import meta.Column;
-import meta.ForeignConstraint;
-import meta.MetaOutput.OutputTable;
-import meta.Table;
+import meta.*;
 import org.apache.log4j.Logger;
 import run.Setting;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Propagation {
 	// Logging
 	private static final Logger logger = Logger.getLogger(Propagation.class.getName());
 
-	// Propagate tuples from the base table into all other tables
-	// BLIND APPROACH IS IMPLEMENTED - get list of PK-FK pairs
-	// THE SEARCH DEPTH SHOULD BE LIMITED
-	// SHOULD CREATE SEVERAL tables if a cycle is present. So far only the farthest table is duplicated.
-	// PROPAGATED TABLES SHOULD HAVE BEEN INDEXED
-	public static SortedMap<String, OutputTable> propagateBase(Setting setting, SortedMap<String, Table> inputMeta) {
-		// Initialize set of propagated tables and not-propagated samples
-		Set<String> notPropagated = inputMeta.keySet(); // Set of tables to propagate
-		Set<String> propagated = new HashSet<>();       // Set of propagated tables...
-		propagated.add(setting.baseSampled);                // ...initialized with baseSampled.
+	private static int counter;   // We want to guarantee that the journal_table is going to have unique and consecutive ids even if the table propagation fails -> it is not enough to just call propagated.size()+newlyPropagated.size()
 
-		// Initialize MetaOutput
-		SortedMap<String, OutputTable> metaOutput = new TreeMap<>(); // The output list (based on the propagated name)
-		OutputTable base = new OutputTable();   // Temporarily add base table (used in propagationPath building)...
-		base.propagationPath = new ArrayList<>();
+	// Propagate tuples from the base table into all other tables.
+	// The propagation depth is limited by setting.propagationDepthMax.
+	// SHOULD CREATE SEVERAL tables if a cycle is present. So far only the farthest table is duplicated.
+	// Note: Maybe I could pass base OutputTable to this method and not build it from scratch (just return outputTable
+	// from some of the previously called methods).
+	public static List<OutputTable> propagateBase(Setting setting, Database inputMeta) {
+		// Initialize set of propagated tables and not-propagated samples
+		List<Table> notPropagated = inputMeta.getAllTables();   // Set of tables to propagate
+		List<OutputTable> propagated = new ArrayList<>();       // Set of propagated tables
+		counter = 1;                                            // In SQL world it is customary to start counting from 1
+
+		// Initialize the propagated set with baseSampled (we need a starting point for BFS)
+		OutputTable base = new OutputTable();
+		base.name = setting.baseSampled;
+		base.schemaName = setting.outputSchema;
 		base.originalName = setting.baseSampled;
 
 		for (String columnName : setting.baseIdList) {  // Can be a composite Id
@@ -48,9 +46,10 @@ public class Propagation {
 			base.columnMap.put(columnName, column);
 		}
 
-		ForeignConstraint fc = new ForeignConstraint("FK_baseTable_targetTable", setting.baseSampled, setting.targetTable, setting.baseIdList, setting.targetIdList);
+		ForeignConstraint fc = new ForeignConstraint("FK_baseTable_targetTable", setting.targetSchema, setting.targetTable, setting.outputSchema, setting.baseSampled, setting.targetIdList, setting.baseIdList);
 		base.foreignConstraintList.add(fc);
-		metaOutput.put(setting.baseSampled, base);  //... into tableMetadata.
+
+		propagated.add(base);   // Temporarily add base table...
 
 
 		// Get an estimate of range of targetDate
@@ -59,44 +58,42 @@ public class Propagation {
 		}
 
 		// Call BFS
-		metaOutput = bfs(setting, 1, propagated, notPropagated, inputMeta, metaOutput);
-
-		// Remove base table (as we want a map of propagated tables)
-		metaOutput.remove(setting.baseSampled);
+		propagated = bfs(setting, 1, propagated, notPropagated);
 
 		// Output QC: If the count of propagated tables is low, complain about it.
-		if (metaOutput.size() < 1) {
+		if (propagated.size() < 1) {
 			logger.warn("Count of propagated tables is 0. The base table itself will be returned.");
 		}
 
-		return metaOutput;
+		return propagated;
 	}
 
 	// Breadth First Search (BFS)
 	// Loop over the current level twice.
 	// The first loop processes all the nodes, the second loop recurses into all the non-leaf nodes.
-	private static SortedMap<String, OutputTable> bfs(Setting setting, int depth, Set<String> propagated, Set<String> notPropagated, SortedMap<String, Table> metaInput, SortedMap<String, OutputTable> metaOutput) {
+	private static List<OutputTable> bfs(Setting setting, int depth, List<OutputTable> propagated, List<Table> notPropagated) {
 
 		// Initialization
-		Set<String> newlyPropagated = new HashSet<>();      // Set of tables propagated at the current depth
-		Set<String> stillNotPropagated = new HashSet<>(notPropagated);  // Set of tables to propagate
+		List<OutputTable> newlyPropagated = new ArrayList<>();      // Set of tables propagated at the current depth
+		List<Table> stillNotPropagated = new ArrayList<>(notPropagated);  // Set of tables to propagate (it is not enough to just visit each table, we want to walk over each edge!)
 
 		// Loop over tables
-		for (String table1 : propagated) {
-			for (String table2 : notPropagated) {
+		for (OutputTable table1 : propagated) {
+			for (Table table2 : notPropagated) {
 
 				// Get relationships between table1 and table2
-				List<ForeignConstraint> relationshipList = metaOutput.get(table1).foreignConstraintList.stream().filter(propagationForeignConstraint -> table2.equals(propagationForeignConstraint.fTable)).collect(Collectors.toList());
+				List<ForeignConstraint> relationshipList = table1.getMatchingFKCs(table2);
 
 				// Loop over all relationships between the tables
 				for (ForeignConstraint relationship : relationshipList) {
 					// Initialize
-					OutputTable table = new OutputTable(metaInput.get(table2));
-					table.name = trim(setting, table2, metaOutput.size()); // We have to make sure that outputTable name is short enough but unique (we add id)
-					table.dateBottomBounded = true;    // NOT PROPERLY USED - is a constant
+					OutputTable table = new OutputTable(table2);
+					table.name = trim(setting, table2.name, counter); // We have to make sure that outputTable name is short enough but unique (we add id)
+					table.propagationOrder = counter;
 					table.propagationForeignConstraint = relationship;
-					table.propagationTable = table1;
-					table.propagationPath = getPropagationPath(metaOutput.get(table1));
+					table.propagationTable = table1.name;
+					table.propagationPath = getPropagationPath(table1);
+					table.dateBottomBounded = true;    // NOT PROPERLY USED - is a constant
 
 					// Identify time constraint
 					table = TemporalConstraint.find(setting, table);
@@ -134,38 +131,37 @@ public class Propagation {
 					// Update the state
 					stillNotPropagated.remove(table2);
 					if (table.isOk) {
-						newlyPropagated.add(table.name);
+						newlyPropagated.add(table);
 					}
 
 					// Collect metadata
 					table.isTargetIdUnique = setting.dialect.isTargetIdUnique(setting, table.name);
-					table.propagationOrder = metaOutput.size();
 					table.timestampDelivered = LocalDateTime.now();
-
-					// Add the table into tableMetadata list
-					metaOutput.put(table.name, table);
 
 					// Log it
 					setting.dialect.addToJournalTable(setting, table);
+
+					// Increment
+					counter++;
 				}
 			}
 		}
 
-		// If we didn't propagate ANY new table (i.e. tables are truly independent of each other) or we
-		// propagated all the tables or we reached the maximal propagation depth, return the conversionMap.
+		// If we didn't propagate ANY new table (e.g. there are no foreign key constraints to the remaining tables) or
+		// we propagated all the tables or we reached the maximal propagation depth, return.
 		if (newlyPropagated.isEmpty() || stillNotPropagated.isEmpty() || depth >= setting.propagationDepthMax) {
 			// Output quality control
 			if (!stillNotPropagated.isEmpty()) {
 				logger.warn("Following tables were not propagated: " + stillNotPropagated.toString());
 				logger.info("The maximal allowed propagation depth is: " + setting.propagationDepthMax);
 			}
-
-			return metaOutput;
+			return newlyPropagated;
 		}
 
 		// Otherwise go a level deeper.
 		logger.info("#### Propagated the base table to depth: " + depth + " ####");
-		return bfs(setting, ++depth, newlyPropagated, stillNotPropagated, metaInput, metaOutput);
+        newlyPropagated.addAll(bfs(setting, ++depth, newlyPropagated, stillNotPropagated));
+		return newlyPropagated; // Includes newly propagated and all propagated from deeper levels
 	}
 
 	// Trim the length of a table name to the length permitted by the database

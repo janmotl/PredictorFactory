@@ -128,7 +128,8 @@ public class Benchmark {
 			if ("regression".equals(setting.task)) {
 				regression(setting);
 			} else {
-				List<String> uniqueRecords = setting.dialect.getUniqueRecords(setting, setting.targetTable, setting.targetColumnList.get(0), true);
+				// NOTE: We evaluate only the first target and omit the rest!
+				List<String> uniqueRecords = setting.dialect.getUniqueRecords(setting, setting.targetSchema, setting.targetTable, setting.targetColumnList.get(0));
 
 				if (uniqueRecords.size() == 2) binaryClassification(setting);
 				else classification(setting);

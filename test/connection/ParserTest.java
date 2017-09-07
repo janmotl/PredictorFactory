@@ -228,7 +228,7 @@ public class ParserTest {
 	public void corrMySQL() {
 		setting = new Setting("MySQL", "mutagenesis");
 		String code = "SELECT corr(col1,col2) FROM tab1";
-		String expected = "SELECT coalesce((Avg(col1 * col2) - Avg(col1) * Avg(col2)) / nullif((stdDev_pop(col1) * stdDev_pop(col2)), 0), 0) FROM tab1";
+		String expected = "SELECT coalesce((Avg(1.0 * col1 * col2) - Avg(1.0*col1) * Avg(col2)) / nullif((stdDev_pop(col1) * stdDev_pop(col2)), 0), 0) FROM tab1";
 		String actual = Parser.getDialectCode(setting, code);
 
 		Assert.assertEquals(expected, actual);
@@ -238,7 +238,7 @@ public class ParserTest {
 	public void corrMSSQL() {
 		setting = new Setting("Azure", "mutagenesis");
 		String code = "SELECT corr(col1,col2) FROM tab1";
-		String expected = "SELECT coalesce((Avg(col1 * col2) - Avg(col1) * Avg(col2)) / nullif((stdevp(col1) * stdevp(col2)), 0), 0) FROM tab1";
+		String expected = "SELECT coalesce((Avg(1.0 * col1 * col2) - Avg(1.0*col1) * Avg(col2)) / nullif((stdevp(col1) * stdevp(col2)), 0), 0) FROM tab1";
 		String actual = Parser.getDialectCode(setting, code);
 
 		Assert.assertEquals(expected, actual);

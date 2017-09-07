@@ -32,7 +32,8 @@ public class Meta {
 					String schemaName = rs.getString("TABLE_CAT");
 					schemaSet.add(schemaName);
 				}
-			} catch (SQLException ignored) {
+			} catch (SQLException e) {
+				logger.warn(e.getMessage());
 			}
 		}
 
@@ -50,7 +51,8 @@ public class Meta {
 
 					schemaSet.add(schemaName);
 				}
-			} catch (SQLException ignored) {
+			} catch (SQLException e) {
+				logger.warn(e.getMessage());
 			}
 		}
 
@@ -63,7 +65,8 @@ public class Meta {
 					String schemaName = rs.getString("TABLE_SCHEM");
 					schemaSet.add(schemaName);
 				}
-			} catch (SQLException ignored) {
+			} catch (SQLException e) {
+				logger.warn(e.getMessage());
 			}
 		}
 
@@ -77,16 +80,19 @@ public class Meta {
 
 	// 2) Get all tables and views in the schema.
 	public static SortedMap<String, Table> collectTables(Setting setting, String database, String schema) {
-		// Deal with different combinations of catalog/schema support
+		// Deal with different combinations of catalog/schema support in JDBC drivers
+		String driversDatabase = database;
+		String driversSchema = schema;
+
 		// MySQL type
 		if (setting.supportsCatalogs && !setting.supportsSchemas) {
-			database = schema;
-			schema = null;
+			driversDatabase = schema;
+			driversSchema = null;
 		}
 
 		// SAS type
 		if (!setting.supportsCatalogs && setting.supportsSchemas) {
-			database = null;
+			driversDatabase = null;
 		}
 
 		// Initialization
@@ -95,24 +101,20 @@ public class Meta {
 
 		// Get all the tables using try-with-resources.
 		try (Connection connection = setting.dataSource.getConnection();
-		     ResultSet rs = connection.getMetaData().getTables(database, schema, "%", tableType)) {
+		     ResultSet rs = connection.getMetaData().getTables(driversDatabase, driversSchema, "%", tableType)) {
 
 			while (rs.next()) {
-				Table table = new Table();
-				table.name = rs.getString("TABLE_NAME");
+				String name = rs.getString("TABLE_NAME");
 
 				if ("SAS".equals(setting.databaseVendor)) {
-					table.name = table.name.trim(); // Remove tail space padding
+					name = name.trim(); // Remove tail space padding
 				}
 
+				Table table = new Table(schema, name);
 				tableMap.put(table.name, table);
 			}
-		} catch (SQLException ignored) {
-		}
-
-		// QC table count
-		if (tableMap.isEmpty()) {
-			logger.warn("The count of available tables in " + database + "." + schema + " is 0.");
+		} catch (SQLException e) {
+			logger.warn(e.getMessage());
 		}
 
 		return tableMap;
@@ -120,16 +122,19 @@ public class Meta {
 
 	// 3) Get all columns in the table.
 	public static SortedMap<String, Column> collectColumns(Setting setting, String database, String schema, String table) {
-		// Deal with different combinations of catalog/schema support
+		// Deal with different combinations of catalog/schema support in JDBC drivers
+		String driversDatabase = database;
+		String driversSchema = schema;
+
 		// MySQL type
 		if (setting.supportsCatalogs && !setting.supportsSchemas) {
-			database = schema;
-			schema = null;
+			driversDatabase = schema;
+			driversSchema = null;
 		}
 
 		// SAS type
 		if (!setting.supportsCatalogs && setting.supportsSchemas) {
-			database = null;
+			driversDatabase = null;
 		}
 
 		// Initialization
@@ -137,31 +142,33 @@ public class Meta {
 
 		// Get all the columns in the table using try-with-resources.
 		try (Connection connection = setting.dataSource.getConnection();
-		     ResultSet rs = connection.getMetaData().getColumns(database, schema, table, null)) {
+		     ResultSet rs = connection.getMetaData().getColumns(driversDatabase, driversSchema, table, null)) {
 
 			while (rs.next()) {
-				Column column = new Column(rs.getString("COLUMN_NAME"));
-				column.dataType = rs.getInt("DATA_TYPE");
-				column.dataTypeName = rs.getString("TYPE_NAME");
-				column.isNullable = "YES".equals(rs.getString("IS_NULLABLE"));      // WHAT IF INDIFFERENT?
+				String name = rs.getString("COLUMN_NAME");
+				int dataType = rs.getInt("DATA_TYPE");
+				String dataTypeName = rs.getString("TYPE_NAME");
+				boolean isNullable = "YES".equals(rs.getString("IS_NULLABLE"));      // WHAT IF INDIFFERENT?
 
 				// SAS stores entity names in chars instead of in varchars
 				if ("SAS".equals(setting.databaseVendor)) {
-					column.name = column.name.trim();   // Remove space padding
+					name = name.trim();   // Remove space padding
 				}
 
 				// Oracle decided that NVARCHAR2 should be classified as "other" type (1111)
 				// even though it can be casted to String. Hence do the work that Oracle
 				// should have done.
-				if (column.dataType == 1111 && rs.getString("TYPE_NAME").toUpperCase().contains("CHAR")) {
-					column.dataType = 12; // Treat it as VARCHAR2
+				if (dataType == 1111 && rs.getString("TYPE_NAME").toUpperCase().contains("CHAR")) {
+					dataType = 12; // Treat it as VARCHAR2
 				}
 
 				// PostgreSQL classifies interval as "other" type (1111). Change the classification to time data type.
-				if (column.dataType == 1111 && rs.getString("TYPE_NAME").toUpperCase().contains("INTERVAL")) {
-					column.dataType = 93; // Treat it as timestamp
+				if (dataType == 1111 && rs.getString("TYPE_NAME").toUpperCase().contains("INTERVAL")) {
+					dataType = 93; // Treat it as timestamp
 				}
 
+				// Create the column with non-null schema name
+				Column column = new Column(schema, table, name, dataType, dataTypeName, isNullable);
 				columnMap.put(column.name, column);
 			}
 		} catch (SQLException e) {
@@ -201,7 +208,7 @@ public class Meta {
 
 		// Iff a DDL is available, return the relevant relationships from the DDL file.
 		// It is ugly that we read and parse the DDL repeatedly. But it should not be a bottleneck.
-		List<ForeignConstraint> relationshipDDL = ForeignConstraintDDL.getForeignConstraintList("foreignConstraint.xml", table);
+		List<ForeignConstraint> relationshipDDL = ForeignConstraintDDL.getForeignConstraintList("foreignConstraint.ddl", table);
 		if (!relationshipDDL.isEmpty()) {
 			logger.info("Table " + table + " has " + relationshipDDL.size() + " relationships defined in the DDL file.");
 			return relationshipDDL;
@@ -259,15 +266,14 @@ public class Meta {
 	// Subroutine: Get all relationships for the table.
 	// Composite relationships are represented by multiple records with the same "name".
 	private static List<ForeignConstraint> downloadRelationships(Setting setting, String schema, String table) {
-		String database;
+		// Deal with different combinations of catalog/schema support in JDBC drivers
+		String driversDatabase = setting.database;
+		String driversSchema = schema;
 
-		// Deal with catalog/schema less databases
-		// MySQL
+		// MySQL type
 		if (setting.supportsCatalogs && !setting.supportsSchemas) {
-			database = schema;
-			schema = null;
-		} else {
-			database = setting.database;
+			driversDatabase = schema;
+			driversSchema = null;
 		}
 
 		// SAS driver doesn't return keys. Use own query.
@@ -281,10 +287,17 @@ public class Meta {
 
 		// Get imported keys
 		try (Connection connection = setting.dataSource.getConnection();
-		     ResultSet resultSet = connection.getMetaData().getImportedKeys(database, schema, table)) {
+		     ResultSet resultSet = connection.getMetaData().getImportedKeys(driversDatabase, driversSchema, table)) {
 			while (resultSet.next()) {
 				ForeignConstraint relationship = new ForeignConstraint();
 				relationship.name = resultSet.getString("FK_NAME");
+				if (setting.supportsSchemas) {
+					relationship.schema = resultSet.getString("FKTABLE_SCHEM");
+					relationship.fSchema = resultSet.getString("PKTABLE_SCHEM");
+				} else {
+					relationship.schema = resultSet.getString("FKTABLE_CAT");   // MySQL does not support schemas but catalogs...
+					relationship.fSchema = resultSet.getString("PKTABLE_CAT");
+				}
 				relationship.table = table;
 				relationship.fTable = resultSet.getString("PKTABLE_NAME");
 				relationship.column.add(resultSet.getString("FKCOLUMN_NAME"));
@@ -298,10 +311,17 @@ public class Meta {
 
 		// And exported keys
 		try (Connection connection = setting.dataSource.getConnection();
-		     ResultSet resultSet = connection.getMetaData().getExportedKeys(database, schema, table)) {
+		     ResultSet resultSet = connection.getMetaData().getExportedKeys(driversDatabase, driversSchema, table)) {
 			while (resultSet.next()) {
 				ForeignConstraint relationship = new ForeignConstraint();
 				relationship.name = resultSet.getString("FK_NAME");
+				if (setting.supportsSchemas) {
+					relationship.schema = resultSet.getString("FKTABLE_SCHEM");
+					relationship.fSchema = resultSet.getString("PKTABLE_SCHEM");
+				} else {
+					relationship.schema = resultSet.getString("FKTABLE_CAT");   // MySQL does not support schemas but catalogs...
+					relationship.fSchema = resultSet.getString("PKTABLE_CAT");
+				}
 				relationship.table = table;
 				relationship.fTable = resultSet.getString("FKTABLE_NAME");
 				relationship.column.add(resultSet.getString("PKCOLUMN_NAME"));

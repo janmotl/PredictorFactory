@@ -3,7 +3,7 @@ package extraction;
 import connection.Network;
 import extraction.Pattern.OptimizeParameters;
 import meta.Column;
-import meta.MetaOutput.OutputTable;
+import meta.OutputTable;
 import meta.StatisticalType;
 import meta.Table;
 import org.apache.log4j.Logger;
@@ -26,12 +26,12 @@ public class Aggregation {
 
 	private static int id = 0;  // Each predictor has a unique id
 
-	public static Journal run(Setting setting, SortedMap<String, OutputTable> tableMetadata) {
+	public static Journal run(Setting setting, List<OutputTable> tableMetadata) {
 		id = setting.predictorStart;
 
 		// Reuse journal.xml OR create everything from scratch?
 		// WE SHOULD really introduce something like: if(setting.isSecondStage) to avoid accidental reading unrelated XML
-		// AND we should check that the {inputSchema, outputSchema, databaseVendor} are the same.
+		// AND we should check that the {inputSchemaList, outputSchema, databaseVendor} are the same.
 		if (setting.useTwoStages && setting.sampleCount == Integer.MAX_VALUE) {
 			List<Predictor> topPredictors = Journal.unmarshall().getAllTopPredictors();
 			Journal journal = new Journal(setting, topPredictors.size());
@@ -41,7 +41,7 @@ public class Aggregation {
 		}
 	}
 
-	private static Journal fromScratch(Setting setting, SortedMap<String, OutputTable> tableMetadata ) {
+	private static Journal fromScratch(Setting setting, List<OutputTable> tableMetadata ) {
 
 		// Initialization
 		Journal journal;    // Log of all predictors
@@ -81,7 +81,7 @@ public class Aggregation {
 		// 6) Loop over @value
 		List<Predictor> predictorList6 = new ArrayList<>();
 		for (Predictor predictor : predictorList5) {
-			predictorList6.addAll(addValue(predictor));
+			predictorList6.addAll(addValue(setting, predictor));
 		}
 
 		// 7) Optimize parameters
@@ -219,13 +219,13 @@ public class Aggregation {
 
 
 	// Subroutine 4: Loop over the propagated tables
-	protected static List<Predictor> loopTables(Predictor predictor, SortedMap<String, OutputTable> tableMetadata) {
+	protected static List<Predictor> loopTables(Predictor predictor, List<OutputTable> tableMetadata) {
 
 		// Initialize the output
 		List<Predictor> outputList = new ArrayList<>();
 
 		// For each propagated table.
-		for (OutputTable workingTable : tableMetadata.values()) {
+		for (OutputTable workingTable : tableMetadata) {
 
 			// Skip tables with wrong cardinality
 			String cardinality = predictor.getPatternCardinality();
@@ -297,7 +297,7 @@ public class Aggregation {
 
 	// Subroutine 6: Populate @value parameter.
 	// NOTE: The value is populated only for the first column in the columnMap.
-	protected static List<Predictor> addValue(Predictor predictor) {
+	protected static List<Predictor> addValue(Setting setting, Predictor predictor) {
 
 		// Initialize the output
 		List<Predictor> predictorList = new ArrayList<>();
@@ -309,7 +309,7 @@ public class Aggregation {
 				if (column.getKey().toUpperCase().matches("@NOMINALCOLUMN\\d*")) {
 
 					// Get list of unique values
-					Set<String> valueList = predictor.getTable().getColumn(column.getValue()).uniqueValueSet;
+					Set<String> valueList = predictor.getTable().getColumn(column.getValue()).getUniqueValues(setting);
 
 					for (String value : valueList) {
 						Predictor cloned = new Predictor(predictor);

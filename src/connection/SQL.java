@@ -3,10 +3,7 @@ package connection;
 import com.google.common.collect.Lists;
 import extraction.Journal;
 import extraction.Predictor;
-import meta.Column;
-import meta.MetaOutput;
-import meta.StatisticalType;
-import meta.Table;
+import meta.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Level;
@@ -66,7 +63,6 @@ public class SQL {
 		// While MySQL doesn't implement "true" schemas, it implements information_schema
 		// and places it next to the database (instead of inside the database).
 		// Hence purely based on the hierarchical structure we call MySQL's database as schema.
-		sql = sql.replace("@inputTable", "@inputSchema.@inputTable");
 		sql = sql.replace("@outputTable", "@outputSchema.@outputTable");
 		sql = sql.replace("@baseTable", "@outputSchema.@baseTable");
 		sql = sql.replace("@baseSampled", "@outputSchema.@baseSampled");
@@ -92,6 +88,9 @@ public class SQL {
 	// Subroutine 3.1: Replace & escape the entities present in setting
 	protected static String escapeEntity(Setting setting, String sql, String outputTable) {
 		// Test parameters
+		if (setting.inputSchemaList == null || setting.inputSchemaList.isEmpty()) {
+			throw new IllegalArgumentException("InputSchema is required");
+		}
 		if (setting.targetIdList == null || setting.targetIdList.isEmpty()) {
 			throw new IllegalArgumentException("Target ID list is required");
 		}
@@ -119,9 +118,6 @@ public class SQL {
 		if (StringUtils.isBlank(setting.targetTable)) {
 			throw new IllegalArgumentException("Target table is required");
 		}
-		if (StringUtils.isBlank(setting.inputSchema)) {
-			throw new IllegalArgumentException("InputSchema is required");
-		}
 		if (StringUtils.isBlank(setting.outputSchema)) {
 			throw new IllegalArgumentException("OutputSchema is required");
 		}
@@ -137,6 +133,8 @@ public class SQL {
 		sql = Parser.expandToList(setting, sql, "@baseTarget", setting.baseTargetList);
 		sql = Parser.expandToList(setting, sql, "@targetId", setting.targetIdList);
 		sql = Parser.expandToList(setting, sql, "@targetColumn", setting.targetColumnList);
+		// TODO validate that this works
+		sql = Parser.expandToList(setting, sql, "@inputSchemaList", setting.inputSchemaList);
 
 		// Get escape characters
 		String QL = setting.quoteEntityOpen;
@@ -149,7 +147,6 @@ public class SQL {
 		sql = sql.replace("@baseSampled", QL + setting.baseSampled + QR);
 		sql = sql.replace("@targetDate", QL + setting.targetDate + QR);
 		sql = sql.replace("@targetTable", QL + setting.targetTable + QR);
-		sql = sql.replace("@inputSchema", QL + setting.inputSchema + QR);
 		sql = sql.replace("@outputSchema", QL + setting.outputSchema + QR);
 		sql = sql.replace("@targetSchema", QL + setting.targetSchema + QR);
 		sql = sql.replace("@outputTable", QL + outputTable + QR);
@@ -211,13 +208,15 @@ public class SQL {
 		return sql;
 	}
 
-	protected static String escapeEntityTable(Setting setting, String sql, MetaOutput.OutputTable table) {
+	protected static String escapeEntityTable(Setting setting, String sql, OutputTable table) {
 		// Get escape characters
 		String QL = setting.quoteEntityOpen;
 		String QR = setting.quoteEntityClose;
 
+		// We expand @inputTable -> @schema.@table and escape
+		sql = sql.replace("@inputTable", QL + table.schemaName + QR + "." + QL + table.originalName + QR);
+
 		// Escape primitive entities
-		sql = sql.replace("@inputTable", QL + table.originalName + QR);
 		sql = sql.replace("@propagatedTable", QL + table.propagationTable + QR);
 		sql = sql.replace("@outputTable", QL + table.name + QR);
 		sql = sql.replace("@dateColumn", QL + table.temporalConstraint + QR);
@@ -280,7 +279,7 @@ public class SQL {
 		abbreviatedName = abbreviatedName.replace("MAINSAMPLE", "MS");
 
 		// Initialization
-		String bkpName = setting.bkpPrefix + "_" + setting.inputSchema + "_" + abbreviatedName;
+		String bkpName = setting.bkpPrefix + "_" + setting.inputSchemaList + "_" + abbreviatedName;
 
 		// Conditionally drop the old back up
 		if (tableMap.containsKey(bkpName)) dropTable(setting, bkpName);
@@ -306,7 +305,7 @@ public class SQL {
 	// Note: Deleting whole schema is not going to work, if it contains tables (at least in PostgreSQL).
 	// Note: We could delete all tables in the schema. But I am terrified of consequences, if someone with administrator
 	// privileges entered wrong output schema (for example, if someone swaps by accident input and output schema).
-	// Also, if someone has set up Predictor Factory that inputSchema=outputSchema, we would delete all the user's data.
+	// Also, if someone has set up Predictor Factory that inputSchemaList=outputSchema, we would delete all the user's data.
 	// Note: Use addBatch() for speeding up if possible. Take care of memory limits as described at:
 	//  http://viralpatel.net/blogs/batch-insert-in-java-jdbc/
 	// But first check that it is going to work in SAS.
@@ -484,7 +483,6 @@ public class SQL {
 		// By default count over a column ignores NULL values
 		String sql = "SELECT count(@column) FROM " + entity;
 
-		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, table);
 
 		Map<String, String> fieldMap = new HashMap<>();
@@ -501,17 +499,16 @@ public class SQL {
 
 	// Returns true if the column contains null.
 	// Overwritten in SQLOracle.
-	public boolean containsNull(Setting setting, String table, String column) {
+	public boolean containsNull(Setting setting, String schema, String table, String column) {
 
-		String sql = "SELECT exists(SELECT 1 FROM @inputTable WHERE @column is null)";
+		String sql = "SELECT exists(SELECT 1 FROM @schema.@table WHERE @column is null)";
 
 		sql = Parser.replaceExists(setting, sql);
-		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, table);
 
 		Map<String, String> fieldMap = new HashMap<>();
 		fieldMap.put("@column", column);
-		fieldMap.put("@inputTable", table);
+		fieldMap.put("@table", table);
+		fieldMap.put("@schema", schema);
 		sql = escapeEntityMap(setting, sql, fieldMap);
 
 		return Network.isTrue(setting.dataSource, sql);
@@ -520,22 +517,21 @@ public class SQL {
 	// Returns true if the date column contains a date from the future.
 	// NOTE: May fail on a timestamp or different database dialect.
 	// Overwritten in SQLOracle.
-	public boolean containsFutureDate(Setting setting, String table, String column) {
+	public boolean containsFutureDate(Setting setting, String schema, String table, String column) {
 
 		// The good thing on "current_date" is that it is a standard. The bad thing is that it does not work in MSSQL.
 		// Hence we use ODBC standard of "{fn NOW()}", which should be automatically replaced in the JDBC driver to the
 		// database specific command. The ODBC command works in PostgreSQL.
 		// Plus the comparison works with: date, timestamp and datetime.
 		// Comparison with time fails.
-		String sql = "SELECT exists(SELECT 1 FROM @inputTable WHERE {fn NOW()} < @column)";
+		String sql = "SELECT exists(SELECT 1 FROM @schema.@table WHERE {fn NOW()} < @column)";
 
 		sql = Parser.replaceExists(setting, sql);
-		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, table);
 
 		Map<String, String> fieldMap = new HashMap<>();
 		fieldMap.put("@column", column);
-		fieldMap.put("@inputTable", table);
+		fieldMap.put("@table", table);
+		fieldMap.put("@schema", schema);
 		sql = escapeEntityMap(setting, sql, fieldMap);
 
 		sql = ANTLR.parseSQL(setting, sql);
@@ -547,7 +543,7 @@ public class SQL {
 	// This is an optimistic estimate based on max(targetDate) and min(targetDate).
 	// NOTE: It may fail on Oracle if we use month unit because we are using "interval".
 	// If we used add_month, it would work.
-	public static int countUsableDates(Setting setting, String table, String column) {
+	public static int countUsableDates(Setting setting, String schema, String table, String column) {
 
 		// First the upper bound (lead)
 		String timeConstraint = " dateToNumber(" + setting.dateAddSyntax + ") <= " + setting.baseDateRange.get(1);
@@ -561,19 +557,18 @@ public class SQL {
 		// We do not work with the @baseDate but @column (it must be correctly escaped, hence, it is still a macro variable)
 		timeConstraint = timeConstraint.replaceAll("@baseDate", "@column");
 
-		String sql = "SELECT count(*) FROM @inputTable WHERE " + timeConstraint;
+		String sql = "SELECT count(*) FROM @schema.@table WHERE " + timeConstraint;
 
 		// Set correct units
 		sql = sql.replaceAll("@datePart", setting.unit);
 
-		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, table);
-		sql = ANTLR.parseSQL(setting, sql);
-
 		Map<String, String> fieldMap = new HashMap<>();
 		fieldMap.put("@column", column);
-		fieldMap.put("@inputTable", table);
+		fieldMap.put("@table", table);
+		fieldMap.put("@schema", schema);
 		sql = escapeEntityMap(setting, sql, fieldMap);
+
+		sql = ANTLR.parseSQL(setting, sql);
 
 		List<String> resultList = Network.executeQuery(setting.dataSource, sql);
 		return (int) Double.parseDouble(resultList.get(0)); // SAS can return 682.0
@@ -585,9 +580,9 @@ public class SQL {
 	// Note that we are working with the input tables -> alter commands are forbidden.
 	// IS NOT USING SYSTEM ESCAPING
 	// Overwritten in SQLOracle.
-	public boolean isIdUnique(Setting setting, MetaOutput.OutputTable table) {
+	public boolean isIdUnique(Setting setting, OutputTable table) {
 
-		// Note: Following query, which does not use exist, is ~twice as fast on unique columns but ~twice as slow
+		// Note: Following query, which does not use exist, is ~twice as fast on unique columns but ~twice as slow on
 		// non-unique columns on PostgreSQL:
 		//  select 1
 		//  from loan
@@ -627,7 +622,7 @@ public class SQL {
 		return result;
 	}
 
-	// Check whether the columns {baseId, baseDate} are unique in the table in the inputSchema.
+	// Check whether the columns {baseId, baseDate} are unique in the table in the inputSchemaList.
 	// Overwritten in SQLOracle.
 	public boolean isTargetTupleUnique(Setting setting, String table) {
 		// We could have used possibly faster: "ALTER TABLE @outputTable ADD UNIQUE (@baseId, @baseDate)".
@@ -705,21 +700,15 @@ public class SQL {
 	// This function is useful for example for dummy coding of nominal attributes.
 	// NOTE: IT WOULD BE NICE IF THE COUNT OF RETURNED SAMPLES WAS SORTED AND LIMITED -> a subquery?
 	// NOTE: It would be nice, if a vector of occurrences was also returned (to skip rare configurations).
-	public static List<String> getUniqueRecords(Setting setting, String tableName, String columnName, boolean useInputSchema) {
-		String table = "@outputTable";
-		if (useInputSchema) {
-			table = "@inputTable";
-		}
+	public static List<String> getUniqueRecords(Setting setting, String schema, String table, String column) {
+		String sql = "SELECT DISTINCT @column " +
+				"FROM @schema.@table " +
+				"WHERE @column IS NOT NULL";
 
-		String sql = "SELECT DISTINCT @columnName " +
-				"FROM " + table + " " +
-				"WHERE @columnName is not null";
-
-		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, tableName);
 		Map<String, String> map = new HashMap<>();
-		map.put("@columnName", columnName);
-		map.put("@inputTable", tableName); // To cover the scenario that it's in the input schema
+		map.put("@column", column);
+		map.put("@table", table);
+		map.put("@schema", schema);
 		sql = escapeEntityMap(setting, sql, map);
 
 		return Network.executeQuery(setting.dataSource, sql);
@@ -732,24 +721,23 @@ public class SQL {
 	// NOTE: It would be nice, if a vector of frequencies was also returned (to skip rare values
 	// in absolute measure, not only relative - handy when the attribute's cardinality is small).
 	// NOTE: Maybe I should consider null values as a legit category.
-	public static List<String> getTopUniqueRecords(Setting setting, String tableName, String columnName) {
-		String table = "@inputTable";
+	public static List<String> getTopUniqueRecords(Setting setting, String schemaName, String tableName, String columnName) {
 
 		// A query without an aggregate function in ORDER BY clause because of the following limitation of SAS:
 		//  Summary functions are restricted to the SELECT and HAVING clauses only...
 		// If desirable, wrap it in another select and return only @columnName.
-		String sql = "SELECT @columnName, count(*) " +
-				"FROM " + table + " " +
-				"WHERE @columnName is not null " +
-				"GROUP BY @columnName " +
+		String sql = "SELECT @column, count(*) " +
+				"FROM @schema.@table " +
+				"WHERE @column is not null " +
+				"GROUP BY @column " +
 				"ORDER BY 2 DESC";
 
 		sql = Parser.limitResultSet(setting, sql, setting.valueCount); // Possibly not necessary...
-		sql = expandName(sql);
-		sql = escapeEntity(setting, sql, tableName);
+
 		Map<String, String> map = new HashMap<>();
-		map.put("@columnName", columnName);
-		map.put("@inputTable", tableName); // To cover the scenario that it's in the input schema
+		map.put("@column", columnName);
+		map.put("@table", tableName);
+		map.put("@schema", schemaName);
 		sql = escapeEntityMap(setting, sql, map);
 
 		return Network.executeQuery(setting.dataSource, sql, setting.valueCount); // Because of SAS we use JDBC maxRows
@@ -757,6 +745,7 @@ public class SQL {
 
 	// Could the two columns in the table describe a symmetric relation (like in borderLength(c1, c2))?
 	// DEVELOPMENTAL AND LIKELY USELESS...
+	// Note: We should rewrite it to support multiple schemas
 	public static boolean isSymmetric(Setting setting, Map<String, String> map) {
 		String sql = "SELECT exists("
 				+ "SELECT @lagColumn, @column FROM @inputTable "
@@ -1397,7 +1386,7 @@ public class SQL {
 
 		try (Connection connection = setting.dataSource.getConnection();
 		     PreparedStatement ps = connection.prepareStatement(sql)) {
-			ps.setString(1, setting.inputSchema);
+			ps.setString(1, setting.inputSchemaList.toString());
 			ps.setDouble(2, elapsedTime / 1000.0); // In seconds. Note: Do not use bigDecimal as it is unsupported on SAS
 			ps.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
 			ps.setDouble(4, Memory.usedMemory());   // In MB
@@ -1556,7 +1545,7 @@ public class SQL {
 		return Network.executeUpdate(setting.dataSource, sql);
 	}
 
-	public static boolean addToJournalTable(Setting setting, MetaOutput.OutputTable table) {
+	public static boolean addToJournalTable(Setting setting, OutputTable table) {
 
 		// Convert bool to int
 		int isSuccessfullyExecuted = table.isSuccessfullyExecuted ? 1 : 0;
@@ -1703,7 +1692,7 @@ public class SQL {
 	}
 
 	// NOTE: IN PROGRESS OF CONSTRUCTION
-	public static boolean addToJournalTemporal(Setting setting, MetaOutput.OutputTable table) {
+	public static boolean addToJournalTemporal(Setting setting, OutputTable table) {
 
 
 		Column column = table.getColumn("");
@@ -1716,8 +1705,8 @@ public class SQL {
 				column.dataTypeName + ", " +
 				(setting.targetDate == null) + ", " +
 				table.isIdUnique + ", " +
-				column.containsNull(setting, table.name) + ", " +
-				column.containsFutureDate(setting, table.name) + ", " +
+				column.containsNull(setting) + ", " +
+				column.containsFutureDate(setting) + ", " +
 				column.isNullable + ", " +
 				0 + ", " +
 				table.temporalConstraint + ")";
@@ -1825,7 +1814,7 @@ public class SQL {
 	// Sample base table based on target class.
 	// Note: The selection is not guaranteed to be random.
 	// NOTE: CURRENTLY STRATIFIED JUST BY THE THE FIRST TARGET COLUMN
-	public static void getSubSampleClassification(Setting setting, SortedMap<String, Table> metaInput) {
+	public static void getSubSampleClassification(Setting setting, Database metaInput) {
 
 		// Initialization
 		String sql = "";
@@ -1835,7 +1824,7 @@ public class SQL {
 		String quote = "";
 
 		// Iff the target is a string, quote the values with single quotes.
-		String targetDataTypeName = metaInput.get(setting.targetTable).getColumn(targetColumn).dataTypeName.toUpperCase();
+		String targetDataTypeName = metaInput.getTargetTable(setting).getColumn(targetColumn).dataTypeName.toUpperCase();
 		if (targetDataTypeName.contains("CHAR") || targetDataTypeName.contains("TEXT")) {
 			quote = "'";
 		}
@@ -1880,12 +1869,11 @@ public class SQL {
 	}
 
 
-	// 3) Propagate ID. The map should contain @outputTable, @propagatedTable, @inputTable and @targetId[?].
-	// If the map contains @dateColumn, time condition is added.
+	// 3) Propagate ID.
 	// Technical note: We have to return SQL string, because these things are logged and exported for the user
 	// as the "scoring code" for predictors.
 	// IS NOT USING SYSTEM ESCAPING
-	public static String propagateID(Setting setting, MetaOutput.OutputTable table) {
+	public static String propagateID(Setting setting, OutputTable table) {
 		// Get escape characters
 		String QL = setting.quoteEntityOpen;
 		String QR = setting.quoteEntityClose;
@@ -1908,7 +1896,7 @@ public class SQL {
 				"t1.@baseFold, " +
 				"t2.* " +
 				"FROM @propagatedTable t1 " +
-				"INNER JOIN @inputTable t2 " + joinOn;
+				"INNER JOIN " + QL + table.schemaName + QR + "." + QL + table.originalName + QR + " t2 " + joinOn;
 
 		// Add time condition if dateColumn is present
 		// The comparison "t2.@dateColumn <= t1.@baseDate" has to use <= to get

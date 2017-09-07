@@ -2,7 +2,7 @@ package connection;
 
 import extraction.Predictor;
 import meta.ForeignConstraint;
-import meta.MetaOutput;
+import meta.OutputTable;
 import mother.PredictorMother;
 import org.apache.log4j.Level;
 import org.junit.Assert;
@@ -15,15 +15,16 @@ import java.util.List;
 
 public   class SQLTest {
 
-    private MetaOutput.OutputTable table;
+    private OutputTable table;
 
     @Before
     public void initialization() {
         utility.Logging.initialization();
 
-        table = new MetaOutput.OutputTable();
+        table = new OutputTable();
         table.originalName = "trans";
         table.name = "propagated_trans";
+	    table.schemaName = "financial";
         table.propagationTable = "propagated_account";
         table.propagationForeignConstraint = new ForeignConstraint();
     }
@@ -176,11 +177,11 @@ public   class SQLTest {
         setting.unit = "month";
 
 		// No missing values
-        boolean result = setting.dialect.containsNull(setting, "trans", "date");
+        boolean result = setting.dialect.containsNull(setting, "financial", "trans", "date");
         Assert.assertFalse(result);
 
 		// Missing values
-		boolean result2 = setting.dialect.containsNull(setting, "trans", "k_symbol");
+		boolean result2 = setting.dialect.containsNull(setting, "financial", "trans", "k_symbol");
 		Assert.assertTrue(result2);
 
 	    Network.closeConnection(setting);
@@ -190,10 +191,12 @@ public   class SQLTest {
 	public void getTopUniqueRecordsPostgreSQL() {
 		// Setting
 		Setting setting = new Setting("PostgreSQL", "financial");
+		setting.valueCount = 4;
 		Network.openConnection(setting);
 
-		List<String> records = setting.dialect.getTopUniqueRecords(setting, "district", "A2");
-		Assert.assertTrue(records.size() <= setting.valueCount);
+		List<String> records = setting.dialect.getTopUniqueRecords(setting, "financial", "district", "A3");
+		Assert.assertEquals(setting.valueCount, records.size());    // The size is upper bounded (from 8 to 4)
+		Assert.assertEquals("south Moravia", records.get(0));   // The results are ordered from the most frequent item
 
 		Network.closeConnection(setting);
 	}

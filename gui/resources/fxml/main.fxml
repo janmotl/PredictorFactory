@@ -104,29 +104,14 @@
                   <Insets left="14.0" top="10.0" />
                </padding>
                <VBox>
-                  <Label text="Input schema">
-                     <tooltip>
-                        <Tooltip text="The single table with {target column, target ID, target timestamp}. If this table doesn't exist, it has to be manually created." />
-                     </tooltip>
+                  <Label text="Target schema">
                      <padding>
                         <Insets bottom="3.0" />
                      </padding>
                   </Label>
-                  <ComboBox fx:id="comboBoxInputSchema" onAction="#inputSchemaAction" prefWidth="170.0" visibleRowCount="12">
+                  <ComboBox fx:id="comboBoxTargetSchema" onAction="#targetSchemaAction" prefWidth="170.0" visibleRowCount="12">
                      <tooltip>
-                        <Tooltip text="The schema, in which data resides. Note that if your database doesn't support schemas (like MySQL), databases are listed." />
-                     </tooltip>
-                  </ComboBox>
-               </VBox>
-               <VBox>
-                  <Label text="Output schema">
-                     <padding>
-                        <Insets bottom="3.0" />
-                     </padding>
-                  </Label>
-                  <ComboBox fx:id="comboBoxOutputSchema" prefWidth="170.0" visibleRowCount="12">
-                     <tooltip>
-                        <Tooltip text="Place for temporary tables and the output table with the calculated predictors (features)." />
+                        <Tooltip text="The schema with the target table. Note that if your database doesn't support schemas (like MySQL), databases are listed." />
                      </tooltip>
                   </ComboBox>
                </VBox>
@@ -178,7 +163,19 @@
                      </tooltip>
                   </ComboBox>
                </VBox>
-               <VBox minHeight="57.0">
+               <VBox>
+                  <Label text="Output schema">
+                     <padding>
+                        <Insets bottom="3.0" />
+                     </padding>
+                  </Label>
+                  <ComboBox fx:id="comboBoxOutputSchema" prefWidth="170.0" visibleRowCount="12">
+                     <tooltip>
+                        <Tooltip text="Place for temporary tables and the output table with the calculated predictors (features)." />
+                     </tooltip>
+                  </ComboBox>
+               </VBox>
+               <VBox>
                   <Label text="Task">
                      <padding>
                         <Insets bottom="3.0" />
@@ -198,14 +195,14 @@
    <Tab text="Select">
       <graphic>
          <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
-            <Image url="@../img/check-box-outline.png" />
+            <Image url="@../img/check-box.png" />
          </ImageView>
       </graphic>
       <VBox>
          <padding>
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
          </padding>
-         <Label text="Select tables and their columns to traverse.">
+         <Label text="Select input data">
             <VBox.margin>
                <Insets bottom="3.0" />
             </VBox.margin>
@@ -375,7 +372,7 @@
    <Tab fx:id="tabRun" text="Run">
       <graphic>
          <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
-            <Image url="@../img/android-play-circle-outline-24.png" />
+            <Image url="@../img/play-circle-24.png" />
          </ImageView>
       </graphic>
       <BorderPane>

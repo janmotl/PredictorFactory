@@ -6,7 +6,6 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.performance.PerformanceVector;
 import com.rapidminer.tools.XMLException;
 import connection.Network;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +32,7 @@ public class BenchmarkNegative {
 		for (String journal : journalList) {
 			
 			String mainSample = "ms_" + journal.substring(2, journal.length());
-			List<String> patternList = setting.dialect.getUniqueRecords(setting, journal, "pattern_name", false);
+			List<String> patternList = setting.dialect.getUniqueRecords(setting, setting.outputSchema, journal, "pattern_name");
 			
 			for (String pattern : patternList) {
 				

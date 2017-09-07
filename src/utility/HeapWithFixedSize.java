@@ -9,6 +9,7 @@ import java.util.*;
 // If eviction happens, we return the evicted item. Otherwise we return null.
 // Implementation details: Guava's MinMaxPriorityQueue follows the collection contract --> add() returns boolean.
 // And that is not what we want.
+// Note: Nulls at the inputs are not permissible.
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class HeapWithFixedSize<T> {

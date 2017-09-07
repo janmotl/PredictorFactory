@@ -1,10 +1,11 @@
 package meta;
 
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
+
+import static org.junit.Assert.*;
 
 public class ForeignConstraintListTest {
 
@@ -15,12 +16,13 @@ public class ForeignConstraintListTest {
 		ForeignConstraintList.marshall(fc, "foreignConstraint_Mutagenesis.xml");
 		ForeignConstraintList fc2 = ForeignConstraintList.unmarshall("foreignConstraint_Mutagenesis.xml");
 
-		String expected = "molecule";
-		String retrieved = fc.getForeignConstraintList("molecule").get(0).table;
-		String retrieved2 = fc2.getForeignConstraintList("molecule").get(0).table;
+		// Original
+		assertEquals("molecule", fc.getForeignConstraintList("molecule").get(0).table);
+		assertEquals(3, fc.foreignConstraint.size());
 
-		Assert.assertEquals(expected, retrieved);
-		Assert.assertEquals(expected, retrieved2);
+		// Read, written and re-read
+		assertEquals("molecule", fc2.getForeignConstraintList("molecule").get(0).table);
+		assertEquals(3, fc2.foreignConstraint.size());
 	}
 
 	@Test
@@ -61,8 +63,27 @@ public class ForeignConstraintListTest {
 		String expected = "col1_1";
 		String retrieved = fc.getForeignConstraintList("table").get(0).column.get(0);
 
-		Assert.assertEquals(expected, retrieved);
+		assertEquals(expected, retrieved);
+	}
 
+	@Test
+	public void testReadWriteRead_crossSchema() {
+
+		ForeignConstraintList fc = ForeignConstraintList.unmarshall("foreignConstraint_crossSchema.xml");
+		ForeignConstraintList.marshall(fc, "foreignConstraint_crossSchema.xml");
+		ForeignConstraintList fc2 = ForeignConstraintList.unmarshall("foreignConstraint_crossSchema.xml");
+
+		// Original
+		assertEquals("molecule", fc.getForeignConstraintList("molecule").get(0).table);
+		assertEquals("ctu_crossSchema1", fc.getForeignConstraintList("molecule").get(0).schema);
+		assertEquals("ctu_crossSchema2", fc.getForeignConstraintList("molecule").get(0).fSchema);
+		assertEquals(3, fc.foreignConstraint.size());
+
+		// Read, written and re-read
+		assertEquals("molecule", fc2.getForeignConstraintList("molecule").get(0).table);
+		assertEquals("ctu_crossSchema1", fc2.getForeignConstraintList("molecule").get(0).schema);
+		assertEquals("ctu_crossSchema2", fc2.getForeignConstraintList("molecule").get(0).fSchema);
+		assertEquals(3, fc2.foreignConstraint.size());
 	}
 
 	@Test
@@ -87,11 +108,11 @@ public class ForeignConstraintListTest {
 		foreignConstraint2.fColumn.add("col2_1");
 		foreignConstraint2.fColumn.add("col2_2");
 
-		Assert.assertFalse(foreignConstraint.equals(foreignConstraint2));
+		assertFalse(foreignConstraint.equals(foreignConstraint2));
 		foreignConstraint.name="name";
-		Assert.assertFalse(foreignConstraint.equals(foreignConstraint2));
-		Assert.assertFalse(foreignConstraint2.equals(foreignConstraint));
+		assertFalse(foreignConstraint.equals(foreignConstraint2));
+		assertFalse(foreignConstraint2.equals(foreignConstraint));
 		foreignConstraint2.name="name";
-		Assert.assertTrue(foreignConstraint.equals(foreignConstraint2));
+		assertTrue(foreignConstraint.equals(foreignConstraint2));
 	}
 }

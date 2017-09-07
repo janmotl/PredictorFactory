@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 // A version of comboBox, which permits selection of multiple items.
 // Unfortunately, it has to be extended to work with FXML:
 //  https://stackoverflow.com/questions/31569299/how-to-extend-custom-javafx-components-that-use-fxml
+// Hence, CheckComboBox is used instead of this class.
 public class ComboBoxMulti extends MenuButton {
 	final private List<String> selectedItems = new ArrayList<>();
 
