@@ -70,13 +70,10 @@ public class Table {
 		return columnMap.get(columnName);
 	}
 
-	// NOTE: PF assumes that foreignConstraints are undirected (when PF loads FKCs from jdbc.metadatabase, it
-	// automatically creates duplicates in the reverse direction). But I am not sure this happens when we are loading
-	// data from DDL or XML. There are two options. Either create reversed duplicates everywhere. Or nowhere.
+	// Find relationships from THIS --> table2.
 	public List<ForeignConstraint> getMatchingFKCs(Table table2) {
 		List<ForeignConstraint> result = new ArrayList<>();
 
-		// Note that foreignConstraints in PF are undirected -> we match only based on fTable
 		for (ForeignConstraint fc : foreignConstraintList) {
 			requireNonNull(table2.name, "Table name cannot be null");
 			requireNonNull(table2.schemaName, "Schema name cannot be null");

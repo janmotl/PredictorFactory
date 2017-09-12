@@ -31,11 +31,14 @@ public class TemporalConstraint {
 			return table;
 		}
 
-		// 3) If idColumn is distinct in the table, it is unnecessary to set time condition.
+		// 3) If idColumn (a set of columns used in this table in the propagation foreign key constraint) is distinct
+		// in the table, it is unnecessary to set time condition.
 		// For example, in Customer table, which contains only static information, like Birth_date,
 		// it is not necessary to set the time constrain.
-		// NOTE: if the id is a primary key, I know the relationship between the target table and the non-target
-		// table must be 1:1 or n:1. Either way, the id is unique. This may accelerate the query, if the planer is dumb.
+		// On the other end, if idColumn is not unique, the table is likely versioned and we likely should use a
+		// temporal constraint.
+		// NOTE: Speed up proposal: If the id is a primary key, I know the relationship between the target table and
+		// the non-target table must be 1:1 or n:1. Either way, the id is unique.
 		table.isIdUnique = setting.dialect.isIdUnique(setting, table);
 		if (table.isIdUnique) {
 			table.temporalConstraintJustification = "Static table. The relationship between targetTable and this table appears to be in 1:1 or n:1. This is a sign of a static table or a table without old versions of the data.";

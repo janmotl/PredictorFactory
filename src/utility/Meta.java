@@ -1,5 +1,7 @@
 package utility;
 
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 import meta.*;
 import org.apache.log4j.Logger;
 import run.Setting;
@@ -202,14 +204,16 @@ public class Meta {
 		List<ForeignConstraint> relationshipXML = ForeignConstraintList.unmarshall("foreignConstraint.xml").getForeignConstraintList(table);
 		if (!relationshipXML.isEmpty()) {
 			// NOTE: Could replace list with a LinkedHasSet to avoid duplicates (use: Refactor | Type Migration)
+			relationshipXML = addReverseDirections(relationshipXML);
 			result.addAll(relationshipXML);
 			logger.info("Table " + table + " has " + relationshipXML.size() + " relationships defined in the XML file.");
 		}
 
 		// Iff a DDL is available, return the relevant relationships from the DDL file.
 		// It is ugly that we read and parse the DDL repeatedly. But it should not be a bottleneck.
-		List<ForeignConstraint> relationshipDDL = ForeignConstraintDDL.getForeignConstraintList("foreignConstraint.ddl", table);
+		List<ForeignConstraint> relationshipDDL = ForeignConstraintDDL.getForeignConstraintList("foreignConstraint.ddl", table, setting.targetSchema);
 		if (!relationshipDDL.isEmpty()) {
+			relationshipDDL = addReverseDirections(relationshipDDL);
 			logger.info("Table " + table + " has " + relationshipDDL.size() + " relationships defined in the DDL file.");
 			return relationshipDDL;
 		}
@@ -261,6 +265,50 @@ public class Meta {
 		// Otherwise return null;
 		return null;
 	}
+
+	// 6) Get unique constrained columns
+	public static List<String> getUniqueColumns(Setting setting, String database, String schema, String table) {
+		// Deal with different combinations of catalog/schema support
+		// MySQL type
+		if (setting.supportsCatalogs && !setting.supportsSchemas) {
+			database = schema;
+			schema = null;
+		}
+
+		// SAS type
+		if (!setting.supportsCatalogs && setting.supportsSchemas) {
+			database = null;
+		}
+
+		// Initialization
+		Map<String, String> uniques = new HashMap<>();
+		Multiset<String> multiset = HashMultiset.create();
+
+		// Get unique indexes
+		try (Connection connection = setting.dataSource.getConnection();
+		     ResultSet rs = connection.getMetaData().getIndexInfo(database, schema, table, true, true)) {  // Only unique indexes, approximations are ok
+			while (rs.next()) {
+				String columnName = rs.getString("COLUMN_NAME");
+				String constraintName = rs.getString("INDEX_NAME");
+				if (columnName==null) continue; // Azure is quirky and returns one row with only nulls -> ignore the quirky row
+				uniques.put(constraintName, columnName);
+				multiset.add(constraintName);
+			}
+		} catch (SQLException e) {
+			logger.error(e.getMessage());
+		}
+
+		// We want unique constraints per individual columns, not per set of columns
+		List<String> result = new ArrayList<>();
+		for (String constraintName : multiset) {
+			if (multiset.count(constraintName)==1) {
+				result.add(uniques.get(constraintName));
+			}
+		}
+
+		return result;
+	}
+
 
 
 	// Subroutine: Get all relationships for the table.
@@ -373,7 +421,7 @@ public class Meta {
 				ForeignConstraint relationship = new ForeignConstraint();
 				relationship.name = rs.getString("FK_NAME");
 				relationship.table = table;
-				relationship.fTable = rs.getString("PKTABLE_NAME");
+				relationship.fTable = rs.getString("PKTABLE_NAME"); // Note ITENTIONAL swapping of fTable and PKTABLE
 				relationship.column.add(rs.getString("FKCOLUMN_NAME"));
 				relationship.fColumn.add(rs.getString("PKCOLUMN_NAME"));
 				relationshipList.add(relationship);
@@ -400,4 +448,18 @@ public class Meta {
 		return relationshipList;
 	}
 
+	private static ForeignConstraint reverseFCDirection(ForeignConstraint fc) {
+		return new ForeignConstraint(fc.name, fc.schema, fc.table, fc.fSchema, fc.fTable, fc.column, fc.fColumn);
+	}
+
+	// Add reverse directions
+	public static List<ForeignConstraint> addReverseDirections(Collection<ForeignConstraint> relationships) {
+		List<ForeignConstraint> undirected = new ArrayList<>(relationships);
+
+		for (ForeignConstraint foreignConstraint : relationships) {
+			undirected.add(reverseFCDirection(foreignConstraint));
+		}
+
+		return undirected;
+	}
 }

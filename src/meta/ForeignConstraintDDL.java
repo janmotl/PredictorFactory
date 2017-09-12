@@ -18,7 +18,7 @@ public class ForeignConstraintDDL {
 	// Logging
 	private static final Logger logger = Logger.getLogger(ForeignConstraintDDL.class.getName());
 
-	public static List<ForeignConstraint> unmarshall(String fileName) {
+	public static List<ForeignConstraint> unmarshall(String fileName, String defaultSchema) {
 		List<ForeignConstraint> result = new ArrayList<>();
 		Path path = Paths.get("config", fileName);
 
@@ -26,31 +26,35 @@ public class ForeignConstraintDDL {
 			try {
 				byte[] encoded = Files.readAllBytes(path);
 				String sql = new String(encoded, StandardCharsets.UTF_8);
-				result = extract(sql);
+				result = extract(sql, defaultSchema);
 			} catch (IOException e) {
 				logger.warn("Attempt to parse 'config/" + fileName + "' failed.");
 			}
+		} else {
+			logger.debug("File 'config/" + fileName + "' does not exist. Skipping the DDL import.");
 		}
 
 		return result;
 	}
 
-	public static List<ForeignConstraint> extract(String sql) {
+	// Matching is slow. Just call extract() only once.
+	// Note: Particularly repeated spaces seems to slowdown the parsing. See readRecords_mysqlWithSpaces() unit test.
+	public static List<ForeignConstraint> extract(String sql, String defaultSchema) {
         List<ForeignConstraint> result = new ArrayList<>();
 
 		// Prepare regex matcher
-		// Note: The regex is very simple and parses EVEN comments, requires termination semicolon...
-		String regex = " ALTER TABLE id ADD (?: | CONSTRAINT id ) FOREIGN KEY \\(id\\) REFERENCES id \\(id\\) anything ; ";
-		regex = regex.replace(" ", "\\s*");             // Whitespace characters
-		regex = regex.replace("id", "([^;]+?)");        // ID group (any character(s) but semicolon, not greedy)
-		regex = regex.replace("anything", "[^;]*?");    // Like "NOT DEFERRABLE"...
-        Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+		// Note: The regex is very simple and parses comments, requires termination semicolon...
+		String regex = "ALTER TABLE id ADD (?:CONSTRAINT id)? FOREIGN KEY \\(id\\) REFERENCES id \\(id\\) anything;";
+		regex = regex.replace(" ", "\\s*+");            // Whitespace characters (be greedy and never backtrack -> faster)
+		regex = regex.replace("id", "([^;]+?)");        // ID group (any character(s) but semicolon, lazy "non-greedy" evaluation)
+		regex = regex.replace("anything", "[^;]*+");    // Like "NOT DEFERRABLE"... (be greedy until you spot a semicolon)
+        Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
 
 		Matcher matcher = pattern.matcher(sql);
 		while (matcher.find()) {
 			// Note: Will fail if a comma is used in a name (we should respect the quotation marks)
-			String fTable = "";
-			String fSchema = "";
+			String fTable = null;
+			String fSchema = null;
 			String[] foreign = matcher.group(1).trim().split("\\."); // Split on dot, if possible
 			if (foreign.length==0) {
 				fTable = matcher.group(1).trim();
@@ -71,8 +75,8 @@ public class ForeignConstraintDDL {
 			List<String> fColumns = Arrays.stream(matcher.group(3).split(",")).map(String::trim).map(ForeignConstraintDDL::trimQuotes).collect(Collectors.toList());
 
 			// Note: Will fail if a comma is used in a name (we should respect the quotation marks)
-			String table = "";
-			String schema = "";
+			String table = null;
+			String schema = null;
 			String[] local = matcher.group(4).trim().split("\\.");
 			if (local.length==0) {
 				table = matcher.group(4).trim();
@@ -86,26 +90,28 @@ public class ForeignConstraintDDL {
 			// Note: Comma in a quoted name will cause troubles...
 			List<String> columns = Arrays.stream(matcher.group(5).split(",")).map(String::trim).map(ForeignConstraintDDL::trimQuotes).collect(Collectors.toList());
 
-			ForeignConstraint fc = new ForeignConstraint(name, fSchema, fTable, schema, table, fColumns, columns);
+			// Use the default schema, if necessary
+			if (schema==null) schema=defaultSchema;
+			if (fSchema==null) fSchema=defaultSchema;
+
+			ForeignConstraint fc = new ForeignConstraint(trimQuotes(name), trimQuotes(fSchema), trimQuotes(fTable), trimQuotes(schema), trimQuotes(table), fColumns, columns);
 			result.add(fc);
 		}
 
 		return result;
 	}
 
-	public static String trimQuotes(String input) {
-		return input.replaceAll("^(\"|`)|(\"|`)$", ""); // Remove the starting and ending quotes
-	}
-
 	// More specific getter. Return all FC related to the table.
 	// But if there is a self-referencing FC, include that FC just once.
-	public static List<ForeignConstraint> getForeignConstraintList(String fileName, String tableName) {
+	// NOTE: Shouldn't it also check the schemas?
+	public static List<ForeignConstraint> getForeignConstraintList(String fileName, String tableName, String defaultSchema) {
 
 		// Initialisation
 		List<ForeignConstraint> result = new ArrayList<>();
 
 		// Select the appropriate foreign constrains
-		for (ForeignConstraint foreignConstraint : unmarshall(fileName)) {
+		for (ForeignConstraint foreignConstraint : unmarshall(fileName, defaultSchema)) {
+
 			if (foreignConstraint.table.equals(tableName)) {
 				result.add(foreignConstraint);
 			} else if (foreignConstraint.fTable.equals(tableName)) {
@@ -115,5 +121,13 @@ public class ForeignConstraintDDL {
 
 		return result;
 	}
+
+
+	// Subroutines
+	protected static String trimQuotes(String input) {
+		if (input==null) return null;
+		return input.replaceAll("^(\"|`)|(\"|`)$", ""); // Remove the starting and ending quotes
+	}
+
 
 }

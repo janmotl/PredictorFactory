@@ -198,6 +198,14 @@ public class Schema {
 				table.getColumn(pk).isUnique = true;
 			}
 
+			// Unique constraints
+			List<String> uniques = Meta.getUniqueColumns(setting, setting.database, schema, table.name);
+			for (String column : uniques) {
+				if (table.columnMap.containsKey(column)) {  // Some of the columns can be blacklisted -> we have to validate the presence
+					table.getColumn(column).isUnique = true;
+				}
+			}
+
 			// Store numericalColumn, nominalColumn and temporalColumn
 			table.categorizeColumns(setting);
 		}

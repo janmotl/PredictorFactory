@@ -1,10 +1,7 @@
 package propagation;
 
 import connection.Network;
-import meta.Column;
-import meta.Database;
-import meta.OutputTable;
-import meta.Table;
+import meta.*;
 import org.apache.log4j.Level;
 import org.junit.Test;
 import run.Setting;
@@ -14,9 +11,7 @@ import utility.Meta;
 import java.util.List;
 import java.util.SortedMap;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class PropagationTest {
 
@@ -24,7 +19,7 @@ public class PropagationTest {
 	public void propagateBase() {
 		utility.Logging.initialization();
 
-		Setting setting = new Setting("PostgreSQL", "mutagenesis");
+		Setting setting = new Setting("PostgreSQL", "mutagenesis_test_setting");
 		setting.sampleCount = 10000;
 
 		setting = Network.openConnection(setting);
@@ -63,7 +58,7 @@ public class PropagationTest {
 	public void propagateBase_depthLimit() {
 		utility.Logging.initialization();
 
-		Setting setting = new Setting("PostgreSQL", "mutagenesis");
+		Setting setting = new Setting("PostgreSQL", "mutagenesis_test_setting");
 		setting.sampleCount = 10000;
 		setting.propagationDepthMax = 2;
 
@@ -115,7 +110,7 @@ public class PropagationTest {
 		List<OutputTable> result = Propagation.propagateBase(setting, metaInput);
 
 		// Validate the returned list
-		assertEquals("The list contains: " + result, 8, result.size()); // One table is (or can be) empty
+		assertEquals("The list contains: " + result, 8, result.size()); // One table is (or can be) empty due to sampleCount==1
 		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_loan_001")));
 		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_account_002")));
 		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_disp_003")));
@@ -157,4 +152,73 @@ public class PropagationTest {
 		assertTrue(CountAppender.getCount(Level.INFO) > 0);     // Check that logging works
 		assertEquals(2, CountAppender.getCount(Level.WARN));    // 2 warnings are expected
 	}
+
+	@Test
+	public void propagateBase_ddl() {
+		utility.Logging.initialization();
+
+		Setting setting = new Setting("PostgreSQL", "financial");   // Alternatively use ctu_financial
+		setting.sampleCount = 1;    // The minimal size for the minimal runtime
+
+		setting = Network.openConnection(setting);
+		setting.dialect.prepareOutputSchema(setting);
+		setting.dialect.getBase(setting);
+		Database metaInput = new Database(setting);
+
+		// Overwrite foreign key definitions from the database with the definition from DDL
+		for (Table table : metaInput.getAllTables()) {
+			table.foreignConstraintList = ForeignConstraintDDL.getForeignConstraintList("financial.ddl", table.name, setting.targetSchema);
+			table.foreignConstraintList = Meta.addReverseDirections(table.foreignConstraintList);
+			System.out.println(table.foreignConstraintList);
+		}
+
+		setting.dialect.getSubSampleClassification(setting, metaInput);
+
+		// Run!
+		List<OutputTable> result = Propagation.propagateBase(setting, metaInput);
+
+		// Validate the returned list
+		assertEquals("The list contains: " + result, 8, result.size()); // One table is (or can be) empty
+		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_loan_001")));
+		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_account_002")));
+		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_disp_003")));
+		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_district_004")));
+		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_order_005")));
+		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_trans_006")));
+		assertFalse(result.stream().anyMatch(t->t.name.equals("propagated_card_007"))); // The join is empty -> absent
+		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_client_008")));
+		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_client_009")));
+
+		// Count of warnings
+		assertTrue(CountAppender.getCount(Level.INFO) > 0);     // Check that logging works
+		assertEquals(0, CountAppender.getCount(Level.WARN));
+	}
+
+	// TODO
+//	@Test
+//	public void getMatches() throws Exception {
+//		Table t1 = new Table();
+//		t1.name = "t1";
+//		t1.schemaName = "schema";
+//
+//		Table t2 = new Table();
+//		t2.name = "t2";
+//		t2.schemaName = "schema";
+//
+//		Table t3 = new Table();
+//		t3.name = "t3";
+//		t3.schemaName = "schema";
+//
+//		List<String> t1Columns = new ArrayList<>();
+//		t1Columns.add("t1c1");
+//		List<String> t2Columns = new ArrayList<>();
+//		t2Columns.add("t2c1");
+//		ForeignConstraint fc = new ForeignConstraint("name", "schema", "t1", "schema", "t2", t1Columns, t2Columns);
+//		t1.foreignConstraintList.add(fc);
+//
+//		// Asserts
+//		assertEquals(0, Propagation.getMatches(t1, t3).size()); // t1 -/-> t3
+//		assertEquals(1, Propagation.getMatches(t1, t2).size()); // t1 ---> t2
+//		assertEquals(0, Propagation.getMatches(t2, t1).size()); // t2 -/-> t1
+//	}
 }

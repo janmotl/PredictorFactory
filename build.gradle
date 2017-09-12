@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'PredictorFactory'
-version '4.0.0'
+version '4.0.2'
 sourceCompatibility = 1.8
 
 
@@ -32,18 +32,11 @@ dependencies {
 
 //    compileOnly 'org.projectlombok:lombok:1.16.18'  // Necessary only during the compilation phase -> do not deploy it
 
-    runtime fileTree(dir: 'lib/jdbc-driver/hsqldb', include: '*.jar')   // The search is not recursive -> list all directories
-    runtime fileTree(dir: 'lib/jdbc-driver/jtds', include: '*.jar')
-    runtime fileTree(dir: 'lib/jdbc-driver/monetdb', include: '*.jar')
-    runtime fileTree(dir: 'lib/jdbc-driver/mssql', include: '*.jar')
+    runtime fileTree(dir: 'lib/jdbc-driver/mssql', include: '*.jar')    // The search is not recursive -> list all directories
     runtime fileTree(dir: 'lib/jdbc-driver/mysql', include: '*.jar')
     runtime fileTree(dir: 'lib/jdbc-driver/oracle', include: '*.jar')
     runtime fileTree(dir: 'lib/jdbc-driver/postgresql', include: '*.jar')
-    runtime fileTree(dir: 'lib/jdbc-driver/postgresql-ng', include: '*.jar')
     runtime fileTree(dir: 'lib/jdbc-driver/sas', include: '*.jar')
-    runtime fileTree(dir: 'lib/jdbc-driver/teradata', include: '*.jar')
-    runtime fileTree(dir: 'lib/jdbc-driver/vertica', include: '*.jar')
-    runtime fileTree(dir: 'lib/jdbc-driver/voltdb', include: '*.jar')
 
     compile fileTree(dir: 'lib/sqlformatter', include: '*.jar') // But fails on "mode" in postgre sql...
     compile fileTree(dir: 'lib/SQLinForm', include: '*.jar') // Ok

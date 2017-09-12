@@ -23,8 +23,8 @@ public class Column implements Comparable<Column> {
 	public final boolean isNullable;    // From JDBC
 
 
-	// NOTE: Should be memoized!
-	public boolean isUnique;
+	// NOTE: Should be memoized! (Currently it is set in Schema during metadata load. Has to be profiled what is better.)
+	public boolean isUnique;        // Does this column contain only unique values? NOTE: Currently not used
 
 	// An integer column with low cardinality (<100) can be both, numerical and nominal.
 	// An integer id column can be treated as an id, nominal and numerical.

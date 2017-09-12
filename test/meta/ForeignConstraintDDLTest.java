@@ -14,7 +14,7 @@ public class ForeignConstraintDDLTest {
 	public void readRecords_zero() throws Exception {
 		String input = "course1\ncourse2\ncourse3";
 
-		List<ForeignConstraint> obtained = extract(input);
+		List<ForeignConstraint> obtained = extract(input, "defaultSchema");
 
 		assertEquals(0, obtained.size());
 	}
@@ -26,7 +26,7 @@ public class ForeignConstraintDDLTest {
 				"    REFERENCES orders ( \"id\" )\n" +
 				"NOT DEFERRABLE;";
 
-		List<ForeignConstraint> obtained = extract(input);
+		List<ForeignConstraint> obtained = extract(input, "defaultSchema");
 
 		assertEquals(1, obtained.size());
 		assertEquals("order_products", obtained.get(0).fTable);
@@ -43,7 +43,7 @@ public class ForeignConstraintDDLTest {
 				"ALTER TABLE fTable ADD CONSTRAINT name1 FOREIGN KEY (fColumn) REFERENCES table (fColumn);\n" +
 				"ALTER TABLE fTable ADD CONSTRAINT name2 FOREIGN KEY (fColumn) REFERENCES table (fColumn);";
 
-		List<ForeignConstraint> obtained = extract(input);
+		List<ForeignConstraint> obtained = extract(input, "defaultSchema");
 
 		assertEquals(3, obtained.size());
 		assertEquals("name0", obtained.get(0).name);
@@ -58,7 +58,7 @@ public class ForeignConstraintDDLTest {
 				"  FOREIGN KEY (supplier_id1, supplier_name1)\n" +
 				"  REFERENCES supplier(supplier_id2, supplier_name2);";
 
-		List<ForeignConstraint> obtained = extract(input);
+		List<ForeignConstraint> obtained = extract(input, "defaultSchema");
 
 		assertEquals(1, obtained.size());
 		assertEquals("supplier_id1", obtained.get(0).fColumn.get(0));
@@ -72,25 +72,30 @@ public class ForeignConstraintDDLTest {
 	public void readRecords_noName() throws Exception {
 		String input = "ALTER TABLE fTable ADD FOREIGN KEY (fColumn) REFERENCES table(fColumn);";
 
-		List<ForeignConstraint> obtained = extract(input);
+		List<ForeignConstraint> obtained = extract(input, "defaultSchema");
 
 		assertEquals(1, obtained.size());
 	}
 
 	@Test
-	public void readRecords_mysqWithSpaces() throws Exception {
-		String input = "  ALTER  TABLE  products  ADD  CONSTRAINT  fk_supplier  FOREIGN  KEY  (`supplier_id`)  REFERENCES  supplier  (`supplier_id`)  ;  ";
+	public void readRecords_mysqlWithSpaces() throws Exception {
+		String input = "  ALTER  TABLE  `products`  ADD  CONSTRAINT  `fk_supplier`  FOREIGN  KEY  (`supplier_id`)  REFERENCES  `supplier`  (`supplier_id`)  ;  ";
 
-		List<ForeignConstraint> obtained = extract(input);
+		List<ForeignConstraint> obtained = extract(input, "defaultSchema");
 
 		assertEquals(1, obtained.size());
+		assertEquals("products", obtained.get(0).fTable);
+		assertEquals("fk_supplier", obtained.get(0).name);
+		assertEquals("supplier_id", obtained.get(0).fColumn.get(0));
+		assertEquals("supplier", obtained.get(0).table);
+		assertEquals("supplier_id", obtained.get(0).column.get(0));
 	}
 
 	@Test
 	public void readRecords_mixedCaps() throws Exception {
 		String input = "AlteR tABLE tab1 AdD FoREIGN  KeY (col1) References tab2 (col2);";
 
-		List<ForeignConstraint> obtained = extract(input);
+		List<ForeignConstraint> obtained = extract(input, "defaultSchema");
 
 		assertEquals(1, obtained.size());
 	}
@@ -99,7 +104,7 @@ public class ForeignConstraintDDLTest {
 	public void readRecords_uglyNames() throws Exception {
 		String input = "ALTER TABLE hr.hire_date ADD FOREIGN KEY (\"EVEN THIS & THAT!\") REFERENCES database.schema.table (a_very_long_and_valid_name);";
 
-		List<ForeignConstraint> obtained = extract(input);
+		List<ForeignConstraint> obtained = extract(input, "defaultSchema");
 
 		assertEquals(1, obtained.size());
 		assertEquals("hire_date", obtained.get(0).fTable);
@@ -253,7 +258,7 @@ public class ForeignConstraintDDLTest {
 			"-- ERRORS                                   5\n" +
 			"-- WARNINGS                                 0\n";
 
-		List<ForeignConstraint> obtained = extract(input);
+		List<ForeignConstraint> obtained = extract(input, "defaultSchema");
 
 		assertEquals(7, obtained.size());
 	}
@@ -539,7 +544,7 @@ public class ForeignConstraintDDLTest {
 				"    ON DELETE NO ACTION \n" +
 				";";
 
-		List<ForeignConstraint> obtained = extract(input);
+		List<ForeignConstraint> obtained = extract(input, "defaultSchema");
 
 		assertEquals(8, obtained.size());
 	}

@@ -10,7 +10,14 @@ import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
+// Important notice: The definition of fColumn and column is NOT "foreign key" and "primary key".
+// It rather means "THAT" table contains fColumns anf "THIS" table contains column. And it does not matter which is
+// primary and which is foreign.
+// This difference is important during the propagation phase as we can propagate only from propagated tables. We
+// do not care whether it is FK->PK or PK->FK. We just care that Propagated->Unpropagated works. But Unpropagated->Propagated
+// does not work.
 
+// Maybe we should name it Relationship rather than ForeignKey to avoid confusion.
 @XmlType(name = "foreignConstraint")
 public class ForeignConstraint implements Comparable<ForeignConstraint> {
 	@XmlAttribute
@@ -90,9 +97,10 @@ public class ForeignConstraint implements Comparable<ForeignConstraint> {
 		return result;
 	}
 
+	// Note: this points from this to that (not from FK to PK)!
 	@Override
 	public String toString() {
-		return fSchema + "." + fTable + " --> " + schema + "." + table;
+		return schema + "." + table + " --> " + fSchema + "." + fTable;
 	}
 
 }
