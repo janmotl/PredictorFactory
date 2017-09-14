@@ -13,14 +13,18 @@
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.control.TreeView?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.TilePane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
@@ -256,142 +260,154 @@
             <Image url="@../img/settings.png" />
          </ImageView>
       </graphic>
-      <VBox>
+      <GridPane hgap="10.0" vgap="10.0">
+         <columnConstraints>
+            <ColumnConstraints percentWidth="49" />
+            <ColumnConstraints percentWidth="51"/>
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints valignment="TOP" vgrow="NEVER" />
+            <RowConstraints valignment="TOP" vgrow="ALWAYS" />
+         </rowConstraints>
          <padding>
-            <Insets bottom="10.0" left="10.0" right="14.0" top="10.0" />
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
          </padding>
-         <opaqueInsets>
-            <Insets />
-         </opaqueInsets>
-         <VBox minHeight="57.0">
-            <VBox.margin>
-               <Insets left="4.0" />
-            </VBox.margin>
-            <Label text="Unit">
-               <padding>
-                  <Insets bottom="3.0" />
-               </padding>
-            </Label>
-            <ComboBox fx:id="comboBoxUnit" prefWidth="170.0">
-               <tooltip>
-                  <Tooltip text="Units in which to lag and lead are defined" />
-               </tooltip>
-            </ComboBox>
-         </VBox>
-         <VBox minHeight="57.0">
-            <VBox.margin>
-               <Insets left="4.0" />
-            </VBox.margin>
-            <Label text="Lag">
-               <padding>
-                  <Insets bottom="3.0" />
-               </padding>
-            </Label>
-            <TextField fx:id="textLag" maxWidth="170.0" promptText="use all past data">
-               <tooltip>
-                  <Tooltip text="Length of history that is used for creation of the patterns" />
-               </tooltip>
-            </TextField>
-         </VBox>
-         <VBox minHeight="57.0">
-            <VBox.margin>
-               <Insets left="4.0" />
-            </VBox.margin>
-            <Label text="Lead">
-               <padding>
-                  <Insets bottom="3.0" />
-               </padding>
-            </Label>
-            <TextField fx:id="textLead" maxWidth="170.0" promptText="0">
-               <tooltip>
-                  <Tooltip text="Blackout length" />
-               </tooltip>
-            </TextField>
-         </VBox>
-         <VBox minHeight="57.0">
-            <VBox.margin>
-               <Insets left="4.0" />
-            </VBox.margin>
-            <Label text="Sample count">
-               <VBox.margin>
-                  <Insets />
-               </VBox.margin>
-               <padding>
-                  <Insets bottom="3.0" />
-               </padding>
-            </Label>
-            <TextField fx:id="textSampleCount" maxWidth="170.0" promptText="use all samples">
-               <tooltip>
-                  <Tooltip text="Sample count per target class (missing values are treated as another class).&#10;If regression task is selected, it is the total sample count.&#10;The count must be smaller 2 147 483 647." />
-               </tooltip>
-            </TextField>
-         </VBox>
-         <VBox minHeight="57.0">
-            <VBox.margin>
-               <Insets left="4.0" />
-            </VBox.margin>
-            <Label text="Maximal count of returned predictors">
-               <VBox.margin>
-                  <Insets />
-               </VBox.margin>
-               <padding>
-                  <Insets bottom="3.0" />
-               </padding>
-            </Label>
-            <TextField fx:id="textPredictorMax" maxWidth="170.0" promptText="database bounded">
-               <tooltip>
-                  <Tooltip text="Don't cross the limit of the database on the count of columns in a table.&#10;Don't cross the byte limit of the database on the row size." />
-               </tooltip>
-            </TextField>
-         </VBox>
-         <VBox minHeight="57.0">
-            <children>
-               <Label text="Predictor calculation timeout in seconds">
+
+         <TitledPane collapsible="false" text="History length">
+            <VBox>
+               <VBox minHeight="57.0">
+                  <Label text="Unit">
+                     <padding>
+                        <Insets bottom="3.0" />
+                     </padding>
+                  </Label>
+                  <ComboBox fx:id="comboBoxUnit" prefWidth="170.0">
+                     <tooltip>
+                        <Tooltip text="Units in which to lag and lead are defined" />
+                     </tooltip>
+                  </ComboBox>
+               </VBox>
+               <VBox minHeight="57.0">
+                  <Label text="Lag">
+                     <padding>
+                        <Insets bottom="3.0" />
+                     </padding>
+                  </Label>
+                  <TextField fx:id="textLag" maxWidth="170.0" promptText="use all past data">
+                     <tooltip>
+                        <Tooltip text="Length of history that is used for creation of the patterns" />
+                     </tooltip>
+                  </TextField>
+               </VBox>
+               <VBox>
+                  <Label text="Lead">
+                     <padding>
+                        <Insets bottom="3.0" />
+                     </padding>
+                  </Label>
+                  <TextField fx:id="textLead" maxWidth="170.0" promptText="0">
+                     <tooltip>
+                        <Tooltip text="Blackout length" />
+                     </tooltip>
+                  </TextField>
+               </VBox>
+            </VBox>
+         </TitledPane>
+
+         <TitledPane collapsible="false" prefHeight="209.0" text="Predictors" GridPane.columnIndex="1">
+            <VBox>
+               <VBox minHeight="57.0">
                   <VBox.margin>
                      <Insets left="4.0" />
                   </VBox.margin>
-                  <padding>
-                     <Insets bottom="3.0" />
-                  </padding>
-               </Label>
-               <TextField fx:id="textSecondMax" maxWidth="170.0" promptText="no timeout">
-                  <tooltip>
-                     <Tooltip text="If the timeout is crossed, the calculation of the predictor is canceled." />
-                  </tooltip>
-               </TextField>
-            </children>
-         </VBox>
-         <VBox minHeight="30.0">
-            <CheckBox fx:id="checkBoxUseId" mnemonicParsing="false" text="Calculate predictors from identifiers">
-               <tooltip>
-                  <Tooltip text="IDs may contain leaking data. That is good in challenges. But bad in deployment." />
-               </tooltip>
-               <VBox.margin>
-                  <Insets left="4.0" />
-               </VBox.margin>
-            </CheckBox>
-         </VBox>
-          <VBox minHeight="30.0">
-              <CheckBox fx:id="checkBoxUseTwoStages" mnemonicParsing="false" text="Permit two-stage processing (exploration, exploitation)">
-                 <tooltip>
-                     <Tooltip text="Identify promising predictors on &quot;Sample count&quot;.&#10;Then calculate the best predictors for whole target table." />
-                 </tooltip>
-                 <VBox.margin>
+                  <Label text="Maximal count of returned predictors">
+                     <VBox.margin>
+                        <Insets />
+                     </VBox.margin>
+                     <padding>
+                        <Insets bottom="3.0" />
+                     </padding>
+                  </Label>
+                  <TextField fx:id="textPredictorMax" maxWidth="170.0" promptText="database bounded">
+                     <tooltip>
+                        <Tooltip text="Don't cross the limit of the database on the count of columns in a table.&#10;Don't cross the byte limit of the database on the row size." />
+                     </tooltip>
+                  </TextField>
+               </VBox>
+               <VBox minHeight="57.0">
+                  <VBox.margin>
                      <Insets left="4.0" />
-                 </VBox.margin>
-              </CheckBox>
-          </VBox>
-         <VBox minHeight="30.0">
-            <CheckBox fx:id="checkBoxIgnoreDatabaseForeignConstraints" mnemonicParsing="false" text="Ignore foreign key constraints defined in the database">
-               <tooltip>
-                  <Tooltip text="If the definition of the foreign key constraints in the database is spotty,&#10;it can be better to completely ignore the FKCs from the database and use FKC definitions from DDL or XML file exclusively."/>
-               </tooltip>
-               <VBox.margin>
-                  <Insets left="4.0"/>
-               </VBox.margin>
-            </CheckBox>
-         </VBox>
-      </VBox>
+                  </VBox.margin>
+                  <Label text="Predictor calculation timeout in seconds">
+                     <VBox.margin>
+                        <Insets left="4.0" />
+                     </VBox.margin>
+                     <padding>
+                        <Insets bottom="3.0" />
+                     </padding>
+                  </Label>
+                  <TextField fx:id="textSecondMax" maxWidth="170.0" promptText="no timeout">
+                     <tooltip>
+                        <Tooltip text="If the timeout is crossed, the calculation of the predictor is canceled." />
+                     </tooltip>
+                  </TextField>
+               </VBox>
+               <VBox minHeight="30.0">
+                  <CheckBox fx:id="checkBoxUseId" mnemonicParsing="false" text="Calculate predictors from identifiers">
+                     <tooltip>
+                        <Tooltip text="IDs may contain leaking data. That is good in challenges. But bad in deployment." />
+                     </tooltip>
+                     <VBox.margin>
+                        <Insets left="4.0" />
+                     </VBox.margin>
+                  </CheckBox>
+               </VBox>
+            </VBox>
+         </TitledPane>
+
+         <TitledPane collapsible="false" prefHeight="2147483647" text="Processing" GridPane.columnSpan="2147483647" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS">
+            <VBox>
+               <VBox minHeight="57.0">
+                  <VBox.margin>
+                     <Insets left="4.0" />
+                  </VBox.margin>
+                  <Label text="Sample count">
+                     <VBox.margin>
+                        <Insets />
+                     </VBox.margin>
+                     <padding>
+                        <Insets bottom="3.0" />
+                     </padding>
+                  </Label>
+                  <TextField fx:id="textSampleCount" maxWidth="170.0" promptText="use all samples">
+                     <tooltip>
+                        <Tooltip text="Sample count per target class (missing values are treated as another class).&#10;If regression task is selected, it is the total sample count.&#10;The count must be smaller 2 147 483 647." />
+                     </tooltip>
+                  </TextField>
+               </VBox>
+               <VBox minHeight="30.0">
+                  <CheckBox fx:id="checkBoxIgnoreDatabaseForeignConstraints" mnemonicParsing="false" text="Ignore foreign key constraints defined in the database">
+                     <tooltip>
+                        <Tooltip text="If the definition of the foreign key constraints in the database is spotty,&#10;it can be better to completely ignore the FKCs from the database and use FKC definitions from DDL or XML file exclusively." />
+                     </tooltip>
+                     <VBox.margin>
+                        <Insets left="4.0" />
+                     </VBox.margin>
+                  </CheckBox>
+               </VBox>
+               <VBox>
+                  <CheckBox fx:id="checkBoxUseTwoStages" mnemonicParsing="false" text="Permit two-stage processing (exploration, exploitation)">
+                     <tooltip>
+                        <Tooltip text="Identify promising predictors on &quot;Sample count&quot;.&#10;Then calculate the best predictors for whole target table." />
+                     </tooltip>
+                     <VBox.margin>
+                        <Insets left="4.0" />
+                     </VBox.margin>
+                  </CheckBox>
+               </VBox>
+            </VBox>
+         </TitledPane>
+      </GridPane>
    </Tab>
 
    <Tab fx:id="tabRun" text="Run">
