@@ -10,6 +10,7 @@ import run.Setting;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class NetworkTest {
@@ -78,7 +79,7 @@ public class NetworkTest {
 	@Test
 	public void loadTest_metaData() {
 		for (int i = 0; i < 30; i++) {
-			Schema.getTables(setting, setting.targetSchema);
+			Schema.getTables(setting, setting.targetSchema, new ArrayList<>());
 
 			System.out.println("	iteration: " + i); // This test may take some time -> let the tester know the work is in progress
 		}

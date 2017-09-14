@@ -33,6 +33,7 @@ public class TableTest {
 		// Asserts
 		assertEquals(0, t1.getMatchingFKCs(t3).size()); // t1 -/-> t3
 		assertEquals(1, t1.getMatchingFKCs(t2).size()); // t1 ---> t2
+		assertEquals(0, t2.getMatchingFKCs(t1).size()); // t2 -/-> t1
 	}
 
 }

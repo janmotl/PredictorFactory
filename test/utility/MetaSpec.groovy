@@ -99,20 +99,20 @@ class MetaSpec extends Specification {
 
         then:
         imported.size() == 1;
-        imported.get(0).fTable == "loan";
-        imported.get(0).table == "account";
-        imported.get(0).fColumn.size() == 1;
-        imported.get(0).fColumn.get(0) == "account_id";
+        imported.get(0).table == "loan";
+        imported.get(0).fTable == "account";   // This is in THIS --> THAT order. Not in FK --> PK order
         imported.get(0).column.size() == 1;
         imported.get(0).column.get(0) == "account_id";
+        imported.get(0).fColumn.size() == 1;
+        imported.get(0).fColumn.get(0) == "account_id";
 
         exported.size() == 2;
-        exported.get(0).fTable == "account";
         exported.get(0).table == "district";
-        exported.get(0).fColumn.size() == 1;
-        exported.get(0).fColumn.get(0) == "district_id";
+        exported.get(0).fTable == "account";
         exported.get(0).column.size() == 1;
         exported.get(0).column.get(0) == "district_id";
+        exported.get(0).fColumn.size() == 1;
+        exported.get(0).fColumn.get(0) == "district_id";
 
         where:
         connection   | database

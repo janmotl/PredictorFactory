@@ -14,15 +14,13 @@ import java.util.Set;
 import java.util.TreeSet;
 
 public class Column implements Comparable<Column> {
-	// Final variables
-	private final String schemaName;    // Necessity for memoized calls
-	private final String tableName;     // Necessity for memoized calls
 	public final String name;           // We have name field even though Column object is in a Map because it allows an easy iteration over the Columns (and not over that ugly Entry).
 	public final int dataType;          // Data type as defined by JDBC
 	public final String dataTypeName;   // Data type name as defined by database
 	public final boolean isNullable;    // From JDBC
-
-
+	// Final variables
+	private final String schemaName;    // Necessity for memoized calls
+	private final String tableName;     // Necessity for memoized calls
 	// NOTE: Should be memoized! (Currently it is set in Schema during metadata load. Has to be profiled what is better.)
 	public boolean isUnique;        // Does this column contain only unique values? NOTE: Currently not used
 

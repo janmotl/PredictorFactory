@@ -23,25 +23,6 @@ public class ForeignConstraintList {
 	@XmlAttribute public String schemaName;     // Optional metadata just for users
 
 
-	// More specific getter. Return all FC related to the table.
-	// But if there is a self-referencing FC, include that FC just once.
-	public List<ForeignConstraint> getForeignConstraintList(String tableName) {
-
-		// Initialisation
-		List<ForeignConstraint> result = new ArrayList<>();
-
-		// Select the appropriate foreign constrains
-		for (ForeignConstraint foreignConstraint : this.foreignConstraint) {
-			if (foreignConstraint.table.equals(tableName)) {
-				result.add(foreignConstraint);
-			} else if (foreignConstraint.fTable.equals(tableName)) {
-				result.add(foreignConstraint);
-			}
-		}
-
-		return result;
-	}
-
 	public void setForeignConstraint(List<ForeignConstraint> foreignConstraint) {
 		this.foreignConstraint = foreignConstraint;
 	}
@@ -57,12 +38,14 @@ public class ForeignConstraintList {
 				JAXBContext jaxbContext = JAXBContext.newInstance(ForeignConstraintList.class);
 				Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 				list = (ForeignConstraintList) jaxbUnmarshaller.unmarshal(new File("config/" + fileName));
+                logger.info("In total " + list.foreignConstraint.size() + " foreign key constraints were loaded from the XML file.");
 			} catch (JAXBException ignored) {
 				logger.warn("Attempt to parse 'config/" + fileName + "' failed.");
 			}
 		} else {
 			list = new ForeignConstraintList();
 			list.foreignConstraint = new ArrayList<>();
+            logger.debug("File 'config/" + fileName + "' does not exist. Skipping the XML import.");
 		}
 
 		return list;

@@ -20,16 +20,22 @@ public class Schema {
 	// Constructors
 	public Schema(String name, SortedMap<String, Table> tableMap) {
 		this.name = name;
-		this.tableMap = tableMap;
+		this.tableMap = Collections.unmodifiableSortedMap(tableMap);
 	}
 
 	public Schema(Setting setting, String schemaName) {
 		name = schemaName;
 
+        // Get the relationships from the DDL and XML files for whole schema -> we parse the files just once
+		List<ForeignConstraint> external = ForeignConstraintDDL.unmarshall("foreignConstraint.externalFCs", setting.targetSchema);
+        external.addAll(ForeignConstraintList.unmarshall("foreignConstraint.xml").foreignConstraint);
+        external = Meta.addReverseDirections(external); // Make the FCs bidirectional
+
+        // If it is a target schema, we perform additional checks
 		if (setting.targetSchema.equals(schemaName)) {
-			tableMap = getTables(setting, schemaName);  // If it is a target schema, we perform additional checks
+			tableMap = getTables(setting, schemaName, external);
 		} else {
-			tableMap = getTablesBasic(setting, schemaName);
+			tableMap = getTablesBasic(setting, schemaName, external);
 		}
 	}
 
@@ -43,7 +49,7 @@ public class Schema {
 	}
 
 	// Note: These methods should be private -> rewrite the tests to use the constructor.
-	public static SortedMap<String, Table> getTablesBasic(Setting setting, String schema) {
+	public static SortedMap<String, Table> getTablesBasic(Setting setting, String schema, List<ForeignConstraint> externalFCs) {
 
 		// Initialization
 		SortedMap<String, Table> tableMap;
@@ -67,7 +73,7 @@ public class Schema {
 		// Collect columns and relationships
 		whiteMapColumn.putIfAbsent(schema, new TreeMap<>());
 		blackMapColumn.putIfAbsent(schema, new TreeMap<>());
-		getColumns(setting, schema, tableMap, whiteMapColumn.get(schema), blackMapColumn.get(schema));
+		getColumns(setting, schema, tableMap, whiteMapColumn.get(schema), blackMapColumn.get(schema), externalFCs);
 
 		// QC that relationships were extracted
 		int relationshipCount = 0;
@@ -85,7 +91,7 @@ public class Schema {
 	// IDS ARE WRONGFULLY IGNORED FROM THE BLACK/WHITE LISTS
 	// Note: We parse the content of black/white-lists repeatably. That's not nice.
 	// Note: Merge getTables and getTablesBasic together - who has to maintain them both?! Use ifs to skip unrelated calls.
-	public static SortedMap<String, Table> getTables(Setting setting, String schema) {
+	public static SortedMap<String, Table> getTables(Setting setting, String schema, List<ForeignConstraint> externalFCs) {
 
 		// Initialization
 		SortedMap<String, Table> tableMap;
@@ -111,7 +117,7 @@ public class Schema {
 		// Collect columns and relationships
 		whiteMapColumn.putIfAbsent(schema, new TreeMap<>());
 		blackMapColumn.putIfAbsent(schema, new TreeMap<>());
-		getColumns(setting, schema, tableMap, whiteMapColumn.get(schema), blackMapColumn.get(schema));
+		getColumns(setting, schema, tableMap, whiteMapColumn.get(schema), blackMapColumn.get(schema), externalFCs);
 
 		// QC the columns and relationships
 		qcColumns(setting, tableMap);
@@ -173,7 +179,7 @@ public class Schema {
 		}
 	}
 
-	private static void getColumns(Setting setting, String schema, SortedMap<String, Table> tableMap, Map<String, List<String>> whiteMapColumn, Map<String, List<String>> blackMapColumn) {
+	private static void getColumns(Setting setting, String schema, SortedMap<String, Table> tableMap, Map<String, List<String>> whiteMapColumn, Map<String, List<String>> blackMapColumn, List<ForeignConstraint> externalFCs) {
 		// I could have collected all the metadata at schema level. The runtime would be faster,
 		// because just one query would be performed (instead of making a unique query for each table).
 		// But implementation would be slightly more complex.
@@ -185,8 +191,10 @@ public class Schema {
 			// Respect white/black lists
 			table.columnMap = BlackWhiteList.filter(table.columnMap, blackMapColumn.get(table.name), whiteMapColumn.get(table.name));
 
-			// Store relationships
+			// Store relationships from the database, DDL and XML
 			table.foreignConstraintList = Meta.collectRelationships(setting, schema, table.name);
+            table.foreignConstraintList.addAll(Meta.getTableForeignConstraints(externalFCs, table.name));
+
 
 			// Identify ids based on FK
 			table.identifyId();
@@ -272,14 +280,12 @@ public class Schema {
 	}
 
 
-
-
 //  public static boolean isSymmetrical(){
 //      for (String table : tableSet) {
 //          // Get relationships
 //          List<List<String>> relationshipList = MetaInput.downloadRelationships(setting, setting.database, setting.inputSchemaList, table);
 //          System.out.println(relationshipList);
-//      
+//
 //          // Detection
 //          String lagFTable = "";
 //          String lagColumn = "";

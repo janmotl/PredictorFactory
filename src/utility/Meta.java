@@ -188,7 +188,8 @@ public class Meta {
 		// Sort by {fTable, name, sequence}
 		Collections.sort(relationshipList);
 
-		// Assume that the elements in relationshipList are ordered by {fTable, sequence}
+		// Reconstruct compound relationships by assuming that the elements in relationshipList
+        // are ordered by {fTable, sequence}.
 		for (ForeignConstraint fc : relationshipList) {
 			if (result.contains(fc)) {
 				ForeignConstraint constrainReference = result.get(result.size() - 1);
@@ -197,25 +198,6 @@ public class Meta {
 			} else {
 				result.add(fc);
 			}
-		}
-
-		// Add relevant relationships from an XML file, if available.
-		// It is ugly that we read and parse the XML repeatedly. But it should not be a bottleneck.
-		List<ForeignConstraint> relationshipXML = ForeignConstraintList.unmarshall("foreignConstraint.xml").getForeignConstraintList(table);
-		if (!relationshipXML.isEmpty()) {
-			// NOTE: Could replace list with a LinkedHasSet to avoid duplicates (use: Refactor | Type Migration)
-			relationshipXML = addReverseDirections(relationshipXML);
-			result.addAll(relationshipXML);
-			logger.info("Table " + table + " has " + relationshipXML.size() + " relationships defined in the XML file.");
-		}
-
-		// Iff a DDL is available, return the relevant relationships from the DDL file.
-		// It is ugly that we read and parse the DDL repeatedly. But it should not be a bottleneck.
-		List<ForeignConstraint> relationshipDDL = ForeignConstraintDDL.getForeignConstraintList("foreignConstraint.ddl", table, setting.targetSchema);
-		if (!relationshipDDL.isEmpty()) {
-			relationshipDDL = addReverseDirections(relationshipDDL);
-			logger.info("Table " + table + " has " + relationshipDDL.size() + " relationships defined in the DDL file.");
-			return relationshipDDL;
 		}
 
 		return result;
@@ -290,7 +272,8 @@ public class Meta {
 			while (rs.next()) {
 				String columnName = rs.getString("COLUMN_NAME");
 				String constraintName = rs.getString("INDEX_NAME");
-				if (columnName==null) continue; // Azure is quirky and returns one row with only nulls -> ignore the quirky row
+				if (columnName == null)
+					continue; // Azure is quirky and returns one row with only nulls -> ignore the quirky row
 				uniques.put(constraintName, columnName);
 				multiset.add(constraintName);
 			}
@@ -301,14 +284,13 @@ public class Meta {
 		// We want unique constraints per individual columns, not per set of columns
 		List<String> result = new ArrayList<>();
 		for (String constraintName : multiset) {
-			if (multiset.count(constraintName)==1) {
+			if (multiset.count(constraintName) == 1) {
 				result.add(uniques.get(constraintName));
 			}
 		}
 
 		return result;
 	}
-
 
 
 	// Subroutine: Get all relationships for the table.
@@ -461,5 +443,23 @@ public class Meta {
 		}
 
 		return undirected;
+	}
+
+    // Returns all FC related to the table.
+	// But if there is a self-referencing FC, include that FC just once.
+	// NOTE: Shouldn't it also check the schemas?
+	public static List<ForeignConstraint> getTableForeignConstraints(List<ForeignConstraint> foreignConstraints, String tableName) {
+		List<ForeignConstraint> result = new ArrayList<>();
+
+		// Select the appropriate foreign constrains
+		for (ForeignConstraint foreignConstraint : foreignConstraints) {
+			if (foreignConstraint.table.equals(tableName)) {
+				result.add(foreignConstraint);
+			} else if (foreignConstraint.fTable.equals(tableName)) {
+				result.add(foreignConstraint);
+			}
+		}
+
+		return result;
 	}
 }

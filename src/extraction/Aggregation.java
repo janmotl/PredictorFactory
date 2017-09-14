@@ -24,7 +24,7 @@ public class Aggregation {
 	// Logging
 	private static final Logger logger = Logger.getLogger(Aggregation.class.getName());
 
-	private static int id = 0;  // Each predictor has a unique id
+	private static int id;  // Each predictor has a unique id
 
 	public static Journal run(Setting setting, List<OutputTable> tableMetadata) {
 		id = setting.predictorStart;

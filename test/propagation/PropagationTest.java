@@ -166,10 +166,10 @@ public class PropagationTest {
 		Database metaInput = new Database(setting);
 
 		// Overwrite foreign key definitions from the database with the definition from DDL
+		List<ForeignConstraint> foreignConstraintList = ForeignConstraintDDL.unmarshall("financial.ddl", setting.targetSchema);
 		for (Table table : metaInput.getAllTables()) {
-			table.foreignConstraintList = ForeignConstraintDDL.getForeignConstraintList("financial.ddl", table.name, setting.targetSchema);
+			table.foreignConstraintList = Meta.getTableForeignConstraints(foreignConstraintList, table.name);
 			table.foreignConstraintList = Meta.addReverseDirections(table.foreignConstraintList);
-			System.out.println(table.foreignConstraintList);
 		}
 
 		setting.dialect.getSubSampleClassification(setting, metaInput);
@@ -193,32 +193,4 @@ public class PropagationTest {
 		assertTrue(CountAppender.getCount(Level.INFO) > 0);     // Check that logging works
 		assertEquals(0, CountAppender.getCount(Level.WARN));
 	}
-
-	// TODO
-//	@Test
-//	public void getMatches() throws Exception {
-//		Table t1 = new Table();
-//		t1.name = "t1";
-//		t1.schemaName = "schema";
-//
-//		Table t2 = new Table();
-//		t2.name = "t2";
-//		t2.schemaName = "schema";
-//
-//		Table t3 = new Table();
-//		t3.name = "t3";
-//		t3.schemaName = "schema";
-//
-//		List<String> t1Columns = new ArrayList<>();
-//		t1Columns.add("t1c1");
-//		List<String> t2Columns = new ArrayList<>();
-//		t2Columns.add("t2c1");
-//		ForeignConstraint fc = new ForeignConstraint("name", "schema", "t1", "schema", "t2", t1Columns, t2Columns);
-//		t1.foreignConstraintList.add(fc);
-//
-//		// Asserts
-//		assertEquals(0, Propagation.getMatches(t1, t3).size()); // t1 -/-> t3
-//		assertEquals(1, Propagation.getMatches(t1, t2).size()); // t1 ---> t2
-//		assertEquals(0, Propagation.getMatches(t2, t1).size()); // t2 -/-> t1
-//	}
 }
