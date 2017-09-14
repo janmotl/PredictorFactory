@@ -3,7 +3,6 @@
  */
 package run;
 
-import com.google.common.base.MoreObjects;
 import com.zaxxer.hikari.HikariDataSource;
 import connection.*;
 import org.apache.log4j.Logger;
@@ -14,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static com.google.common.base.MoreObjects.firstNonNull;
 
 //  Builder Pattern would be nice to make the variables final.
 //  Could make the variables static to be available from everywhere (and final, if possible).
@@ -130,6 +131,7 @@ public final class Setting {
 	public int secondMax;                           // Timeout on predictor calculation in seconds.
 	public boolean useIdAttributes;                 // Use id attributes in feature creation?
 	public boolean useTwoStages;                    // Perform exploration+exploitation, or directly calculate all predictors?
+	public boolean ignoreDatabaseForeignConstraints;// By default foreign key constraints are read from the database.
 	public boolean skipBaseGeneration = false;      // This is for iterative bug fixing...
 	public boolean skipPropagation = false;
 	public boolean skipAggregation = false;
@@ -178,8 +180,8 @@ public final class Setting {
 
 		// Load database properties
 		inputSchemaList = TextParser.string2list(databaseProperty.inputSchema); // Permits input data in multiple schemas. In theory the default value could be targetSchema once XML is modified.
-		outputSchema = databaseProperty.outputSchema;
-		targetSchema = databaseProperty.targetSchema;
+		outputSchema = firstNonNull(databaseProperty.outputSchema, inputSchemaList.get(0));
+		targetSchema = firstNonNull(databaseProperty.targetSchema, inputSchemaList.get(0));
 		targetTable = databaseProperty.targetTable;
 		targetIdList = TextParser.string2list(databaseProperty.targetId); // Permits composite id
 		targetDate = databaseProperty.targetDate;
@@ -187,27 +189,27 @@ public final class Setting {
 		predictorMax = databaseProperty.predictorMax;
 
 		// Load optional (null-able) properties. Always set appropriate default values.
-		urlSuffix = MoreObjects.firstNonNull(driverProperty.urlSuffix, "");
-		quoteAliasOpen = MoreObjects.firstNonNull(driverProperty.quoteAliasOpen, "\"");
-		quoteAliasClose = MoreObjects.firstNonNull(driverProperty.quoteAliasClose, "\"");
-		indexNameSyntax = MoreObjects.firstNonNull(driverProperty.indexNameSyntax, "table_idx");
-		supportsCatalogs = MoreObjects.firstNonNull(driverProperty.supportsCatalogs, true);
-		supportsSchemas = MoreObjects.firstNonNull(driverProperty.supportsSchemas, true);
-		supportsCreateTableAs = MoreObjects.firstNonNull(driverProperty.supportsCreateTableAs, true);
-		supportsWithData = MoreObjects.firstNonNull(driverProperty.supportsWithData, false);
-		supportsJoinUsing = MoreObjects.firstNonNull(driverProperty.supportsJoinUsing, false);
-		supportsSelectExists = MoreObjects.firstNonNull(driverProperty.supportsSelectExists, false);
-		insertTimestampSyntax = MoreObjects.firstNonNull(driverProperty.insertTimestampSyntax, "'@timestamp'");
-		stdDevSampCommand = MoreObjects.firstNonNull(driverProperty.stdDevSampCommand, "stdDev_samp");
-		stdDevPopCommand = MoreObjects.firstNonNull(driverProperty.stdDevPopCommand, "stdDev_pop");
-		limitSyntax = MoreObjects.firstNonNull(driverProperty.limitSyntax, "limit");
-		dateAddSyntax = MoreObjects.firstNonNull(driverProperty.dateAddSyntax, "DATEADD(@datePart, @amount, @baseDate)");
-		dateAddMonth = MoreObjects.firstNonNull(driverProperty.dateAddSyntax, "DATEADD(month, @amount, @baseDate)");
-		dateDiffSyntax = MoreObjects.firstNonNull(driverProperty.dateDiffSyntax, "DATEDIFF(day, @dateTo, @dateFrom)");
-		typeVarchar = MoreObjects.firstNonNull(driverProperty.typeVarchar, "VARCHAR");
-		typeInteger = MoreObjects.firstNonNull(driverProperty.typeInteger, "INTEGER");
-		typeDecimal = MoreObjects.firstNonNull(driverProperty.typeDecimal, "DECIMAL");
-		typeTimestamp = MoreObjects.firstNonNull(driverProperty.typeTimestamp, "TIMESTAMP");
+		urlSuffix = firstNonNull(driverProperty.urlSuffix, "");
+		quoteAliasOpen = firstNonNull(driverProperty.quoteAliasOpen, "\"");
+		quoteAliasClose = firstNonNull(driverProperty.quoteAliasClose, "\"");
+		indexNameSyntax = firstNonNull(driverProperty.indexNameSyntax, "table_idx");
+		supportsCatalogs = firstNonNull(driverProperty.supportsCatalogs, true);
+		supportsSchemas = firstNonNull(driverProperty.supportsSchemas, true);
+		supportsCreateTableAs = firstNonNull(driverProperty.supportsCreateTableAs, true);
+		supportsWithData = firstNonNull(driverProperty.supportsWithData, false);
+		supportsJoinUsing = firstNonNull(driverProperty.supportsJoinUsing, false);
+		supportsSelectExists = firstNonNull(driverProperty.supportsSelectExists, false);
+		insertTimestampSyntax = firstNonNull(driverProperty.insertTimestampSyntax, "'@timestamp'");
+		stdDevSampCommand = firstNonNull(driverProperty.stdDevSampCommand, "stdDev_samp");
+		stdDevPopCommand = firstNonNull(driverProperty.stdDevPopCommand, "stdDev_pop");
+		limitSyntax = firstNonNull(driverProperty.limitSyntax, "limit");
+		dateAddSyntax = firstNonNull(driverProperty.dateAddSyntax, "DATEADD(@datePart, @amount, @baseDate)");
+		dateAddMonth = firstNonNull(driverProperty.dateAddSyntax, "DATEADD(month, @amount, @baseDate)");
+		dateDiffSyntax = firstNonNull(driverProperty.dateDiffSyntax, "DATEDIFF(day, @dateTo, @dateFrom)");
+		typeVarchar = firstNonNull(driverProperty.typeVarchar, "VARCHAR");
+		typeInteger = firstNonNull(driverProperty.typeInteger, "INTEGER");
+		typeDecimal = firstNonNull(driverProperty.typeDecimal, "DECIMAL");
+		typeTimestamp = firstNonNull(driverProperty.typeTimestamp, "TIMESTAMP");
 
 		// Correlation:
 		//  https://www.red-gate.com/simple-talk/blogs/statistics-sql-pearsons-correlation/
@@ -215,24 +217,25 @@ public final class Setting {
 		// If we divide by zero (i.e. at least one of the vectors is constant), we return zero:
 		//  https://stackoverflow.com/questions/861778/how-to-avoid-the-divide-by-zero-error-in-sql
 		// To avoid "Arithmetic overflow error converting expression to data type int" at Azure we cast to double.
-		corrSyntax = MoreObjects.firstNonNull(driverProperty.corrSyntax, "coalesce((Avg(1.0 * @column1 * @column2) - Avg(1.0*@column1) * Avg(@column2)) / nullif((stdDev_pop(@column1) * stdDev_pop(@column2)), 0), 0)");
+		corrSyntax = firstNonNull(driverProperty.corrSyntax, "coalesce((Avg(1.0 * @column1 * @column2) - Avg(1.0*@column1) * Avg(@column2)) / nullif((stdDev_pop(@column1) * stdDev_pop(@column2)), 0), 0)");
 
-		unit = MoreObjects.firstNonNull(databaseProperty.unit, "year");
-		lag = MoreObjects.firstNonNull(databaseProperty.lag, 100);
-		lead = MoreObjects.firstNonNull(databaseProperty.lead, 0);
-		task = MoreObjects.firstNonNull(databaseProperty.task, "classification");
-		sampleCount = MoreObjects.firstNonNull(databaseProperty.sampleCount, Integer.MAX_VALUE);
-		blackListPattern = MoreObjects.firstNonNull(databaseProperty.blackListPattern, "");
-		whiteListPattern = MoreObjects.firstNonNull(databaseProperty.whiteListPattern, "");
-		whiteListSchema = MoreObjects.firstNonNull(databaseProperty.whiteListSchema, "");
-		blackListSchema = MoreObjects.firstNonNull(databaseProperty.blackListSchema, "");
-		whiteListTable = MoreObjects.firstNonNull(databaseProperty.whiteListTable, "");
-		blackListTable = MoreObjects.firstNonNull(databaseProperty.blackListTable, "");
-		whiteListColumn = MoreObjects.firstNonNull(databaseProperty.whiteListColumn, "");
-		blackListColumn = MoreObjects.firstNonNull(databaseProperty.blackListColumn, "");
+		unit = firstNonNull(databaseProperty.unit, "year");
+		lag = firstNonNull(databaseProperty.lag, 100);
+		lead = firstNonNull(databaseProperty.lead, 0);
+		task = firstNonNull(databaseProperty.task, "classification");
+		sampleCount = firstNonNull(databaseProperty.sampleCount, Integer.MAX_VALUE);
+		blackListPattern = firstNonNull(databaseProperty.blackListPattern, "");
+		whiteListPattern = firstNonNull(databaseProperty.whiteListPattern, "");
+		whiteListSchema = firstNonNull(databaseProperty.whiteListSchema, "");
+		blackListSchema = firstNonNull(databaseProperty.blackListSchema, "");
+		whiteListTable = firstNonNull(databaseProperty.whiteListTable, "");
+		blackListTable = firstNonNull(databaseProperty.blackListTable, "");
+		whiteListColumn = firstNonNull(databaseProperty.whiteListColumn, "");
+		blackListColumn = firstNonNull(databaseProperty.blackListColumn, "");
 		useIdAttributes = databaseProperty.useIdAttributes; // The default is set in xsd
 		useTwoStages = databaseProperty.useTwoStages; // The default is set in xsd -> However, it always writes the value into XML -> not nice
-		secondMax = MoreObjects.firstNonNull(databaseProperty.secondMax, 0); // If zero, no timeout is applied
+        ignoreDatabaseForeignConstraints = firstNonNull(databaseProperty.ignoreDatabaseForeignConstraints, false);
+		secondMax = firstNonNull(databaseProperty.secondMax, 0); // If zero, no timeout is applied
 
 		// Initialize baseIdList based on the count of columns in targetIdList
 		// Note: The first value could be without any index to make it nicer. Eg.: {propagated_id, propagated_id2}

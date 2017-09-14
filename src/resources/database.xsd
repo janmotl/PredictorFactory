@@ -23,6 +23,7 @@
                                 <attribute type="int" name="secondMax"/>
                                 <attribute type="boolean" name="useIdAttributes" default="true"/>
                                 <attribute type="boolean" name="useTwoStages" default="true"/>
+                                <attribute type="boolean" name="ignoreDatabaseForeignConstraints"/>
                                 <attribute name="task">
                                     <simpleType>
                                         <restriction base="string">

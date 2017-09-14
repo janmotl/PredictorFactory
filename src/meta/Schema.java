@@ -191,10 +191,11 @@ public class Schema {
 			// Respect white/black lists
 			table.columnMap = BlackWhiteList.filter(table.columnMap, blackMapColumn.get(table.name), whiteMapColumn.get(table.name));
 
-			// Store relationships from the database, DDL and XML
-			table.foreignConstraintList = Meta.collectRelationships(setting, schema, table.name);
+			// Relationships from the database, DDL and XML
+            if (!setting.ignoreDatabaseForeignConstraints) {
+                table.foreignConstraintList = Meta.collectRelationships(setting, schema, table.name);
+            }
             table.foreignConstraintList.addAll(Meta.getTableForeignConstraints(externalFCs, table.name));
-
 
 			// Identify ids based on FK
 			table.identifyId();

@@ -159,6 +159,7 @@ public class PropagationTest {
 
 		Setting setting = new Setting("PostgreSQL", "financial");   // Alternatively use ctu_financial
 		setting.sampleCount = 1;    // The minimal size for the minimal runtime
+        setting.ignoreDatabaseForeignConstraints = true;    // Ignore FCs from the database (if the FCs in the database are extremely spotty, it is less error-prone to set all FCs in the DDL exclusively)
 
 		setting = Network.openConnection(setting);
 		setting.dialect.prepareOutputSchema(setting);
@@ -168,6 +169,7 @@ public class PropagationTest {
 		// Overwrite foreign key definitions from the database with the definition from DDL
 		List<ForeignConstraint> foreignConstraintList = ForeignConstraintDDL.unmarshall("financial.ddl", setting.targetSchema);
 		for (Table table : metaInput.getAllTables()) {
+            assertTrue(table.foreignConstraintList.isEmpty());  // Validation that no FKC was imported from the DB
 			table.foreignConstraintList = Meta.getTableForeignConstraints(foreignConstraintList, table.name);
 			table.foreignConstraintList = Meta.addReverseDirections(table.foreignConstraintList);
 		}
@@ -191,6 +193,6 @@ public class PropagationTest {
 
 		// Count of warnings
 		assertTrue(CountAppender.getCount(Level.INFO) > 0);     // Check that logging works
-		assertEquals(0, CountAppender.getCount(Level.WARN));
+		assertEquals(1, CountAppender.getCount(Level.WARN));    // One warning about no relationships is expected
 	}
 }

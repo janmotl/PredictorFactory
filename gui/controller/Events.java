@@ -67,6 +67,7 @@ public class Events implements Initializable {
     @FXML private ComboBox<String> comboBoxUnit;
     @FXML private CheckBox checkBoxUseId;
 	@FXML private CheckBox checkBoxUseTwoStages;
+    @FXML private CheckBox checkBoxIgnoreDatabaseForeignConstraints;
     @FXML private Label labelPredictorCountText;
     @FXML private Label labelPredictorCount;
     @FXML private ProgressIndicator progressWhirl;
@@ -195,6 +196,7 @@ public class Events implements Initializable {
         databaseProperty.task = comboBoxTask.getValue();
         databaseProperty.useIdAttributes = checkBoxUseId.isSelected();
         databaseProperty.useTwoStages = checkBoxUseTwoStages.isSelected();
+        databaseProperty.ignoreDatabaseForeignConstraints = checkBoxIgnoreDatabaseForeignConstraints.isSelected();
         databaseProperty.sampleCount = parseInteger(textSampleCount.getText());
         databaseProperty.predictorMax = parseInteger(textPredictorMax.getText());
         databaseProperty.secondMax = parseInteger(textSecondMax.getText());
@@ -317,35 +319,36 @@ public class Events implements Initializable {
 
         // Read past setting. If no past setting is available, leave it unfilled.
         // NOTE: IF SOME ATTRIBUTE IS MISSING, IT WILL FAIL -> just use try-catch
-         ConnectionPropertyList connectionList = ConnectionPropertyList.unmarshall();
-         ConnectionProperty connectionProperty = connectionList.getConnectionProperties("GUI");
+        ConnectionPropertyList connectionList = ConnectionPropertyList.unmarshall();
+        ConnectionProperty connectionProperty = connectionList.getConnectionProperties("GUI");
 
-         if (connectionProperty != null) {
+        if (connectionProperty != null) {
             comboBoxVendor.setValue(connectionProperty.driver);
             textDatabase.setText(connectionProperty.database);
             textHost.setText(connectionProperty.host);
             textPort.setText(connectionProperty.port);
             textUsername.setText(connectionProperty.username);
             textPassword.setText(connectionProperty.password);
-         }
+        }
 
-         DatabasePropertyList databaseList = DatabasePropertyList.unmarshall();
-         DatabaseProperty databaseProperty = databaseList.getDatabaseProperties("GUI");
-         List<String> blackListPattern  = new ArrayList<>();
-         List<String> whiteListPattern  = new ArrayList<>();
+        DatabasePropertyList databaseList = DatabasePropertyList.unmarshall();
+        DatabaseProperty databaseProperty = databaseList.getDatabaseProperties("GUI");
+        List<String> blackListPattern = new ArrayList<>();
+        List<String> whiteListPattern = new ArrayList<>();
 
-         // Database properties
-         try {comboBoxUnit.setValue(databaseProperty.unit);} catch (NullPointerException ignored) {}
-         try {textLag.setText(databaseProperty.lag.toString());} catch (NullPointerException ignored) {}
-         try {textLead.setText(databaseProperty.lead.toString());} catch (NullPointerException ignored) {}
-         try {textSampleCount.setText(databaseProperty.sampleCount.toString());} catch (NullPointerException ignored) {}
-         try {comboBoxTask.setValue(databaseProperty.task);} catch (NullPointerException ignored) {}
-         try {textPredictorMax.setText(databaseProperty.predictorMax.toString());} catch (NullPointerException ignored) {}
-	     try {textSecondMax.setText(databaseProperty.secondMax.toString());} catch (NullPointerException ignored) {}
-         try {checkBoxUseId.setSelected(databaseProperty.useIdAttributes);} catch (NullPointerException ignored) {}
-	     try {checkBoxUseTwoStages.setSelected(databaseProperty.useTwoStages);} catch (NullPointerException ignored) {}
-         try {blackListPattern = TextParser.string2list(databaseProperty.blackListPattern);} catch (NullPointerException ignored) {}
-         try {whiteListPattern = TextParser.string2list(databaseProperty.whiteListPattern);} catch (NullPointerException ignored) {}
+        // Database properties
+        try {comboBoxUnit.setValue(databaseProperty.unit);} catch (NullPointerException ignored) {}
+        try {textLag.setText(databaseProperty.lag.toString());} catch (NullPointerException ignored) {}
+        try {textLead.setText(databaseProperty.lead.toString());} catch (NullPointerException ignored) {}
+        try {textSampleCount.setText(databaseProperty.sampleCount.toString());} catch (NullPointerException ignored) {}
+        try {comboBoxTask.setValue(databaseProperty.task);} catch (NullPointerException ignored) {}
+        try {textPredictorMax.setText(databaseProperty.predictorMax.toString());} catch (NullPointerException ignored) {}
+        try {textSecondMax.setText(databaseProperty.secondMax.toString());} catch (NullPointerException ignored) {}
+        try {checkBoxUseId.setSelected(databaseProperty.useIdAttributes);} catch (NullPointerException ignored) {}
+        try {checkBoxUseTwoStages.setSelected(databaseProperty.useTwoStages);} catch (NullPointerException ignored) {}
+        try {checkBoxIgnoreDatabaseForeignConstraints.setSelected(databaseProperty.ignoreDatabaseForeignConstraints);} catch (NullPointerException ignored) {}
+        try {blackListPattern = TextParser.string2list(databaseProperty.blackListPattern);} catch (NullPointerException ignored) {}
+        try {whiteListPattern = TextParser.string2list(databaseProperty.whiteListPattern);} catch (NullPointerException ignored) {}
 
         // Add ability to select an item in a combobox with a key stroke.
 	    // Note: It is too tough to add it for ComboBoxMulti (comboBoxTargetColumn, comboBoxTargetId).
