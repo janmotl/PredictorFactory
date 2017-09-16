@@ -10,6 +10,8 @@ import java.util.*;
 // Implementation details: Guava's MinMaxPriorityQueue follows the collection contract --> add() returns boolean.
 // And that is not what we want.
 // Note: Nulls at the inputs are not permissible.
+// Note: I tried to store Comparator to make getAllSorted() nicer. But Comparator is an interface. And interfaces do not
+// work with JAXB.
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class HeapWithFixedSize<T> {
@@ -37,11 +39,18 @@ public class HeapWithFixedSize<T> {
 		return null;
 	}
 
-	// Returns a collection with all the items sorted in the descending order (from the best predictor to the worst)
+	// Returns a collection with all the items in an unspecified order
 	public List<T> getAll() {
 		List<T> result = new ArrayList<>();
+		result.addAll(priorityQueue); // The results are not guaranteed to be in any specific order
+		return result;
+	}
+
+    // Returns a collection with all the items sorted in the descending order (from the best predictor to the worst)
+    public List<T> getAllSorted(Comparator comparator) {
+		List<T> result = new ArrayList<>();
 		result.addAll(priorityQueue);
-		Collections.reverse(result);
+		Collections.sort(result, comparator);
 		return result;
 	}
 

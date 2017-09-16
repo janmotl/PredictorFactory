@@ -120,7 +120,7 @@ public class Journal {
 	// Return the top predictors for the given target
 	public List<Predictor> getTopPredictors(String baseTarget) {
 
-		List<Predictor> result = heapMap.get(baseTarget).getAll();
+		List<Predictor> result = heapMap.get(baseTarget).getAllSorted(Predictor.SingleRelevanceComparator);
 		int upperBound = Math.min(result.size(), featureLimitCount);
 
 		return result.subList(0, upperBound);
