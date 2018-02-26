@@ -13,6 +13,7 @@ import utility.Meta;
 import utility.PatternMap;
 import utility.TextParser;
 
+import javax.xml.bind.JAXBException;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -29,14 +30,12 @@ public class Aggregation {
 	public static Journal run(Setting setting, List<OutputTable> tableMetadata) {
 		id = setting.predictorStart;
 
-		// Reuse journal.xml OR create everything from scratch?
-		// WE SHOULD really introduce something like: if(setting.isSecondStage) to avoid accidental reading unrelated XML
-		// AND we should check that the {inputSchemaList, outputSchema, databaseVendor} are the same.
-		if (setting.useTwoStages && setting.sampleCount == Integer.MAX_VALUE) {
-			List<Predictor> topPredictors = Journal.unmarshall().getAllTopPredictors();
+		// Try to reuse journal.xml if possible. Fallback to processing from scratch.
+		try {
+			List<Predictor> topPredictors = Journal.unmarshall(setting).getAllTopPredictors();
 			Journal journal = new Journal(setting, topPredictors.size());
 			return fromXML(setting, journal, topPredictors);
-		} else {
+		} catch (InstantiationException | JAXBException e) {
 			return fromScratch(setting, tableMetadata);
 		}
 	}
@@ -408,7 +407,7 @@ public class Aggregation {
 		// Azure and Teradata require not-null constraint -> skip it for MSSQL and Teradata.
 		if (!"Microsoft SQL Server".equals(setting.databaseVendor) && !"Teradata".equals(setting.databaseVendor)) {
 			if (!setting.dialect.setPrimaryKey(setting, predictor.getOutputTable())) {
-				logger.warn("Primary key constrain failed");
+				logger.warn("Primary key constraint failed");
 				return;
 			}
 		}
@@ -471,7 +470,7 @@ public class Aggregation {
 		// Azure and Teradata require not-null constraint -> skip it for MSSQL and Teradata.
 		if (!"Microsoft SQL Server".equals(setting.databaseVendor) && !"Teradata".equals(setting.databaseVendor)) {
 			if (!setting.dialect.setPrimaryKey(setting, predictor.getOutputTable())) {
-				logger.warn("Primary key constrain failed");
+				logger.warn("Primary key constraint failed");
 				return;
 			}
 		}
@@ -513,7 +512,7 @@ public class Aggregation {
 	// Note: The data type could be predicted from the pattern and pattern parameters. But the implemented
 	// method is foolproof, though slow.
 	// Note: An exception is a direct field where we want to treat an integer column once like numerical and once like
-	// nominal
+	// nominal.
 	private static void getPredictorType(Setting setting, Predictor predictor) {
 
 		Table table = new Table();
@@ -525,15 +524,18 @@ public class Aggregation {
 		predictor.setDataType(column.dataType);
 		predictor.setDataTypeName(column.dataTypeName);
 
-		// Exception for direct field pattern
+		// Exception for direct field pattern (since once we treat it as nominal and once as numerical)
 		if ("Direct field".equals(predictor.getPatternName())) {
 			String statisticalType = getColumnStatisticalType(predictor.getColumnMap().firstKey());
 			predictor.setDataTypeCategory(statisticalType);
+			if (column.dataType == -7 || column.dataType == 16) {    // We treat here bit/boolean data type as nominal, not numerical!
+				predictor.setDataTypeCategory("nominal");
+			}
 			return;
 		}
 
 		// NOTE: WE DO NOT WANT STATISTICAL TYPE, WE WANT RAW TYPE!
-		if (column.dataType == -7) {   // We treat here boolean data type as nominal, not numerical!
+		if (column.dataType == -7 || column.dataType == 16) {   // We treat here bit/boolean data type as nominal, not numerical!
 			predictor.setDataTypeCategory("nominal");
 		} else if (column.isTemporal) {
 			predictor.setDataTypeCategory("temporal");
@@ -552,5 +554,4 @@ public class Aggregation {
 		logger.warn("Unknown type encountered: " + type);
 		return type;
 	}
-
 }

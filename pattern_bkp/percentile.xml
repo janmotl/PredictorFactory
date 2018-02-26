@@ -5,22 +5,22 @@
 	<description>Percentile of a numerical attribute.
 	
 	Note: The implementation for PostgreSQL is supported from PostgreSQL 9.4.
-	Note: Schizofrenic window functions - PostgreSQL requires "group by", MSSQL requires "over".
+	Note: Schizophrenic aggregate/window function - PostgreSQL requires "group by", MSSQL requires "over".
 	</description>
 	<example>
 		The 95th percentile of the transaction amount. The advantage of the percentile in comparison to other aggregates
-		like min, avg and max is the resistance to outliers. The disadvantage is increased
+		like min, avg and max is the resistance to outliers. The disadvantage is increased runtime.
 	</example>
 	<author>Jan Motl</author>
 	<date>2014-12-22</date>
+	<code compatibility="Microsoft SQL Server,Oracle">SELECT DISTINCT @base
+	           , percentile_cont(@value) WITHIN GROUP (ORDER BY @numericalColumn) OVER (PARTITION BY @basePartitionBy) AS @columnName
+		   FROM @propagatedTable
+	</code>
 	<code compatibility="PostgreSQL">SELECT @base
 	           , percentile_cont(@value) WITHIN GROUP (ORDER BY @numericalColumn) AS @columnName
 		   FROM @propagatedTable
 		   GROUP BY @base
-	</code>
-	<code compatibility="Microsoft SQL Server">SELECT DISTINCT @base
-	           , percentile_cont(@value) WITHIN GROUP (ORDER BY @numericalColumn) OVER (PARTITION BY @basePartitionBy) AS @columnName
-		   FROM @propagatedTable
 	</code>
 	<parameter key="@value" value="0.05, 0.5, 0.95"/>
 	<cardinality>n</cardinality>

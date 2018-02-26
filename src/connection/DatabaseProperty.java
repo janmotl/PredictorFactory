@@ -42,6 +42,7 @@ public class DatabaseProperty implements Cloneable{
 	@XmlAttribute public Integer secondMax;
 	@XmlAttribute public Boolean useIdAttributes;
 	@XmlAttribute public Boolean useTwoStages;
+	@XmlAttribute public Boolean isExploitationPhase;
 	@XmlAttribute public Boolean ignoreDatabaseForeignConstraints;
 
 	@Override public Object clone() {

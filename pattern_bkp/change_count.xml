@@ -26,7 +26,7 @@
 				 , sum(is_change) AS @columnName
 			FROM (
 			   SELECT @base
-					, (CASE WHEN lag(@column) OVER (ORDER BY @temporalColumn) != @column
+					, (CASE WHEN lag(@column) OVER (PARTITION BY @basePartitionBy ORDER BY @temporalColumn) != @column
 							THEN 1
 							ELSE 0
 						END) is_change

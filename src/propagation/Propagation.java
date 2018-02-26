@@ -5,15 +5,17 @@ import connection.Network;
 import meta.*;
 import org.apache.log4j.Logger;
 import run.Setting;
+import utility.Hash;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Propagation {
 	// Logging
 	private static final Logger logger = Logger.getLogger(Propagation.class.getName());
 
-	private static int counter;   // We want to guarantee that the journal_table is going to have unique and consecutive ids even if the table propagation fails -> it is not enough to just call propagated.size()+newlyPropagated.size()
+	private static int counter;   // We want to guarantee that the journal_table is going to have unique and monotonically growing ids even if the table propagation fails -> it is not enough to just call propagated.size()+newlyPropagated.size()
 
 	// Propagate tuples from the base table into all other tables.
 	// The propagation depth is limited by setting.propagationDepthMax.
@@ -88,11 +90,12 @@ public class Propagation {
 				for (ForeignConstraint relationship : relationshipList) {
 					// Initialize
 					OutputTable table = new OutputTable(table2);
-					table.name = trim(setting, table2.name, counter); // We have to make sure that outputTable name is short enough but unique (we add id)
 					table.propagationOrder = counter;
 					table.propagationForeignConstraint = relationship;
 					table.propagationTable = table1.name;
 					table.propagationPath = getPropagationPath(table1);
+					table.propagationTables = getPropagationTables(table1);
+					table.name = trim(setting, table, table2.name); // We have to make sure that outputTable name is short enough but unique (we add id)
 					table.dateBottomBounded = true;    // NOT PROPERLY USED - is a constant
 
 					// Identify time constraint
@@ -166,11 +169,11 @@ public class Propagation {
 
 	// Trim the length of a table name to the length permitted by the database
 	// but make sure the name is unique.
-	private static String trim(Setting setting, String outputTable, int counter) {
+	private static String trim(Setting setting, OutputTable table, String outputTable) {
 		outputTable = setting.propagatedPrefix + "_" + outputTable;
 		int stringLength = Math.min(outputTable.length(), setting.identifierLengthMax - 4);
 		outputTable = outputTable.substring(0, stringLength);
-		outputTable = outputTable + "_" + String.format("%03d", counter);
+		outputTable = outputTable + "_" + Hash.deterministically(table);
 
 		return outputTable;
 	}
@@ -179,5 +182,11 @@ public class Propagation {
 		List<String> path = new ArrayList<>(table.propagationPath);
 		path.add(table.originalName);
 		return path;
+	}
+
+	private static List<OutputTable> getPropagationTables(OutputTable table) {
+		List<OutputTable> list = new ArrayList<>(table.propagationTables);
+		list.add(table);
+		return list;
 	}
 }

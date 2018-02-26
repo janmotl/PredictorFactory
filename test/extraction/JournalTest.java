@@ -9,13 +9,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import run.Setting;
 
+import javax.xml.bind.JAXBException;
 import java.util.List;
 import java.util.Set;
 
 import static mother.PredictorMother.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 
 public class JournalTest {
@@ -43,18 +42,32 @@ public class JournalTest {
 
 
 	@Test
-	public void unmarshall() {
+	public void unmarshall() throws JAXBException, InstantiationException {
+		setting.useTwoStages = true;
+		setting.isExploitationPhase = true;
+
 		journal.addPredictor(setting, woeMutagenic());  //  0.5 0   woeMutagenic
 		journal.addPredictor(setting, woeInd1());       //  0   0.8 woeInd1
 		journal.addPredictor(setting, aggregateMax());  //  0.7 0.2 aggregateMax
 		journal.addPredictor(setting, aggregateMin());
 
-		Journal.marshall(journal);
-		Journal unmarshalled = Journal.unmarshall();
+		journal.marshall(setting);
+		Journal unmarshalled = Journal.unmarshall(setting);
 
 		assertEquals(journal.getAllTopPredictors(), unmarshalled.getAllTopPredictors());
 	}
 
+	@Test
+	public void unmarshallUseTwoPhasesIsNotSet() {
+		setting.useTwoStages = false;
+
+		journal.marshall(setting);
+		try {
+		    Journal unmarshalled = Journal.unmarshall(setting);
+		    fail("My method didn't throw when I expected it to");
+		} catch (InstantiationException|JAXBException ignored) {}
+	}
+	
 	@Test
 	public void respectLimit() {
 		journal.addPredictor(setting, woeMutagenic());  //  0.5 0   woeMutagenic

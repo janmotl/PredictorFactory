@@ -26,7 +26,7 @@
 		  FROM (SELECT t1.@base
 			   		 , t1.@columnName
 			   		 , t1.n
-		             , Max(t1.n) OVER (partition BY t1.@basePartitionBy) max_n
+		             , Max(t1.n) OVER (PARTITION BY t1.@basePartitionBy) max_n
 		        FROM   (SELECT @base
 		                     , @numericalColumn AS @columnName
 		                     , ROW_NUMBER() OVER (PARTITION BY @basePartitionBy ORDER BY @numericalColumn @sortOrder) AS n

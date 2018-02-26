@@ -133,7 +133,7 @@ Description of the fields:
 		driverClass="com.mysql.jdbc.Driver"
 		defaultPort="3306"
 		urlPrefix="jdbc:mysql://"
-		urlSuffix="?prepStmtCacheSqlLimit=2048&amp;cachePrepStmts=true&amp;useServerPrepStmts=true"
+		urlSuffix="?prepStmtCacheSqlLimit=2048&amp;cachePrepStmts=true&amp;useServerPrepStmts=true&amp;useSSL=false"
 		dbNameSeparator="/"
 		quoteAliasOpen="'"
 		quoteAliasClose="'"

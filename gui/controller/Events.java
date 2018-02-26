@@ -86,6 +86,14 @@ public class Events implements Initializable {
     @FXML private Text textVersion;
 
     // Event handlers
+    @FXML private void vendorAction() {
+
+        // Fill in the default port for the selected vendor
+        DriverPropertyList driverList = DriverPropertyList.unmarshall();
+        DriverProperty driverProperty = driverList.getDriverProperties(comboBoxVendor.getValue());
+        textPort.setPromptText(driverProperty.defaultPort);
+    }
+
     @FXML private void connectAction() {
 
         // Close the connection, if appropriate
@@ -104,8 +112,8 @@ public class Events implements Initializable {
         connectionProperty.name = "GUI";
         connectionProperty.driver = comboBoxVendor.getValue();
         connectionProperty.database = textDatabase.getText();
-        connectionProperty.host = textHost.getText();
-        connectionProperty.port = textPort.getText();
+        connectionProperty.host = textHost.getText().isEmpty() ? "localhost" : textHost.getText();
+        connectionProperty.port = textPort.getText().isEmpty() ? textPort.getPromptText() : textPort.getText();
         connectionProperty.username = textUsername.getText();
         connectionProperty.password = textPassword.getText();   // WE SHOULD NOT WRITE THE PASSWORD INTO THE XML. PASS IT AS A PARAMETER TO Launcher?
 
@@ -313,6 +321,7 @@ public class Events implements Initializable {
 
         // Populate comboBoxes
         // VENDOR COMBOBOX SHOULD BE POPULATED BASED ON DRIVER.XML
+        //  However, we currently declare support only for a subset of vendors  in driver.xml.
         comboBoxVendor.getItems().addAll("Microsoft SQL Server", "MySQL", "Oracle", "PostgreSQL", "SAS");
         comboBoxTask.getItems().addAll("classification", "regression");
         comboBoxUnit.getItems().addAll("second", "hour", "day", "month", "year");
@@ -331,12 +340,12 @@ public class Events implements Initializable {
             textPassword.setText(connectionProperty.password);
         }
 
+        // Database properties
         DatabasePropertyList databaseList = DatabasePropertyList.unmarshall();
         DatabaseProperty databaseProperty = databaseList.getDatabaseProperties("GUI");
         List<String> blackListPattern = new ArrayList<>();
         List<String> whiteListPattern = new ArrayList<>();
 
-        // Database properties
         try {comboBoxUnit.setValue(databaseProperty.unit);} catch (NullPointerException ignored) {}
         try {textLag.setText(databaseProperty.lag.toString());} catch (NullPointerException ignored) {}
         try {textLead.setText(databaseProperty.lead.toString());} catch (NullPointerException ignored) {}
@@ -365,6 +374,8 @@ public class Events implements Initializable {
         // Connection tab
         ValidatorText.addNumericValidation(textPort, Integer.MAX_VALUE);
         buttonConnect.defaultButtonProperty().bind(tabConnect.selectedProperty());
+        vendorAction();
+        textHost.setPromptText("localhost");
 
         // Pattern tab - populate list of patterns
         SortedMap<String, Pattern> patternMap = PatternMap.getPatternMap(); // Get patternMap
@@ -546,7 +557,6 @@ public class Events implements Initializable {
             ConnectionDialog.exceptionDialog(exception);
         });
     }
-
 
     // Takes a setting, makes a connection, returns the setting
     private class ConnectionService extends Service<Setting> {

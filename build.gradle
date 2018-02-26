@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'PredictorFactory'
-version '4.0.5'
+version '4.0.6'
 sourceCompatibility = 1.8
 
 

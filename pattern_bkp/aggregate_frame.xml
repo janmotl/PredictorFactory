@@ -11,6 +11,8 @@
 		Of course, the same remedy applies to sum() and stddev_samp().
 		
 		Note: This pattern can be very slow.
+
+		Note: This pattern may produce a lot of duplicates.
 		
 		NOTE: ADDED SUM
 		

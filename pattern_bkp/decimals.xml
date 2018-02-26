@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Decimals</name>
+	<description>
+		Returns the count of decimal digits.
+
+		Note: Useful only for numbers that can contain decimals.
+	</description>
+	<example>
+		Energy consumption in kWh/year entered by the web visitor. If they enter something like 1986.724, it is more
+		likely to be an exact value than 1986.
+	</example>
+	<author>Jan Motl</author>
+	<date>2017-11-08</date>
+	<code>SELECT @base
+			   , case when length(cast(@numericalColumn as varchar)) - length(cast(round(@numericalColumn) as varchar)) > 0 then length(cast(@numericalColumn as varchar)) - length(cast(round(@numericalColumn) as varchar)) -1 else 0 end AS @columnName
+		  FROM @propagatedTable
+		  WHERE @numericalColumn is not null</code>
+	<cardinality>1</cardinality>
+</pattern>

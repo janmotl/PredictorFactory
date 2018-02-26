@@ -50,7 +50,7 @@
                         <Insets bottom="3.0" />
                      </padding>
                   </Label>
-                  <ComboBox fx:id="comboBoxVendor" prefWidth="170.0" />
+                  <ComboBox fx:id="comboBoxVendor" onAction="#vendorAction" prefWidth="170.0" />
                </VBox>
                <VBox>
                   <Label text="Host name/IP address">
@@ -317,13 +317,7 @@
          <TitledPane collapsible="false" prefHeight="209.0" text="Predictors" GridPane.columnIndex="1">
             <VBox>
                <VBox minHeight="57.0">
-                  <VBox.margin>
-                     <Insets left="4.0" />
-                  </VBox.margin>
                   <Label text="Maximal count of returned predictors">
-                     <VBox.margin>
-                        <Insets />
-                     </VBox.margin>
                      <padding>
                         <Insets bottom="3.0" />
                      </padding>
@@ -335,13 +329,7 @@
                   </TextField>
                </VBox>
                <VBox minHeight="57.0">
-                  <VBox.margin>
-                     <Insets left="4.0" />
-                  </VBox.margin>
                   <Label text="Predictor calculation timeout in seconds">
-                     <VBox.margin>
-                        <Insets left="4.0" />
-                     </VBox.margin>
                      <padding>
                         <Insets bottom="3.0" />
                      </padding>
@@ -353,28 +341,19 @@
                   </TextField>
                </VBox>
                <VBox minHeight="30.0">
-                  <CheckBox fx:id="checkBoxUseId" mnemonicParsing="false" text="Calculate predictors from identifiers">
+                  <CheckBox fx:id="checkBoxUseId" text="Calculate predictors from identifiers">
                      <tooltip>
                         <Tooltip text="IDs may contain leaking data. That is good in challenges. But bad in deployment." />
                      </tooltip>
-                     <VBox.margin>
-                        <Insets left="4.0" />
-                     </VBox.margin>
                   </CheckBox>
                </VBox>
             </VBox>
          </TitledPane>
 
-         <TitledPane collapsible="false" prefHeight="2147483647" text="Processing" GridPane.columnSpan="2147483647" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS">
+         <TitledPane collapsible="false" prefHeight="2147483647" text="Processing" GridPane.columnSpan="2" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS">
             <VBox>
                <VBox minHeight="57.0">
-                  <VBox.margin>
-                     <Insets left="4.0" />
-                  </VBox.margin>
                   <Label text="Sample count">
-                     <VBox.margin>
-                        <Insets />
-                     </VBox.margin>
                      <padding>
                         <Insets bottom="3.0" />
                      </padding>
@@ -386,23 +365,17 @@
                   </TextField>
                </VBox>
                <VBox minHeight="30.0">
-                  <CheckBox fx:id="checkBoxIgnoreDatabaseForeignConstraints" mnemonicParsing="false" text="Ignore foreign key constraints defined in the database">
+                  <CheckBox fx:id="checkBoxIgnoreDatabaseForeignConstraints" text="Ignore foreign key constraints defined in the database">
                      <tooltip>
                         <Tooltip text="If the definition of the foreign key constraints in the database is spotty,&#10;it can be better to completely ignore the FKCs from the database and use FKC definitions from DDL or XML file exclusively." />
                      </tooltip>
-                     <VBox.margin>
-                        <Insets left="4.0" />
-                     </VBox.margin>
                   </CheckBox>
                </VBox>
                <VBox>
-                  <CheckBox fx:id="checkBoxUseTwoStages" mnemonicParsing="false" text="Permit two-stage processing (exploration, exploitation)">
+                  <CheckBox fx:id="checkBoxUseTwoStages" text="Permit two-stage processing (exploration, exploitation)">
                      <tooltip>
                         <Tooltip text="Identify promising predictors on &quot;Sample count&quot;.&#10;Then calculate the best predictors for whole target table." />
                      </tooltip>
-                     <VBox.margin>
-                        <Insets left="4.0" />
-                     </VBox.margin>
                   </CheckBox>
                </VBox>
             </VBox>
@@ -427,7 +400,7 @@
          <bottom>
             <BorderPane prefHeight="50.0" style="-fx-background-color: DDD;" BorderPane.alignment="BOTTOM_CENTER">
                <right>
-                  <Button fx:id="buttonRun" mnemonicParsing="false" onAction="#runAction" text="Run" BorderPane.alignment="CENTER">
+                  <Button fx:id="buttonRun" onAction="#runAction" text="Run" BorderPane.alignment="CENTER">
                      <BorderPane.margin>
                         <Insets right="14.0" />
                      </BorderPane.margin>

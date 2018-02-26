@@ -217,9 +217,11 @@ public   class SQLTest {
 
     @Test
     public void getChi2() {
+        // Design: unless stated otherwise, we test columns without any missing value (to make it comparable to RapidMiner)
+
         // Setting
-        Setting setting = new Setting("MariaDB", "mutagenesis");
-	    setting.outputSchema = "financial";
+        Setting setting = new Setting("MariaDB", "financial");
+	    setting.outputSchema = "financial";     // We use input schemas instead of predictor_factory
         Network.openConnection(setting);
 		Predictor predictor = PredictorMother.aggregateAvg();
 
@@ -270,7 +272,78 @@ public   class SQLTest {
 	    chi2 = 10*SQL.getChi2(setting, predictor, "PayFrequency"); // Binning into 10 bins
         Assert.assertEquals(21.856300708852554, chi2, 0.001); // RapidMiner reference
 
+        // Text (slow and with nulls -> find better test)
+        setting.outputSchema = "FNHK";
+        predictor.setOutputTable("pripady");
+        predictor.setName("PSC");
+        predictor.setDataTypeCategory("nominal");
+        chi2 = 1202*SQL.getChi2(setting, predictor, "Pohlavi_pacienta"); // 1202 unique values in PSC
+        Assert.assertEquals(1931.1719247408, chi2, 0.01);
+        // R with double precision:       1931.17192474082753 without nulls (excluded from the calculation)
+        // R 140 bit precision:           1931.17192474082751 without nulls
+        // RapidMiner reference:          1931.1719247408496  without nulls
+        // Databases numeric precision:   1931.1719247408275  without nulls -> without nulls correct
+        // ------
+        // R with double precision:       1931.54616075496073 with nulls (included in the raw data)
+        // R 140 bit precision:           1931.54616075496065 with nulls
+        // RapidMiner reference:          1930.9136306749358  with nulls
+        // Databases numeric precision:   1934.16990049500675 with nulls
+        // Databases float8 precision:    1934.16990049502    with nulls -> off by 0.001
+        // Databases float4 precision:    1934.17             with nulls
+        //
+        // When comparing to R, we should remove the correction, which affects the statistics.
+        // When calculating from a contingency table:
+        //      M <- as.table(rbind(c(1, 0), c(0, 1)))
+        //      print(chisq.test(M, correct=FALSE))     # We expect to see value 2
+        // When calculating from raw data:
+        //      tbl = table(input$Pohlavi_pacienta, input$PSC)
+        //      print(chisq.test(tbl, correct=FALSE))
+
+
 	    // Enum, blob, binary, text
+
+
+        // Nulls numerical (see the implementation for explanation why the results differ )
+        setting.outputSchema = "pubs";
+	    predictor.setOutputTable("titles");
+		predictor.setName("royalty");
+	    predictor.setDataTypeCategory("numerical");
+	    chi2 = 10*SQL.getChi2(setting, predictor, "type"); // It is always divided by 10 for numerical
+        Assert.assertEquals(20.5866666666666, chi2, 2);
+        // http://www.quantpsy.org/chisq/chisq.htm (we treat null as another category): 31.86
+        // http://www.quantpsy.org/chisq/chisq.htm (we remove whole rows with nulls): 20.587
+        // Rapidminer: 20.724999999999998
+
+
+        // Nulls nominal
+        setting.outputSchema = "pubs";
+	    predictor.setOutputTable("titles");
+		predictor.setName("royalty");
+	    predictor.setDataTypeCategory("nominal");
+	    chi2 = 5*SQL.getChi2(setting, predictor, "type"); // 6 unique values in the label, but one always has null feature
+        Assert.assertEquals(20.5866666666666, chi2, 2);
+
+
+        // Nulls nominal
+        // The convention is to remove records with missing values:
+        //      http://stat.ethz.ch/R-manual/R-patched/library/stats/html/chisq.test.html
+        setting.outputSchema = "pubs";
+	    predictor.setOutputTable("publishers");
+		predictor.setName("state");
+	    predictor.setDataTypeCategory("nominal");
+	    chi2 = 6*SQL.getChi2(setting, predictor, "country"); // 6+1 unique values in the state
+        Assert.assertEquals(2, chi2, 0.1);
+        // http://www.quantpsy.org/chisq/chisq.htm (we treat null as another category): 8
+        // R (we treat null as a valid value, not as NA): 8
+        // R (we treat null as NA): NaN
+        // RapidMiner: 4.444444444444445
+
+
+
+
+
+
+        // Constant feature
 
         Network.closeConnection(setting);
     }

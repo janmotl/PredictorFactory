@@ -1,10 +1,13 @@
 package meta;
 
+import javax.xml.bind.annotation.XmlIDREF;
+import javax.xml.bind.annotation.XmlType;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 // Table metadata
+@XmlType(name = "outputTable")
 public class OutputTable extends Table {
 	public String originalName;                     // The table name before propagation.
 	public String temporalConstraint;               // Column used for time constrain during table propagation (in the last table).
@@ -13,7 +16,8 @@ public class OutputTable extends Table {
 	public String sql;                      // SQL code used for creation of the propagated.
 	public String propagationTable;         // This is the name of the outputTable, from which we collect {targetId,...}.
 
-	public List<String> propagationPath = new ArrayList<>();    // In the case of loops this makes the difference.
+	@XmlIDREF public List<OutputTable> propagationTables = new ArrayList<>(); // All outputTables (including FKCs!) over which the table was propagated. Since it contains only links, it is small in RAM. However, to prevent the bloat of the XML, we have to use {@XmlIDREF @XmlID} trick.
+	public List<String> propagationPath = new ArrayList<>();    // In the case of loops this makes the difference. It uses input table names -> useful only for reporting. Can be completely replaced with propagationTables.
 	public int propagationOrder;            // The order, in which tables are propagated.
 	public Integer rowCount;                // Count of tuples in the calculated feature.
 	public boolean dateBottomBounded;       // Related to time window NOT PROPERLY USED!

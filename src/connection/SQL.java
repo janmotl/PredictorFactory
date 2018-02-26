@@ -351,6 +351,8 @@ public class SQL {
 	// Create index on {baseId, baseDate}.
 	// Returns true if the update was successful.
 	// Note: The index can not be unique because we are creating it on propagated tables (like table of transactions...).
+	// Hypothesis: We get better speed up if we add target columns into the index (to the end), because aggregate
+	// queries group over {baseId, baseDate, baseTarget}
 	// Design note: There are troubles with obligatory index names (PostgreSQL allows to omit the name but other
 	// databases like MySQL, Oracle, SAS or MSSQL require the index name) :
 	//  1) The created index name can be already taken (e.g.: a user may have backed up the table from a previous run).
@@ -826,7 +828,25 @@ public class SQL {
 	// that are put together with String concatenation (necessary for databases without "with" clause support).
 	// The calculation could be streamlined as described in:
 	//  Study of feature selection algorithms for text-categorization.
-	// SHOULD BE EXTENDED TO SUPPORT BOOLEANS
+	//
+	// Treatment of nulls: There were two competing theories:
+	//  1) Treat nulls as another nominal category
+	//  2) Ignore samples with nulls
+	// Results: Ignoring nulls is by ~5% faster and by ~5% more predictive of getting the attribute into a model (at
+	// least with a decision tree and naive Bayes) than treating the nulls as another category. These numbers are
+	// heavily influenced by the sparsity of the data in the tables - if there is a lot of nulls, you may expect bigger
+	// impact.
+	// Conclusion: We ignore nulls (in both, the feature and the label).
+	// Theoretical justification: If the data are missing completely at random (MCAR), it is desirable to ignore
+	// nulls in Chi2 calculation. This is the approach is taken for example by chisq.test in R. If the missing data are
+	// not MCAR, we preserve that knowledge in is_null and null_ratio patterns.
+	//
+	// Another thing to decide: When we are calculating expected counts, should we calculate it:
+	//  1) After filtering out rows with even a single null (in the feature or in the target)
+	//  2) Ignore nulls only in the examined column (after all, we assume that the target and the feature are independent)
+	// Conclusion: The difference is close to nonexistent. I take the second approach (which is; however, difficult to
+	// validate in other implementations).
+	// I use the first approach.
 	public static double getChi2(Setting setting, Predictor predictor, String baseTarget) {
 		// Initialization
 		String sql;
@@ -848,7 +868,7 @@ public class SQL {
 		// NOTE: We should treat NULL values as another category in the histograms/list of categorical values.
 		// Technical: Azure cloud may require after us to cast some of the count(*) to decimal. Not tested.
 		if ("nominal".equals(predictor.getDataTypeCategory())) {
-			// Use categorical column directly
+			// Use categorical/bit/boolean column directly
 			sql = "SELECT sum(chi2)/count(distinct(bin)) " // Linearly regularized against columns with high cardinality
 					+ "FROM ( "
 					+ " SELECT (expected.expected-coalesce(measured.count, 0)) * (expected.expected-coalesce(measured.count, 0)) / expected.expected AS chi2"
@@ -863,12 +883,14 @@ public class SQL {
 					+ "         FROM @outputTable, ( "
 					+ "             SELECT count(*) AS nrow "
 					+ "             FROM @outputTable "
+					+ "             WHERE @baseTarget is not null " // Ignore nulls in the target (and only in the target)
 					+ "         ) t2 "
 					+ "         GROUP BY @baseTarget "
 					+ "     ) expected_target, ( "
 					+ "         SELECT count(*) AS count "
 					+ "              , @column AS bin "
 					+ "         FROM @outputTable "
+					+ "         WHERE @column is not null " // Ignore nulls in the column (and only in the column)
 					+ "         GROUP BY @column "
 					+ "     ) expected_bin "
 					+ " ) expected "
@@ -877,10 +899,11 @@ public class SQL {
 					+ "          , count(*) AS count "
 					+ "          , @column AS bin "
 					+ "     FROM @outputTable "
+					+ "     WHERE @baseTarget is not null AND @column is not null " // Ignore nulls from the target and the column (there is no way around that)
 					+ "     GROUP BY @column, @baseTarget "
 					+ " ) measured "
-					+ " ON expected.bin = measured.bin "
-					+ " AND expected.target = measured.target "
+					+ " ON (expected.bin = measured.bin ) "
+					+ " AND (expected.target = measured.target ) "
 					+ ") chi2";
 		} else {
 			// Group numerical/time values into 10 bins.
@@ -903,7 +926,9 @@ public class SQL {
 					+ "         FROM @outputTable, ( "
 					+ "             SELECT count(*) AS nrow "
 					+ "             FROM @outputTable "
+					+ "             WHERE @baseTarget is not null " // No null in the target (in nrow)
 					+ "         ) t2 "
+					+ "         WHERE @baseTarget is not null " // No null in the target (in the cross-join)
 					+ "         GROUP BY @baseTarget "
 					+ "     ) expected_target, ( "
 					+ "         SELECT bin "
@@ -911,10 +936,11 @@ public class SQL {
 					+ "         FROM ( "
 					+ "             SELECT floor((@column-t2.min_value) / t2.bin_width) AS bin "
 					+ "             FROM @outputTable, ( "
-					+ "                 SELECT ((max(@column)-min(@column)) / 10.0) + 0.0000001 bin_width " // 0.0000001 because the maximum should fall into into the 10th bin, not the 11th.
+					+ "                 SELECT ((max(@column)-min(@column)) / 10.0) + 0.0000001 bin_width " // 0.0000001 because the maximum should fall into the 10th bin, not the 11th.
 					+ "                      , min(@column) AS min_value "                                  // Also it prevents division by zero if all the values are constant.
 					+ "                 FROM @outputTable "                                                 // 10.0 because bin_width may not be a whole number.
 					+ "             ) t2 "
+					+ "             WHERE @column is not null "// No null in the column
 					+ "         ) t3 "
 					+ "         GROUP BY bin "
 					+ "     ) expected_bin "
@@ -931,17 +957,23 @@ public class SQL {
 					+ "                  , min(@column) AS min_value "
 					+ "             FROM @outputTable "
 					+ "         ) t2 "
+					+ "         WHERE @baseTarget is not null AND @column is not null " // No null to avoid joining over nullable columns
 					+ "     ) t3 "
 					+ "     GROUP BY bin, target "
 					+ " ) measured "
-					+ " ON expected.bin = measured.bin "
-					+ " AND expected.target = measured.target "
+					+ " ON (expected.bin = measured.bin ) "
+					+ " AND (expected.target = measured.target ) "
 					+ ") chi2";
 
 			// For time columns just cast time to number.
 			if ("temporal".equals(predictor.getDataTypeCategory())) {
 				sql = sql.replace("@column", setting.dateToNumber);
 			}
+
+//			// For boolean columns, cast the boolean to
+//			if () {
+//				sql = sql.replace("@column", setting.dateToNumber);
+//			}
 		}
 
 		// Expand
@@ -1134,7 +1166,8 @@ public class SQL {
 			similarity = Double.parseDouble(response.get(0));
 		} catch (Exception ignored) {  // Cover's both, number format exception and null pointer exception.
 			similarity = 0;
-			logger.info("The estimated concept drift on " + predictor.getOutputTable() + "." + predictor.getName() + " is null (empty table...). Returning 0.");
+			// To get these errors, run VOC dataset. It would be nice to use some regularization to avoid division by zero.
+			logger.info("The estimated concept drift on " + predictor.getOutputTable() + "." + predictor.getName() + " is null (no rows, only nulls,...). Returning 0.");
 		}
 
 		return similarity;
@@ -1293,7 +1326,8 @@ public class SQL {
 			similarity = Double.parseDouble(response.get(0));
 		} catch (Exception ignored) {  // Cover's both, number format exception and null pointer exception.
 			similarity = 0;
-			logger.info("The estimated concept drift on " + predictor.getOutputTable() + "." + predictor.getName() + " is null (empty table...). Returning 0.");
+			// To get these errors, run VOC dataset. It would be nice to use some regularization to avoid division by zero.
+			logger.info("The estimated concept drift on " + predictor.getOutputTable() + "." + predictor.getName() + " is null (no rows, only nulls,...). Returning 0.");
 		}
 
 		return similarity;
@@ -1417,6 +1451,7 @@ public class SQL {
 				"predictor_long_name " + setting.typeVarchar + "(512), " +
 				"table_name " + setting.typeVarchar + "(1024), " +    // Table is a reserved keyword -> use table_name
 				"column_list " + setting.typeVarchar + "(1024), " +
+				"propagation_table_name " + setting.typeVarchar + "(255), " +
 				"propagation_path " + setting.typeVarchar + "(1024), " +
 				"propagation_depth " + setting.typeInteger + ", " +
 				"date_constrain " + setting.typeVarchar + "(255), " +
@@ -1480,6 +1515,7 @@ public class SQL {
 				"'" + predictor.getLongName() + "', " +
 				"'" + predictor.getOriginalTable() + "', " +
 				"'" + predictor.getColumnMap().toString() + "', " +      // Should be a list...
+				"'" + predictor.getTable().name + "', " +
 				"'" + predictor.getPropagationPath().toString() + "', " +
 				predictor.getPropagationPath().size() + ", " +
 				"'" + predictor.getPropagationDate() + "', " +
@@ -1873,6 +1909,10 @@ public class SQL {
 	// Technical note: We have to return SQL string, because these things are logged and exported for the user
 	// as the "scoring code" for predictors.
 	// IS NOT USING SYSTEM ESCAPING
+	// NOTE: The output table currently contains ALL attributes of the input table, even thought we have
+	// white/black listed columns. This is bad as some columns can be really big (e.g. images) and if we are
+	// performing two-stage processing, we may KNOW that we are not going to use them and that we will have to
+	// make a much taller table than during the first phase.
 	public static String propagateID(Setting setting, OutputTable table) {
 		// Get escape characters
 		String QL = setting.quoteEntityOpen;
@@ -1951,7 +1991,7 @@ public class SQL {
 			String targetColumn = setting.targetColumnList.get(i);
 			Collection<Predictor> predictorList = journal.getTopPredictors(baseTarget);
 			getMainSample(setting, predictorList, baseTarget, targetColumn);
-			logger.info("#### Produced " + setting.outputSchema + "." + setting.mainTablePrefix + " with " + predictorList.size() + " most predictive predictors from " + journal.getEvaluationCount() + " evaluated. Duplicate or unsuccessfully calculated predictors are not passed into the output table. ####");
+			logger.info("#### Produced " + setting.outputSchema + "." + setting.mainTablePrefix + "_" + targetColumn + " with " + predictorList.size() + " most predictive predictors from " + journal.getEvaluationCount() + " evaluated. Duplicate or unsuccessfully calculated predictors are not passed into the output table. ####");
 		}
 	}
 

@@ -10,8 +10,8 @@ calls and memoized.
 
 import run.Setting;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class Column implements Comparable<Column> {
 	public final String name;           // We have name field even though Column object is in a Map because it allows an easy iteration over the Columns (and not over that ugly Entry).
@@ -35,10 +35,15 @@ public class Column implements Comparable<Column> {
 	// Memoized fields retrievable through function calls
 	private Boolean containsNull;
 	private Boolean containsFutureDate;
-	private Set<String> uniqueValueSet;
+	private Set<String> uniqueValueSet; // LinkedSet - sorted by frequency
 
 
 	// Constructors
+	@SuppressWarnings("unused")
+	private Column() {
+		this("No argument constructor is needed for unmarshalling of journal.xml with JAXB");
+	}
+
 	public Column(String name) {
 		if (name == null) {
 			throw new NullPointerException("The column name cannot be null");
@@ -101,10 +106,13 @@ public class Column implements Comparable<Column> {
 
 	// Returns the top N most frequent unique values.
 	// The unique values can be used in patterns like "WoE" or "Existential count" for nominal columns.
+	// The values are sorted by their frequency.
+	// Since we want to make WOE deterministic (to always pick the same reference value), we have to use a collection
+	// that preserve order of the elements.
 	public Set<String> getUniqueValues(Setting setting) {
 		// Memoized
 		if (uniqueValueSet == null) {
-			uniqueValueSet = new TreeSet<>(setting.dialect.getTopUniqueRecords(setting, schemaName, tableName, name));
+			uniqueValueSet = new LinkedHashSet<>(setting.dialect.getTopUniqueRecords(setting, schemaName, tableName, name));
 		}
 		return uniqueValueSet;
 	}

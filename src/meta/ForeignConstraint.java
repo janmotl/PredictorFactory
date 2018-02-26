@@ -12,7 +12,7 @@ import java.util.List;
 
 // Important notice: The definition of fColumn and column is NOT "foreign key" and "primary key".
 // It rather means "THAT" table contains fColumns anf "THIS" table contains column. And it does not matter which is
-// primary and which is foreign.
+// primary and which is foreign. Mnemonic: "f" means "father".
 // This difference is important during the propagation phase as we can propagate only from propagated tables. We
 // do not care whether it is FK->PK or PK->FK. We just care that Propagated->Unpropagated works. But Unpropagated->Propagated
 // does not work.
@@ -20,16 +20,14 @@ import java.util.List;
 // Maybe we should name it Relationship rather than ForeignKey to avoid confusion.
 @XmlType(name = "foreignConstraint")
 public class ForeignConstraint implements Comparable<ForeignConstraint> {
-	@XmlAttribute
-	public String name;       // Optional in the input XML. More like a comment.
+	@XmlAttribute public String name;       // Optional in the input XML. More like a comment.
 	public String fSchema;
 	public String fTable;
 	public String schema;
 	public String table;
 	public List<String> fColumn = new ArrayList<>();
 	public List<String> column = new ArrayList<>();
-	@XmlTransient
-	public int sequence;      // Composite keys in the input XML use multiple column and fColumn fields.
+	@XmlTransient public int sequence;      // Composite keys in the input XML use multiple column and fColumn fields.
 
 	// Constructors
 	public ForeignConstraint() {
@@ -97,10 +95,10 @@ public class ForeignConstraint implements Comparable<ForeignConstraint> {
 		return result;
 	}
 
-	// Note: this points from this to that (not from FK to PK)!
+	// Note: this points from ALREADY PROPAGATED table to table TO PROPAGATE (not from FK to PK)!
+	// See the explanation at the top of this class.
 	@Override
 	public String toString() {
-		return schema + "." + table + " --> " + fSchema + "." + fTable;
+		return "From this table to the father: " + schema + "." + table + " --> " + fSchema + "." + fTable;
 	}
-
 }

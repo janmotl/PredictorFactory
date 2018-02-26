@@ -45,9 +45,9 @@ public class TextParser {
 			} else if (tableColumn.length == 1) {
 				schema = defaultSchema;
 				table = tableColumn[0];
-				logger.debug("Expected string in the form schema.table but obtained: " + tuple + " Target schema name was used as the prefix.");
+				logger.trace("Expected string in the form 'schema.table' but obtained: '" + tuple + "'. Target schema name was used as the prefix.");
 			} else {
-				logger.warn("Expected string in the form schema.table but obtained: " + tuple);
+				logger.warn("Expected string in the form 'schema.table' but obtained: " + tuple + "'.");
 				continue;   // Skip the record
 			}
 
@@ -77,9 +77,9 @@ public class TextParser {
 				schema = defaultSchema;
 				table = schemaTableColumn[0];
 				column = schemaTableColumn[1];
-				logger.debug("Expected string in the form schema.table.column but obtained: " + tuple + " Target schema name was used as the prefix.");
+				logger.trace("Expected string in the form 'schema.table.column' but obtained: '" + tuple + "'. Target schema name was used as the prefix.");
 			} else {
-				logger.warn("Expected string in the form schema.table.column but obtained: " + tuple);
+				logger.warn("Expected string in the form 'schema.table.column' but obtained: '" + tuple + "'.");
 				continue;   // Skip the record
 			}
 

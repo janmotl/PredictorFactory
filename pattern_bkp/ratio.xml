@@ -22,9 +22,20 @@
 		multiplication is. Hence, if we have a non-zero attribute x1 and an attribute x2, which frequently takes a zero
 		value, it is better to calculate x2/x1 than x1/x2 to avoid division by zero.
 
-		This pattern is slow, but produces great predictors.
+		This pattern is slow, but produces great predictors. However, this pattern also produces a lot of duplicates to isNull pattern.
+		Beware of leaks of the target column into this pattern.
+
+		Conclusion: If you think there can be interactions between features, prefer to use a model (classifier...)
+		that can model interactions natively (neural network, regression with defined interactions,...) instead of this
+		pattern. Reasoning: The recommended approach saves memory and runtime of both, propositionalization and model.
+		Does it mean all multivariate patterns are "useless"? Not at all - multivariate _aggregate_ patterns capture
+		information that is not available to the propositional model. And multivariate patterns that work
+		with a timestamp (temporal attribute) and some other attribute can be pretty fast as there is commonly just
+		a few timestamps in a table.
 	
 		NOTE: COULD HAVE BEEN EXTENDED INTO RATIOS OF AGGREGATES
+
+		Another example: ratio of performances (e.g. NN/DT) are the best features for meta-learning.
 
 	</description>
 	<example>

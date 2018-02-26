@@ -67,7 +67,7 @@
 			JOIN (
 				 SELECT @column
 				 	  , {fn log(((sum(case when @targetName='@targetValue' then 1.0 else 0 end)+1)/avg(total.total_default))
-				 / ((sum(case when @targetName &lt;&gt; '@targetValue' then 1.0 else 0 end)+1)/avg(total.total_nondefault)))*100 }
+				 / ((sum(case when @targetName &lt;&gt; '@targetValue' then 1.0 else 0 end)+1)/avg(total.total_nondefault))) } *100
 				 as woe
 				 FROM @propagatedTable
 					  , (SELECT sum(case when @targetName='@targetValue' then 1.0 else 0 end)+2 as total_default

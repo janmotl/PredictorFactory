@@ -13,10 +13,6 @@
 		However, in this implementation both directions are counted.
 		
 		Note: The inequality signs "less than" and "greater than" have to be escaped in XML.
-
-		Note: The pattern would have a better runtime, if PARTITION By was over {@baseId, @baseDate} and not over
-		{@base}, which commonly expands into {@baseId, @baseDate, @baseTarget}. However, if @baseDate is not defined,
-		@base is automatically expanded into
 	</description>
 	<example>
 		People whose balance on the account frequently gets into negative value are less likely to payoff their loan.

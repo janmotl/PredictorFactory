@@ -1,12 +1,16 @@
 package utility;
 
 
+import org.apache.log4j.Logger;
+
 import java.util.Collection;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
 @SuppressWarnings("unchecked")
 public class BlackWhiteList {
+	// Logging
+	private static final Logger logger = Logger.getLogger(BlackWhiteList.class.getName());
 
 	// Apply black/white lists
 	// The map should contain a map of all items.
@@ -16,7 +20,22 @@ public class BlackWhiteList {
 	// The default behaviour is to return all.
 	public static SortedMap filter(SortedMap map, Collection blackList, Collection whiteList) {
 
-		SortedMap result = new TreeMap(map); // Do not modify the original map
+		// If whitelist/blacklist contains an item not present in the map, log it.
+		if (blackList != null) {
+			for (Object o : blackList) {
+				if (!map.keySet().contains(o))
+					logger.warn("Item '" + o + "' from the blacklist was not found in the map. The map contains only: " + map.keySet());
+			}
+		}
+		if (whiteList != null) {
+			for (Object o : whiteList) {
+				if (!map.keySet().contains(o))
+					logger.warn("Item '" + o + "' from the whitelist was not found in the map. The map contains only: " + map.keySet());
+			}
+		}
+
+		// Do not modify the original map
+		SortedMap result = new TreeMap(map);
 
 		if ((whiteList != null) && !whiteList.isEmpty()) { // If the list is empty, ignore the list
 			result.keySet().retainAll(whiteList);  // If whiteList is used, perform intersect with the available keys

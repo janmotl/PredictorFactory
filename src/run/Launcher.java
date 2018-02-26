@@ -26,7 +26,7 @@ public class Launcher {
 
 		// Connect to the following server and database:
 		String connectionProperty = "PostgreSQL";   // Host identification as specified in resources/connection.xml
-		String databaseProperty = "crossSchema";       // Dataset identification as specified in resources/database.xml
+		String databaseProperty = "financial";       // Dataset identification as specified in resources/database.xml
 
 		// Read command line parameters iff they are present (and overwrite the defaults).
 		if (arg.length == 1 || arg.length > 2) {
@@ -43,7 +43,7 @@ public class Launcher {
 		// Setup logging - load the property file
 		Logging.initialization();
 
-		// Validate all XMLs
+		// Validate all XMLs (can be slow)
 		InputQualityControl.validateConfiguration();
 
 		// Check the system
@@ -79,13 +79,13 @@ public class Launcher {
 		// Calculate features
 		Journal journal = Aggregation.run(setting, outputTables);
 
-		// Two-stage processing
-		if (setting.useTwoStages && setting.sampleCount<Integer.MAX_VALUE) {
-			Journal.marshall(journal);
+		// Two-phase processing
+		if (setting.useTwoStages && !setting.isExploitationPhase) {
+			journal.marshall(setting);
 			TwoStages.setExploitationPhase(setting, databaseProperty, journal);
 			logger.info("Evaluated predictor count: " + journal.getEvaluationCount());
 			logger.info("Preserved predictor count: " + journal.getAllTopPredictors().size());
-			logger.info("The exploration stage finished. Starting the exploitation phase.");
+			logger.info("The exploration phase finished. Starting the exploitation phase.");
 			main(new String[]{connectionProperty, "exploitationStage"});
 
 			return;

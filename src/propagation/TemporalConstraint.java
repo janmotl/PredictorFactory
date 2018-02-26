@@ -59,7 +59,7 @@ public class TemporalConstraint {
 		candidateSet.removeIf(column -> column.containsFutureDate(setting));
 
 		if (candidateSet.isEmpty()) {
-			table.temporalConstraintJustification = "All candidates either contain null values or dates in the future. An attribute with a future date can't be a date of record entry.";
+			table.temporalConstraintJustification = "All candidates either contain null values or dates in the future. An attribute with a future date cannot be a date of record entry.";
 			return table;
 		}
 

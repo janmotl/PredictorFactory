@@ -4,6 +4,10 @@
 	<name>Time diff</name>
 	<description>
 		Difference between two times.
+
+		Note: This pattern produces a lot of duplicate features because PF currently assumes that all multivariate
+		patterns are not symmetrical. Hence, PF calculates diff(A,B) and diff(B,A). But from the point of modeling,
+		these two patterns contain the same information.
 	</description>
 	<example>
 		Session length.

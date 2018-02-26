@@ -3,9 +3,11 @@ package meta;
 import org.apache.log4j.Logger;
 import run.Setting;
 
+import javax.xml.bind.annotation.XmlID;
 import java.util.*;
 
-import static java.util.Objects.*;
+import static java.util.Objects.hash;
+import static java.util.Objects.requireNonNull;
 
 
 // Define struct.
@@ -18,7 +20,7 @@ public class Table {
 	// Logging
 	private static final Logger logger = Logger.getLogger(Table.class.getName());
 
-	public String name;                                         // To make Table self-sufficient even outside the map
+	@XmlID public String name;  // To make Table self-sufficient even outside the map; annotated as an unique id (needed for marshalling into XML). BUT IT CAN FAIL IF MULTIPLE INPUT SCHEMAS ARE USED as then we have to use composite PK, for example with @XmlKey
 	public String schemaName;
 	public SortedMap<String, Column> columnMap = new TreeMap<>();   // All columns (but eventually blacklisted)
 	public List<ForeignConstraint> foreignConstraintList = new ArrayList<>();   // NOTE: Should we create a single ForeignConstraintList?

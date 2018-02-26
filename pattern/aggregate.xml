@@ -6,7 +6,7 @@
 		Applies aggregation function on numerical attributes. Following aggregate functions were selected for being
 		supported in many databases: avg, min, max and stddev_samp.
 
-		This pattern is a horse power for 1:n relationships and has a great ratio predictive power/runtime.
+		This pattern is a horse power for 1:n relationships and has a great predictivity/runtime ratio.
 
 		Note that "stddev_samp" is automatically translated to the database specific command for sample standard
 		deviation (for example, MS SQL is using "stddev" while Oracle is using "stddev_samp"). Hence if you want
@@ -34,6 +34,9 @@
 
 		Note: Consider adding sum of squares as used in Phaeaco.
 
+		Note: Minimum aggregate frequently produces duplicate predictors because the result of the aggregation is
+		frequently zero.
+
 		NOTE: IS FOLLOWING CODE NECESSARY?!
 			(CASE WHEN COUNT(*) = 1 THEN 0 ELSE STDEV(PayDelayI) END) AS PayDelay_stdev
 		A simple remedy is to simply assume imputation with zero, if noted differently.
@@ -43,8 +46,6 @@
 		because of integer columns
 
 		NOTE: ADDED SUM
-
-		NOTE: Testing Markdown code highlight syntax:
 
 	</description>
 	<example>

@@ -8,6 +8,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.File;
 import java.time.LocalDateTime;
@@ -20,6 +21,18 @@ public class Journal {
 	// Logging
 	private static final Logger logger = Logger.getLogger(Journal.class.getName());
 
+	// JAXB metadata - to be able to validate that journal.xml matches the current setting.
+	// These attributes are used by {marshaller() and unmarshaller()}.
+	// There is a plethora of other attributes I should take care of like lag and lead.
+	// BUT there are also variables that I should ignore like isExploitationStage -> I cannot simply calculate a hash.
+	@XmlAttribute private String databaseVendor;    // This check is important during unit testing, when we test the same schema against multiple vendors
+	@XmlAttribute private String inputSchemaList;   // Each inputSchema contains different tables
+	@XmlAttribute private String targetTable;       // We should be able to uniquely identify the target(s)
+	@XmlAttribute private String targetColumnList;  // The selection of the predictors is valid only for the selected targets
+	@XmlAttribute private String targetIdList;      // The values of the predictors can be completely different based on the specified targetIds
+	@XmlAttribute private String targetDate;        // The reference times should not differ
+
+	// Variables
 	private final Map<String, HeapWithFixedSize<Predictor>> heapMap = new HashMap<>();  // Map: baseTarget -> queue
 	private Map<String, Predictor> groupIdDuplicate = new HashMap<>();  // Holds the best predictor per {groupId, target}
 	private Map<String, Predictor> valueDuplicate = new HashMap<>();    // Holds the fastest predictor per duplicate group
@@ -271,25 +284,46 @@ public class Journal {
 
 	////// JAXB
 
-	// Load property list from XML
-	public static Journal unmarshall() {
-		Journal list = null;
+	// Load the journal from XML and make sure the journal is compatible with the current setting
+	public static Journal unmarshall(Setting setting) throws InstantiationException, JAXBException {
+		logger.debug("Attempting to unmarshall journal.xml.");
 
-		try {
-			JAXBContext jaxbContext = JAXBContext.newInstance(Journal.class);
-			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-			list = (Journal) jaxbUnmarshaller.unmarshal(new File("config/journal.xml"));
-		} catch (JAXBException e) {
-			logger.warn("Attempt to parse 'config/journal.xml' failed. Does the file exist?");
-			e.printStackTrace();
-		}
+		// Does journal.xml exist and does it appear to be a syntactically valid XML?
+		JAXBContext jaxbContext = JAXBContext.newInstance(Journal.class);
+		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+		Journal journal = (Journal) jaxbUnmarshaller.unmarshal(new File("config/journal.xml"));
 
-		return list;
+		// Do we perform two-phase processing?
+		if (!setting.useTwoStages) throw new InstantiationException();
+
+		// Are we at the beginning of the exploitation phase?
+		if (!setting.isExploitationPhase) throw new InstantiationException();
+
+		// Does the content of journal.xml match setting? (to avoid reading of unrelated XML)
+		if (!(setting.databaseVendor.equals(journal.databaseVendor))) throw new InstantiationException();
+		if (!(setting.inputSchemaList.toString().equals(journal.inputSchemaList))) throw new InstantiationException();
+		if (!(setting.targetTable.equals(journal.targetTable))) throw new InstantiationException();
+		if (!(setting.targetColumnList.toString().equals(journal.targetColumnList))) throw new InstantiationException();
+		if (!(setting.targetIdList.toString().equals(journal.targetIdList))) throw new InstantiationException();
+		if (setting.targetDate!=null && !(setting.targetDate.equals(journal.targetDate))) throw new InstantiationException();
+
+		// Ok, journal.xml seems to be reusable
+		logger.debug("The journal.xml was successfully unmarshalled.");
+		return journal;
 	}
 
-	// Write into the XML
-	public static void marshall(Journal journal) {
+	// Write this journal into the XML
+	public void marshall(Setting setting) {
 
+		// Set first metadata from the setting into this journal instance
+		databaseVendor = setting.databaseVendor;
+		inputSchemaList = setting.inputSchemaList.toString();
+		targetTable = setting.targetTable;
+		targetColumnList = setting.targetColumnList.toString();
+		targetIdList = setting.targetIdList.toString();
+		targetDate = setting.targetDate;
+
+		// Ordinary marshalling
 		try {
 			File file = new File("config/journal.xml");
 			JAXBContext jaxbContext = JAXBContext.newInstance(Journal.class);
@@ -299,12 +333,10 @@ public class Journal {
 			jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 
 			// Write into the file
-			jaxbMarshaller.marshal(journal, file);
+			jaxbMarshaller.marshal(this, file);
 		} catch (JAXBException e) {
 			logger.warn("Attempt to write 'config/journal.xml' failed. Does Predictor Factory have the right to write?");
 			e.printStackTrace();
 		}
 	}
-
-
 }

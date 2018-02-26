@@ -131,6 +131,7 @@ public final class Setting {
 	public int secondMax;                           // Timeout on predictor calculation in seconds.
 	public boolean useIdAttributes;                 // Use id attributes in feature creation?
 	public boolean useTwoStages;                    // Perform exploration+exploitation, or directly calculate all predictors?
+	public boolean isExploitationPhase;             // If two-phase processing is used, are we currently exploiting?
 	public boolean ignoreDatabaseForeignConstraints;// By default foreign key constraints are read from the database.
 	public boolean skipBaseGeneration = false;      // This is for iterative bug fixing...
 	public boolean skipPropagation = false;
@@ -234,6 +235,7 @@ public final class Setting {
 		blackListColumn = firstNonNull(databaseProperty.blackListColumn, "");
 		useIdAttributes = databaseProperty.useIdAttributes; // The default is set in xsd
 		useTwoStages = databaseProperty.useTwoStages; // The default is set in xsd -> However, it always writes the value into XML -> not nice
+		isExploitationPhase = firstNonNull(databaseProperty.isExploitationPhase, false);
         ignoreDatabaseForeignConstraints = firstNonNull(databaseProperty.ignoreDatabaseForeignConstraints, false);
 		secondMax = firstNonNull(databaseProperty.secondMax, 0); // If zero, no timeout is applied
 
@@ -258,6 +260,8 @@ public final class Setting {
 		}
 
 		// Log the configuration
+		logger.debug("Entry name in connection.xml: " + connectionPropertyName);
+		logger.debug("Entry name in database.xml: " + databasePropertyName);
 		prettyPrint();
 	}
 

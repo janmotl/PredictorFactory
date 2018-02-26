@@ -32,11 +32,11 @@ public class PropagationTest {
 		List<OutputTable> result = Propagation.propagateBase(setting, metaInput);
 		
 		// Validate in database
-		assertEquals(188, setting.dialect.getRowCount(setting, setting.outputSchema, "propagated_molecule_001"));
-		assertEquals(4893, setting.dialect.getRowCount(setting, setting.outputSchema, "propagated_atom_002"));
-		assertEquals(5243, setting.dialect.getRowCount(setting, setting.outputSchema, "propagated_bond_003"));
-		assertEquals(5243, setting.dialect.getRowCount(setting, setting.outputSchema, "propagated_bond_004"));
-		SortedMap<String, Column> meta = Meta.collectColumns(setting, setting.database, setting.outputSchema, "propagated_molecule_001");
+		assertEquals(188, setting.dialect.getRowCount(setting, setting.outputSchema, "propagated_molecule_DOP"));
+		assertEquals(4893, setting.dialect.getRowCount(setting, setting.outputSchema, "propagated_atom_FPI"));
+		assertEquals(5243, setting.dialect.getRowCount(setting, setting.outputSchema, "propagated_bond_7AL"));
+		assertEquals(5243, setting.dialect.getRowCount(setting, setting.outputSchema, "propagated_bond_DRR"));
+		SortedMap<String, Column> meta = Meta.collectColumns(setting, setting.database, setting.outputSchema, "propagated_molecule_DOP");
 		Network.closeConnection(setting);
 		assertTrue(meta.containsKey("propagated_id1"));
 		assertTrue(meta.containsKey("propagated_target1"));
@@ -44,10 +44,10 @@ public class PropagationTest {
 
 		// Validate the returned list
 		assertEquals("The list contains: " + result, 4, result.size());
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_molecule_001")));
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_atom_002")));
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_bond_003")));
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_bond_004")));
+		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_molecule_DOP")));
+		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_atom_FPI")));
+		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_bond_7AL")));
+		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_bond_DRR")));
 
 		// Count of warnings
 		assertTrue(CountAppender.getCount(Level.INFO) > 0);     // Check that logging works
@@ -72,12 +72,12 @@ public class PropagationTest {
 		List<OutputTable> result = Propagation.propagateBase(setting, metaInput);
 
 		// Validate in database
-		assertEquals(188, setting.dialect.getRowCount(setting, setting.outputSchema, "propagated_molecule_001"));
-		assertEquals(4893, setting.dialect.getRowCount(setting, setting.outputSchema, "propagated_atom_002"));
+		assertEquals(188, setting.dialect.getRowCount(setting, setting.outputSchema, "propagated_molecule_DOP"));
+		assertEquals(4893, setting.dialect.getRowCount(setting, setting.outputSchema, "propagated_atom_FPI"));
 		SortedMap<String, Table> metaTables = Meta.collectTables(setting, setting.database, setting.outputSchema);
-		assertFalse(metaTables.containsKey("propagated_bond_003"));
-		assertFalse(metaTables.containsKey("propagated_bond_004"));
-		SortedMap<String, Column> meta = Meta.collectColumns(setting, setting.database, setting.outputSchema, "propagated_molecule_001");
+		assertFalse(metaTables.containsKey("propagated_bond_7AL"));
+		assertFalse(metaTables.containsKey("propagated_bond_DRR"));
+		SortedMap<String, Column> meta = Meta.collectColumns(setting, setting.database, setting.outputSchema, "propagated_molecule_DOP");
 		Network.closeConnection(setting);
 		assertTrue(meta.containsKey("propagated_id1"));
 		assertTrue(meta.containsKey("propagated_target1"));
@@ -85,8 +85,8 @@ public class PropagationTest {
 
 		// Validate the returned list
 		assertEquals("The list contains: " + result, 2, result.size());
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_molecule_001")));
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_atom_002")));
+		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_molecule_DOP")));
+		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_atom_FPI")));
 
 		// Count of warnings
 		assertTrue(CountAppender.getCount(Level.INFO) > 0);     // Check that logging works
@@ -111,15 +111,15 @@ public class PropagationTest {
 
 		// Validate the returned list
 		assertEquals("The list contains: " + result, 8, result.size()); // One table is (or can be) empty due to sampleCount==1
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_loan_001")));
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_account_002")));
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_disp_003")));
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_district_004")));
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_order_005")));
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_trans_006")));
-		assertFalse(result.stream().anyMatch(t->t.name.equals("propagated_card_007"))); // The join is empty -> absent
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_client_008")));
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_client_009")));
+		assertTrue(result.stream().anyMatch(t->t.name.startsWith("propagated_loan")));
+		assertTrue(result.stream().anyMatch(t->t.name.startsWith("propagated_account")));
+		assertTrue(result.stream().anyMatch(t->t.name.startsWith("propagated_disp")));
+		assertTrue(result.stream().anyMatch(t->t.name.startsWith("propagated_district")));
+		assertTrue(result.stream().anyMatch(t->t.name.startsWith("propagated_order")));
+		assertTrue(result.stream().anyMatch(t->t.name.startsWith("propagated_trans")));
+		assertFalse(result.stream().anyMatch(t->t.name.startsWith("propagated_card"))); // The join is empty -> absent
+		assertTrue(result.stream().anyMatch(t->t.name.startsWith("propagated_client")));
+		assertTrue(result.stream().anyMatch(t->t.name.startsWith("propagated_client")));
 
 		// Count of warnings
 		assertTrue(CountAppender.getCount(Level.INFO) > 0);     // Check that logging works
@@ -145,7 +145,7 @@ public class PropagationTest {
 
 		// Validate the returned list
 		assertEquals("The list contains: " + result, 1, result.size()); // Just the target table is expected
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_SalesOrderHeader_001")));
+		assertTrue(result.stream().anyMatch(t->t.name.startsWith("propagated_SalesOrderHeader")));
 
 
 		// Count of warnings
@@ -181,15 +181,15 @@ public class PropagationTest {
 
 		// Validate the returned list
 		assertEquals("The list contains: " + result, 8, result.size()); // One table is (or can be) empty
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_loan_001")));
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_account_002")));
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_disp_003")));
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_district_004")));
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_order_005")));
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_trans_006")));
-		assertFalse(result.stream().anyMatch(t->t.name.equals("propagated_card_007"))); // The join is empty -> absent
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_client_008")));
-		assertTrue(result.stream().anyMatch(t->t.name.equals("propagated_client_009")));
+		assertTrue(result.stream().anyMatch(t->t.name.startsWith("propagated_loan")));
+		assertTrue(result.stream().anyMatch(t->t.name.startsWith("propagated_account")));
+		assertTrue(result.stream().anyMatch(t->t.name.startsWith("propagated_disp")));
+		assertTrue(result.stream().anyMatch(t->t.name.startsWith("propagated_district")));
+		assertTrue(result.stream().anyMatch(t->t.name.startsWith("propagated_order")));
+		assertTrue(result.stream().anyMatch(t->t.name.startsWith("propagated_trans")));
+		assertFalse(result.stream().anyMatch(t->t.name.startsWith("propagated_card"))); // The join is empty -> absent
+		assertTrue(result.stream().anyMatch(t->t.name.startsWith("propagated_client")));
+		assertTrue(result.stream().anyMatch(t->t.name.startsWith("propagated_client")));
 
 		// Count of warnings
 		assertTrue(CountAppender.getCount(Level.INFO) > 0);     // Check that logging works

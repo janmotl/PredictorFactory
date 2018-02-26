@@ -4,6 +4,10 @@
 	<name>Frequency</name>
 	<description>
 		Relative frequency of the given nominal value in the population.
+
+		Based on Learning Feature Engineering for Classification from Nargesian, this pattern should incur performance
+		improvement for the majority of attributes. Similar observation is described in: CatBoost: gradient boosting
+		with categorical features support from Dorogush.
 	</description>
 	<example>
 		Frequency of the client's name - which tells us, whether the client is a foreigner, or not. And based 

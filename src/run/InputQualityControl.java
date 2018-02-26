@@ -3,10 +3,13 @@
  */
 package run;
 
+import extraction.Pattern;
 import org.apache.log4j.Logger;
+import utility.PatternMap;
 import utility.XML;
 
 import java.io.File;
+import java.util.SortedMap;
 
 public class InputQualityControl {
 	// Logging
@@ -15,12 +18,19 @@ public class InputQualityControl {
 	// Validate all XMLs in config and pattern directories
 	public static void validateConfiguration() {
 		qcPatterns();
+		listPatterns();
 		qcConnection();
 		qcDatabase();
 		qcDriver();
 		qcForeignConstraint();
 	}
 
+
+	// Subroutine: List the found patterns
+	private static void listPatterns() {
+		SortedMap<String, Pattern> patternMap = PatternMap.getPatternMap();
+		logger.debug("The 'pattern' directory contains " + patternMap.size() + " patterns: " + patternMap.keySet().toString());
+	}
 
 	// Subroutine: Check all pattern XMLs in pattern directory - useful when developing new patterns
 	private static void qcPatterns() {
