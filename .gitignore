@@ -21,6 +21,9 @@ Desktop.ini		# Windows - folder personalisation
 # IDEA project #
 ################
 
+# IDE specific files should not be included in repository, so whole .idea folder should be ignored
+.idea/*
+
 # User-specific files:
 .idea/workspace.xml
 .idea/tasks.xml
