@@ -720,10 +720,8 @@ public class SQL {
 	// Return top N unique records sorted by the frequency in the descending order.
 	// The N is given by setting.valueCount (if necessary, could become a parameter).
 	// This function is useful for example for dummy coding of nominal attributes.
-	// NOTE: It would be nice, if a vector of frequencies was also returned (to skip rare values
-	// in absolute measure, not only relative - handy when the attribute's cardinality is small).
 	// NOTE: Maybe I should consider null values as a legit category.
-	public static List<String> getTopUniqueRecords(Setting setting, String schemaName, String tableName, String columnName) {
+	public static LinkedHashMap<String, Integer> getTopUniqueRecords(Setting setting, String schemaName, String tableName, String columnName) {
 
 		// A query without an aggregate function in ORDER BY clause because of the following limitation of SAS:
 		//  Summary functions are restricted to the SELECT and HAVING clauses only...
@@ -742,7 +740,7 @@ public class SQL {
 		map.put("@schema", schemaName);
 		sql = escapeEntityMap(setting, sql, map);
 
-		return Network.executeQuery(setting.dataSource, sql, setting.valueCount); // Because of SAS we use JDBC maxRows
+		return Network.executeQueryMap(setting.dataSource, sql, setting.valueCount); // Because of SAS we use JDBC maxRows
 	}
 
 	// Could the two columns in the table describe a symmetric relation (like in borderLength(c1, c2))?
@@ -1427,7 +1425,8 @@ public class SQL {
 			ps.setInt(5, CountAppender.getCount(Level.WARN));
 			ps.setInt(6, CountAppender.getCount(Level.ERROR));
 			ps.executeUpdate();
-		} catch (SQLException ignored) {
+		} catch (SQLException exception) {
+			logger.warn("Logging into journal_run failed: " + exception.getMessage());
 			return false;
 		}
 
@@ -1462,14 +1461,15 @@ public class SQL {
 				"sql_code " + setting.typeVarchar + "(3600), " + // For example code for WoE is close to 1024 chars and NB is 3000
 				"data_type " + setting.typeVarchar + "(255), " +
 				"category_type " + setting.typeVarchar + "(255), " +
-				"target " + setting.typeVarchar + "(255), " +
-				getRelevanceDefinition(setting) +   // Chi2+conceptDrift for each target. Note: The variability of the name will cause troubles in external code (dashboard...). Can either use user friendly targetColumn identifiers or computer friendly baseTarget identifiers.
 				"qc_row_count " + setting.typeInteger + ", " +
 				"qc_null_count " + setting.typeInteger + ", " +
 				"exception_message " + setting.typeVarchar + "(255), " +
 				"is_ok " + setting.typeInteger + ", " +
 				"is_duplicate " + setting.typeInteger + ", " +
-				"duplicate_name " + setting.typeVarchar + "(255))";
+				"duplicate_name " + setting.typeVarchar + "(255), " +
+				"used_target_column " + setting.typeVarchar + "(255), " +
+				getRelevanceDefinition(setting) +   // Chi2+conceptDrift for each target. Note: The variability of the name will cause troubles in external code (dashboard...). Can either use user friendly targetColumn identifiers or computer friendly baseTarget identifiers.
+				")";
 
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, setting.journalPredictor);
@@ -1486,68 +1486,79 @@ public class SQL {
 			result += "weighted_relevance_" + targetColumn + " " + setting.typeDecimal + "(18,6), ";
 		}
 
+		result = result.substring(0, result.length()-2);
+
 		return result;
 	}
 
 	// 1b) Add record into the journal_predictor
 	// Return true if the journal table was successfully updated.
-	// Note: should deal properly with storing nulls
+	// Note: We use preparedStatement to store nulls properly and to insert exception messages with quotes safely.
 	public static boolean addToJournalPredictor(Setting setting, Predictor predictor) {
 
 		// Convert bool to int
 		int isOk = predictor.isOk() ? 1 : 0;
 		int isInferiorDuplicate = predictor.isInferiorDuplicate() ? 1 : 0;
 
-		// Insert timestamp subquery
-		String timestampBuild = date2query(setting, predictor.getTimestampBuilt());
+		// Dynamically assembly the insert command
+		// Note: It should be done just once.
+		String questionMarks = "";
+		for (int i = 0; i < (26 + 3*setting.baseTargetList.size()); i++) {
+			questionMarks = questionMarks + "?,";
+		}
+		questionMarks = questionMarks.substring(0, questionMarks.length()-1);
 
-		// Assembly the head of the insert command
-		String sql = "INSERT INTO @outputTable VALUES (";
+		String sql = "INSERT INTO @outputTable VALUES (" + questionMarks + ")";
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, setting.journalPredictor);
 
-		// Add the payload (which should not be transformed)
-		sql += predictor.getId() + ", " +
-				predictor.getGroupId() + ", " +
-				timestampBuild + ", " +
-				predictor.getRuntime() + ", " +
-				"'" + predictor.getName() + "', " +
-				"'" + predictor.getLongName() + "', " +
-				"'" + predictor.getOriginalTable() + "', " +
-				"'" + predictor.getColumnMap().toString() + "', " +      // Should be a list...
-				"'" + predictor.getTable().name + "', " +
-				"'" + predictor.getPropagationPath().toString() + "', " +
-				predictor.getPropagationPath().size() + ", " +
-				"'" + predictor.getPropagationDate() + "', " +
-				"'" + predictor.getParameterMap().toString() + "', " +  // Violates the 1st norm...
-				"'" + predictor.getPatternName() + "', " +
-				"'" + predictor.getPatternAuthor() + "', " +
-				"'" + predictor.getPatternCode().replaceAll("'", "''") + "', " +    // Escape single quotes
-				"'" + predictor.getSql().replaceAll("'", "''") + "', " +        // Escape single quotes
-				"'" + predictor.getDataTypeName() + "', " +
-				"'" + predictor.getDataTypeCategory() + "', " +
-				"'" + predictor.getTargetColumn() + "', " +
-				getRelevanceValues(setting, predictor) +    // Chi2+conceptDrift for each target
-				predictor.getRowCount() + ", " +
-				predictor.getNullCount() + ", " +
-				"'" + predictor.getExceptionMessage() + "', " +
-				isOk + ", " +
-				isInferiorDuplicate + ", " +
-				"'" + predictor.getDuplicateName() + "')";
+		try (Connection connection = setting.dataSource.getConnection();
+		     PreparedStatement ps = connection.prepareStatement(sql)) {
+			ps.setInt(1, predictor.getId());
+			ps.setInt(2, predictor.getGroupId());
+			ps.setTimestamp(3, Timestamp.valueOf(predictor.getTimestampBuilt()));
+			ps.setDouble(4, predictor.getRuntime());  // Note: Do not use bigDecimal as it is unsupported on SAS
+			ps.setString(5, predictor.getName());
+			ps.setString(6, predictor.getLongName());
+			ps.setString(7, predictor.getOriginalTable());
+			ps.setString(8, predictor.getColumnMap().toString());   // Should be a list...
+			ps.setString(9, predictor.getTable().name);
+			ps.setString(10, predictor.getPropagationPath().toString());
+			ps.setInt(11, predictor.getPropagationPath().size());
+			ps.setString(12, predictor.getPropagationDate());
+			ps.setString(13, predictor.getParameterMap().toString());   // Violates the 1st norm...
+			ps.setString(14, predictor.getPatternName());
+			ps.setString(15, predictor.getPatternAuthor());
+			ps.setString(16, predictor.getPatternCode());
+			ps.setString(17, predictor.getSql());
+			ps.setString(18, predictor.getDataTypeName());
+			ps.setString(19, predictor.getDataTypeCategory());
+			ps.setInt(20, predictor.getRowCount());
+			ps.setInt(21, predictor.getNullCount());
+			ps.setString(22, predictor.getExceptionMessage());
+			ps.setInt(23, isOk);
+			ps.setInt(24, isInferiorDuplicate);
+			ps.setString(25, predictor.getDuplicateName());
+			ps.setString(26, predictor.getTargetColumn());
 
-		return Network.executeUpdate(setting.dataSource, sql);
-	}
+			// Set Chi2+conceptDrift for each target
+			int counter = 27;
+			for (String baseTarget : setting.baseTargetList) {
+				ps.setDouble(counter, predictor.getRelevance(baseTarget));            // Chi2
+				counter++;
+				ps.setDouble(counter, predictor.getConceptDrift(baseTarget));         // conceptDrift
+				counter++;
+				ps.setDouble(counter, predictor.getWeightedRelevance(baseTarget));    // Chi2*conceptDrift
+				counter++;
+			}
 
-	private static String getRelevanceValues(Setting setting, Predictor predictor) {
-		String result = "";
-
-		for (String baseTarget : setting.baseTargetList) {
-			result += predictor.getRelevance(baseTarget) + ", ";            // Chi2
-			result += predictor.getConceptDrift(baseTarget) + ", ";         // conceptDrift
-			result += predictor.getWeightedRelevance(baseTarget) + ", ";    // Chi2*conceptDrift
+			ps.executeUpdate();
+		} catch (SQLException exception) {
+			logger.warn("Logging into journal_predictor failed: " + exception.getMessage());
+			return false;
 		}
 
-		return result;
+		return true;
 	}
 
 	public static boolean getJournalTable(Setting setting) {
@@ -1855,7 +1866,7 @@ public class SQL {
 		// Initialization
 		String sql = "";
 		String targetColumn = setting.targetColumnList.get(0);
-		Set<String> targetValueList = setting.targetUniqueValueMap.get(targetColumn);
+		Set<String> targetValueList = setting.targetUniqueValueMap.get(targetColumn).keySet();
 		String baseTarget = setting.baseTargetList.get(0);
 		String quote = "";
 

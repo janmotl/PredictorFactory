@@ -1,9 +1,15 @@
 <component name="ProjectDictionaryState">
   <dictionary name="jan">
     <words>
+      <w>acora</w>
+      <w>charindex</w>
+      <w>datatype</w>
+      <w>datepart</w>
       <w>disp</w>
+      <w>initcap</w>
       <w>instacart</w>
       <w>logp</w>
+      <w>longnvarchar</w>
       <w>matej</w>
       <w>matlab</w>
       <w>mcar</w>
@@ -12,10 +18,15 @@
       <w>propositionalization</w>
       <w>remerging</w>
       <w>runtimes</w>
+      <w>smac</w>
+      <w>sqlxml</w>
       <w>stdep</w>
       <w>stdevp</w>
       <w>subqury</w>
       <w>teradata</w>
+      <w>timediff</w>
+      <w>timestamptz</w>
+      <w>timetz</w>
       <w>unmarshal</w>
       <w>unmarshalled</w>
       <w>varchars</w>

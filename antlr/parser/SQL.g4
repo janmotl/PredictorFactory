@@ -19,13 +19,18 @@ WS : (' '|'\t'|'\r'|'\n');	// The space between the quotes is intentional
 //SINGLE_LINE_COMMENT : '--' ~[\r\n]* -> channel(HIDDEN);
 //MULTILINE_COMMENT : '/*' .*? ( '*/' | EOF ) -> channel(HIDDEN);
 
-//start_rule: expression;	// Dummy start rule as ANTLR v3 requires, that the start rule is not referenced by another rule.
+// But do not use ANTLR v3 anymore - it will complain and the complains are not silencable by using "options {backtrack=true;}".
 
-expression : (from | TEXT | bracket | WS | AND | EQUALS | ARITHMETIC | datediff | datetonumber | corr | COMMA)*;
+// For Case-Insensitive Lexing:
+// 		https://github.com/antlr/antlr4/blob/master/doc/case-insensitive-lexing.md
+
+expression : (from | TEXT | bracket | WS | AND | EQUALS | ARITHMETIC | datediff | datediff_mssql | datetonumber | corr | COMMA)*;
 
 bracket	: LBR expression RBR;
 
 datediff : DATEDIFF LBR payload COMMA payload RBR;
+
+datediff_mssql : DATEDIFF LBR payload COMMA payload COMMA payload RBR;	// MSSQL dialect is using 3 parameters and we do not want to modify this datediff()
 
 datetonumber : DATETONUMBER LBR payload RBR;
 
@@ -49,7 +54,7 @@ columns	: TEXT (WS*  COMMA WS* TEXT)*;
 on: ON expression;
 
 
-payload	: (from | TEXT | bracket | WS | AND | EQUALS | ARITHMETIC | datediff | datetonumber | corr)*;
+payload	: (from | TEXT | bracket | WS | AND | EQUALS | ARITHMETIC | datediff | datediff_mssql | datetonumber | corr)*;
 
 
 

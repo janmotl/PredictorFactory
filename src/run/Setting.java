@@ -9,10 +9,7 @@ import org.apache.log4j.Logger;
 import utility.TextParser;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 
@@ -142,7 +139,7 @@ public final class Setting {
 	public SQL dialect;                             // SQL commands for the specific database vendor
 
 	// UGLY PLACE TO STORE IT (move it to metaInput/metaOutput/meta?)
-	public Map<String, Set<String>> targetUniqueValueMap; // Unique values in the target columns
+	public Map<String, LinkedHashMap<String, Integer>> targetUniqueValueMap; // Unique values in the target columns: columnName -> {uniqueValues -> count}
 
 	// Constructors
 	public Setting() {

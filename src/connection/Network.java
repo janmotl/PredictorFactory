@@ -12,6 +12,7 @@ import javax.sql.DataSource;
 import java.io.Console;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Scanner;
 
@@ -257,6 +258,49 @@ public final class Network {
 
 		return result;
 	}
+
+	// Get a map of strings->int with the limited amount of results
+	public static LinkedHashMap<String, Integer> executeQueryMap(DataSource dataSource, String sql, int maxRows) {
+		// Parameter checking
+		if (StringUtils.isBlank(sql)) {
+			throw new IllegalArgumentException("SQL statement is required");
+		}
+
+		// Check interruption flag
+		isInterrupted();
+
+		// Initialization
+		LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
+
+		// Query with AutoCloseable interface introduced in Java 7.
+		try (Connection connection = dataSource.getConnection();
+		     Statement stmt = connection.createStatement()) {
+
+			// Even if the query would return several rows, only the first n rows are transmitted
+			stmt.setMaxRows(maxRows);
+
+			// Transfer tuples from database in batches. 100 seems to be a reasonable default: http://guyharrison.squarespace.com/blog/2014/4/30/best-practices-for-accessing-oracle-from-scala-using-jdbc.html
+			// Note: It is ugly that we can't use setting.fetchSize from here.
+			stmt.setFetchSize(Math.min(100, maxRows)); // We have to set up the limit to the min because of SAS driver
+
+			try (ResultSet rs = stmt.executeQuery(sql)) {
+				while (rs.next()) {
+					result.put(rs.getString(1), rs.getInt(2)); // Columns in ResultSets are indexed from 1
+				}
+			}
+
+			// Log it
+			// Remove line breaks and collapse all "whitespace substrings" longer than one character.
+			sql = sql.replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ");
+			logger.debug(sql);
+		} catch (SQLException e) {
+			sql = sql.replace("\n", " ").replace("\r", " ").replaceAll("\\s+", " ");
+			logger.warn(e.getMessage() + " | " + sql);
+		}
+
+		return result;
+	}
+
 
 	// Get a single bool. This a useful convenience function because some databases
 	// return t/f, other true/false and another 1/0. And SAS returns 1.0/0.0.

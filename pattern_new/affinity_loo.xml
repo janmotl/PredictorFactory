@@ -6,6 +6,11 @@
 		Probability estimate with leave-one-out estimate (the label from the current row is ignored).
 
 		The estimate is adjusted with Laplace correction. The implemented Laplace correction assumes binary label.
+
+		Tests:
+			1) For id attributes the computed Chi2 is 0
+			2) Works with nulls in the attribute (you may test it on financial.district.A15 - currently it fails in EM, just exclude nulls and leave this on isNull pattern)
+			3) Works with nulls in the label
 	</description>
 	<example>
 		Log ods for customer's cellphone brand.

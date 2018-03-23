@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'PredictorFactory'
-version '4.0.6'
+version '4.0.7'
 sourceCompatibility = 1.8
 
 
@@ -16,7 +16,7 @@ repositories {
 
 // Dependencies
 dependencies {
-    compile 'org.antlr:antlr4:4.5.3'                // Parser
+    compile 'org.antlr:antlr4:4.7.1'                // Parser
     compile 'org.apache.commons:commons-lang3:3.5'  // Text processing utility
     compile 'com.google.guava:guava:20.0'           // Convenience library
     compile 'com.zaxxer:HikariCP:2.5.1'             // Versions 2.4.2 and 2.4.3 do not release connections -> do not use them
@@ -63,7 +63,7 @@ sourceSets {
     }
     test {
         java {
-            srcDir 'test'
+            srcDirs = ['test', 'testBenchmark']
         }
     }
 }

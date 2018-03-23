@@ -24,6 +24,7 @@ Desktop.ini		# Windows - folder personalisation
 # User-specific files:
 .idea/workspace.xml
 .idea/tasks.xml
+.idea/vcs.xml
 
 # Sensitive or high-churn files:
 .idea/dataSources/
@@ -36,8 +37,13 @@ Desktop.ini		# Windows - folder personalisation
 .idea/gradle.xml
 .idea/libraries
 
-# File-based project format:
+# File-based user-specific project format:
 *.iws
+
+# Low priority configuration files:
+.idea/codeStyleSettings.xml
+.idea/checkstyle-idea.xml
+.idea/inspectionProfiles/
 
 # Eclipse plugins #
 ###################
@@ -58,3 +64,5 @@ config/journal.xml  # A (potentially) big auto-generated file
 src/benchmark	# A directory for evaluation of Predictor Factory
 *.bkp			# Ad hoc backup files
 CopyOf*			# Ad hoc development files
+*.log			# Java runtime crash logs
+.evosuite		# Used by a library for mutation testing

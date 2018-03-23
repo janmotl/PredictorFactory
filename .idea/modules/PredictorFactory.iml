@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module external.linked.project.id="PredictorFactory" external.linked.project.path="$MODULE_DIR$/../.." external.root.project.path="$MODULE_DIR$/../.." external.system.id="GRADLE" external.system.module.group="PredictorFactory" external.system.module.version="4.0.6" type="JAVA_MODULE" version="4">
+<module external.linked.project.id="PredictorFactory" external.linked.project.path="$MODULE_DIR$/../.." external.root.project.path="$MODULE_DIR$/../.." external.system.id="GRADLE" external.system.module.group="PredictorFactory" external.system.module.version="4.0.7" type="JAVA_MODULE" version="4">
   <component name="NewModuleRootManager" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/../../build/classes/main" />
     <output-test url="file://$MODULE_DIR$/../../build/classes/test" />
@@ -8,8 +8,8 @@
       <sourceFolder url="file://$MODULE_DIR$/../../antlr" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../gui" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../../src/test/java" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/../../test" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../testBenchmark" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/../../gui/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../src/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../src/test/resources" type="java-test-resource" />
@@ -107,7 +107,6 @@
     <orderEntry type="library" scope="TEST" name="Gradle: com.zaxxer:HikariCP:2.5.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: com.google.guava:guava:20.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.apache.commons:commons-lang3:3.5" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.antlr:antlr4:4.5.3" level="project" />
     <orderEntry type="module-library" scope="RUNTIME">
       <library name="Gradle: SQLinFormFXpro_5.1.25">
         <CLASSES>
@@ -151,7 +150,6 @@
     <orderEntry type="library" scope="RUNTIME" name="Gradle: com.zaxxer:HikariCP:2.5.1" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: com.google.guava:guava:20.0" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.apache.commons:commons-lang3:3.5" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.antlr:antlr4:4.5.3" level="project" />
     <orderEntry type="module-library" scope="PROVIDED">
       <library name="Gradle: SQLinFormFXpro_5.1.25">
         <CLASSES>
@@ -195,7 +193,6 @@
     <orderEntry type="library" scope="PROVIDED" name="Gradle: com.zaxxer:HikariCP:2.5.1" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: com.google.guava:guava:20.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle: org.apache.commons:commons-lang3:3.5" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.antlr:antlr4:4.5.3" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.evosuite:evosuite-standalone-runtime:1.0.5" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: info.solidsoft.spock:spock-global-unroll:0.5.0" level="project" />
     <orderEntry type="module-library" scope="TEST">
@@ -318,5 +315,26 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.antlr:antlr4:4.7.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.antlr:antlr4-runtime:4.7.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.antlr:ST4:4.0.8" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.antlr:antlr-runtime:3.5.2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.abego.treelayout:org.abego.treelayout.core:1.0.3" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.glassfish:javax.json:1.0.4" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.ibm.icu:icu4j:58.2" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.antlr:antlr4:4.7.1" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.antlr:antlr4-runtime:4.7.1" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.antlr:ST4:4.0.8" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.antlr:antlr-runtime:3.5.2" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.abego.treelayout:org.abego.treelayout.core:1.0.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.glassfish:javax.json:1.0.4" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.ibm.icu:icu4j:58.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.antlr:antlr4:4.7.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.antlr:antlr4-runtime:4.7.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.antlr:ST4:4.0.8" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.antlr:antlr-runtime:3.5.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.abego.treelayout:org.abego.treelayout.core:1.0.3" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.glassfish:javax.json:1.0.4" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.ibm.icu:icu4j:58.2" level="project" />
   </component>
 </module>

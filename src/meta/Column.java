@@ -10,14 +10,14 @@ calls and memoized.
 
 import run.Setting;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.LinkedHashMap;
 
 public class Column implements Comparable<Column> {
 	public final String name;           // We have name field even though Column object is in a Map because it allows an easy iteration over the Columns (and not over that ugly Entry).
 	public final int dataType;          // Data type as defined by JDBC
 	public final String dataTypeName;   // Data type name as defined by database
 	public final boolean isNullable;    // From JDBC
+	public final boolean isDecimal;     // From JDBC
 	// Final variables
 	private final String schemaName;    // Necessity for memoized calls
 	private final String tableName;     // Necessity for memoized calls
@@ -27,6 +27,7 @@ public class Column implements Comparable<Column> {
 	// An integer column with low cardinality (<100) can be both, numerical and nominal.
 	// An integer id column can be treated as an id, nominal and numerical.
 	// Hence, these fields are not exclusive.
+	public boolean isCharacter;     // Character columns
 	public boolean isNominal;       // Categorical columns
 	public boolean isNumerical;     // Additive columns
 	public boolean isTemporal;      // Time, date, datetime, timestamp...
@@ -35,7 +36,7 @@ public class Column implements Comparable<Column> {
 	// Memoized fields retrievable through function calls
 	private Boolean containsNull;
 	private Boolean containsFutureDate;
-	private Set<String> uniqueValueSet; // LinkedSet - sorted by frequency
+	private LinkedHashMap<String, Integer> uniqueValueMap; // Sorted by the occurrence count in decreasing order
 
 
 	// Constructors
@@ -55,9 +56,10 @@ public class Column implements Comparable<Column> {
 		this.dataTypeName = "This is a phony data type for a phony instance from Propagation class";
 		this.dataType = Integer.MIN_VALUE;
 		this.isNullable = false;
+		this.isDecimal = false;
 	}
 
-	public Column(String schemaName, String tableName, String columnName, int dataType, String dataTypeName, boolean isNullable) {
+	public Column(String schemaName, String tableName, String columnName, int dataType, String dataTypeName, boolean isNullable, boolean isDecimal) {
 		if (schemaName == null) {
 			throw new NullPointerException("The schema name cannot be null");
 		}
@@ -77,6 +79,7 @@ public class Column implements Comparable<Column> {
 		this.dataTypeName = dataTypeName;
 		this.dataType = dataType;
 		this.isNullable = isNullable;
+		this.isDecimal = isDecimal;
 	}
 
 
@@ -109,12 +112,12 @@ public class Column implements Comparable<Column> {
 	// The values are sorted by their frequency.
 	// Since we want to make WOE deterministic (to always pick the same reference value), we have to use a collection
 	// that preserve order of the elements.
-	public Set<String> getUniqueValues(Setting setting) {
+	public LinkedHashMap<String, Integer> getUniqueValues(Setting setting) {
 		// Memoized
-		if (uniqueValueSet == null) {
-			uniqueValueSet = new LinkedHashSet<>(setting.dialect.getTopUniqueRecords(setting, schemaName, tableName, name));
+		if (uniqueValueMap == null) {
+			uniqueValueMap = setting.dialect.getTopUniqueRecords(setting, schemaName, tableName, name);
 		}
-		return uniqueValueSet;
+		return uniqueValueMap;
 	}
 
 	@Override

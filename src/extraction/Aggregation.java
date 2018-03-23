@@ -21,11 +21,50 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
+import static java.util.regex.Pattern.compile;
+
 public class Aggregation {
 	// Logging
 	private static final Logger logger = Logger.getLogger(Aggregation.class.getName());
 
-	private static int id;  // Each predictor has a unique id
+	// Each predictor has a unique id
+	private static int id;
+
+	// Compiled regex patterns. Case sensitive to enforce nicely formatted patterns.
+	// We use 'Column' suffix to distinguish between: '@timestamp' and '@timestampWithTimezone' without the need to
+	// think about the order of pattern matching.
+	private static final java.util.regex.Pattern regexPatternColumn = compile("@\\w+Column\\d*");
+	private static final java.util.regex.Pattern regexPatternAny = compile("@anyColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternCharacter = compile("@characterColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternNumerical = compile("@numericalColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternNominal = compile("@nominalColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternTemporal = compile("@temporalColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternLongnvarchar = compile("@longnvarcharColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternNchar = compile("@ncharColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternNvarchar = compile("@nvarcharColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternTinyint = compile("@tinyintColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternBigint = compile("@bigintColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternLongvarchar = compile("@longvarcharColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternChar = compile("@charColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternNumeric = compile("@numericColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternDecimal = compile("@decimalColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternInteger = compile("@integerColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternSmallint = compile("@smallintColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternFloat = compile("@floatColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternReal = compile("@realColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternDouble = compile("@doubleColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternVarchar = compile("@varcharColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternBoolean = compile("@booleanColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternDate = compile("@dateColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternTime = compile("@timeColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternTimestamp = compile("@timestampColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternSqlxml = compile("@sqlxmlColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternTimeWithTimezone = compile("@timeWithTimezoneColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternTimestampWithTimezone = compile("@timestampWithTimezoneColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternEnum = compile("@enumColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternInterval = compile("@intervalColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternSet = compile("@setColumn\\d*");
+	private static final java.util.regex.Pattern regexPatternYear = compile("@yearColumn\\d*");
 
 	public static Journal run(Setting setting, List<OutputTable> tableMetadata) {
 		id = setting.predictorStart;
@@ -138,6 +177,12 @@ public class Aggregation {
 		// Skip predictors requiring baseDate, if targetDate is not available
 		outputList = filterRequiresBaseDate(setting, outputList);
 
+		// If we use a pattern that is using @targetValue and @timeColumn,
+		// warn the user that we are using lagged values of the target.
+		if (outputList.stream().anyMatch(it -> it.getPatternCode().contains("@targetValue"))) {
+			logger.info("Predictors that use the lagged target are known to have inflated estimates of the weights if OLS (Ordinary Least Square regression) is used. The remedy is to use MLE (Maximum Likelihood Estimate method) to estimate the parameters (see The Overlapping Data Problem by Ardian, or A Note on the Validity of Cross-Validation for Evaluating Time Series Prediction by Bergmeir, or Why Lagged Dependent Variables Can Supress the Explanatory Power of Other Independent Variables by Achen). Methods that are based on gradient descend (e.g. logistic regression) should by definition not be heavily biased (the regularization factor, however, is affected), although convergence may take longer.");
+		}
+
 		return outputList;
 	}
 
@@ -163,11 +208,18 @@ public class Aggregation {
 			for (int i = 0; i < setting.baseTargetList.size(); i++) {
 				String baseTarget = setting.baseTargetList.get(i);
 				String targetColumn = setting.targetColumnList.get(i);
-				Set uniqueValueSet = setting.targetUniqueValueMap.get(targetColumn);
+				String targetValue = setting.targetUniqueValueMap.get(targetColumn).keySet().iterator().next(); // Just pick the most common value
 				Predictor cloned = new Predictor(predictor);
 				cloned.setBaseTarget(baseTarget);
 				cloned.setTargetColumn(targetColumn);
-				cloned.setParameter("@targetValue", (String) uniqueValueSet.iterator().next()); // Just some random item
+				cloned.setParameter("@targetValue", targetValue);
+
+				// Set targetValuePrior
+				if (predictor.getPatternCode().contains("@targetValuePrior")) {
+					String targetValuePrior = Double.toString(getPrior(setting.targetUniqueValueMap.get(targetColumn), targetValue));
+					cloned.setParameter("@targetValuePrior", targetValuePrior);
+				}
+
 				result.add(cloned);
 			}
 		} else {
@@ -175,6 +227,17 @@ public class Aggregation {
 		}
 
 		return result;
+	}
+
+	// Should have been calculated just once and stored in setting or somewhere
+	private static double getPrior(LinkedHashMap<String, Integer> uniqueValueMap, String value) {
+		int counter = 0;
+
+		for (Integer count : uniqueValueMap.values()) {
+			counter = counter + count;
+		}
+
+		return ( ((double) uniqueValueMap.get(value)) / ((double) counter) );
 	}
 
 
@@ -243,18 +306,18 @@ public class Aggregation {
 
 
 	// Subroutine 5: Recursively generate each possible combination of the columns.
-	// NO GUARANTIES ABOUT COLUMN1 != COLUMN2 IF THEY ARE OF THE SAME TYPE!
-	// NEITHER THAT {COLUMN1, COLUMN2} WILL BE REPEATED AS {COLUMN2, COLUMN1}!
-	// CHECK HOW DO I TREAT COLUMNS THAT ARE BOTH, NUMERICAL AND NOMINAL...
+	// NO GUARANTIES THAT {COLUMN1, COLUMN2} WILL NOT BE REPEATED AS {COLUMN2, COLUMN1}!
+	// Solution: introduce a mark into a pattern: isCommutative=true / isCommutative=false to optionally allow it
+	// E.g. ratio is not commutative, because we may get division by zero.
+	// On the other end, diff is commutative (from the point of the classifier)
 	protected static List<Predictor> loopColumns(Setting setting, Predictor predictor) {
 
 		// Initialize the output
 		List<Predictor> predictorList = new ArrayList<>();
 		predictorList.add(predictor);
 
-		// Find each occurrence of "@?*column*" in SQL. The search is case sensitive (to force nicely formatted patterns).
-		String regexPattern = "@\\w+Column\\w*";
-		Matcher m = java.util.regex.Pattern.compile(regexPattern).matcher(predictor.getSql());
+		// Find each occurrence of "@*column*" in SQL
+		Matcher m = regexPatternColumn.matcher(predictor.getSql());
 		while (m.find()) {
 			predictor.getColumnMap().put(m.group(), null);
 		}
@@ -263,6 +326,12 @@ public class Aggregation {
 		for (Entry<String, String> parameter : predictor.getColumnMap().entrySet()) {
 			predictorList = expandColumn(setting, predictorList, parameter.getKey(), predictor.getTable());
 		}
+
+		// Remove predictors, where the same column was used repeatedly
+		predictorList.removeIf(it -> it.getColumnMap().values().stream().distinct().collect(Collectors.toList()).size() < it.getColumnMap().size());
+
+		// If boolean/bit is used as numerical, cast the boolean/bit to double
+		booleanToDouble(predictorList);
 
 		return predictorList;
 	}
@@ -275,12 +344,42 @@ public class Aggregation {
 			// Select columns from the table with the correct data type.
 			SortedSet<Column> columnValueSet = new TreeSet<>();
 
-			// Matches: Case insensitive plus suffix with any number of digits
-			if (columnKey.matches("(?i)@NUMERICALCOLUMN\\d*")) columnValueSet = table.getColumns(setting, StatisticalType.NUMERICAL);
-			else if (columnKey.matches("(?i)@NOMINALCOLUMN\\d*")) columnValueSet = table.getColumns(setting, StatisticalType.NOMINAL);
-			else if (columnKey.matches("(?i)@TEMPORALCOLUMN\\d*")) columnValueSet = table.getColumns(setting, StatisticalType.TEMPORAL);
-			else if (columnKey.matches("(?i)@IDCOLUMN\\d*")) columnValueSet = table.getColumns(setting, StatisticalType.ID);
-			else logger.warn("The term: " + columnKey +  " in pattern: " + predictor.getPatternName() + " is not recognized as a valid column identifier. Expected terms are: {numericalColumn, nominalColumn, temporalColumn, idColumn}.");
+			// Matches: Case sensitive plus suffix with any number of digits
+			if (regexPatternAny.matcher(columnKey).matches()) columnValueSet = table.getColumns();
+			else if (regexPatternCharacter.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.CHARACTER);
+			else if (regexPatternNumerical.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.NUMERICAL);
+			else if (regexPatternNominal.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.NOMINAL);
+			else if (regexPatternTemporal.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.TEMPORAL);
+
+			else if (regexPatternLongnvarchar.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.LONGNVARCHAR);
+			else if (regexPatternNchar.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.NCHAR);
+			else if (regexPatternNvarchar.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.NVARCHAR);
+			else if (regexPatternTinyint.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.TINYINT);
+			else if (regexPatternBigint.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.BIGINT);
+			else if (regexPatternLongvarchar.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.LONGVARCHAR);
+			else if (regexPatternChar.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.CHAR);
+			else if (regexPatternNumeric.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.NUMERIC);
+			else if (regexPatternDecimal.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.DECIMAL);
+			else if (regexPatternInteger.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.INTEGER);
+			else if (regexPatternSmallint.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.SMALLINT);
+			else if (regexPatternFloat.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.FLOAT);
+			else if (regexPatternReal.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.REAL);
+			else if (regexPatternDouble.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.DOUBLE);
+			else if (regexPatternVarchar.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.VARCHAR);
+			else if (regexPatternBoolean.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.BOOLEAN);
+			else if (regexPatternDate.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.DATE);
+			else if (regexPatternTime.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.TIME);
+			else if (regexPatternTimestamp.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.TIMESTAMP);
+			else if (regexPatternSqlxml.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.SQLXML);
+			else if (regexPatternTimeWithTimezone.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.TIME_WITH_TIMEZONE);
+			else if (regexPatternTimestampWithTimezone.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.TIMESTAMP_WITH_TIMEZONE);
+
+			else if (regexPatternEnum.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.ENUM);
+			else if (regexPatternInterval.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.INTERVAL);
+			else if (regexPatternSet.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.SET);
+			else if (regexPatternYear.matcher(columnKey).matches()) columnValueSet = table.getColumns(setting, StatisticalType.YEAR);
+
+			else logger.warn("The term: '" + columnKey +  "' in pattern: '" + predictor.getPatternName() + "' is not recognized as a valid column identifier.");
 
 			// Bind the columnKey to the actual columnValue.
 			for (Column columnValue : columnValueSet) {
@@ -291,6 +390,22 @@ public class Aggregation {
 		}
 
 		return outputList;
+	}
+
+	// If a boolean/bit is used as numerical, convert the boolean/bit to double
+	private static void booleanToDouble(List<Predictor> predictorList) {
+		for (Predictor predictor : predictorList) {
+			for (Entry<String, String> tuple : predictor.getColumnMap().entrySet()) {
+				String variableName = tuple.getKey();
+				String attributeName = tuple.getValue();
+				int columnDataType = predictor.getTable().getColumn(attributeName).dataType;
+				if (variableName.startsWith("@numericalColumn") && (columnDataType == -7 || columnDataType == 16)) {
+					java.util.regex.Pattern regex = compile("(\\w*\\.?" + variableName + ")");  // Just this @numericalColumn? and not other @numericalColumns
+					String sql = regex.matcher(predictor.getSql()).replaceAll("CASE WHEN $1 THEN 1.0 ELSE 0.0 END");
+					predictor.setSql(sql);
+				}
+			}
+		}
 	}
 
 
@@ -308,7 +423,7 @@ public class Aggregation {
 				if (column.getKey().toUpperCase().matches("@NOMINALCOLUMN\\d*")) {
 
 					// Get list of unique values
-					Set<String> valueList = predictor.getTable().getColumn(column.getValue()).getUniqueValues(setting);
+					Set<String> valueList = predictor.getTable().getColumn(column.getValue()).getUniqueValues(setting).keySet();
 
 					for (String value : valueList) {
 						Predictor cloned = new Predictor(predictor);
@@ -345,7 +460,7 @@ public class Aggregation {
 
 		// Apply the parameters to SQL (Just like in Parameter section)
 		for (Predictor pred : outputList) {
-			addSQL(pred, pred.getPatternCode());
+			addSQL(pred, pred.getSql());
 		}
 
 		// Set predictor's group id
@@ -362,10 +477,23 @@ public class Aggregation {
 
 		for (Predictor predictor : predictorList) {
 			// CURRENTLY JUST SWEEP OVER THE VALUES. USE A REAL OPTIMISATION TOOLBOX.
+			// Check:
+			//  http://www.cs.ubc.ca/labs/beta/Projects/SMAC/
+			//  https://github.com/deeplearning4j/Arbiter
+			//  https://cs.gmu.edu/~eclab/projects/ecj/
+			// IF iterationLimit is 1, we get an error.
 			for (int i = 0; i < parameter.iterationLimit; i++) {
-				double value = parameter.min + i * (parameter.max-parameter.min)/(parameter.iterationLimit-1);
 				Predictor clonedPredictor = new Predictor(predictor);
-				clonedPredictor.setParameter(parameter.key, String.valueOf(value));
+
+				if (parameter.integerValue) {
+					int value = (int) (parameter.min + i * (parameter.max - parameter.min) / (parameter.iterationLimit - 1));
+					clonedPredictor.setParameter(parameter.key, String.valueOf(value));
+
+				} else {
+					double value = parameter.min + i * (parameter.max - parameter.min) / (parameter.iterationLimit - 1);
+					clonedPredictor.setParameter(parameter.key, String.valueOf(value));
+				}
+
 				outputList.add(clonedPredictor);
 			}
 		}
@@ -511,8 +639,6 @@ public class Aggregation {
 	// The result is then used in getChi2() and getConceptDrift().
 	// Note: The data type could be predicted from the pattern and pattern parameters. But the implemented
 	// method is foolproof, though slow.
-	// Note: An exception is a direct field where we want to treat an integer column once like numerical and once like
-	// nominal.
 	private static void getPredictorType(Setting setting, Predictor predictor) {
 
 		Table table = new Table();
@@ -523,16 +649,6 @@ public class Aggregation {
 
 		predictor.setDataType(column.dataType);
 		predictor.setDataTypeName(column.dataTypeName);
-
-		// Exception for direct field pattern (since once we treat it as nominal and once as numerical)
-		if ("Direct field".equals(predictor.getPatternName())) {
-			String statisticalType = getColumnStatisticalType(predictor.getColumnMap().firstKey());
-			predictor.setDataTypeCategory(statisticalType);
-			if (column.dataType == -7 || column.dataType == 16) {    // We treat here bit/boolean data type as nominal, not numerical!
-				predictor.setDataTypeCategory("nominal");
-			}
-			return;
-		}
 
 		// NOTE: WE DO NOT WANT STATISTICAL TYPE, WE WANT RAW TYPE!
 		if (column.dataType == -7 || column.dataType == 16) {   // We treat here bit/boolean data type as nominal, not numerical!

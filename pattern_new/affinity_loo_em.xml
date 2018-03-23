@@ -12,7 +12,7 @@
 			https://stats.stackexchange.com/questions/189568/replacing-variables-by-woe-weight-of-evidence-in-logistic-regression
 		In the praxis, WoE is interesting for nominal attributes with high cardinality (high count of unique values).
 
-		SANDBOX HARDCODED VALUES OF PRIORS!
+
 	</description>
 	<example>
 		Log ods for customer's cellphone brand.
