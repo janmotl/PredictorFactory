@@ -5,18 +5,24 @@
 	<description>
 		The integral (area under curve) is computed with the trapezoidal rule as described at:
 			http://www.lexjansen.com/wuss/2004/posters/c_post_the_sas_calculations_.pdf
+
+		Note: PostgreSQL returns dislikes calculation of (time with time zone - time with time zone).
+
+		Note: Does not work in older MySQL databases...
+
+		Note: Keyword dateToNumber is automatically replaced with database specific function.
 	</description>
 	<example>
 		Civilisation's score from Civilization III (a computer game).
 	</example>
 	<author>Jan Motl</author>
 	<date>2015-03-14</date>
-	<code compatibility="PostgreSQL">WITH intermediate AS (
+	<code compatibility="PostgreSQL,Microsoft SQL Server">WITH intermediate AS (
 			SELECT @base
 				 , @numericalColumn nowValue
-				 , @temporalColumn nowTime
+				 , dateToNumber(@temporalColumn) nowTime
 				 , LAG(@numericalColumn) OVER (PARTITION BY @basePartitionBy ORDER BY @temporalColumn) AS lagValue
-				 , LAG(@temporalColumn) OVER (PARTITION BY @basePartitionBy ORDER BY @temporalColumn) AS lagTime
+				 , LAG(dateToNumber(@temporalColumn)) OVER (PARTITION BY @basePartitionBy ORDER BY @temporalColumn) AS lagTime
 			FROM @propagatedTable
 		  )
 		  SELECT @base

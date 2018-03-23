@@ -16,6 +16,8 @@
 		multiple events happen during a day. Consequently, it may always return slightly different result.
 
 		NOTE: Pattern nominal_change was a duplicate -> removed nominal_change.
+
+		Note: Does not work on MySQL.
 	</description>
 	<example>
 		How many times did a student interrupt his studies?

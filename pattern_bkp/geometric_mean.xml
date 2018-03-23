@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Geometric Mean</name>
+	<description>
+		To avoid taking of a logarithm of a zero or negative value, we consider only positive values.
+
+		However, we should for such sets return zero!!!:
+			http://math.stackexchange.com/questions/91443/geometric-mean-of-a-dataset-containing-0s
+
+		But different approaches exist:
+			http://www.wwdmag.com/channel/casestudies/handling-zeros-geometric-mean-calculation
+
+		Note: We do not use @numericalColumn because this union type includes booleans. But this pattern excludes zeros.
+		And geometric mean of ones is one. If you need a predictor that looks whether there is one in the set, use
+		"aggregate", which will calculate the maximum of the set.
+
+		Note: We use ODBC functions to deal with different function names.
+	</description>
+	<example>
+
+	</example>
+	<author>Matej Polak</author>
+	<date>2017-01-16</date>
+	<code compatibility="MySQL,PostgreSQL">SELECT @base,
+			EXP(AVG({fn LOG(@column) })) AS @columnName
+		FROM @propagatedTable
+		WHERE @column > 0
+		GROUP BY @base
+	</code>
+	<parameter key="@column" value="@tinyintColumn, @bigintColumn, @numericColumn, @decimalColumn, @integerColumn, @integerColumn, @floatColumn, @realColumn, @doubleColumn, @yearColumn"/>
+	<cardinality>n</cardinality>
+</pattern>

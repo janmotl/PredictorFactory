@@ -20,6 +20,12 @@
 		  WHERE @nominalColumn='@value'
 		  GROUP BY @base
 	</code>
+	<code compatibility="PostgreSQL">SELECT @base
+	           , @aggregateFunction((DATETONUMBER(@temporalColumn) - DATETONUMBER(@temporalColumn)) / 86400) AS @columnName
+	      FROM @propagatedTable
+		  WHERE @nominalColumn='@value'
+		  GROUP BY @base
+	</code>
 	<parameter key="@aggregateFunction" value="min, max, avg, stddev_samp"/>
 	<cardinality>n</cardinality>
 </pattern>

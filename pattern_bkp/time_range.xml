@@ -14,5 +14,10 @@
 	      FROM @propagatedTable
 	      GROUP BY @base
 	</code>
+	<code compatibility="PostgreSQL">SELECT @base
+	           , (DATETONUMBER(max(@temporalColumn)) - DATETONUMBER(min(@temporalColumn))) / 86400 AS @columnName
+	      FROM @propagatedTable
+		  GROUP BY @base
+	</code>
 	<cardinality>n</cardinality>
 </pattern>

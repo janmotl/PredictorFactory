@@ -23,9 +23,8 @@
 	<author>Jan Motl</author>
 	<date>2016-10-21</date>
 	<code>SELECT @base
-			   , case when @column is null then 1 else 0 end AS @columnName
+			   , case when @anyColumn is null then 1 else 0 end AS @columnName
 	      FROM @propagatedTable
 	</code>
-	<parameter key="@column" value="@nominalColumn, @numericalColumn, @temporalColumn"/>
 	<cardinality>1</cardinality>
 </pattern>

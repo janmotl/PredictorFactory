@@ -13,8 +13,8 @@
 		Note: This pattern can be very slow.
 
 		Note: This pattern may produce a lot of duplicates.
-		
-		NOTE: ADDED SUM
+
+		Note: Comparison of "timestamp with time zone" to "time without time zone" will fail.
 		
 		NOTE: THERE SHOULD BE A SPECIAL NAME FOR @propagationTimeColumn (dateConstrain) - the time column used for time constrain during
 		base propagation.
@@ -28,15 +28,29 @@
 	</example>
 	<author>Jan Motl</author>
 	<date>2014-10-14</date>
-	<code>SELECT @base
+	<code compatibility="Default,MySQL">SELECT @base
 			   , @aggregateFunction(@numericalColumn) AS @columnName
 	      FROM @propagatedTable
-	      WHERE DATEDIFF(@baseDate, @temporalColumn) &lt; @lag
-	      	AND DATEDIFF(@baseDate, @temporalColumn) &gt; ((@leadFraction)*@lag)
+	      WHERE DATEDIFF(@baseDate, @column) &lt; @lag
+	      	AND DATEDIFF(@baseDate, @column) &gt; ((@leadFraction)*@lag)
+	      GROUP BY @base
+	</code>
+	<code compatibility="Microsoft SQL Server">SELECT @base
+			   , @aggregateFunction(@numericalColumn) AS @columnName
+	      FROM @propagatedTable
+	      WHERE DATEDIFF(d, @column, @baseDate) &lt; @lag
+	      	AND DATEDIFF(d, @column, @baseDate) &gt; ((@leadFraction)*@lag)
+	      GROUP BY @base
+	</code>
+	<code compatibility="PostgreSQL">SELECT @base
+			   , @aggregateFunction(@numericalColumn) AS @columnName
+	      FROM @propagatedTable
+	      WHERE @baseDate::date - @column::date &lt; @lag
+	      	AND @baseDate::date - @column::date &gt; ((@leadFraction)*@lag)
 	      GROUP BY @base
 	</code>
     <parameter key="@aggregateFunction" value="stddev_samp, avg, min, max, sum"/>
-   
+   	<parameter key="@column" value="@dateColumn, @timestampColumn, @timestampWithTimezoneColumn"/>
     <optimize key="@lag" min="30" max="240" integerValue="true" iterationLimit="4"/>
     <optimize key="@leadFraction" min="0.2" max="0.8" integerValue="false" iterationLimit="4"/>
 	<cardinality>n</cardinality>

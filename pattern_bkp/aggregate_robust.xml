@@ -14,7 +14,9 @@
 		
 		Overall, this pattern is superior to the conventional min/max whenever the attribute contains many records.
 		But it performs badly whenever there is just a few records. Hence, if the pattern is too slow, it can be 
-		simplified and return null whenever there is too few samples.  
+		simplified and return null whenever there is too few samples.
+
+		Note: Does not work on MySQL.
 	</description>
 	<example>
 		Minimum of the balance.

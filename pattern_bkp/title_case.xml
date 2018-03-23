@@ -5,6 +5,8 @@
 	<description>
 		Is the string in "Title Case" format? In other words, are all initial letters in upper case and everything else
 		in lower case?
+
+		Note: Does not work in MySQL and MSSQL.
 	</description>
 	<example>
 		Commonly names of peoples and addresses follow title case format (at least in countries of Greek-Latin heritage).
@@ -13,8 +15,8 @@
 	</example>
 	<author>Jan Motl</author>
 	<date>2017-11-08</date>
-	<code>SELECT @base
-			   , case when initcap(@nominalColumn)=@nominalColumn then 1 else 0 end AS @columnName
+	<code compatibility="PostgreSQL,Oracle">SELECT @base
+			   , case when initcap(@characterColumn)=@characterColumn then 1 else 0 end AS @columnName
 		  FROM @propagatedTable</code>
 	<cardinality>1</cardinality>
 </pattern>

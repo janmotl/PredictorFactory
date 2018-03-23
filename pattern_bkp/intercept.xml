@@ -15,6 +15,11 @@
 	</example>
 	<author>Jan Motl</author>
 	<date>2014-12-22</date>
+	<code compatibility="Default,Microsoft SQL Server">SELECT @base
+	           , ((sum(dateToNumber(@temporalColumn)) * sum(dateToNumber(@temporalColumn) * @numericalColumn)) - (sum(@numericalColumn) * sum(power(dateToNumber(@temporalColumn), 2)))) / (power(sum(dateToNumber(@temporalColumn)), 2) - count(@numericalColumn) * sum(power(dateToNumber(@temporalColumn), 2))) AS @columnName
+	      FROM @propagatedTable
+	      GROUP BY @base
+	</code>
 	<code compatibility="MySQL">SELECT @base
 	           , ((sum(@temporalColumn) * sum(@temporalColumn * @numericalColumn)) - (sum(@numericalColumn) * sum(power(@temporalColumn, 2)))) / (power(sum(@temporalColumn), 2) - count(@numericalColumn) * sum(power(@temporalColumn, 2))) AS @columnName
 	      FROM @propagatedTable

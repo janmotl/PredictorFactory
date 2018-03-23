@@ -3,9 +3,14 @@
 <pattern>
 	<name>Entropy</name>
 	<description>
-		Shannon entropy.
+		Shannon entropy for discrete distributions.
 
-		Note: To avoid integer division, we multiply the ration by 1.0 to cast it to numerical.
+		The returned entropy is by definition non-negative and is maximized by uniform distribution. The entropy
+		(generally) increases with the increasing count of unique values.
+
+		This pattern is slow.
+
+		Note: To avoid integer division, we multiply the ratio by 1.0 to cast it to numerical.
 		Note: The base of the logarithm is database vendor specific.
 		Note: This is a population estimate. Not sample estimate. See:
 			http://thirdorderscientist.org/homoclinic-orbit/2013/7/9/how-many-ways-can-you-estimate-entropy

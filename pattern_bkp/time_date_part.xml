@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 
 <pattern>
-	<name>Time part</name>
+	<name>Time date part</name>
 	<description>
-		The hour/day/day-of-week/month of the event.
+		The day/day-of-week/month of the event.
 
 		Note: Should add day in a month and day in a year.
 
@@ -25,8 +25,6 @@
 		Day-of-week is sometimes highly predictive.
 	</description>
 	<example>
-		Time of waking up.
-
 		Day in week: For example, let’s say you are trying to predict foot fall in a shopping mall based on dates. If you try and use the dates directly, you may not be able to extract meaningful insights from the data. This is because the foot fall is less affected by the day of the month than it is by the day of the week. Now this information about day of week is implicit in your data. You need to bring it out to make your model better.
 	</example>
 	<author>Jan Motl</author>
@@ -39,7 +37,7 @@
 	           , DATEPART(@field, @column) AS @columnName
 	      FROM @propagatedTable
 	</code>
-	<parameter key="@field" value="hour, minute"/>
-	<parameter key="@column" value="@timeColumn, @timeWithTimezoneColumn, @timestampColumn, @timestampWithTimezoneColumn"/>
+	<parameter key="@field" value="day, dow, month"/>
+	<parameter key="@column" value="@dateColumn, @timestampColumn, @timestampWithTimezoneColumn"/>
 	<cardinality>1</cardinality>
 </pattern>

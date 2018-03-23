@@ -3,9 +3,11 @@
 <pattern>
 	<name>Zeros</name>
 	<description>
-		Returns the count of trailing zeros.
+		Returns the count of trailing zeros. If the value is zero, we return zero.
 
 		Note: It is implemented only for up to 3 zeros.
+
+		Note: We use floor() function instead of round() function because MSSQL requires at least 2 parameters for round().
 	</description>
 	<example>
 		Energy consumption in kWh/year entered by the web visitor. If they enter something like 2000, it is most likely
@@ -15,7 +17,7 @@
 	<author>Jan Motl</author>
 	<date>2017-11-08</date>
 	<code>SELECT @base
-			   , case when 1000*round(@numericalColumn/1000)=@numericalColumn then 3 else (case when 100*round(@numericalColumn/100)=@numericalColumn then 2 else (case when 10*round(@numericalColumn/10)=@numericalColumn then 1 else 0 end) end) end AS @columnName
+			   , case when @numericalColumn=0 then 0 else (case when 1000*floor(@numericalColumn/1000)=@numericalColumn then 3 else (case when 100*floor(@numericalColumn/100)=@numericalColumn then 2 else (case when 10*floor(@numericalColumn/10)=@numericalColumn then 1 else 0 end) end) end) end AS @columnName
 		  FROM @propagatedTable
 		  WHERE @numericalColumn is not null</code>
 	<cardinality>1</cardinality>

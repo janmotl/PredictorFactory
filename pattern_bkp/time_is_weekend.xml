@@ -15,16 +15,21 @@
 	<author>Jan Motl</author>
 	<date>2015-01-10</date>
 	<code compatibility="MySQL">SELECT @base
-	           , weekday(@temporalColumn) &gt;= 5 AS @columnName
+	           , weekday(@column) &gt;= 5 AS @columnName
 	      FROM @propagatedTable
 	</code>
 	<code compatibility="PostgreSQL">SELECT @base
-			     , CASE WHEN EXTRACT(dow from @temporalColumn) &gt;= 5 THEN 1 ELSE 0 END AS @columnName
+			     , CASE WHEN extract(dow from @column) &gt;= 5 THEN 1 ELSE 0 END AS @columnName
 			FROM @propagatedTable
 	</code>
 	<code compatibility="Oracle">SELECT @base
-			     , CASE WHEN to_char(@temporalColumn, 'D') in (1,7) THEN 1 ELSE 0 END AS @columnName
+			     , CASE WHEN to_char(@column, 'D') in (1,7) THEN 1 ELSE 0 END AS @columnName
 			FROM @propagatedTable
 	</code>
+	<code compatibility="Microsoft SQL Server">SELECT @base
+			     , CASE WHEN datepart(dw, @column) in (1,7) THEN 1 ELSE 0 END AS @columnName
+			FROM @propagatedTable
+	</code>
+	<parameter key="@column" value="@dateColumn, @timestampColumn, @timestampWithTimezoneColumn"/>
 	<cardinality>1</cardinality>
 </pattern>

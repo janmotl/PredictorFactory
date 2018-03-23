@@ -7,7 +7,9 @@
 		values.
 		
 		Note: The value is regularized toward 1. When no change happens, 1 is returned. Also by using regularization
-		we avoid division by zero. 
+		we avoid division by zero.
+
+		Note: Does not work on MySQL.
 	</description>
 	<example>
 		Detect, whether the person is a seller (many small incomes, a few big expenses) or an employee (many small expenses, a few incomes).

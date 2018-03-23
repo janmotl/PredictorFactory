@@ -11,30 +11,22 @@
 		NOTE: Could calculate slope of two numerical attributes (in another pattern).
 		NOTE: Whenever correlation is calculated manually, arithmetic overflow can happen.
 		NOTE: DateToNumber function is automatically replaced with the database aware function call.
+		NOTE: Since we use DateToNumber, it works on all temporal types (at least in PostgreSQL).
 	</description>
 	<example>
 		Trend of customer's balance on his account.
 	</example>
 	<author>Jan Motl</author>
 	<date>2014-12-22</date>
-	<code compatibility="SAS">SELECT @base
-	           , (count(@numericalColumn)*sum(@numericalColumn*@temporalColumn) - sum(@numericalColumn)* sum(@temporalColumn))/(count(@numericalColumn)*sum(@numericalColumn*@numericalColumn) - sum(@numericalColumn)* sum(@numericalColumn)) AS @columnName
+	<code compatibility="MySQL,SAS">SELECT @base
+	           , (count(@numericalColumn)*sum(@numericalColumn*DATETONUMBER(@temporalColumn)) - sum(@numericalColumn)* sum(DATETONUMBER(@temporalColumn)))/(count(@numericalColumn)*sum(@numericalColumn*@numericalColumn) - sum(@numericalColumn)* sum(@numericalColumn)) AS @columnName
 	      FROM @propagatedTable
-	      WHERE dateDiff(@baseDate, @temporalColumn) &lt; @timeRange
-	      GROUP BY @base
-	</code>
-	<code compatibility="MySQL">SELECT @base
-	           , (count(@numericalColumn)*sum(@numericalColumn*@temporalColumn) - sum(@numericalColumn)* sum(@temporalColumn))/(count(@numericalColumn)*sum(@numericalColumn*@numericalColumn) - sum(@numericalColumn)* sum(@numericalColumn)) AS @columnName
-	      FROM @propagatedTable
-	      WHERE @temporalColumn &gt; DATE_ADD(@baseDate, INTERVAL -@timeRange day)
 	      GROUP BY @base
 	</code>
 	<code compatibility="PostgreSQL,Oracle">SELECT @base
-	           , regr_slope(@numericalColumn, dateToNumber(@temporalColumn)) AS @columnName
+	           , regr_slope(@numericalColumn, DATETONUMBER(@temporalColumn)) AS @columnName
 	      FROM @propagatedTable
-	      WHERE @temporalColumn &gt; (@baseDate -@timeRange)
 	      GROUP BY @base
 	</code>
-	<parameter key="@timeRange" value="30, 60, 90, 180, 360, 540, 720"/>
 	<cardinality>n</cardinality>
 </pattern>

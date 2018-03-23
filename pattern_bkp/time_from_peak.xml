@@ -3,11 +3,15 @@
 <pattern>
 	<name>Time from peak</name>
 	<description>
-		Elapsed time from the moment, when a numerical attribute reached its maximum/minimum value. In the case of
-		a tie, time from the most recent maximum/minimum is returned.
+		Elapsed time in seconds from the moment, when a numerical attribute reached its maximum/minimum value.
+		In the case of a tie, time from the most recent maximum/minimum is returned.
 		
 		Note: NumericalColumn can be null and that can cause ties -> avoid nulls. However, ties can still happen ->
 		pick the most recent (the maximum) time value (note that it also deals with ties at temporalColumn level).
+
+		Note: It is known to fail on PostgreSQL with timetz ant timestamp target_date (they are not additive).
+
+		Note: Does not work on MySQL.
 	</description>
 	<example>
 		How long ago did the customer transfer the biggest amount.
@@ -15,7 +19,7 @@
 	<author>Jan Motl</author>
 	<date>2015-05-10</date>
 	<code compatibility="PostgreSQL">SELECT @base
-			     , DATEDIFF(@baseDate, max(@temporalColumn)) AS @columnName
+			     , DATETONUMBER(DATEDIFF(@baseDate, max(@temporalColumn))) / 86400 AS @columnName
 			FROM (SELECT @base
 			           , @temporalColumn
 		               , RANK() OVER (PARTITION BY @basePartitionBy ORDER BY @numericalColumn @sortOrder) AS rk

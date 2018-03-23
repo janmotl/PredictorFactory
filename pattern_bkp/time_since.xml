@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Time since</name>
+	<description>Time in seconds since some time in the past till the time when the prediction is required (defined with @baseDate).
+
+		Because we are guaranteed that there is just one date per the group (cardinality is set to 1), it is wasteful to try
+		several aggregates as in "Time aggregate since" pattern.
+
+		Note: Cardinality of n is handled in time_aggregate_since.
+
+		Note: PostgreSQL likes to return intervals. And while intervals are easy to understand for people, they are
+		difficult to digest for RapidMiner and so on. Hence, we explicitly return a double - count of days. Epoch
+		takes simplifying assumptions:
+			https://stackoverflow.com/questions/952493/how-do-i-convert-an-interval-into-a-number-of-hours-with-postgres
+		But for analytical purposes it should be acceptable.
+	</description>
+	<example>
+		Let's imagine we want to predict customer's behaviour and that we have an attribute with the client's birth year.
+		We could use direct_field pattern on the attribute. However,
+		age is more appropriate as a modeling variable because it is not time dependent. The model will predict the
+		behavior of 20-year-old people today, next year, and five years from now, and will always be predicting the
+		behavior of incoming 20-year-old people based on the experience data.
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-01-10</date>
+	<code compatibility="Microsoft SQL Server">SELECT @base
+	           , DATEDIFF(s, @column, @baseDate) AS @columnName
+	      FROM @propagatedTable
+	</code>
+	<code compatibility="MySQL">SELECT @base
+	           , DATEDIFF(@baseDate, @column) AS @columnName
+	      FROM @propagatedTable
+	</code>
+	<code compatibility="PostgreSQL">SELECT @base
+	           , extract(epoch from @baseDate - @column)AS @columnName
+	      FROM @propagatedTable
+	</code>
+	<parameter key="@column" value="@timeColumn, @timeWithTimezoneColumn"/>
+	<cardinality>1</cardinality>
+</pattern>

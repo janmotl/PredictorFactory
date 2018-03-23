@@ -4,6 +4,8 @@
 	<name>Accented</name>
 	<description>
 		Does the string contain a common accented character?
+
+		Note: In MySQL we would have to use nested replace().
 	</description>
 	<example>
 		In some countries, Latin alphabet is enriched by accents. But it takes time to write these accents.
@@ -12,12 +14,12 @@
 	</example>
 	<author>Jan Motl</author>
 	<date>2017-11-08</date>
-	<code>SELECT @base
-			   , case when translate(@nominalColumn,
+	<code compatibility="PostgreSQL,Oracle">SELECT @base
+			   , case when translate(@characterColumn,
 					'áàâãäåāăąèééêëēĕėęěìíîïìĩīĭḩóôõöōŏőùúûüũūŭůäàáâãåæçćĉčöòóôõøüùúûßéèêëýñîìíïşěščřžýáíéůúťňďÁČĎÉĚÍŇÓŘŠŤÚŮŽÝŽ',
 					'aaaaaaaaaeeeeeeeeeeiiiiiiiihooooooouuuuuuuuaaaaaaeccccoooooouuuuseeeeyniiiisescrzyaieuutndACDEEINORSTUUZYZ'
-				)=@nominalColumn then 0 else 1 end AS @columnName
+				)=@characterColumn then 0 else 1 end AS @columnName
 		  FROM @propagatedTable
-		  WHERE @nominalColumn is not null</code>
+		  WHERE @characterColumn is not null</code>
 	<cardinality>1</cardinality>
 </pattern>

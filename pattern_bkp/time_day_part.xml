@@ -24,7 +24,7 @@
                 END AS @columnName
         FROM (
             SELECT @base
-                 , { fn HOUR(@temporalColumn)} AS hour
+                 , { fn HOUR(@column)} AS hour
             FROM @propagatedTable
         ) t
     </code>
@@ -37,9 +37,10 @@
 					END AS @columnName
 			FROM (
 				SELECT @base
-					, EXTRACT(HOUR FROM @temporalColumn) AS hour
+					, EXTRACT(HOUR FROM @column) AS hour
 				FROM @propagatedTable
 			) t
 	</code>
+	<parameter key="@column" value="@timeColumn, @timeWithTimezoneColumn, @timestampColumn, @timestampWithTimezoneColumn"/>
 	<cardinality>1</cardinality>
 </pattern>

@@ -13,6 +13,8 @@
 		NOTE: Works also on id!
 	
 		Note: The implementation for PostgreSQL is supported from PostgreSQL 9.4.
+
+		Note: Does not work on MySQL.
 	
 		NOTE: THE VERSION FOR SAS CAN RETURN TOO MANY ROWS BECAUSE OF TIES.
 

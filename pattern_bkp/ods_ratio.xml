@@ -7,7 +7,7 @@
 		Based on the empirical comparison in the article, odds ratio should be better than WoE. However, our empirical
 		comparisons do not agree with the claim.
 
-		In comparison to WoE, this pattern also takes into account conditional probailities of NOT observing the
+		In comparison to WoE, this pattern also takes into account conditional probabilities of NOT observing the
 		given attribute value.
 
 		NOTE: This pattern is twice as fast as WoE.
@@ -18,6 +18,8 @@
 
 		NOTE: TARGET VALUES SHOULD BE ESCAPED IN PF - if target is numerical, do not escape, if nominal, escape with
 		the right escape character.
+
+		Note: Does not work on MySQL (full join).
 	</description>
 	<example>
 		Logarithmic odds that a customer is a female based on the client's address.
@@ -28,27 +30,27 @@
 			, oddsRatio AS @columnName
 		FROM @propagatedTable t1
 		JOIN (
-			SELECT @column
-				 , {fn log(tp*(negative-fp)*1.0)/(fp*(positive-tp)) } as oddsRatio
+			SELECT @nominalColumn
+				 , {fn log((tp*(negative-fp)*1.0)/(fp*(positive-tp))) } as oddsRatio
 			FROM (
-				SELECT COALESCE(tp.@column, fp.@column) as @column
+				SELECT COALESCE(tp.@nominalColumn, fp.@nominalColumn) as @nominalColumn
 					, coalesce(tp,0) + 1 as tp
 					, coalesce(fp,0) + 1 as fp
 					, coalesce(positive,0) + 2 as positive
 					, coalesce(negative,0) + 2 as negative
 				FROM (
-					SELECT @column, count(*) as tp
+					SELECT @nominalColumn, count(*) as tp
 					FROM @propagatedTable
 					WHERE @targetName = '@targetValue'
-					GROUP BY @column
+					GROUP BY @nominalColumn
 				) tp
 				FULL JOIN (
-					SELECT @column, count(*) as fp
+					SELECT @nominalColumn, count(*) as fp
 					FROM @propagatedTable
 					WHERE @targetName &lt;&gt; '@targetValue'
-					GROUP BY @column
+					GROUP BY @nominalColumn
 				) fp
-				ON tp.@column = fp.@column
+				ON tp.@nominalColumn = fp.@nominalColumn
 				, (
 					SELECT count(*) as negative
 					FROM @propagatedTable
@@ -61,8 +63,7 @@
 				) positive
 			) counts
 		) odds
-		ON t1.@column = odds.@column
+		ON t1.@nominalColumn = odds.@nominalColumn
 	</code>
-	<parameter key="@column" value="@nominalColumn,@idColumn"/>
 	<cardinality>1</cardinality>
 </pattern>

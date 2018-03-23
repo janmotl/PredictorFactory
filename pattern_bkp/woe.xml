@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 
 <pattern>
-	<name>Aggregate WOE</name>
+	<name>WOE</name>
 	<description>Weight of evidence.
 
 		In comparison to the textbook formulation this implementation takes care of:
@@ -20,6 +20,15 @@
 		To avoid division by zero and logarithm of zero in evaluation of WoE we use the Laplace correction.
 		Laplacean correction is from: http://shigglesblog.blogspot.com/2013/07/weight-of-evidence.html
 
+		A different correction schema:
+			http://support.sas.com/documentation/cdl/en/prochp/66704/HTML/default/viewer.htm#prochp_hpbin_details02.htm
+		Based on the empirical comparison performed by Maros Spak, the implemented correction schema performs on average
+		by 0.5% better than the correction implemented by SAS. This difference was consistent across
+		different models (decision tree, logistic regression, naive Bayes), different metrics (classification accuracy,
+		f-measure, AUC) and different datasets (7 datasets). From the theoretical point of view, the implemented
+		correction produces scores that can be interpreted as a probability (e.g. they sum to 1), while the SAS score
+		cannot be interpreted as a probability because the scores do not sum to 1 (at least for finite count of samples).
+
 		The empirical evidence suggests that Laplacean correction improves AUC by 5 percent points.
 			See: http://papers.ssrn.com/sol3/papers.cfm?abstract_id=1918410
 
@@ -27,11 +36,13 @@
 		But databases do not automatically cast strings to numbers. Hence, treating the target value as a string works
 		for both, numerical and string targets.
 
-		NOTE: We do not calculate WoE for NULL category. An example of implementation where See: http://support.sas.com/resources/papers/proceedings13/095-2013.pdf
-			or https://cran.r-project.org/web/packages/Causata/Causata.pdf
-			Test for missing values in both, the attribute and the target.
-			Missing values should be treated as a special category as explained at: http://multithreaded.stitchfix.com/blog/2015/08/13/weight-of-evidence/
+		NOTE: We do not calculate WoE for NULL category in the attribute.
+		For examples of the implementation see http://support.sas.com/resources/papers/proceedings13/095-2013.pdf
+		or https://cran.r-project.org/web/packages/Causata/Causata.pdf
+		Missing values should be treated as a special category as explained at: http://multithreaded.stitchfix.com/blog/2015/08/13/weight-of-evidence/
 
+		NOTE: We do not calculate WoE for NULL target value as it just unnecessarily increases the count
+		of rows in the predictor.
 
 		Multi-class WoE: http://dspace.library.uu.nl/bitstream/handle/1874/11641/c4.pdf
 
@@ -39,24 +50,19 @@
 
 		NOTE: WORKS ONLY ON BINARY TARGETS! -> produce a column for each target class
 
-		NOTE: Interestingly enough, average of woe works better than sum of woe.
+		NOTE: Is expected to fail on regression tasks.
 
 		NOTE: Oracle may require specifying logarithm base.
 
-		Note: We use {fn log(x) } because Oracle 11g EX expects presence of the base in the logarithm.
-		Hence we can't universally use it.
-		Another story is ln(x), which is supported by Oracle and MySQL but not by MSSQL. In MSSQL it is log(x).
-
 		Some other predictors are mentioned in ACORA (Provost).
-
 	</description>
 	<example>
-		Average logarithmic odds that a customer is a female based on ids of purchased products.
+		Log ods for customer's cellphone brand.
 	</example>
 	<author>Jan Motl</author>
 	<date>2015-03-08</date>
 	<code> SELECT a.@base
-				, avg(woe.woe) @columnName
+				, woe.woe @columnName
 			FROM @propagatedTable a
 			JOIN (
 				 SELECT @nominalColumn
@@ -67,10 +73,11 @@
 					  , (SELECT sum(case when @targetName='@targetValue' then 1.0 else 0 end)+2 as total_default
 					          , sum(case when @targetName &lt;&gt; '@targetValue' then 1.0 else 0 end)+2 as total_nondefault
 					  FROM @propagatedTable) total
+		         WHERE @targetName IS NOT NULL
 				 GROUP BY @nominalColumn
 				 ) woe
-			on a.@nominalColumn = woe.@nominalColumn
-			GROUP BY a.@base
+			ON a.@nominalColumn = woe.@nominalColumn
+			GROUP BY a.@base, woe.woe
 	</code>
-	<cardinality>n</cardinality>
+	<cardinality>1</cardinality>
 </pattern>

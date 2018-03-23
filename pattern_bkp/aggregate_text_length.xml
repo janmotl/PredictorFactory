@@ -22,7 +22,7 @@
 	<author>Jan Motl</author>
 	<date>2015-01-25</date>
 	<code>SELECT @base
-	           , @aggregateFunction(CHAR_LENGTH(@nominalColumn)) AS @columnName
+	           , @aggregateFunction(CHAR_LENGTH(@characterColumn)) AS @columnName
 	      FROM @propagatedTable
 	      GROUP BY @base
 	</code>

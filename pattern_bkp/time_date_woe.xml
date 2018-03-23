@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 
 <pattern>
-	<name>Time WOE</name>
-	<description>Weight of evidence for time.
+	<name>Time date WOE</name>
+	<description>Weight of evidence for date.
 	
 	The implementation is from: https://qizeresearch.wordpress.com/2014/05/21/utilize-woe-to-replace-dummy-variables/
 
@@ -24,11 +24,11 @@
 
 	</description>
 	<example>
-		Average log odds for the time the customer accessed our web page.
+		Average log odds for the date the customer accessed our web page.
 	</example>
 	<author>Jan Motl</author>
 	<date>2015-06-01</date>
-	<code> SELECT a.@base
+	<code compatibility="PostgreSQL"> SELECT a.@base
 				, avg(woe.woe) @columnName
 			FROM (
 				SELECT @base
@@ -49,7 +49,7 @@
 			on a.day = woe.day
 			GROUP BY a.@base
 	</code>
-	<parameter key="@datePart" value="hour, minute"/>
-	<parameter key="@column" value="@timeColumn, @timeWithTimezoneColumn, @timestampColumn, @timestampWithTimezoneColumn"/>
+	<parameter key="@datePart" value="day, month, year"/>
+	<parameter key="@column" value="@dateColumn, @timestampColumn, @timestampWithTimezoneColumn"/>
 	<cardinality>n</cardinality>
 </pattern>
