@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Aggregate robust</name>
+	<description>
+		Returns the n-th lowest/biggest value instead of the lowest/biggest value. This pattern is also known as "ranked
+		aggregate".
+		
+		Note: There are several approaches how to deal with scenarios when there isn't enough samples. We can return 
+		null. Or we can return the m-th extreme, when only m (m &lt; n) samples are available.
+		
+		Also note that if two samples are available and we want the minimum, then the bigger value is actually
+		returned. 
+		
+		Overall, this pattern is superior to the conventional min/max whenever the attribute contains many records.
+		But it performs badly whenever there is just a few records. Hence, if the pattern is too slow, it can be 
+		simplified and return null whenever there is too few samples.
+
+		Note: Does not work on MySQL.
+	</description>
+	<example>
+		Minimum of the balance.
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-04-04</date>
+	<code compatibility="PostgreSQL">SELECT t2.@base
+			   , t2.@columnName
+		  FROM (SELECT t1.@base
+			   		 , t1.@columnName
+			   		 , t1.n
+		             , Max(t1.n) OVER (PARTITION BY t1.@basePartitionBy) max_n
+		        FROM   (SELECT @base
+		                     , @numericalColumn AS @columnName
+		                     , ROW_NUMBER() OVER (PARTITION BY @basePartitionBy ORDER BY @numericalColumn @sortOrder) AS n
+		                FROM @propagatedTable
+		                WHERE @numericalColumn IS NOT NULL) t1
+		        WHERE  t1.n &lt;= @nth) t2
+		   WHERE t2.max_n = t2.n
+	</code>
+    <parameter key="@sortOrder" value="ASC, DESC"/>
+    <parameter key="@nth" value="2, 3"/>
+	<cardinality>n</cardinality>
+</pattern>

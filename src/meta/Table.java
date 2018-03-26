@@ -44,10 +44,37 @@ public class Table {
 		SortedSet<Column> result = new TreeSet<>();
 
 		for (Column column : columnMap.values()) {
-			if (statisticalType == StatisticalType.ID && column.isId) result.add(column);
+			if (statisticalType == StatisticalType.CHARACTER && column.isCharacter) result.add(column);
 			if (statisticalType == StatisticalType.NOMINAL && column.isNominal) result.add(column);
 			if (statisticalType == StatisticalType.NUMERICAL && column.isNumerical) result.add(column);
 			if (statisticalType == StatisticalType.TEMPORAL && column.isTemporal) result.add(column);
+
+			if (statisticalType == StatisticalType.BIGINT && column.dataType == -5) result.add(column);
+			if (statisticalType == StatisticalType.BOOLEAN && column.dataType == 16) result.add(column);
+			if (statisticalType == StatisticalType.CHAR && column.dataType == 1) result.add(column);
+			if (statisticalType == StatisticalType.DATE && column.dataType == 91) result.add(column);
+			if (statisticalType == StatisticalType.DECIMAL && column.dataType == 3) result.add(column);
+			if (statisticalType == StatisticalType.DOUBLE && column.dataType == 8) result.add(column);
+			if (statisticalType == StatisticalType.FLOAT && column.dataType == 6) result.add(column);
+			if (statisticalType == StatisticalType.INTEGER && column.dataType == 4) result.add(column);
+			if (statisticalType == StatisticalType.LONGNVARCHAR&& column.dataType == -16) result.add(column);
+			if (statisticalType == StatisticalType.LONGVARCHAR && column.dataType == -1) result.add(column);
+			if (statisticalType == StatisticalType.NCHAR && column.dataType == -15) result.add(column);
+			if (statisticalType == StatisticalType.NUMERIC && column.dataType == 2) result.add(column);
+			if (statisticalType == StatisticalType.NVARCHAR && column.dataType == -9) result.add(column);
+			if (statisticalType == StatisticalType.REAL && column.dataType == 7) result.add(column);
+			if (statisticalType == StatisticalType.SMALLINT && column.dataType == 5) result.add(column);
+			if (statisticalType == StatisticalType.TIME && column.dataType == 92) result.add(column);
+			if (statisticalType == StatisticalType.TIME_WITH_TIMEZONE && column.dataType == 2013) result.add(column);
+			if (statisticalType == StatisticalType.TIMESTAMP && column.dataType == 93) result.add(column);
+			if (statisticalType == StatisticalType.TIMESTAMP_WITH_TIMEZONE && column.dataType == 2014) result.add(column);
+			if (statisticalType == StatisticalType.TINYINT && column.dataType == -6) result.add(column);
+			if (statisticalType == StatisticalType.VARCHAR && column.dataType == 12) result.add(column);
+
+			if (statisticalType == StatisticalType.ENUM && column.dataTypeName.equals("ENUM")) result.add(column);
+			if (statisticalType == StatisticalType.INTERVAL && column.dataTypeName.equals("INTERVAL")) result.add(column);
+			if (statisticalType == StatisticalType.SET && column.dataTypeName.equals("SET")) result.add(column);
+			if (statisticalType == StatisticalType.YEAR && column.dataTypeName.equals("YEAR")) result.add(column);
 		}
 
 		// Use ids for feature calculation? Nevertheless, always allow targetColumns.
@@ -102,7 +129,7 @@ public class Table {
 		// Initialization
 		int columnCounter = 0;
 
-		// Categorize the dataTypes. If the data type is not recognized, the column is ignored.
+		// Mark the columns. If the data type is not recognized, the column is ignored.
 		// This is intentional because we do not know how to deal with blobs (dataType = 2004)...
 		// And we don't want them to slow down the mining process -> do not propagate them.
 		// Doc: https://docs.oracle.com/cd/A97337_01/ias102_otn/buslog.102/bc4j/bc_abcdatatypes.htm
@@ -110,21 +137,60 @@ public class Table {
 		// Doc: http://docs.oracle.com/javase/8/docs/api/constant-values.html#java.sql.Types.ARRAY
 		for (Column column : columnMap.values()) {
 			int dataType = column.dataType;
+			boolean isKnown = false;
 
 			if (dataType == -16 || dataType == -15 || dataType == -9 || dataType == -1 || dataType == 1 || dataType == 12) {
+				column.isCharacter = true;
+				isKnown = true;
+			}
+			if (dataType == -16 || dataType == -15 || dataType == -9 || dataType == -7 || dataType == -6 || dataType == -5 ||  dataType == -1 || dataType == 1 || dataType == 4 || dataType == 5 || dataType == 12 || dataType == 16) {
 				column.isNominal = true;
-			} else if ((dataType >= -7 && dataType <= -5) || (dataType >= 2 && dataType <= 8) || dataType == 16) {
+				isKnown = true;
+			}
+			if (dataType == -7 || dataType == -6 || dataType == -5 || (dataType >= 2 && dataType <= 8) || dataType == 16) {
 				column.isNumerical = true;
-			} else if (dataType == 91 || dataType == 92 || dataType == 93 || dataType == 2013 || dataType == 2014) {
+				isKnown = true;
+			}
+			if (dataType == 91 || dataType == 92 || dataType == 93 || dataType == 2013 || dataType == 2014) {
 				column.isTemporal = true;
-			} else {
+				isKnown = true;
+			}
+
+			// JDBC categorize all these as OTHER (dataType=1111). But we like to differentiate between them.
+			if ("ENUM".equals(column.dataTypeName.toUpperCase())) {
+				column.isCharacter = true;
+				column.isNominal = true;
+				isKnown = true;
+			}
+
+			if ("INTERVAL".equals(column.dataTypeName.toUpperCase())) {
+				isKnown = true;
+			}
+
+			if ("SET".equals(column.dataTypeName.toUpperCase())) {
+				isKnown = true;
+			}
+
+			if ("YEAR".equals(column.dataTypeName.toUpperCase())) {
+				column.isTemporal = true;
+				column.isNumerical = true;
+				isKnown = true;
+			}
+
+			if (!isKnown) {
 				columnCounter++;
 				logger.debug("Ignoring column: " + name + "." + column.name
 						+ " because it is of an unsupported data type (" + dataType + ": " + column.dataTypeName + ")");
 			}
+
+			// If the numeric/decimal attribute has scale=0 or is used in PK/FK, mark it as nominal
+			if ((dataType == 2 || dataType == 3) && (!column.isDecimal || column.isId)) {
+				column.isNominal = true;
+			}
+
 		}
 
-		// If we are performing classification, treat the target column differently
+		// If we are performing classification, treat the target columns as nominal
 		if ("classification".equals(setting.task) && setting.targetTable.equals(name)) {
 			// Target columns shall always be considered nominal when doing classification (useful for patterns like "WoE").
 			for (String target : setting.targetColumnList) {

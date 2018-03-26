@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>IP local</name>
+	<description>
+		If it is a local IP address, return 1 else 0.
+
+		Note: This pattern only looks at the beginning of the string. So, even "127.nonsense" will be treated as a
+		local IP. To make it worse, we do not respect range: 172.16.0.0 – 172.31.255.255 tightly enough.
+
+		Note: Some databases, like PostgreSQL, use a specialized data type for IPs.
+
+		Note: This is a specialized version of "prefix" pattern.
+	</description>
+	<example>
+		Logged traffic from local addresses is likely only for testing purposes. Based on this pattern, we may separate
+		real traffic from dummies.
+	</example>
+	<author>Jan Motl</author>
+	<date>2018-03-04</date>
+	<code>SELECT @base
+			   , case when (@characterColumn like '10.%' OR @characterColumn like '192.168.%' OR @characterColumn like '172.%') then 1 else 0 end AS @columnName
+		  FROM @propagatedTable
+		  WHERE @characterColumn is not null</code>
+	<cardinality>1</cardinality>
+</pattern>

@@ -70,6 +70,10 @@ public class Pattern {
 		return pattern;
 	}
 
+	@Override
+	public String toString() {
+		return name;
+	}
 
 	/////////// Subroutines ///////////
 	// Convert the database agnostic SQL into vendor's specific SQL.

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Mode</name>
+	<description>
+		The most frequent value.
+
+		Example when mode fails: mode of ISBN is not meaningful because people commonly buy the same book just once.
+		Hence "the most common" value doesn't exist.
+
+		This pattern is producing great predictors.
+
+		NOTE: Works also on id!
+	
+		Note: The implementation for PostgreSQL is supported from PostgreSQL 9.4.
+
+		Note: Does not work on MySQL.
+	
+		NOTE: THE VERSION FOR SAS CAN RETURN TOO MANY ROWS BECAUSE OF TIES.
+
+		This pattern is fast and produces good predictors.
+	</description>
+	<example>
+		The typical payment amount.
+	</example>
+	<author>Jan Motl</author>
+	<date>2014-12-22</date>
+	<code compatibility="PostgreSQL">SELECT @base
+	           , mode() WITHIN GROUP (ORDER BY @column) AS @columnName
+		   FROM @propagatedTable
+		   GROUP BY @base
+	</code>
+	<code compatibility="Microsoft SQL Server">SELECT @base
+	           , (
+	           		SELECT TOP 1 @column 
+					FROM @propagatedTable t2 
+					WHERE t.@baseId = t2.@baseId AND t.@baseDate = t2.@baseDate
+					GROUP BY @column 
+					ORDER BY count(*) desc
+				) AS @columnName
+			FROM  @propagatedTable  t
+			GROUP BY @base
+	</code>
+	<code compatibility="SAS-errorenous">SELECT @base
+	           , @column AS @columnName
+			FROM (
+			        SELECT @base, @column, count(*) AS count
+			        FROM @propagatedTable 
+			        GROUP BY @base, @column
+			      )
+			GROUP BY @base
+			HAVING count=max(count)
+	</code>
+	<code compatibility="Oracle">SELECT @base
+	           , STATS_MODE(@column) AS @columnName
+		   FROM @propagatedTable
+		   GROUP BY @base
+	</code>
+	<parameter key="@column" value="@nominalColumn, @numericalColumn"/>
+	<cardinality>n</cardinality>
+</pattern>

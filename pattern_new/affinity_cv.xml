@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Affinity cv</name>
+	<description>
+		Probability estimate with 10-fold cross-validation. Thanks to the cross-validation, non-repeating id attributes
+		get 0 relevance just like they should.
+
+		For ID attributes (that do not repeat) it returns 0.5 (but should return prior).
+
+		The estimate is adjusted with Laplace correction.
+	</description>
+	<example>
+		Log ods for customer's cellphone brand.
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-03-08</date>
+	<code>WITH counts as (
+			SELECT t1.@base
+				, coalesce(t2.cnt_positive, 0) + 1 as cnt_positive
+				, coalesce(t3.cnt_negative, 0) + 1 as cnt_negative
+			FROM @propagatedTable t1
+			LEFT JOIN (
+				SELECT @nominalColumn, @baseFold, count(*) as cnt_positive
+				FROM @propagatedTable
+				WHERE @targetName = '@targetValue'
+				GROUP BY @nominalColumn, @baseFold
+			) t2
+			ON t1.@nominalColumn=t2.@nominalColumn AND t1.@baseFold &lt;&gt; t2.@baseFold
+			LEFT JOIN (
+				SELECT @nominalColumn, @baseFold, count(*) as cnt_negative
+				FROM @propagatedTable
+				WHERE @targetName &lt;&gt; '@targetValue'
+				GROUP BY @nominalColumn, @baseFold
+			) t3
+			ON t1.@nominalColumn=t3.@nominalColumn AND t1.@baseFold &lt;&gt; t2.@baseFold
+		)
+		SELECT @base, avg(cnt_positive) / (avg(cnt_negative) + avg(cnt_positive)) AS @columnName
+		FROM counts
+		GROUP BY @base
+	</code>
+	<cardinality>1</cardinality>
+</pattern>

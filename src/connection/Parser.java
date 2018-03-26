@@ -224,8 +224,8 @@ public class Parser {
 		// charLengthCommand
 		dialectCode = dialectCode.replaceAll("(?i)char_length", setting.charLengthCommand);
 
-		// Timestamp
-		dialectCode = dialectCode.replaceAll("(?i)timestamp", setting.typeTimestamp);
+		// Timestamp (but ignore @timestampColumn and @timestampWithTimezoneColumn variable names, ignore UNIX_TIMESTAMP())
+		dialectCode = dialectCode.replaceAll("(?i)[^@_]timestamp", setting.typeTimestamp);
 
 
 

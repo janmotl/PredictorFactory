@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Decimals</name>
+	<description>
+		Returns the count of decimal digits.
+
+		Note: Useful only for numbers that can contain decimals.
+
+		Note: We use floor instead of round because round in MSSQL requires precision specification.
+
+		Note: CHAR_LENGTH keyword is automatically replaced with the database specific command. We do not use ODBC
+		functions because SAS does not support {fn LENGTH('abc')}.
+	</description>
+	<example>
+		Energy consumption in kWh/year entered by the web visitor. If they enter something like 1986.724, it is more
+		likely to be an exact value than 1986.
+	</example>
+	<author>Jan Motl</author>
+	<date>2017-11-08</date>
+	<code compatibility="PostgreSQL">SELECT @base
+			   , case when CHAR_LENGTH(cast(@numericalColumn as varchar)) - CHAR_LENGTH(cast(floor(@numericalColumn) as varchar)) > 0 then CHAR_LENGTH(cast(@numericalColumn as varchar)) - CHAR_LENGTH(cast(floor(@numericalColumn) as varchar)) -1 else 0 end AS @columnName
+		  FROM @propagatedTable
+		  WHERE @numericalColumn is not null</code>
+	<code compatibility="MySQL">SELECT @base
+			   , case when CHAR_LENGTH(cast(@numericalColumn as char)) - CHAR_LENGTH(cast(floor(@numericalColumn) as char)) > 0 then CHAR_LENGTH(cast(@numericalColumn as char)) - CHAR_LENGTH(cast(floor(@numericalColumn) as char)) -1 else 0 end AS @columnName
+		  FROM @propagatedTable
+		  WHERE @numericalColumn is not null</code>
+	<cardinality>1</cardinality>
+</pattern>

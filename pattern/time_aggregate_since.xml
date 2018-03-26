@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Time aggregate since</name>
+	<description>Time since some date in the past till the time when the prediction is required (defined with @baseDate). 
+	The selection of the date is driven with aggregate functions like min, max and avg.
+
+	In comparison to "time aggregate since event" we look at the timestamps of all the events, not just of some events.
+	In comparison to "time since" we look at attributes in 1:n relationship to the target.
+	
+	</description>
+	<example>
+		Time from the last event.
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-01-10</date>
+	<code>SELECT @base
+	           , @aggregateFunction(DATEDIFF(@baseDate, @temporalColumn)) AS @columnName
+	      FROM @propagatedTable
+	      GROUP BY @base
+	</code>
+	<code compatibility="PostgreSQL">SELECT @base
+	           , @aggregateFunction((DATETONUMBER(@baseDate) - DATETONUMBER(@temporalColumn)) / 86400) AS @columnName
+	      FROM @propagatedTable
+		  GROUP BY @base
+	</code>
+	<parameter key="@aggregateFunction" value="min, max, avg, stddev_samp"/>
+	<cardinality>n</cardinality>
+</pattern>

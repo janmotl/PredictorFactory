@@ -151,26 +151,30 @@ public class Meta {
 				int dataType = rs.getInt("DATA_TYPE");
 				String dataTypeName = rs.getString("TYPE_NAME");
 				boolean isNullable = "YES".equals(rs.getString("IS_NULLABLE"));      // WHAT IF INDIFFERENT?
+				boolean isDecimal = rs.getInt("DECIMAL_DIGITS")>0;
 
 				// SAS stores entity names in chars instead of in varchars
 				if ("SAS".equals(setting.databaseVendor)) {
 					name = name.trim();   // Remove space padding
 				}
 
-				// Oracle decided that NVARCHAR2 should be classified as "other" type (1111)
-				// even though it can be casted to String. Hence do the work that Oracle
-				// should have done.
-				if (dataType == 1111 && rs.getString("TYPE_NAME").toUpperCase().contains("CHAR")) {
-					dataType = 12; // Treat it as VARCHAR2
+				// Oracle decided that NVARCHAR2 and VARCHAR2 should be classified as OTHER type (1111)
+				// even though it can be casted to String. Hence do the work that Oracle should have done.
+				if (dataType == 1111 && rs.getString("TYPE_NAME").toUpperCase().equals("NVARCHAR2")) {
+					dataType = -9; // Treat it as NVARCHAR
+				}
+				if (dataType == 1111 && rs.getString("TYPE_NAME").toUpperCase().equals("VARCHAR2")) {
+					dataType = 12; // Treat it as VARCHAR
 				}
 
-				// PostgreSQL classifies interval as "other" type (1111). Change the classification to time data type.
-				if (dataType == 1111 && rs.getString("TYPE_NAME").toUpperCase().contains("INTERVAL")) {
-					dataType = 93; // Treat it as timestamp
+				// MSSQL decided that XML should be classified as LONGNVARCHAR (-16).
+				// But it does not seem to matter.
+				if (dataType == -16 && rs.getString("TYPE_NAME").toUpperCase().equals("XML")) {
+					dataType = 2009; // Treat it as SQLXML
 				}
 
 				// Create the column with non-null schema name
-				Column column = new Column(schema, table, name, dataType, dataTypeName, isNullable);
+				Column column = new Column(schema, table, name, dataType, dataTypeName, isNullable, isDecimal);
 				columnMap.put(column.name, column);
 			}
 		} catch (SQLException e) {

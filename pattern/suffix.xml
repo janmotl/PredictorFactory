@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern topN="1">
+	<name>Suffix</name>
+	<description>
+		Extracts suffix of a constant length from a string.
+	</description>
+	<example>
+		Url domains like "com" or ".uk".
+	</example>
+	<author>Jan Motl</author>
+	<date>2018-03-07</date>
+	<code>SELECT @base
+			   , right(@characterColumn, @length) AS @columnName
+	      FROM @propagatedTable
+	</code>
+    <optimize key="@length" min="1" max="10" integerValue="true" iterationLimit="10"/>
+	<cardinality>1</cardinality>
+</pattern>

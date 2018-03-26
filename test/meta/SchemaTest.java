@@ -73,7 +73,7 @@ public class SchemaTest {
 
         assertEquals(5, metaInput.get("loan").getColumns(setting, StatisticalType.NUMERICAL).size());
         assertEquals(1, metaInput.get("loan").getColumns(setting, StatisticalType.TEMPORAL).size());
-        assertEquals(1, metaInput.get("loan").getColumns(setting, StatisticalType.NOMINAL).size());
+        assertEquals(5, metaInput.get("loan").getColumns(setting, StatisticalType.NOMINAL).size()); // 1 varchar + 4 integers
         assertTrue(metaInput.get("loan").getColumn("duration") != null);
     }
 
@@ -92,8 +92,6 @@ public class SchemaTest {
         assertTrue(metaInput.get("loan").getColumn("account_id") != null);
         assertEquals(2, metaInput.get("loan").getColumns(setting, StatisticalType.NUMERICAL).size());
         assertEquals(1, metaInput.get("loan").getColumns(setting, StatisticalType.TEMPORAL).size());
-        assertEquals(1, metaInput.get("loan").getColumns(setting, StatisticalType.ID).size());
-
     }
 
     @Test
@@ -107,7 +105,6 @@ public class SchemaTest {
         // Assumes ids are permitted for feature generation
         assertEquals(4, metaInput.get("loan").getColumns(setting, StatisticalType.NUMERICAL).size());
         assertEquals(1, metaInput.get("loan").getColumns(setting, StatisticalType.TEMPORAL).size());
-        assertEquals(2, metaInput.get("loan").getColumns(setting, StatisticalType.ID).size());
     }
 
     @Test

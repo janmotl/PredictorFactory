@@ -22,9 +22,10 @@ Description of the fields:
 	corrSyntax: Optional. Define the command for correlation if the database provides such command.
 	DateAddSyntax: Because we want to be able to express time ranges. This syntax doesn't deal with leap years. Replaceable with {fn TIMESTAMPADD}.
 	DateAddMonth: Because we want to be able to express time ranges. This syntax correctly deals with leap years. CURRENTLY NOT USED.
-	DateDiffSyntax: Not all databases support conversion of time to number. Hence just use a diff against a constant. Replaceable with {fn TIMESTAMPDIFF}.
+	DateDiffSyntax: Not all databases support conversion of time to number. Hence just use a diff against a constant. Replaceable with {fn TIMESTAMPDIFF}. Beware that PostgreSQL treats timestamps and dates differently (you get interval/integer).
 	DateToNumber: EXPERIMENTAL. SHOULD BE SUBSTITUTED WITH DATEDIFF SYNTAX AND CONSTANT
 		But then we would have to support: dateDiff(date, date) and dateDiff(date, constant as string). Replaceable with {fn CONVERT SQL_INTEGER}
+		PostgreSQL support: works for all temporal types (even that pesky timetz!): {date, time, timetz, timestamp, timestamptz}.
 	InsertTimestampSyntax: Syntax for timestamp (it's used for creation of journal table). Because of SAS it generally has to be in single quotes.
 	StdDevSampCommand: The command for calculation of sample standard deviation.
 	StdDevPopCommand: The command for calculation of population standard deviation.

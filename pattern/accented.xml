@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Accented</name>
+	<description>
+		Does the string contain a common accented character?
+
+		Note: In MySQL we would have to use nested replace().
+	</description>
+	<example>
+		In some countries, Latin alphabet is enriched by accents. But it takes time to write these accents.
+		Consequently, informal text is written without accents. While formal text is still written with accents.
+		Thus, this feature can asses the formality of the entered text.
+	</example>
+	<author>Jan Motl</author>
+	<date>2017-11-08</date>
+	<code compatibility="PostgreSQL,Oracle">SELECT @base
+			   , case when translate(@characterColumn,
+					'áàâãäåāăąèééêëēĕėęěìíîïìĩīĭḩóôõöōŏőùúûüũūŭůäàáâãåæçćĉčöòóôõøüùúûßéèêëýñîìíïşěščřžýáíéůúťňďÁČĎÉĚÍŇÓŘŠŤÚŮŽÝŽ',
+					'aaaaaaaaaeeeeeeeeeeiiiiiiiihooooooouuuuuuuuaaaaaaeccccoooooouuuuseeeeyniiiisescrzyaieuutndACDEEINORSTUUZYZ'
+				)=@characterColumn then 0 else 1 end AS @columnName
+		  FROM @propagatedTable
+		  WHERE @characterColumn is not null</code>
+	<cardinality>1</cardinality>
+</pattern>

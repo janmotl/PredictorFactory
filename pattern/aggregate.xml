@@ -44,9 +44,6 @@
 		NOTE: CONSIDER USAGE OF:
 			AVG(labcountI * 1.0) AS labCount_ave
 		because of integer columns
-
-		NOTE: ADDED SUM
-
 	</description>
 	<example>
 		Count of attended events.

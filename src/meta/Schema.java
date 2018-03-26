@@ -304,8 +304,8 @@ public class Schema {
 
 	// Return sets of unique values for the target columns
 	// The returned map contains: targetColumn -> set(values)
-	private static Map<String, Set<String>> getUniqueTargetValueMap(Setting setting, SortedMap<String, Table> tableMap) {
-		Map<String, Set<String>> uniqueValueMap = new HashMap<>();
+	private static Map<String, LinkedHashMap<String, Integer>> getUniqueTargetValueMap(Setting setting, SortedMap<String, Table> tableMap) {
+		Map<String, LinkedHashMap<String, Integer>> uniqueValueMap = new HashMap<>();
 		Table targetTable = tableMap.get(setting.targetTable);
 
 		for (String targetColumn : setting.targetColumnList) {

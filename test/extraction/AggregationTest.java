@@ -19,9 +19,9 @@ public class AggregationTest {
 
 		// Initialize setting
 		setting.targetUniqueValueMap = new HashMap<>();
-		Set<String> uniqueSet = new LinkedHashSet<>();
-		uniqueSet.add("value55");
-		setting.targetUniqueValueMap.put("status", uniqueSet);
+		LinkedHashMap<String, Integer> uniqueMap = new LinkedHashMap<>();
+		uniqueMap.put("value55", 1);
+		setting.targetUniqueValueMap.put("status", uniqueMap);
 
 
 		// Initialize pattern

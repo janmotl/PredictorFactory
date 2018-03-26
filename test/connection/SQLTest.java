@@ -11,7 +11,7 @@ import org.junit.Test;
 import run.Setting;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
 
 public   class SQLTest {
 
@@ -194,9 +194,9 @@ public   class SQLTest {
 		setting.valueCount = 4;
 		Network.openConnection(setting);
 
-		List<String> records = setting.dialect.getTopUniqueRecords(setting, "financial", "district", "A3");
+		Set<String> records = setting.dialect.getTopUniqueRecords(setting, "financial", "district", "A3").keySet();
 		Assert.assertEquals(setting.valueCount, records.size());    // The size is upper bounded (from 8 to 4)
-		Assert.assertEquals("south Moravia", records.get(0));   // The results are ordered from the most frequent item
+		Assert.assertTrue(records.contains("south Moravia"));
 
 		Network.closeConnection(setting);
 	}

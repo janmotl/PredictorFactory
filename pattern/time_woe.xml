@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Time WOE</name>
+	<description>Weight of evidence for time.
+	
+	The implementation is from: https://qizeresearch.wordpress.com/2014/05/21/utilize-woe-to-replace-dummy-variables/
+
+	NOTE: Training and testing data are getting mixed -> expect overly optimistic estimates.
+	
+	NOTE: WORKS ONLY ON BINARY TARGETS! -> produce a column for each target class
+	
+	NOTE: ALSO WORKS ON CARDINALITY 1!
+	
+	NOTE: Interestingly enough, average of woe works better than sum of woe.
+	
+	NOTE: Laplace correction is applied to deal with division by zero and log of zeo. Note that non-standard value of
+	0.5 (instead of 1) is used because it worked better on ftp dataset. Also note that I am not performing normalisation
+	based on the count of unique values in @nominalValue multiplied by the count of classes.
+	
+	Could theoretically update woe estimates based on already estimated samples from testing set (iterative learning).  
+	
+	Some other predictors are mentioned in ACORA (Provost).
+
+	</description>
+	<example>
+		Average log odds for the time the customer accessed our web page.
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-06-01</date>
+	<code> SELECT a.@base
+				, avg(woe.woe) @columnName
+			FROM (
+				SELECT @base
+		           	 , EXTRACT(@datePart FROM @column) AS day
+				FROM @propagatedTable
+				) a
+			JOIN (
+				 SELECT EXTRACT(@datePart FROM @column) AS day
+				 	  , {fn log(((sum(case when @targetName='@targetValue' then 1.0 else 0 end)+1)/avg(total.total_default))
+				 / ((sum(case when @targetName &lt;&gt; '@targetValue' then 1.0 else 0 end)+1)/avg(total.total_nondefault)))*100 }
+				 as woe
+				 FROM @propagatedTable
+					  , (SELECT sum(case when @targetName='@targetValue' then 1.0 else 0 end)+2 as total_default
+					          , sum(case when @targetName &lt;&gt; '@targetValue' then 1.0 else 0 end)+2 as total_nondefault
+					  FROM @propagatedTable) total
+				 GROUP BY EXTRACT(@datePart FROM @column)
+				 ) woe
+			on a.day = woe.day
+			GROUP BY a.@base
+	</code>
+	<parameter key="@datePart" value="hour, minute"/>
+	<parameter key="@column" value="@timeColumn, @timeWithTimezoneColumn, @timestampColumn, @timestampWithTimezoneColumn"/>
+	<cardinality>n</cardinality>
+</pattern>

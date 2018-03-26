@@ -1,6 +1,7 @@
 package run
 
 import connection.Network
+import groovy.sql.Sql
 import org.apache.log4j.Level
 import spock.lang.Specification
 import utility.CountAppender
@@ -24,7 +25,7 @@ class LauncherSpec extends Specification {
         columns.any {it.matches("trans_amount_aggregate.*")};   // The column name lengths can differ and order of evaluation can differ -> regex
         columns.any {it.matches("loan_amount_directField.*")};
         rowCount == 682;                            // We use all the data for comparable results
-        columns.size() == 13;                       // 10 good features + 3 base
+        columns.size() == 14;                       // 11 good features + 3 base
         CountAppender.getCount(Level.INFO) > 0;     // We have to make sure the CountAppender is working
         CountAppender.getCount(Level.WARN) == 0;
         CountAppender.getCount(Level.ERROR) == 0;
@@ -97,8 +98,61 @@ class LauncherSpec extends Specification {
         where:
         database                    || rowCount | columnCount
         "voc_test_setting"          || 1218     | 15     // Sampling; 11 successful predictors + 4 base (compound Id)
-        "mutagenesis_test_setting"  || 188      | 18     // All data; 16 successful predictors + 2 base (no targetTime)
+        "mutagenesis_test_setting"  || 188      | 20     // All data; 18 successful predictors + 2 base (no targetTime)
     }
+
+
+    def "PostgreSQL tests all patterns #database"() {
+        String[] arguments = ["PostgreSQL", database];
+
+        when: "we start Predictor Factory"
+        Launcher.main(arguments);
+
+        then: "we expect a table with the features"
+        CountAppender.getCount(Level.INFO) > 0;     // We have to make sure the CountAppender is working
+        CountAppender.getCount(Level.WARN) <= 1;    // Expect 1 unsupported data type. But log of negative values... should be expected as well
+        CountAppender.getCount(Level.ERROR) == 0;
+
+        where:
+        database << [
+                "ctu_datatype_benchmark_test_setting", // We avoid {Aggregate frame, Aggregate subgroup, Ratio} because they take a lot of time
+                "ctu_datatype_benchmark_ts_test_setting",
+                "ctu_datatype_benchmark_date_test_setting"]
+    }
+
+
+    def "PostgreSQL leaking patterns"() {
+        String[] arguments = ["PostgreSQL", database];
+
+        when: "we start Predictor Factory"
+        Launcher.main(arguments);
+
+        then: "we expect a table with the features"
+        Setting setting = new Setting("PostgreSQL", database);
+
+        // Following predictors are ok:
+        //  1) atom_atom_id_entropy - it is a non-linearly transformed count of atoms in the molecule
+        //  2) atom_atom_id_distinctCount - it is identical with the count of atoms in the molecule
+        //  3) atom_atom_id_aggregateTextLength_avg - it leaks information about the count of atoms in the molecule
+        //  4) atom_atom_id_aggregateTextLength_stdDev_samp - it leaks information about the count of atoms in the molecule
+        //  5) atom_atom_id_concentration - it is a non-linearly transformed count of atoms in the molecule
+        //  6) molecule_molecule_id_ind1_segmentComparison - it is like ind1
+        String sql = "select count(*) as cnt from predictor_factory.journal_predictor where relevance_mutagenic > 3.0 and column_list like '%id%' and pattern_name not in ('Entropy', 'Distinct count', 'Aggregate text length', 'Concentration', 'Segment comparison')"
+        Network.openConnection(setting);
+        def connection = new Sql(setting.dataSource);
+        def tuple = connection.firstRow(sql);
+        tuple.getProperty("cnt") == 0;
+        Network.closeConnection(setting);
+
+        CountAppender.getCount(Level.INFO) > 0;     // We have to make sure the CountAppender is working
+        CountAppender.getCount(Level.WARN) <= 1;    // Expect 1 division by zero (atom_charge_entropyContinuous)
+        CountAppender.getCount(Level.ERROR) == 0;
+
+        where:
+        database << [
+                "mutagenesis_test_setting_leaks"]
+    }
+
 
     def "TwoStage #connection"() {
         String[] arguments = [connection, database];
@@ -116,7 +170,7 @@ class LauncherSpec extends Specification {
         columns.any {it.matches("trans_amount_aggregate.*")};   // The column name lengths can differ and order of evaluation can differ -> regex
         columns.any {it.matches("loan_amount_directField.*")};
         rowCount == 682;                            // We use all the data (because of twoPhase processing)
-        columns.size() == 13;                       // 10 good features + 3 base
+        columns.size() >= 13;                       // 11 good features + 3 base (but base on luck it can be just 10+3)
         CountAppender.getCount(Level.INFO) > 0;     // We have to make sure the CountAppender is working
         CountAppender.getCount(Level.WARN) == 0;
         CountAppender.getCount(Level.ERROR) == 0;
@@ -131,6 +185,7 @@ class LauncherSpec extends Specification {
         "Oracle"     | "financial_xe_test_setting_twoStage"  // The database name is fixed to be XE
         "SAS"        | "financial_test_setting_twoStage"
     }
+
 
     def "PostgreSQL twoStage #database"() {
         String[] arguments = [connection, database];

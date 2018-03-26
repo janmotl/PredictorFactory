@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern topN="1">
+	<name>Prefix</name>
+	<description>
+		Extracts prefix of a constant length from a string.
+	</description>
+	<example>
+		Phone prefix like +420 or 001.
+	</example>
+	<author>Jan Motl</author>
+	<date>2018-03-04</date>
+	<code>SELECT @base
+			   , left(@characterColumn, @length) AS @columnName
+	      FROM @propagatedTable
+	</code>
+    <optimize key="@length" min="1" max="10" integerValue="true" iterationLimit="10"/>
+	<cardinality>1</cardinality>
+</pattern>

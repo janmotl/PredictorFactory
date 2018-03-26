@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Time month part</name>
+	<description>
+		Identify, whether it's the beginning, middle or end of the month.
+
+		Note: Could return a continuous value (but it would double direct_time_part).
+
+		Note: I can use ODBC escape sequence to get the day of the month. But I can't get the count
+		of days in the month -> what about just returning a day of month?
+	</description>
+	<example>
+		People are more likely to take a short-term loan a week before the paycheck day.
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-06-01</date>
+	<code compatibility="Oracle">SELECT @base
+			, CEIL(day/days_in_month*3) AS @columnName
+		FROM (
+			SELECT @base
+				, extract(day FROM @column) AS day
+				, add_months(trunc(@column,'MM'),1) - trunc(@column,'MM') AS days_in_month
+			FROM @propagatedTable
+		) t
+	</code>
+	<!--<code compatibility="MySQL">SELECT @base-->
+			<!--, CEIL(day/days_in_month*3) AS @columnName-->
+		<!--FROM (-->
+			<!--SELECT @base-->
+				<!--, { fn DAYOFMONTH(@column) } AS day-->
+				<!--, { fn DAYOFMONTH(-->
+					<!--{ fn TIMESTAMPADD(SQL_TSI_DAY, -1,-->
+						<!--{ fn TIMESTAMPADD(SQL_TSI_MONTH, 1, @column) } ) } ) } AS days_in_month-->
+			<!--FROM @propagatedTable-->
+		<!--) t-->
+	<!--</code>-->
+	<code compatibility="PostgreSQL">SELECT @base
+			     , CEIL(day/days_in_month*3) AS @columnName
+			FROM (
+				SELECT @base
+					, EXTRACT(DAY FROM @column) AS day
+					, DATE_PART('day', 
+				        DATE_TRUNC('MONTH', @column)
+				        + '1 MONTH'::INTERVAL 
+				        - '1 DAY'::interval
+			    	) AS days_in_month
+				FROM @propagatedTable
+			) t
+	</code>
+	<parameter key="@column" value="@dateColumn, @timestampColumn, @timestampWithTimezoneColumn"/>
+	<cardinality>1</cardinality>
+</pattern>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Odds ratio</name>
+	<description>
+		The pattern is from: Feature selection for unbalanced class distribution and Naive Bayes, Mladenic &amp; Grobelnik.
+		Based on the empirical comparison in the article, odds ratio should be better than WoE. However, our empirical
+		comparisons do not agree with the claim.
+
+		In comparison to WoE, this pattern also takes into account conditional probabilities of NOT observing the
+		given attribute value.
+
+		NOTE: This pattern is twice as fast as WoE.
+
+		NOTE: To avoid division by zero we use pseudocounts (Laplace correction).
+
+		NOTE: The equation as written was checked against the article with maple and is ok. Jan Motl, 29.9.2016.
+
+		NOTE: TARGET VALUES SHOULD BE ESCAPED IN PF - if target is numerical, do not escape, if nominal, escape with
+		the right escape character.
+
+		Note: Does not work on MySQL (full join).
+	</description>
+	<example>
+		Logarithmic odds that a customer is a female based on the client's address.
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-07-09</date>
+	<code>SELECT t1.@base
+			, oddsRatio AS @columnName
+		FROM @propagatedTable t1
+		JOIN (
+			SELECT @nominalColumn
+				 , {fn log((tp*(negative-fp)*1.0)/(fp*(positive-tp))) } as oddsRatio
+			FROM (
+				SELECT COALESCE(tp.@nominalColumn, fp.@nominalColumn) as @nominalColumn
+					, coalesce(tp,0) + 1 as tp
+					, coalesce(fp,0) + 1 as fp
+					, coalesce(positive,0) + 2 as positive
+					, coalesce(negative,0) + 2 as negative
+				FROM (
+					SELECT @nominalColumn, count(*) as tp
+					FROM @propagatedTable
+					WHERE @targetName = '@targetValue'
+					GROUP BY @nominalColumn
+				) tp
+				FULL JOIN (
+					SELECT @nominalColumn, count(*) as fp
+					FROM @propagatedTable
+					WHERE @targetName &lt;&gt; '@targetValue'
+					GROUP BY @nominalColumn
+				) fp
+				ON tp.@nominalColumn = fp.@nominalColumn
+				, (
+					SELECT count(*) as negative
+					FROM @propagatedTable
+					WHERE @targetName &lt;&gt; '@targetValue'
+				) negative
+				, (
+					SELECT count(*) as positive
+					FROM @propagatedTable
+					WHERE @targetName = '@targetValue'
+				) positive
+			) counts
+		) odds
+		ON t1.@nominalColumn = odds.@nominalColumn
+	</code>
+	<cardinality>1</cardinality>
+</pattern>

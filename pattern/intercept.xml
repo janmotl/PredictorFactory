@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Intercept</name>
+	<description>
+		Time, when the attribute crosses zero, as estimated with a regression line.
+
+		NOTE: Could calculate intercept of two numerical attributes. But it has to be done in a separate pattern
+		because of a cast.
+		
+		Note: Function "dateToNumber" is automatically translated to comply with the database.
+	</description>
+	<example>
+		When customer's balance is estimated to reach zero.
+	</example>
+	<author>Jan Motl</author>
+	<date>2014-12-22</date>
+	<code compatibility="Default,Microsoft SQL Server">SELECT @base
+	           , ((sum(dateToNumber(@temporalColumn)) * sum(dateToNumber(@temporalColumn) * @numericalColumn)) - (sum(@numericalColumn) * sum(power(dateToNumber(@temporalColumn), 2)))) / (power(sum(dateToNumber(@temporalColumn)), 2) - count(@numericalColumn) * sum(power(dateToNumber(@temporalColumn), 2))) AS @columnName
+	      FROM @propagatedTable
+	      GROUP BY @base
+	</code>
+	<code compatibility="MySQL">SELECT @base
+	           , ((sum(@temporalColumn) * sum(@temporalColumn * @numericalColumn)) - (sum(@numericalColumn) * sum(power(@temporalColumn, 2)))) / (power(sum(@temporalColumn), 2) - count(@numericalColumn) * sum(power(@temporalColumn, 2))) AS @columnName
+	      FROM @propagatedTable
+	      GROUP BY @base
+	</code>
+	<code compatibility="PostgreSQL,Oracle">SELECT @base
+	           , regr_intercept(@numericalColumn, dateToNumber(@temporalColumn)) AS @columnName
+	      FROM @propagatedTable
+	      GROUP BY @base
+	</code>
+	<cardinality>n</cardinality>
+</pattern>

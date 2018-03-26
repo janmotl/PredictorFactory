@@ -28,6 +28,13 @@ How to edit the source code
 
 [stackoverflow.com]:http://stackoverflow.com/questions/23568467/how-to-configure-antlr4-plugin-for-intellij-idea 
 
+How Predictor Factory works
+===========================
+1.  Collect metadata about the database (list of tables, columns and foreign key constraints).
+2.  Create a "base table" from the "target table". Base table is a (subsample) of the target table with just the essential attributes (id, target, and optionally a timestamp), which gets propagated into all other tables.
+3.  Propagate base table into all tables in the database with joins, as defined by the foreign key constraints.
+4.  Calculate predictors on the propagated tables.
+5.  Join the calculated predictors into the mainsample table.
 
 Troubleshooting
 ===============

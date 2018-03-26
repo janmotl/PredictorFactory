@@ -290,8 +290,10 @@ public class Predictor implements Comparable<Predictor> {
 		return "Predictor{" +
 				"id=" + id +
 				", name='" + name + '\'' +
+				", pattern='" + pattern + '\'' +
+				", columns='" + columnMap + '\'' +
 				", candidateState='" + candidateState + '\'' +
-				relevance +
+				", " + relevance +
 				'}';
 	}
 

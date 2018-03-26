@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern topN="1">
+	<name>Aggregate frame</name>
+	<description>
+		Applies aggregation function on numerical attributes. In comparison to aggregate pattern, this pattern limits
+		the history to the specific amount of days.
+
+		Note: Are you getting int overflows on avg()? Cast the ints first into biginst! See:
+			http://stackoverflow.com/questions/1197720/sql-server-giving-arithmetic-overflow-when-calculating-avg  
+		Of course, the same remedy applies to sum() and stddev_samp().
+		
+		Note: This pattern can be very slow.
+
+		Note: This pattern may produce a lot of duplicates.
+
+		Note: Comparison of "timestamp with time zone" to "time without time zone" will fail.
+		
+		NOTE: THERE SHOULD BE A SPECIAL NAME FOR @propagationTimeColumn (dateConstrain) - the time column used for time constrain during
+		base propagation.
+		
+		DEVELOPMENT: 
+				stddev_samp, avg, min, max, sum
+				1.0/2,1.0/3,1.0/4,1.0/5,0
+	</description>
+	<example>
+		Total giving in last five years.
+	</example>
+	<author>Jan Motl</author>
+	<date>2014-10-14</date>
+	<code compatibility="Default,MySQL">SELECT @base
+			   , @aggregateFunction(@numericalColumn) AS @columnName
+	      FROM @propagatedTable
+	      WHERE DATEDIFF(@baseDate, @column) &lt; @lag
+	      	AND DATEDIFF(@baseDate, @column) &gt; ((@leadFraction)*@lag)
+	      GROUP BY @base
+	</code>
+	<code compatibility="Microsoft SQL Server">SELECT @base
+			   , @aggregateFunction(@numericalColumn) AS @columnName
+	      FROM @propagatedTable
+	      WHERE DATEDIFF(d, @column, @baseDate) &lt; @lag
+	      	AND DATEDIFF(d, @column, @baseDate) &gt; ((@leadFraction)*@lag)
+	      GROUP BY @base
+	</code>
+	<code compatibility="PostgreSQL">SELECT @base
+			   , @aggregateFunction(@numericalColumn) AS @columnName
+	      FROM @propagatedTable
+	      WHERE @baseDate::date - @column::date &lt; @lag
+	      	AND @baseDate::date - @column::date &gt; ((@leadFraction)*@lag)
+	      GROUP BY @base
+	</code>
+    <parameter key="@aggregateFunction" value="stddev_samp, avg, min, max, sum"/>
+   	<parameter key="@column" value="@dateColumn, @timestampColumn, @timestampWithTimezoneColumn"/>
+    <optimize key="@lag" min="30" max="240" integerValue="true" iterationLimit="4"/>
+    <optimize key="@leadFraction" min="0.2" max="0.8" integerValue="false" iterationLimit="4"/>
+	<cardinality>n</cardinality>
+</pattern>

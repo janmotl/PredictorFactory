@@ -46,7 +46,7 @@ public class ColumnTest {
 		Network.openConnection(setting);
 		SortedMap<String, Column> columns = Meta.collectColumns(setting, setting.database, setting.targetSchema, "district");
 
-		assertTrue(columns.get("A3").getUniqueValues(setting).contains("south Moravia"));
+		assertTrue(columns.get("A3").getUniqueValues(setting).keySet().contains("south Moravia"));
 
 		Network.closeConnection(setting);
 	}
