@@ -36,6 +36,31 @@ Description of the fields:
 
 
 <drivers>
+
+	<!-- JDBC connector for HIVE SQL -->
+	<driver
+			name="Hive SQL"
+			driverClass="org.apache.hive.jdbc.HiveDriver"
+			defaultPort="10000"
+			urlPrefix="jdbc:hive2://"
+			dbNameSeparator="/"
+			supportsCatalogs="false"
+			supportsSchemas="false"
+			dateAddSyntax="(intnx('@datePart', @baseDate, @amount, 'SAME'))"
+			dateAddMonth="intnx('month', @baseDate, @amount, 'SAME')"
+			dateDiffSyntax="(@dateTo - @dateFrom)"
+			dateToNumber="@column"
+			insertTimestampSyntax="'@timestamp'"
+			stdDevSampCommand="std"
+			stdDevPopCommand="std"
+			charLengthCommand="length"
+			randomCommand="rand()"
+			quoteEntityOpen="`"
+			quoteEntityClose="`"
+			quoteAliasOpen=""
+			quoteAliasClose=""
+	/>
+
 	<!-- Draft -->	
 	<driver 
 		name="DB2"
