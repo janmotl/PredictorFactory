@@ -322,7 +322,7 @@ public class Events implements Initializable {
         // Populate comboBoxes
         // VENDOR COMBOBOX SHOULD BE POPULATED BASED ON DRIVER.XML
         //  However, we currently declare support only for a subset of vendors  in driver.xml.
-        comboBoxVendor.getItems().addAll("Microsoft SQL Server", "MySQL", "Oracle", "PostgreSQL", "SAS");
+        comboBoxVendor.getItems().addAll("Microsoft SQL Server", "MySQL", "Oracle", "PostgreSQL", "SAS", "Hive SQL");
         comboBoxTask.getItems().addAll("classification", "regression");
         comboBoxUnit.getItems().addAll("second", "hour", "day", "month", "year");
 

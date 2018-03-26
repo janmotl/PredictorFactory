@@ -37,6 +37,7 @@ dependencies {
     runtime fileTree(dir: 'lib/jdbc-driver/oracle', include: '*.jar')
     runtime fileTree(dir: 'lib/jdbc-driver/postgresql', include: '*.jar')
     runtime fileTree(dir: 'lib/jdbc-driver/sas', include: '*.jar')
+    runtime fileTree(dir: 'lib/jdbc-driver/hive', include: '*.jar')
 
     compile fileTree(dir: 'lib/sqlformatter', include: '*.jar') // But fails on "mode" in postgre sql...
     compile fileTree(dir: 'lib/SQLinForm', include: '*.jar') // Ok
