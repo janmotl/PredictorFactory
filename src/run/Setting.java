@@ -255,6 +255,9 @@ public final class Setting {
 			case "Oracle":
 				dialect = new SQLOracle();
 				break;
+			case "Hive":
+				dialect = new SQLOracle();
+				break;
 			default:
 				dialect = new SQL();
 		}

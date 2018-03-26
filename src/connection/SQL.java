@@ -279,7 +279,7 @@ public class SQL {
 		abbreviatedName = abbreviatedName.replace("MAINSAMPLE", "MS");
 
 		// Initialization
-		String bkpName = setting.bkpPrefix + "_" + setting.inputSchemaList + "_" + abbreviatedName;
+		String bkpName = setting.bkpPrefix + "_" + String.join(",", setting.inputSchemaList) + "_" + abbreviatedName;
 
 		// Conditionally drop the old back up
 		if (tableMap.containsKey(bkpName)) dropTable(setting, bkpName);
@@ -386,7 +386,13 @@ public class SQL {
 		// Table names can use ridiculous symbols like "-" or spaces. Hence we must quote the index name.
 		name = escapeEntity(setting, name);
 
-		String sql = "CREATE INDEX " + name + " ON @outputTable " + columns;
+		String sql;
+		if(setting.driverClass.equalsIgnoreCase("org.apache.hive.jdbc.HiveDriver")) {
+			sql = "CREATE INDEX " + name + " ON TABLE @outputTable "  + columns + " AS 'COMPACT' WITH DEFERRED REBUILD";
+		} else {
+			sql = "CREATE INDEX " + name + " ON @outputTable " + columns;
+		}
+
 
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, outputTable);
@@ -420,8 +426,9 @@ public class SQL {
 //      sql = escapeEntity(setting, sql, outputTable);
 //      Network.executeUpdate(setting.dataSource, sql);
 
-		// Primary key at the end
-		String sql = "ALTER TABLE @outputTable ADD PRIMARY KEY " + columns;
+		String sql = "ALTER TABLE @outputTable ADD PRIMARY KEY " + columns; // Primary key at the end
+
+
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, outputTable);
 		boolean isOK = Network.executeUpdate(setting.dataSource, sql);
@@ -504,7 +511,9 @@ public class SQL {
 	public boolean containsNull(Setting setting, String schema, String table, String column) {
 
 		String sql = "SELECT exists(SELECT 1 FROM @schema.@table WHERE @column is null)";
-
+		if(setting.driverClass.equalsIgnoreCase("org.apache.hive.jdbc.HiveDriver")) {
+			sql += "t";
+		}
 		sql = Parser.replaceExists(setting, sql);
 
 		Map<String, String> fieldMap = new HashMap<>();
@@ -636,6 +645,11 @@ public class SQL {
 				"HAVING count(*)>1" +
 				")";
 
+		// In Hive SQL all nested SELECTs must be named
+		if(setting.driverClass.equalsIgnoreCase("org.apache.hive.jdbc.HiveDriver")) {
+			sql += "t";
+		}
+
 		sql = Parser.replaceExists(setting, sql);
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, table);
@@ -650,6 +664,11 @@ public class SQL {
 
 		String sql = "SELECT exists(" +
 				"SELECT @baseId FROM @outputTable GROUP BY @baseId HAVING count(*)>1)";
+
+		// In Hive SQL all nested SELECTs must be named
+		if(setting.driverClass.equalsIgnoreCase("org.apache.hive.jdbc.HiveDriver")) {
+			sql += "t";
+		}
 
 		sql = Parser.replaceExists(setting, sql);
 		sql = expandName(sql);
@@ -733,6 +752,14 @@ public class SQL {
 				"WHERE @column is not null " +
 				"GROUP BY @column " +
 				"ORDER BY 2 DESC";
+
+		if(setting.driverClass.equalsIgnoreCase("org.apache.hive.jdbc.HiveDriver")) {
+			sql = "SELECT @column, count(*) AS c " +
+					"FROM @schema.@table " +
+					"WHERE @column is not null " +
+					"GROUP BY @column " +
+					"ORDER BY c DESC";
+		}
 
 		sql = Parser.limitResultSet(setting, sql, setting.valueCount); // Possibly not necessary...
 
@@ -1352,9 +1379,15 @@ public class SQL {
 	public static boolean getJournalRun(Setting setting) {
 		logger.debug("# Setting up journal table for runtime summary #");
 
+		String primaryKeyString = " PRIMARY KEY, ";
+		if(setting.driverClass.equalsIgnoreCase("org.apache.hive.jdbc.HiveDriver")) {
+			primaryKeyString = ", ";
+		}
+
 		// An important limitation: Oracle limits name length of an identifier to 30 characters
 		String sql = "CREATE TABLE @outputTable (" +
-				"finish_time " + setting.typeTimestamp + " PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
+				"finish_time " + setting.typeTimestamp +
+				primaryKeyString + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
 				"schema_name " + setting.typeVarchar + "(255), " +
 				"run_time " + setting.typeDecimal + "(18,3), " +
 				"memory " + setting.typeDecimal + "(18,3), " +
@@ -1364,7 +1397,6 @@ public class SQL {
 				"predictor_output_count " + setting.typeInteger + ", " +
 				"propagated_table_count " + setting.typeInteger + ", " +
 				"setting " + setting.typeVarchar + "(2024), " +
-
 				"accuracy_avg " + setting.typeDecimal + "(8,3), " +     // Should possibly create a new table [measure, value, std]
 				"accuracy_std " + setting.typeDecimal + "(8,3), " +
 				"auc_avg " + setting.typeDecimal + "(8,3), " +
@@ -1441,9 +1473,14 @@ public class SQL {
 	public static boolean getJournalPredictor(Setting setting) {
 		logger.debug("# Setting up journal table #");
 
+		String primaryKeyString = " PRIMARY KEY, ";
+		if(setting.driverClass.equalsIgnoreCase("org.apache.hive.jdbc.HiveDriver")) {
+			primaryKeyString = ", ";
+		}
+
 		// The primary key is set directly behind the column name, not at the end, because SAS supports only the first declaration.
 		String sql = "CREATE TABLE @outputTable (" +
-				"predictor_id " + setting.typeInteger + " PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
+				"predictor_id " + setting.typeInteger + primaryKeyString + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
 				"group_id " + setting.typeInteger + ", " +
 				"start_time " + setting.typeTimestamp + ", " +
 				"run_time " + setting.typeDecimal + "(18,3), " +  // Old MySQL and SQL92 do not have/require support for fractions of a second.
@@ -1553,9 +1590,15 @@ public class SQL {
 	public static boolean getJournalTable(Setting setting) {
 		logger.debug("# Setting up journal table for propagated tables #");
 
+		String primaryKeyString = " PRIMARY KEY, ";
+		if(setting.driverClass.equalsIgnoreCase("org.apache.hive.jdbc.HiveDriver")) {
+			primaryKeyString = ", ";
+		}
+
 		// An important limitation: Oracle limits name length of an identifier to 30 characters
 		String sql = "CREATE TABLE @outputTable (" +
-				"table_id " + setting.typeInteger + " PRIMARY KEY, " + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
+				"table_id " + setting.typeInteger +
+				primaryKeyString + // Let the database give the PK a unique name (that allows the user to make multiple copies of the journal)
 				"start_time " + setting.typeTimestamp + ", " +
 				"run_time " + setting.typeDecimal + "(18,3), " +
 				"table_name " + setting.typeVarchar + "(255), " +
@@ -1627,8 +1670,14 @@ public class SQL {
 
 
 	public static boolean getJournalPattern(Setting setting) {
+
+		String primaryKeyString = " PRIMARY KEY, ";
+		if(setting.driverClass.equalsIgnoreCase("org.apache.hive.jdbc.HiveDriver")) {
+			primaryKeyString = ", ";
+		}
+
 		String sql = "CREATE TABLE @outputTable (" +
-				"name varchar(255) PRIMARY KEY, " +
+				"name varchar(255) " + primaryKeyString +
 				"author varchar(255), " +
 				"is_aggregate integer, " +
 				"is_multivariate integer, " +
@@ -1835,6 +1884,9 @@ public class SQL {
 		sql = addCreateTableAs(setting, sql);
 		sql = expandName(sql);
 		sql = escapeEntity(setting, sql, setting.baseTable);
+		if(setting.driverClass.equalsIgnoreCase("org.apache.hive.jdbc.HiveDriver")) {
+			sql = removeAliasQuotes(sql);
+		}
 
 		// Execute the query
 		boolean isCreated = Network.executeUpdate(setting.dataSource, sql);
@@ -1844,6 +1896,12 @@ public class SQL {
 		}
 
 		return (isTargetTupleUnique && isCreated);
+	}
+
+	// This is used for Hive SQL queries
+	// Difference between ANSI SQL and HIVE SQL is that alias names after 'AS' are not quoted
+	public static String removeAliasQuotes(String sql) {
+		return sql.replaceAll("(?i)(AS)\\s*\\\"([a-zA-Z_0-9]*)\\\"", "$1 $2");
 	}
 
 
