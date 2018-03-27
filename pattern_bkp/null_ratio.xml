@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Null ratio</name>
+	<description>
+		Real-world data commonly contain contain missing values. And sometimes they are not missing at random. 
+		Thus we mine them.
+
+		Inspired by: Cohen and Cohen (1975) have suggested developing
+		missing data dummy codes for each variable with missing data, and using this
+		missing variable code as a predictor in a regression model.
+
+		Do not confuse this pattern with aggregation or num_children. Aggregation is only for numerical attributes.
+		And num_children works on table level. Also note that direct_field takes care of the scenario where
+		cardinality==1.
+
+		This pattern has a good predictive power/runtime ratio. However, this pattern also frequently produces duplicate predictors because occurrence of nulls is positively
+		correlated between columns in a single table.
+	</description>
+	<note>
+		Note: Count(*) counts all values regardless of NULLs, while count(@column) excludes NULLs.
+		An alternative way how to calculate the predictor is to use "case then" but that is slower.
+	</note>
+	<example>
+		In Titanic dataset passengers with missing age are more likely to die. This is because information about 
+		the customers' age was obtained after Titanic's sinking. And it was easier to obtain this information from 
+		the survivals than from the victims.   
+	</example>
+	<author>Jan Motl</author>
+	<date>2014-12-30</date>
+	<code>SELECT @base
+			   , (count(*) - count(@anyColumn)) / count(*) AS @columnName
+	      FROM @propagatedTable
+	      GROUP BY @base
+	</code>
+	<cardinality>n</cardinality>
+</pattern>

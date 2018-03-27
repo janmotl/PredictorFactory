@@ -121,7 +121,7 @@ class LauncherSpec extends Specification {
     }
 
 
-    def "PostgreSQL leaking patterns"() {
+    def "PostgreSQL leaking patterns mutagenesis"() {
         String[] arguments = ["PostgreSQL", database];
 
         when: "we start Predictor Factory"
@@ -149,8 +149,58 @@ class LauncherSpec extends Specification {
         CountAppender.getCount(Level.ERROR) == 0;
 
         where:
-        database << [
-                "mutagenesis_test_setting_leaks"]
+        database << ["mutagenesis_test_setting_leaks"]
+    }
+
+
+    def "PostgreSQL leaking patterns financial"() {
+        String[] arguments = ["PostgreSQL", database];
+
+        when: "we start Predictor Factory"
+        Launcher.main(arguments);
+
+        then: "we expect a table with the features"
+        Setting setting = new Setting("PostgreSQL", database);
+
+        // Following predictors are ok:
+        //  1) trans_account_id_date_timeOfPeak - they leak age of the account
+        String sql = "select count(*) as cnt from predictor_factory.journal_predictor where relevance_status > 10.0 and column_list like '%id%' and pattern_name not in ('Time of peak')"
+        Network.openConnection(setting);
+        def connection = new Sql(setting.dataSource);
+        def tuple = connection.firstRow(sql);
+        tuple.getProperty("cnt") == 0;
+        Network.closeConnection(setting);
+
+        CountAppender.getCount(Level.INFO) > 0;     // We have to make sure the CountAppender is working
+        CountAppender.getCount(Level.WARN) == 0;
+        CountAppender.getCount(Level.ERROR) == 0;
+
+        where:
+        database << ["financial_test_setting_leaks"]
+    }
+
+
+    def "PostgreSQL woe is unbiased under ideal conditions"() {
+        String[] arguments = ["PostgreSQL", "ctu_woe_benchmark_balanced_test_setting"];
+
+        when: "we start Predictor Factory"
+        Launcher.main(arguments);
+
+        then: "we compare the obtained values with the expected values"
+        Setting setting = new Setting("PostgreSQL", "ctu_woe_benchmark_balanced_test_setting");
+
+        String sql = """select sum("target_balanced_att_woe_p_100001") as total
+                        from predictor_factory."MAINSAMPLE_target"
+                     """
+        Network.openConnection(setting);
+        def connection = new Sql(setting.dataSource);
+        def tuple = connection.firstRow(sql);
+        tuple.getProperty("total") < 0.0001;
+        Network.closeConnection(setting);
+
+        CountAppender.getCount(Level.INFO) > 0;     // We have to make sure the CountAppender is working
+        CountAppender.getCount(Level.WARN) <= 1;    // No FKC
+        CountAppender.getCount(Level.ERROR) == 0;
     }
 
 

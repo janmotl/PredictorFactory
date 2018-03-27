@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Frequency</name>
+	<description>
+		Relative frequency of the given nominal value in the population. Nulls are ignored.
+
+		Based on Learning Feature Engineering for Classification from Nargesian, this pattern should incur performance
+		improvement for the majority of attributes. Similar observation is described in: CatBoost: gradient boosting
+		with categorical features support from Dorogush.
+	</description>
+	<note>
+		Note: In comparison to count aggregate, this pattern works on 1:1 relationship.
+
+		Note: While presence/absence of null can be predictive, that is covered by is_null pattern, which is easier
+		to understand. Hence, this pattern ignores nulls.
+
+		Note: Frequency must be normalized by the count (calculated with the intermediate table) because the
+		count is changing with time (with time we accumulate more data).
+
+		Note: If applied on a table without temporal constraint in a temporal database, this pattern leaks information
+		from the future (from the point of @baseDate). On such tables, it is safer to ignore this pattern.
+
+		Note: Does not work on MySQL.
+	</note>
+	<example>
+		Frequency of the client's name - which tells us, whether the client is a foreigner, or not. And based 
+		on that we can offer him/her different products.
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-03-15</date>
+	<code dialect="PostgreSQL">SELECT @base
+			   , 1.0 * count(*) over (partition by @nominalColumn order by @baseDate) / count(*) over (order by @baseDate) AS @columnName
+		  FROM @propagatedTable
+		  WHERE @nominalColumn is not null
+	</code>
+	<cardinality>1</cardinality>
+</pattern>

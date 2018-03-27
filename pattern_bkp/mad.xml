@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Mean absolute difference</name>
+	<description>
+		Mean absolute difference measure dispersion (MAD), just like variance. The only difference is,
+		that variance squares the differences, while MAD takes absolute values of differences.
+		Hence, MAD is less influenced by outliers than variance.
+
+		Do not confuse with median absolute deviation (also MAD).
+
+		Note that we do not perform sample correction (correction of the degree of freedom) but instead return
+		population based estimate.
+	</description>
+	<example>
+
+	</example>
+	<author>Matej Polak</author>
+	<date>2017-01-16</date>
+	<code dialect="MySQL,PostgreSQL">
+		SELECT a.@base,
+			   avg(abs(@numericalColumn - TheAvg)) AS @columnName
+		FROM @propagatedTable a
+		INNER JOIN(SELECT @base,
+						 avg(@numericalColumn) AS TheAvg
+				  FROM   @propagatedTable
+				  GROUP  BY @base) b
+		USING(@basePartitionBy)
+		GROUP BY a.@base
+	</code>
+	<cardinality>n</cardinality>
+</pattern>

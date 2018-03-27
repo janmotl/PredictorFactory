@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Affinity loo em</name>
+	<description>
+		Probability estimate with leave-one-out estimate (the label from the current row is ignored).
+
+		The estimate is adjusted with m-estimate: p = (#positive + m*p_positive)/(#positive + #negative + m),
+		where m=1. The implementation assumes binary label.
+
+		set m_estimate =         1.0*(positive_count_loo + positive_prior) / (positive_count_loo + negative_count_loo + 1)
+		set laplace_corrected =  1.0*(positive_count_loo + 1) / (positive_count_loo + negative_count_loo + 2)
+
+		Laplace correction works consistently better than both, 1-estimate and 2-estimate, by 4±4%.
+	</description>
+	<example>
+		Log ods for customer's cellphone brand.
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-03-08</date>
+	<code>SELECT t1.@base
+			  , 1.0 * (coalesce(t2.cnt_positive, 0) + 2.0*@targetValuePrior - case when t1.@targetName='@targetValue' then 1 else 0 end ) / (coalesce(t2.cnt_positive, 0) + coalesce(t3.cnt_negative, 0) + 2.0*1 - case when propagated_target1 is null then 0 else 1 end) AS @columnName
+		FROM @propagatedTable t1 
+		LEFT JOIN (
+			SELECT @nominalColumn, count(*) as cnt_positive
+			FROM @propagatedTable 
+			WHERE @targetName = '@targetValue'
+			GROUP BY @nominalColumn
+		) t2
+		ON t1.@nominalColumn=t2.@nominalColumn 
+		LEFT JOIN (
+			SELECT @nominalColumn, count(*) as cnt_negative
+			FROM @propagatedTable 
+			WHERE @targetName &lt;&gt; '@targetValue'
+			GROUP BY @nominalColumn
+		) t3
+		ON t1.@nominalColumn=t3.@nominalColumn
+		WHERE t1.@nominalColumn is not null
+	</code>
+	<cardinality>1</cardinality>
+</pattern>

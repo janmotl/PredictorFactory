@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Slope</name>
+	<description>
+		Slope of an attribute in time as estimated with a linear regression.
+
+		In comparison to correlation, this pattern looks at the angle of the fitted line, while correlation looks at
+		how well the data can be fit by the line multiplied by the sign of the direction of the line.
+	</description>
+	<note>
+		NOTE: Could calculate slope of two numerical attributes (in another pattern).
+		NOTE: Whenever correlation is calculated manually, arithmetic overflow can happen.
+		NOTE: DateToNumber function is automatically replaced with the database aware function call.
+		NOTE: Since we use DateToNumber, it works on all temporal types (at least in PostgreSQL).
+	</note>
+	<example>
+		Trend of customer's balance on his account.
+	</example>
+	<author>Jan Motl</author>
+	<date>2014-12-22</date>
+	<code dialect="MySQL,SAS">SELECT @base
+	           , (count(@numericalColumn)*sum(@numericalColumn*DATETONUMBER(@temporalColumn)) - sum(@numericalColumn)* sum(DATETONUMBER(@temporalColumn)))/(count(@numericalColumn)*sum(@numericalColumn*@numericalColumn) - sum(@numericalColumn)* sum(@numericalColumn)) AS @columnName
+	      FROM @propagatedTable
+	      GROUP BY @base
+	</code>
+	<code dialect="PostgreSQL,Oracle">SELECT @base
+	           , regr_slope(@numericalColumn, DATETONUMBER(@temporalColumn)) AS @columnName
+	      FROM @propagatedTable
+	      GROUP BY @base
+	</code>
+	<cardinality>n</cardinality>
+</pattern>

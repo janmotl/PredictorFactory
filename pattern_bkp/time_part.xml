@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Time part</name>
+	<description>
+		The hour/minute of the event.
+	</description>
+	<note>
+		Note: The default solution should use JDBC scalar functions (an inheritance from ODBC):
+			http://documentation.progress.com/output/DataDirect/jdbcoschelp/index.html#page/jdbcosc/scalar-functions.html
+		Example: {fn DAYNAME(date-expression)}
+	</note>
+
+	<example>
+		Time of waking up.
+
+		Day in week: For example, let’s say you are trying to predict foot fall in a shopping mall based on dates. If you try and use the dates directly, you may not be able to extract meaningful insights from the data. This is because the foot fall is less affected by the day of the month than it is by the day of the week. Now this information about day of week is implicit in your data. You need to bring it out to make your model better.
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-04-16</date>
+	<code dialect="PostgreSQL, MySQL, Oracle">SELECT @base
+	           , EXTRACT(@field from @column) AS @columnName
+	      FROM @propagatedTable
+	</code>
+	<code dialect="Microsoft SQL Server">SELECT @base
+	           , DATEPART(@field, @column) AS @columnName
+	      FROM @propagatedTable
+	</code>
+	<parameter key="@field" value="hour, minute"/>
+	<parameter key="@column" value="@timeColumn, @timeWithTimezoneColumn, @timestampColumn, @timestampWithTimezoneColumn"/>
+	<cardinality>1</cardinality>
+</pattern>

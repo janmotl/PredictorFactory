@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Ratio</name>
+	<description>Ratio of the two fields X and Y.
+	
+		Ratio(NULL, Y) = NULL
+		Ratio(X, NULL) = NULL
+		Ratio(X, 0) = NULL
+		Ratio(0, Y) = 0
+		Ratio(X, Y) = 100*X/Y
+
+		There are two reasons why to include this pattern in the exploration:
+		1) Many measures in econometrics are ratios (e.g. GDP deflator). If these measures are important
+		in the literature, maybe we should be able to express them (from individual attributes) as well.
+		2) It is a way how to introduce attribute interactions into linear models. While it is customary to introduce
+		interactions in a product form (e.g. x1*x2), ratio works almost as well. The only inconveniences are that
+		division by zero is not defined, hence we have to cover it. And that ratio is not commutative, while
+		multiplication is. Hence, if we have a non-zero attribute x1 and an attribute x2, which frequently takes a zero
+		value, it is better to calculate x2/x1 than x1/x2 to avoid division by zero.
+
+		This pattern is slow, but produces great predictors. However, this pattern also produces a lot of duplicates to isNull pattern.
+		Beware of leaks of the target column into this pattern.
+
+		Conclusion: If you think there can be interactions between features, prefer to use a model (classifier...)
+		that can model interactions natively (neural network, regression with defined interactions,...) instead of this
+		pattern. Reasoning: The recommended approach saves memory and runtime of both, propositionalization and model.
+		Does it mean all multivariate patterns are "useless"? Not at all - multivariate _aggregate_ patterns capture
+		information that is not available to the propositional model. And multivariate patterns that work
+		with a timestamp (temporal attribute) and some other attribute can be pretty fast as there is commonly just
+		a few timestamps in a table.
+	</description>
+	<note>
+		Note: The implementation prefers to return NULL when the ratio is ill defined.
+		If you want to 0 instead of NULL, just add coalesce.
+
+		NOTE: COULD HAVE BEEN EXTENDED INTO RATIOS OF AGGREGATES
+	</note>
+	<example>
+		Customers with very low (loan_duration / regular_payment_amount) are unlikely to pay the loan in time.
+
+		Ratio of performances (e.g. NN/DT) are the best features for meta-learning.
+	</example>
+	<author>Jan Motl</author>
+	<date>2014-12-22</date>
+	<code>SELECT @base
+	           , 100*@numericalColumn1/nullif(@numericalColumn2, 0) AS @columnName
+		   FROM @propagatedTable
+	</code>
+	<cardinality>1</cardinality>
+</pattern>

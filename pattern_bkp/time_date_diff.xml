@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Time date diff</name>
+	<description>
+		Difference between two dates in days.
+
+		This pattern produces a lot of duplicate features because PF currently assumes that all multivariate
+		patterns are not symmetrical. Hence, PF calculates diff(A,B) and diff(B,A). But from the point of modeling,
+		these two predictors contain the same information.
+	</description>
+	<example>
+		Session length.
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-04-16</date>
+	<code dialect="Microsoft SQL Server">SELECT @base
+	           , DATEDIFF(d, @column2, @column1) AS @columnName
+	      FROM @propagatedTable
+	</code>
+	<code dialect="MySQL">SELECT @base
+	           , DATEDIFF(@column1, @column2) AS @columnName
+	      FROM @propagatedTable
+	</code>
+	<code dialect="Default,PostgreSQL,Oracle">SELECT @base
+	           , @column1 - @column2  AS @columnName
+	      FROM @propagatedTable
+	</code>
+	<parameter key="@column1" value="@dateColumn1, @timestampColumn1, @timestampWithTimezoneColumn1"/>
+	<parameter key="@column2" value="@dateColumn2, @timestampColumn2, @timestampWithTimezoneColumn2"/>
+	<cardinality>1</cardinality>
+</pattern>

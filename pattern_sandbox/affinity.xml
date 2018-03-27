@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 
 <pattern>
-	<name>Affinity</name>
+	<name>Affinity2</name>
 	<description>
 		Similar to WoE, but without normalization and transformation with logarithm. For decision trees it should be
 		as informative as WoE, but the calculation should be faster. For interpretability or logistic regression, WoE

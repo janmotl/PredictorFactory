@@ -7,24 +7,26 @@
 
 		The calculation is based on page 13 of:
 			http://www.slideshare.net/DataRobot/featurizing-log-data-before-xgboost
-
-		This pattern can be slow.
-
-		Note: To avoid integer division, we multiply the "sum" by 1.0 to cast it to numerical.
-
-		Note: We may get error that we cannot take logarithm of zero/negative number.
 	</description>
+	<note>
+		Note: To avoid integer division, we cast "count" and "sum" to float.
+
+		Note: Avoid decimals, because a logarithm of a decimal variable is ~100 slower than the logarithm of a float.
+		The results obtained with floats are equal to results on decimal for ~13 decimal digits.
+
+		Note: We may get error that we cannot take a logarithm of zero/negative number.
+	</note>
 	<example>
 
 	</example>
 	<author>Matej Polak</author>
 	<date>2017-01-16</date>
-	<code compatibility="MySQL,PostgreSQL">
+	<code dialect="MySQL,PostgreSQL">
 		SELECT a.@base,
-			- SUM(@numericalColumn/sum * LN(@numericalColumn/sum)) AS @columnName
+			- SUM(@numericalColumn/sum * LOG(@numericalColumn/sum)) AS @columnName
 		FROM @propagatedTable a
 		INNER JOIN (
-			SELECT @basePartitionBy, COUNT(*) count, SUM( @numericalColumn) * 1.0 sum
+			SELECT @basePartitionBy, cast(COUNT(*) as float) count, cast(SUM(@numericalColumn) as float) sum
 			FROM @propagatedTable
 			GROUP BY @basePartitionBy
 		) stats
