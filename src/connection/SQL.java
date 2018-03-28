@@ -14,10 +14,7 @@ import utility.CountAppender;
 import utility.Memory;
 import utility.Meta;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -1555,28 +1552,28 @@ public class SQL {
 			ps.setInt(2, predictor.getGroupId());
 			ps.setTimestamp(3, Timestamp.valueOf(predictor.getTimestampBuilt()));
 			ps.setDouble(4, predictor.getRuntime());  // Note: Do not use bigDecimal as it is unsupported on SAS
-			ps.setString(5, predictor.getName());
-			ps.setString(6, predictor.getLongName());
-			ps.setString(7, predictor.getOriginalTable());
-			ps.setString(8, predictor.getColumnMap().toString());   // Should be a list...
-			ps.setString(9, predictor.getTable().name);
-			ps.setString(10, predictor.getPropagationPath().toString());
+			setStringToStatement(ps, 5, predictor.getName());
+			setStringToStatement(ps, 6, predictor.getLongName());
+			setStringToStatement(ps, 7, predictor.getOriginalTable());
+			setStringToStatement(ps, 8, predictor.getColumnMap().toString());   // Should be a list...
+			setStringToStatement(ps, 9, predictor.getTable().name);
+			setStringToStatement(ps, 10, predictor.getPropagationPath().toString());
 			ps.setInt(11, predictor.getPropagationPath().size());
-			ps.setString(12, predictor.getPropagationDate());
-			ps.setString(13, predictor.getParameterMap().toString());   // Violates the 1st norm...
-			ps.setString(14, predictor.getPatternName());
-			ps.setString(15, predictor.getPatternAuthor());
-			ps.setString(16, predictor.getPatternCode());
-			ps.setString(17, predictor.getSql());
-			ps.setString(18, predictor.getDataTypeName());
-			ps.setString(19, predictor.getDataTypeCategory());
+			setStringToStatement(ps, 12, predictor.getPropagationDate());
+			setStringToStatement(ps, 13, predictor.getParameterMap().toString());   // Violates the 1st norm...
+			setStringToStatement(ps, 14, predictor.getPatternName());
+			setStringToStatement(ps, 15, predictor.getPatternAuthor());
+			setStringToStatement(ps, 16, predictor.getPatternCode());
+			setStringToStatement(ps, 17, predictor.getSql());
+			setStringToStatement(ps, 18, predictor.getDataTypeName());
+			setStringToStatement(ps, 19, predictor.getDataTypeCategory());
 			ps.setInt(20, predictor.getRowCount());
 			ps.setInt(21, predictor.getNullCount());
-			ps.setString(22, predictor.getExceptionMessage());
+			setStringToStatement(ps, 22, predictor.getExceptionMessage());
 			ps.setInt(23, isOk);
 			ps.setInt(24, isInferiorDuplicate);
-			ps.setString(25, predictor.getDuplicateName());
-			ps.setString(26, predictor.getTargetColumn());
+			setStringToStatement(ps, 25, predictor.getDuplicateName());
+			setStringToStatement(ps, 26, predictor.getTargetColumn());
 
 			// Set Chi2+conceptDrift for each target
 			int counter = 27;
@@ -1596,6 +1593,23 @@ public class SQL {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Out of the box function setString() cannot handle null value because it calls toString() on that value.
+	 * So, if value is null, function setNull() has to be used.
+	 *
+	 * @param ps Statement to be string set in
+	 * @param parameterIndex Index of parameter in statement
+	 * @param s String to be tested and set
+	 * @throws SQLException
+	 */
+	private static void setStringToStatement(PreparedStatement ps, int parameterIndex, String s) throws SQLException{
+		if(s != null) {
+			ps.setString(parameterIndex, s);
+		} else {
+			ps.setNull(parameterIndex, Types.NULL);
+		}
 	}
 
 	public static boolean getJournalTable(Setting setting) {
