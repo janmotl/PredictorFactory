@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Direct field</name>
+	<description>
+		Returns the column unchanged.
+
+		This pattern is commonly producing the best predictors.
+	</description>
+	<note>
+		Note: Direct field also returns the target column! This is desirable as in time series analysis you may not
+		have anything but the past values of the target. But if lead==0 then the "current" target will leak into the
+		predictors.
+
+		Note: Time variables are handled here with a fixed reference. For floating reference pattern time_since_direct
+		is used. Neither of the approaches completely dominates the other. Hence both approaches are tested. But only
+		one for the given attribute should be chosen (as they are highly correlated).
+	</note>
+	<example>
+		Indicated “likely to donate” on 2009 alumni survey.
+	</example>
+	<author>Jan Motl</author>
+	<date>2014-10-14</date>
+	<code>SELECT @base
+			   , @anyColumn AS @columnName
+		  FROM @propagatedTable</code>
+	<cardinality>1</cardinality>
+</pattern>

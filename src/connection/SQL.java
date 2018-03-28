@@ -1886,21 +1886,43 @@ public class SQL {
 				target = target + " t1." + QL + setting.targetColumnList.get(i) + QR + " AS " + escapeAlias(setting, setting.baseTargetList.get(i)) + ",";
 			}
 
+			// Prepare on clause
+			String on = "ON ";
+			for (String column : setting.targetIdList) {
+				on = on + " t1." + QL + column + QR + " = t2." + QL + column + QR + " AND ";
+			}
+			if (setting.targetDate != null) {
+				on = on + "t1.@targetDate = t2.@targetDate ";
+			} else {
+				on = on.substring(0, on.length() - 4);
+			}
+
+			// Prepare where clause
+			String where = "WHERE ";
+			for (String column : setting.targetIdList) {
+				where = where + " t2." + QL + column + QR + " is null AND ";
+			}
+			if (setting.targetDate != null) {
+				where = where + "t1.@targetDate is not null";
+			} else {
+				where = where.substring(0, on.length() - 5);
+			}
+
 			// The query itself (two scenarios to avoid putting everything like a puzzle)
 			if (setting.targetDate == null) {
 				sql = "SELECT" + id + target + " FLOOR(" + setting.randomCommand + " * 10) AS " + escapeAlias(setting, setting.baseFold) + " " +
 						"FROM @targetTable t1 LEFT JOIN (" +
 						"SELECT @targetId FROM @targetTable GROUP BY @targetId HAVING count(*)>1 " +
 						") t2 " +
-						"ON t1.@targetId = t2.@targetId " +
-						"WHERE t2.@targetId is null";
+						on +
+						where;
 			} else {
 				sql = "SELECT" + id + dateAsTable + target + " FLOOR(" + setting.randomCommand + " * 10) AS " + escapeAlias(setting, setting.baseFold) + " " +
 						"FROM @targetTable t1 LEFT JOIN (" +
 						"SELECT @targetId, @targetDate FROM @targetTable GROUP BY @targetId, @targetDate HAVING count(*)>1 " +
 						") t2 " +
-						"ON t1.@targetId = t2.@targetId AND t1.@targetDate = t2.@targetDate " +
-						"WHERE t2.@targetId is null AND t1.@targetDate is not null"; // TargetDate should never be null
+						on +
+						where; // TargetDate should never be null
 			}
 		}
 

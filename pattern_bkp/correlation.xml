@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Correlation</name>
+	<description>
+		Calculate Pearson correlation of an attribute with time.
+	</description>
+	<note>
+		Note: correlation of an attribute with another attribute will be implemented in a separate pattern because
+		time columns must be casted in some of the databases to a numerical columns. Hence the syntax differs.
+
+		Note: functions "corr" and "dateToNumber" are automatically converted based on the target database. MySQL
+		has it's own implementation because in this case MySQL doesn't require conversion of dates to numbers.
+	</note>
+	<example>
+		Trend of balance on the customer's account.
+	</example>
+	<author>Jan Motl</author>
+	<date>2014-12-22</date>
+	<code dialect="Default,Oracle,PostgreSQL">SELECT @base
+	           , corr(dateToNumber(@temporalColumn), @numericalColumn) AS @columnName
+	      FROM @propagatedTable
+	      GROUP BY @base
+	</code>
+	<code dialect="MySQL">SELECT @base
+	           , (Avg(@numericalColumn * @temporalColumn) - Avg(@numericalColumn) * Avg(@temporalColumn)) / (StdDev_Samp(@numericalColumn) * StdDev_Samp(@temporalColumn)) AS @columnName
+	      FROM @propagatedTable
+	      GROUP BY @base
+	</code>
+	<cardinality>n</cardinality>
+</pattern>

@@ -1,7 +1,6 @@
 package utility;
 
 import com.github.rjeschke.txtmark.Processor;
-import org.jetbrains.annotations.Nullable;
 
 public class TextToHTML {
 
@@ -19,7 +18,6 @@ public class TextToHTML {
 		if (text == null) return "";
 
 		text = text.replace("\t", " ");                 // Remove tabs to not format text as REM
-		text = text.replaceAll("(?si)note.*", "");      // Ignore everything behind NOTE: keyword
 		text = "[$PROFILE$]: extended \n" + text;       // Tell the markdown processor to ignore underscores
 		text = Processor.process(text);                 // Markdown to HTML
 

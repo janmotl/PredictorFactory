@@ -84,7 +84,7 @@ public class Pattern {
 
 		// Pick the correct code
 		for (PatternCode patternCode : code) {
-			if (patternCode.compatibility != null && patternCode.compatibility.contains(setting.databaseVendor)) {
+			if (patternCode.dialect != null && patternCode.dialect.contains(setting.databaseVendor)) {
 				rawCode = patternCode.code;
 			}
 		}

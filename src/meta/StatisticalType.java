@@ -35,6 +35,7 @@ public enum StatisticalType{
 	INTERVAL,
 	SET,
 	YEAR,   // Is troublesome as datediff between year and timestamp does not work (in MySQL)
+	// Other data types to consider: UUID, COUNTER, DURATION
 
 	// These are convenience union types.
 	//	ID,         // Is in PK or FK

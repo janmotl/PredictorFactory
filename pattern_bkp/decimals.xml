@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Decimals</name>
+	<description>
+		Returns the count of decimal digits.
+	</description>
+	<note>
+		Note: This pattern is useful only on numerical attributes that actually may contain decimal digits.
+
+		Note: We use floor instead of round because round in MSSQL requires precision specification.
+
+		Note: CHAR_LENGTH keyword is automatically replaced with the database specific command. We do not use ODBC
+		functions because SAS does not support {fn LENGTH('abc')}.
+	</note>
+	<example>
+		If an user enters 1234.724 into a form, it is more likely to be a real value than if he inters 1234.
+	</example>
+	<author>Jan Motl</author>
+	<date>2017-11-08</date>
+	<code dialect="PostgreSQL">SELECT @base
+			   , case when CHAR_LENGTH(cast(@column as varchar)) - CHAR_LENGTH(cast(floor(@column) as varchar)) > 0 then CHAR_LENGTH(cast(@column as varchar)) - CHAR_LENGTH(cast(floor(@column) as varchar)) -1 else 0 end AS @columnName
+		  FROM @propagatedTable
+		  WHERE @column is not null</code>
+	<code dialect="MySQL">SELECT @base
+			   , case when CHAR_LENGTH(cast(@column as char)) - CHAR_LENGTH(cast(floor(@column) as char)) > 0 then CHAR_LENGTH(cast(@column as char)) - CHAR_LENGTH(cast(floor(@column) as char)) -1 else 0 end AS @columnName
+		  FROM @propagatedTable
+		  WHERE @column is not null</code>
+	<parameter key="@column" value="@numericColumn, @decimalColumn, @floatColumn, @realColumn, @doubleColumn"/>
+	<cardinality>1</cardinality>
+</pattern>

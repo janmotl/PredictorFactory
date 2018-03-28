@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Email domain</name>
+	<description>
+		Extracts suffix after "@" from a string.
+	</description>
+	<note>
+		Note: In comparison to "suffix" pattern, this pattern allows suffixes of variable length.
+	</note>
+	<example>
+		While email addresses can be unique and as such not directly usable as a feature, domains like "google.com" or
+		"seznam.cz" can be used as a feature.
+	</example>
+	<author>Jan Motl</author>
+	<date>2018-03-04</date>
+	<code dialect="Microsoft SQL Server">SELECT @base
+			   , RIGHT(@characterColumn, CHARINDEX('@', @characterColumn)) AS @columnName
+		  FROM @propagatedTable</code>
+	<code dialect="PostgreSQL">SELECT @base
+			   , substring(@characterColumn from '@.*') AS @columnName
+		  FROM @propagatedTable</code>
+	<code dialect="MySQL">SELECT @base
+			   , RIGHT(@characterColumn, LOCATE(@characterColumn, '@')) AS @columnName
+		  FROM @propagatedTable</code>
+	<cardinality>1</cardinality>
+</pattern>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Log product</name>
+	<description>
+		Calculate log product of numbers.
+		
+		Because not all databases implement product aggregate, a common workaround is to use logarithms:
+			log(a*b*c...*n)=log(a)+log(b)+log(c)...+log(n)
+		as implemented at:
+			http://stackoverflow.com/questions/3912204/why-is-there-no-product-aggregate-function-in-sql
+
+		However, the result can easily overflow. Hence, we directly return the logarithm of the product.
+		Also, to work properly with attributes that start with zero, we increment the attribute value by 1.
+		The nice property, in comparison to implementation at stackoverflow, is that it is ~10 times faster
+		and overflows do not happen. On the other end, there is no workaround for negative values.
+	</description>
+	<example>
+		Log product of yields (qty_out / qty_in).
+		Log product of (independent) probabilities.
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-03-15</date>
+	<code>SELECT @base
+				, SUM({fn log(@numericalColumn + 1)}) @columnName
+		    FROM @propagatedTable
+		    GROUP BY @base
+	</code>
+	<cardinality>n</cardinality>
+</pattern>

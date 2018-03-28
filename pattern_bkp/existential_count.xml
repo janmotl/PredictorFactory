@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Existential count</name>
+	<description>
+		Count of occurrences of a specific value.
+	</description>
+	<note>
+		Note: Null values are ignored as they are covered in null_ratio.
+
+		NOTE: THE SINGLE QUOTES ARE GOING TO CAUSE PROBLEMS -> ESCAPE IN PF.
+
+		Note: Currently we use top 20 frequent values. This limit is set by a parameter of Predictor Factory, not of the
+		pattern. The parameter is named "valueCount" and sets the cap on the size of @value vector.
+		We could also ignore values that appear in less than 5% of samples. The difference is evident if non-uniform
+		distribution of the values is assumed. The implemented variant is an algorithm of "Monte-Carlo" type, while the
+		alternative is "Las Vegas" algorithm type, where you can't predict the runtime, but you can state guaranties
+		about the quality of the output.
+
+		Literature reference: This pattern is similar to TF as used in Wordification. See:
+			http://www.ipcsit.com/vol47/009-ICCTS2012-T049.pdf
+		The difference is that we do not perform multiplication of TF with IDF to get TF-IDF, because
+		IDF is constant for the predictor. In other words TF-IDF (as defined and used in Wordification) mostly just
+		adds processing time (at least for decision trees and regression; however, for k-nn or distance based clustering
+		TF-IDF variant is preferred). The only significant difference is if the value appears in all the base_ids -
+		then the IDF part is zero and TF-IDF is constant, while TF itself doesn't have to be necessarily constant.
+
+		Another literature reference: This pattern is similar to existential quantifier, which is commonly used in ILP.
+		The difference is that the quantifier is binary, while count belongs to natural numbers. From the point of
+		prediction accuracy the difference seems to be insignificant. See:
+			http://www.ipcsit.com/vol47/009-ICCTS2012-T049.pdf
+	</note>
+	<example>
+		Whenever the dataset contains nominal attributes, the existential quantifier belongs to the most important
+		patterns. An example of datasets where existential count excels: train dataset.
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-05-07</date>
+	<code>SELECT @base
+			   , sum(CASE WHEN @nominalColumn = '@value' THEN 1 ELSE 0 END) AS @columnName
+	      FROM @propagatedTable
+	      GROUP BY @base
+	</code>
+	<cardinality>n</cardinality>
+</pattern>

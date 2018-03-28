@@ -4,6 +4,7 @@
             <sequence>
                 <element type="string" name="name"/>
                 <element type="string" name="description"/>
+                <element type="string" name="note" minOccurs="0"/>
                 <element type="string" name="example" minOccurs="0"/>
                 <element type="string" name="author"/>
                 <element type="date" name="date"/>
@@ -11,7 +12,7 @@
                     <complexType>
                         <simpleContent>
                             <extension base="string">
-                                <attribute type="string" name="compatibility" use="optional"/>
+                                <attribute type="string" name="dialect" use="optional"/>
                             </extension>
                         </simpleContent>
                     </complexType>
