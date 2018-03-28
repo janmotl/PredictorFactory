@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <databases>
-    <database name="Hive_test" inputSchema="financial" outputSchema="predictor_factory" targetSchema="financial" targetTable="loan" targetId="account_id" targetColumn="status" task="classification" sampleCount="50" useIdAttributes="true" useTwoStages="false" whiteListPattern="Aggregate"/>
+    <database name="Hive_test" inputSchema="financial" outputSchema="predictor_factory" targetSchema="financial" targetTable="loan" targetId="account_id" targetColumn="status" task="classification" sampleCount="50" useIdAttributes="true" useTwoStages="false" whiteListPattern="Direct field"/>
     <database name="AustralianFootball" inputSchema="AustralianFootball" outputSchema="predictor_factory" targetSchema="AustralianFootball" targetTable="matches" targetId="mid" targetDate="start_dt" targetColumn="target" task="classification" useIdAttributes="true" useTwoStages="false"/>
     <database name="AdventureWorks" inputSchema="AdventureWorks2014" outputSchema="predictor_factory" targetSchema="AdventureWorks2014" targetTable="SalesOrderHeader" targetId="CustomerID" targetDate="OrderDate" targetColumn="TotalDue" task="regression" useIdAttributes="true" useTwoStages="false"/>
     <database name="Accidents" inputSchema="Accidents" outputSchema="predictor_factory" targetSchema="Accidents" targetTable="nesreca" targetId="id_nesreca" targetDate="cas_nesreca" targetColumn="naselje_ali_izven" task="classification" useIdAttributes="true" useTwoStages="false"/>
