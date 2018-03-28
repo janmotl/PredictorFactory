@@ -513,6 +513,12 @@ public class Aggregation {
 		predictor.setName(predictor.getNameOnce(setting));
 		predictor.setLongName(predictor.getLongNameOnce());
 
+		// In Hive all tables/columns have name in lowercase
+		if("Hive SQL".equals(setting.databaseVendor)) {
+			predictor.setName(predictor.getName().toLowerCase());
+			predictor.setLongName(predictor.getLongName().toLowerCase());
+		}
+
 		// Convert pattern to SQL
 		predictor.setSql(setting.dialect.getPredictor(setting, predictor));
 
@@ -532,8 +538,8 @@ public class Aggregation {
 		// Add Primary Key constrain.
 		// This is not because of speeding things up (indeed it has a negative impact on total runtime because only
 		// a small proportion of the predictors gets into MainSample) but because it validates uniqueness of the tuples.
-		// Azure and Teradata require not-null constraint -> skip it for MSSQL and Teradata.
-		if (!"Microsoft SQL Server".equals(setting.databaseVendor) && !"Teradata".equals(setting.databaseVendor)) {
+		// Azure and Teradata require not-null constraint -> skip it for MSSQL and Teradata and Hive.
+		if (!"Microsoft SQL Server".equals(setting.databaseVendor) && !"Teradata".equals(setting.databaseVendor) && !"Hive SQL".equals(setting.databaseVendor)) {
 			if (!setting.dialect.setPrimaryKey(setting, predictor.getOutputTable())) {
 				logger.warn("Primary key constraint failed");
 				return;
@@ -596,7 +602,7 @@ public class Aggregation {
 		// This is not because of speeding things up (indeed it has a negative impact on total runtime because only
 		// a small proportion of the predictors gets into MainSample) but because it validates uniqueness of the tuples.
 		// Azure and Teradata require not-null constraint -> skip it for MSSQL and Teradata.
-		if (!"Microsoft SQL Server".equals(setting.databaseVendor) && !"Teradata".equals(setting.databaseVendor)) {
+		if (!"Microsoft SQL Server".equals(setting.databaseVendor) && !"Teradata".equals(setting.databaseVendor) && !"Hive SQL".equals(setting.databaseVendor)) {
 			if (!setting.dialect.setPrimaryKey(setting, predictor.getOutputTable())) {
 				logger.warn("Primary key constraint failed");
 				return;
