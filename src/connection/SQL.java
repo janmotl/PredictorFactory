@@ -1754,7 +1754,7 @@ public class SQL {
 				ps.setInt(7, contains(predictor, "@temporalColumn"));
 				ps.setInt(8, contains(predictor, "@baseTarget"));
 				ps.setInt(9, contains(predictor, "@baseDate"));
-				ps.setString(10, predictor.getPatternDescription().replaceAll(" +", " ").replaceAll("\\t", "").trim());
+				ps.setString(10, predictor.getPatternDescription().replaceAll("[^\\S ]+", " ").trim());
 				ps.executeUpdate();
 			}
 		} catch (SQLException ignored) {
