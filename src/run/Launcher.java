@@ -24,14 +24,14 @@ public class Launcher {
 	// Where everything starts and ends...
 	public static void main(String[] arg) {
 
-		// Connect to the following server and database:
-		String connectionProperty = "PostgreSQL";   // Host identification as specified in resources/connection.xml
-		String databaseProperty = "financial";       // Dataset identification as specified in resources/database.xml
-
-		// Read command line parameters iff they are present (and overwrite the defaults).
-		if (arg.length == 1 || arg.length > 2) {
+		// Read command line parameters
+		if (arg.length != 2) {
 			throw new IllegalArgumentException("Exactly two arguments are expected: connectionName databaseName");
 		}
+
+		String connectionProperty = "";
+		String databaseProperty = "";
+
 		if (arg.length == 2) {
 			connectionProperty = arg[0];
 			databaseProperty = arg[1];
