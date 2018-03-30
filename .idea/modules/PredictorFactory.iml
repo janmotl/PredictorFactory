@@ -19,43 +19,74 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.codehaus.groovy:groovy-all:2.4.10" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.ibm.icu:icu4j:58.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.glassfish:javax.json:1.0.4" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.abego.treelayout:org.abego.treelayout.core:1.0.3" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.antlr:antlr-runtime:3.5.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.antlr:ST4:4.0.8" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.antlr:antlr4-runtime:4.7.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.antlr:antlr4:4.7.1" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.ibm.icu:icu4j:58.2" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.glassfish:javax.json:1.0.4" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.abego.treelayout:org.abego.treelayout.core:1.0.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.antlr:antlr-runtime:3.5.2" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.antlr:ST4:4.0.8" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.antlr:antlr4-runtime:4.7.1" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.antlr:antlr4:4.7.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.ibm.icu:icu4j:58.2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.glassfish:javax.json:1.0.4" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.abego.treelayout:org.abego.treelayout.core:1.0.3" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.antlr:antlr-runtime:3.5.2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.antlr:ST4:4.0.8" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.antlr:antlr4-runtime:4.7.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.antlr:antlr4:4.7.1" level="project" />
     <orderEntry type="module-library" scope="TEST">
-      <library name="Gradle: sas.intrnet.javatools">
+      <library name="Gradle: mysql-connector-java-5.1.44-bin">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/sas/sas.intrnet.javatools.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/mysql/mysql-connector-java-5.1.44-bin.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library" scope="TEST">
-      <library name="Gradle: sas.core">
+      <library name="Gradle: SQLinFormFXpro_5.1.46">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/sas/sas.core.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/SQLinForm/SQLinFormFXpro_5.1.46.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library" scope="TEST">
-      <library name="Gradle: postgresql-9.4.1212">
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library name="Gradle: SQLinFormFXpro_5.1.46">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/postgresql/postgresql-9.4.1212.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/SQLinForm/SQLinFormFXpro_5.1.46.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library" scope="TEST">
-      <library name="Gradle: ojdbc7">
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library name="Gradle: mysql-connector-java-5.1.44-bin">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/oracle/ojdbc7.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/mysql/mysql-connector-java-5.1.44-bin.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library" scope="TEST">
+    <orderEntry type="module-library" scope="PROVIDED">
+      <library name="Gradle: SQLinFormFXpro_5.1.46">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../lib/SQLinForm/SQLinFormFXpro_5.1.46.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" scope="TEST" name="Gradle: org.spockframework:spock-core:1.1-groovy-2.4" level="project" />
+    <orderEntry type="module-library" scope="RUNTIME">
       <library name="Gradle: sqljdbc42">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/mssql/sqljdbc42.jar!/" />
@@ -64,141 +95,48 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library" scope="TEST">
-      <library name="Gradle: SQLinFormFXpro_5.1.25">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/SQLinForm/SQLinFormFXpro_5.1.25.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="TEST">
-      <library name="Gradle: gsp">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/sqlformatter/gsp.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="library" scope="TEST" name="Gradle: javax.inject:javax.inject:1" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: javax.annotation:jsr250-api:1.0" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.1_spec:1.0.0.Beta1" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: javax.el:el-api:2.2" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: javax.enterprise:cdi-api:1.1" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: dom4j:dom4j:1.6.1" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: com.fasterxml:classmate:1.3.0" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.jboss:jandex:2.0.3.Final" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.apache.geronimo.specs:geronimo-jta_1.1_spec:1.1.1" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: antlr:antlr:2.7.7" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.javassist:javassist:3.20.0-GA" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.jboss.logging:jboss-logging:3.3.0.Final" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.hibernate.common:hibernate-commons-annotations:5.0.1.Final" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.slf4j:slf4j-api:1.7.21" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.controlsfx:controlsfx:8.40.13" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: com.atlassian.commonmark:commonmark:0.8.0" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.hibernate:hibernate-core:5.2.5.Final" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: com.intellij:annotations:12.0" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: com.github.rjeschke:txtmark:0.13" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: log4j:log4j:1.2.17" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.slf4j:slf4j-log4j12:1.7.21" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: com.zaxxer:HikariCP:2.5.1" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: com.google.guava:guava:20.0" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.apache.commons:commons-lang3:3.5" level="project" />
     <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: SQLinFormFXpro_5.1.25">
+      <library name="Gradle: ojdbc7">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/SQLinForm/SQLinFormFXpro_5.1.25.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/oracle/ojdbc7.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: gsp">
+      <library name="Gradle: postgresql-9.4.1212">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/sqlformatter/gsp.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/postgresql/postgresql-9.4.1212.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: javax.inject:javax.inject:1" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: javax.annotation:jsr250-api:1.0" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.1_spec:1.0.0.Beta1" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: javax.el:el-api:2.2" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: javax.enterprise:cdi-api:1.1" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: dom4j:dom4j:1.6.1" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.fasterxml:classmate:1.3.0" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jboss:jandex:2.0.3.Final" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.apache.geronimo.specs:geronimo-jta_1.1_spec:1.1.1" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: antlr:antlr:2.7.7" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.javassist:javassist:3.20.0-GA" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jboss.logging:jboss-logging:3.3.0.Final" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.hibernate.common:hibernate-commons-annotations:5.0.1.Final" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.slf4j:slf4j-api:1.7.21" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.controlsfx:controlsfx:8.40.13" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.atlassian.commonmark:commonmark:0.8.0" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.hibernate:hibernate-core:5.2.5.Final" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.intellij:annotations:12.0" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.rjeschke:txtmark:0.13" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: log4j:log4j:1.2.17" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.slf4j:slf4j-log4j12:1.7.21" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.zaxxer:HikariCP:2.5.1" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.google.guava:guava:20.0" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.apache.commons:commons-lang3:3.5" level="project" />
-    <orderEntry type="module-library" scope="PROVIDED">
-      <library name="Gradle: SQLinFormFXpro_5.1.25">
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library name="Gradle: sas.core">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/SQLinForm/SQLinFormFXpro_5.1.25.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/sas/sas.core.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library" scope="PROVIDED">
-      <library name="Gradle: gsp">
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library name="Gradle: sas.intrnet.javatools">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/sqlformatter/gsp.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/sas/sas.intrnet.javatools.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: javax.inject:javax.inject:1" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: javax.annotation:jsr250-api:1.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.1_spec:1.0.0.Beta1" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: javax.el:el-api:2.2" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: javax.enterprise:cdi-api:1.1" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: dom4j:dom4j:1.6.1" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.fasterxml:classmate:1.3.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jboss:jandex:2.0.3.Final" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.apache.geronimo.specs:geronimo-jta_1.1_spec:1.1.1" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: antlr:antlr:2.7.7" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.javassist:javassist:3.20.0-GA" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jboss.logging:jboss-logging:3.3.0.Final" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.hibernate.common:hibernate-commons-annotations:5.0.1.Final" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.slf4j:slf4j-api:1.7.21" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.controlsfx:controlsfx:8.40.13" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.atlassian.commonmark:commonmark:0.8.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.hibernate:hibernate-core:5.2.5.Final" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.intellij:annotations:12.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.rjeschke:txtmark:0.13" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: log4j:log4j:1.2.17" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.slf4j:slf4j-log4j12:1.7.21" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.zaxxer:HikariCP:2.5.1" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.google.guava:guava:20.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.apache.commons:commons-lang3:3.5" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.evosuite:evosuite-standalone-runtime:1.0.5" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: info.solidsoft.spock:spock-global-unroll:0.5.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: junit:junit:4.12" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.hamcrest:hamcrest-core:1.3" level="project" />
     <orderEntry type="module-library" scope="TEST">
-      <library name="Gradle: vldocking">
+      <library name="Gradle: launcher">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/rapidminer/vldocking.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/rapidminer/launcher.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -214,53 +152,146 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library" scope="TEST">
-      <library name="Gradle: launcher">
+      <library name="Gradle: vldocking">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/rapidminer/launcher.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/rapidminer/vldocking.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" scope="TEST" name="Gradle: org.hamcrest:hamcrest-core:1.3" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: junit:junit:4.12" level="project" />
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: sas.intrnet.javatools">
+    <orderEntry type="library" scope="TEST" name="Gradle: info.solidsoft.spock:spock-global-unroll:0.5.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.evosuite:evosuite-standalone-runtime:1.0.5" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.apache.commons:commons-lang3:3.5" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.google.guava:guava:20.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.zaxxer:HikariCP:2.5.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.slf4j:slf4j-log4j12:1.7.21" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: log4j:log4j:1.2.17" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.github.rjeschke:txtmark:0.13" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.intellij:annotations:12.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.hibernate:hibernate-core:5.2.5.Final" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.atlassian.commonmark:commonmark:0.8.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.controlsfx:controlsfx:8.40.13" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.slf4j:slf4j-api:1.7.21" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.hibernate.common:hibernate-commons-annotations:5.0.1.Final" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jboss.logging:jboss-logging:3.3.0.Final" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.javassist:javassist:3.20.0-GA" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: antlr:antlr:2.7.7" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.apache.geronimo.specs:geronimo-jta_1.1_spec:1.1.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jboss:jandex:2.0.3.Final" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.fasterxml:classmate:1.3.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: dom4j:dom4j:1.6.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: javax.enterprise:cdi-api:1.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: javax.el:el-api:2.2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.1_spec:1.0.0.Beta1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: javax.annotation:jsr250-api:1.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: javax.inject:javax.inject:1" level="project" />
+    <orderEntry type="module-library" scope="PROVIDED">
+      <library name="Gradle: gsp">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/sas/sas.intrnet.javatools.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/sqlformatter/gsp.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="PROVIDED">
+      <library name="Gradle: SQLinFormFXpro_5.1.25">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../lib/SQLinForm/SQLinFormFXpro_5.1.25.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.apache.commons:commons-lang3:3.5" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.google.guava:guava:20.0" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.zaxxer:HikariCP:2.5.1" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.slf4j:slf4j-log4j12:1.7.21" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: log4j:log4j:1.2.17" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.github.rjeschke:txtmark:0.13" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.intellij:annotations:12.0" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.hibernate:hibernate-core:5.2.5.Final" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.atlassian.commonmark:commonmark:0.8.0" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.controlsfx:controlsfx:8.40.13" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.slf4j:slf4j-api:1.7.21" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.hibernate.common:hibernate-commons-annotations:5.0.1.Final" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jboss.logging:jboss-logging:3.3.0.Final" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.javassist:javassist:3.20.0-GA" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: antlr:antlr:2.7.7" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.apache.geronimo.specs:geronimo-jta_1.1_spec:1.1.1" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jboss:jandex:2.0.3.Final" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.fasterxml:classmate:1.3.0" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: dom4j:dom4j:1.6.1" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: javax.enterprise:cdi-api:1.1" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: javax.el:el-api:2.2" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.1_spec:1.0.0.Beta1" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: javax.annotation:jsr250-api:1.0" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: javax.inject:javax.inject:1" level="project" />
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library name="Gradle: gsp">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../lib/sqlformatter/gsp.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: sas.core">
+      <library name="Gradle: SQLinFormFXpro_5.1.25">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/sas/sas.core.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/SQLinForm/SQLinFormFXpro_5.1.25.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: postgresql-9.4.1212">
+    <orderEntry type="library" scope="TEST" name="Gradle: org.apache.commons:commons-lang3:3.5" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.google.guava:guava:20.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.zaxxer:HikariCP:2.5.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.slf4j:slf4j-log4j12:1.7.21" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: log4j:log4j:1.2.17" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.github.rjeschke:txtmark:0.13" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.intellij:annotations:12.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.hibernate:hibernate-core:5.2.5.Final" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.atlassian.commonmark:commonmark:0.8.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.controlsfx:controlsfx:8.40.13" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.slf4j:slf4j-api:1.7.21" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.hibernate.common:hibernate-commons-annotations:5.0.1.Final" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.jboss.logging:jboss-logging:3.3.0.Final" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.javassist:javassist:3.20.0-GA" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: antlr:antlr:2.7.7" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.apache.geronimo.specs:geronimo-jta_1.1_spec:1.1.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.jboss:jandex:2.0.3.Final" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.fasterxml:classmate:1.3.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: dom4j:dom4j:1.6.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: javax.enterprise:cdi-api:1.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: javax.el:el-api:2.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.1_spec:1.0.0.Beta1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: javax.annotation:jsr250-api:1.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: javax.inject:javax.inject:1" level="project" />
+    <orderEntry type="module-library" scope="TEST">
+      <library name="Gradle: gsp">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/postgresql/postgresql-9.4.1212.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/sqlformatter/gsp.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: ojdbc7">
+    <orderEntry type="module-library" scope="TEST">
+      <library name="Gradle: SQLinFormFXpro_5.1.25">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/oracle/ojdbc7.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/SQLinForm/SQLinFormFXpro_5.1.25.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library" scope="RUNTIME">
+    <orderEntry type="module-library" scope="TEST">
       <library name="Gradle: sqljdbc42">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/mssql/sqljdbc42.jar!/" />
@@ -269,72 +300,41 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" scope="TEST" name="Gradle: org.spockframework:spock-core:1.1-groovy-2.4" level="project" />
-    <orderEntry type="module-library" scope="PROVIDED">
-      <library name="Gradle: SQLinFormFXpro_5.1.46">
+    <orderEntry type="module-library" scope="TEST">
+      <library name="Gradle: ojdbc7">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/SQLinForm/SQLinFormFXpro_5.1.46.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: mysql-connector-java-5.1.44-bin">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/mysql/mysql-connector-java-5.1.44-bin.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library name="Gradle: SQLinFormFXpro_5.1.46">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/SQLinForm/SQLinFormFXpro_5.1.46.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/oracle/ojdbc7.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library" scope="TEST">
-      <library name="Gradle: SQLinFormFXpro_5.1.46">
+      <library name="Gradle: postgresql-9.4.1212">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/SQLinForm/SQLinFormFXpro_5.1.46.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/postgresql/postgresql-9.4.1212.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library" scope="TEST">
-      <library name="Gradle: mysql-connector-java-5.1.44-bin">
+      <library name="Gradle: sas.core">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/mysql/mysql-connector-java-5.1.44-bin.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/sas/sas.core.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.antlr:antlr4:4.7.1" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.antlr:antlr4-runtime:4.7.1" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.antlr:ST4:4.0.8" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.antlr:antlr-runtime:3.5.2" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.abego.treelayout:org.abego.treelayout.core:1.0.3" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.glassfish:javax.json:1.0.4" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.ibm.icu:icu4j:58.2" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.antlr:antlr4:4.7.1" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.antlr:antlr4-runtime:4.7.1" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.antlr:ST4:4.0.8" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.antlr:antlr-runtime:3.5.2" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.abego.treelayout:org.abego.treelayout.core:1.0.3" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.glassfish:javax.json:1.0.4" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.ibm.icu:icu4j:58.2" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.antlr:antlr4:4.7.1" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.antlr:antlr4-runtime:4.7.1" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.antlr:ST4:4.0.8" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.antlr:antlr-runtime:3.5.2" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.abego.treelayout:org.abego.treelayout.core:1.0.3" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.glassfish:javax.json:1.0.4" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: com.ibm.icu:icu4j:58.2" level="project" />
+    <orderEntry type="module-library" scope="TEST">
+      <library name="Gradle: sas.intrnet.javatools">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../lib/jdbc-driver/sas/sas.intrnet.javatools.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

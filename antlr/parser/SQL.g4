@@ -19,7 +19,7 @@ WS : (' '|'\t'|'\r'|'\n');	// The space between the quotes is intentional
 //SINGLE_LINE_COMMENT : '--' ~[\r\n]* -> channel(HIDDEN);
 //MULTILINE_COMMENT : '/*' .*? ( '*/' | EOF ) -> channel(HIDDEN);
 
-// But do not use ANTLR v3 anymore - it will complain and the complains are not silencable by using "options {backtrack=true;}".
+// Do not use ANTLR v3 anymore - it will complain and the complains are not silencable by using "options {backtrack=true;}".
 
 // For Case-Insensitive Lexing:
 // 		https://github.com/antlr/antlr4/blob/master/doc/case-insensitive-lexing.md
@@ -39,7 +39,9 @@ corr : CORR LBR payload COMMA payload RBR;
 
 // Using/On clause is not used in cross join -> it is optional
 // Permit both, full outer join and outer join
-from : FROM  WS* (bracket|table) WS* alias? (WS* TEXT* WS* TEXT* WS* JOIN WS* (bracket|table) WS* alias? WS* (using|on)?)*;
+// Permit implicit cross join join (tables separated by commas)
+// We intentionally do not permit: "tableName as alias" as it is not supported in all databases
+from : FROM  WS* (bracket|table) WS* alias? (WS* (TEXT* WS* TEXT* WS* JOIN|COMMA) WS* (bracket|table) WS* alias? WS* (using|on)?)*;
 
 table : TEXT;
 

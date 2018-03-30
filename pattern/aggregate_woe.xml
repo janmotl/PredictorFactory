@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<pattern>
+	<name>Aggregate WOE</name>
+	<description>
+		Weight of evidence for 1:n relationship between the label and the attribute.
+
+		In both WoEs (1:1 and 1:n), we perform subject-level leave-one-out (LOO). And the subject is defined by target_id.
+		Consequently, in 1:1 we LOO individual rows. While in 1:n we LOO sets (calculated with count_i_subject).
+		Maybe we should call it leave-subject-out instead of leave-one-out.
+
+		Average(WoE) works empirically better than sum(WoE) and naive Bayes.
+	</description>
+	<example>
+		Average logarithmic odds that a customer is a female based ON ids of purchased products.
+	</example>
+	<author>Jan Motl</author>
+	<date>2015-03-08</date>
+	<code>WITH count_all as (
+				SELECT cast(sum(case when @baseTarget  = '@targetValue' then 1 else 0 end)+2 as float) as pos_all
+				     , cast(sum(case when @baseTarget &lt;&gt; '@targetValue' then 1 else 0 end)+2 as float) as neg_all
+				FROM @propagatedTable
+			),
+			count_i as (
+				SELECT @nominalColumn
+					, (sum(case when @baseTarget  = '@targetValue' then 1 else 0 end)+1) as pos_i
+					, (sum(case when @baseTarget &lt;&gt; '@targetValue' then 1 else 0 end)+1) as neg_i
+				FROM @propagatedTable
+				GROUP BY @nominalColumn
+			),
+			count_i_subject as (
+				SELECT @baseId
+					, @nominalColumn
+					, sum(case when @baseTarget = '@targetValue' then 1 else 0 end) as pos_subject
+					, sum(case when @baseTarget &lt;&gt; '@targetValue' then 1 else 0 end) as neg_subject
+				FROM @propagatedTable
+				GROUP BY @baseId, @nominalColumn
+			)
+			SELECT t1.@base
+				, avg(100 * {fn log( ((pos_i-pos_subject)/pos_all) / ((neg_i-neg_subject)/neg_all) )}) as @columnName
+			FROM count_all, @propagatedTable as t1
+			JOIN count_i
+			ON t1.@nominalColumn = count_i.@nominalColumn
+			JOIN count_i_subject
+			ON t1.@baseId = count_i_subject.@baseId AND t1.@nominalColumn = count_i_subject.@nominalColumn
+			GROUP BY t1.@base
+	</code>
+	<cardinality>n</cardinality>
+</pattern>

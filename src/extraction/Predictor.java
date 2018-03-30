@@ -122,6 +122,7 @@ public class Predictor implements Comparable<Predictor> {
         dataTypeCategory = other.dataTypeCategory;
         dataType = other.dataType;
         dataTypeName = other.dataTypeName;
+		targetColumn = other.targetColumn;
 	}
 
 	// Get column name.

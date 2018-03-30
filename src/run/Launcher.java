@@ -26,7 +26,7 @@ public class Launcher {
 
 		// Connect to the following server and database:
 		String connectionProperty = "PostgreSQL";   // Host identification as specified in resources/connection.xml
-		String databaseProperty = "financial";       // Dataset identification as specified in resources/database.xml
+		String databaseProperty = "financial_scoring";       // Dataset identification as specified in resources/database.xml
 
 		// Read command line parameters iff they are present (and overwrite the defaults).
 		if (arg.length == 1 || arg.length > 2) {

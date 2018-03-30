@@ -97,27 +97,11 @@
 		constant. And that is what do we need.
 
 		Conclusion: use LOO.
-
-		Implementation details: the prior counts can be obtained with @targetValueCount. That way we can avoid repeated
-		calculation of the prior. But for clarity, we do not do that. Similarly, the outer-most wrapping in the subquery
-		is only for clarity.
-
-
-		Note that WoE still ignores confidence of the estimates. For example, if we have 2 positive samples and
-		5 negative samples, we get the same WoE as if we had 2000 positive samples and 5000 negative samples.
-		Intuitively, the second scenario should result into a value further from zero. Nevertheless, this problem is
-		partially solved with leave-one-out: with small sample size, the variance of the estimate is higher.
-
-
-		Target value is always treated as a string because databases automatically cast numbers to strings, if necessary.
-		But databases do not automatically cast strings to numbers. Hence, treating the target value as a string works
-		for both, numerical and string targets.
 	</description>
 	<note>
 		Note: We use {fn log(x) } because Oracle 11g EX expects presence of the base in the logarithm.
 		Hence we can't universally use it.
 		Another story is ln(x), which is supported by Oracle and MySQL but not by MSSQL. In MSSQL it is log(x).
-
 
 		Note: LOO works at row level -> if we have records about the same person over time, the label from the past
 		is going to leak into the predictor. While it would be MUCH nicer to have a dedicated pattern that would look
@@ -125,7 +109,26 @@
 
 		NOTE: WORKS ONLY ON BINARY TARGETS! -> produce a column for each target class
 
-		NOTE: Is expected to fail on regression tasks.
+		Note: Is expected to fail on regression tasks.
+
+		Note: The prior counts can be obtained with @targetValueCount. That way we can avoid repeated
+		calculation of the prior. But for clarity, we do not do that. Similarly, the outer-most wrapping in the subquery
+		is only for clarity.
+
+		Note: WoE ignores confidence of the estimates. For example, if we have 2 positive samples and
+		5 negative samples, we get the same WoE as if we had 2000 positive samples and 5000 negative samples.
+		Intuitively, the second scenario should result into a value further from zero. Nevertheless, this problem is
+		partially solved with leave-one-out: with small sample size, the variance of the estimate is higher.
+
+		Note: Target value is always treated as a string because databases automatically cast numbers to strings, if necessary.
+		But databases do not automatically cast strings to numbers. Hence, treating the target value as a string works
+		for both, numerical and string targets.
+
+		Note: Nesting:
+			getWoE(getLOO(getAllCounts(getTotal())))
+
+		Note: We want to avoid integer divisions. But logarithm on decimal data type is slow. Hence, we cast the counts
+		to floats.
 	</note>
 	<author>Jan Motl</author>
 	<date>2016-06-17</date>
@@ -134,8 +137,8 @@
 				FROM (
 					SELECT t1.@base
 						, t1.@nominalColumn
-						, pos_i - (case when @baseTarget  = '@targetValue' then 1.0 else 0 end) as pos_i_loo
-						, neg_i - (case when @baseTarget &lt;&gt; '@targetValue' then 1.0 else 0 end) as neg_i_loo
+						, pos_i - (case when @baseTarget = '@targetValue' then 1 else 0 end) as pos_i_loo
+						, neg_i - (case when @baseTarget &lt;&gt; '@targetValue' then 1 else 0 end) as neg_i_loo
 						, pos_all
 						, neg_all
 					FROM @propagatedTable t1
@@ -143,12 +146,12 @@
 						SELECT @nominalColumn
 							, pos_all
 							, neg_all
-							, (sum(case when @baseTarget  = '@targetValue' then 1.0 else 0 end)+1) as pos_i
-							, (sum(case when @baseTarget &lt;&gt; '@targetValue' then 1.0 else 0 end)+1) as neg_i
+							, cast(sum(case when @baseTarget  = '@targetValue' then 1 else 0 end)+1 as float) as pos_i
+							, cast(sum(case when @baseTarget &lt;&gt; '@targetValue' then 1 else 0 end)+1 as float) as neg_i
 						FROM @propagatedTable
 							, (
-								SELECT sum(case when @baseTarget ='@targetValue' then 1.0 else 0 end)+2 as pos_all
-									, sum(case when @baseTarget &lt;&gt; '@targetValue' then 1.0 else 0 end)+2 as neg_all
+								SELECT sum(case when @baseTarget ='@targetValue' then 1 else 0 end)+2 as pos_all
+									, sum(case when @baseTarget &lt;&gt; '@targetValue' then 1 else 0 end)+2 as neg_all
 								FROM @propagatedTable
 							) total
 						GROUP BY @nominalColumn, pos_all, neg_all

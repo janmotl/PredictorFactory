@@ -97,6 +97,16 @@ public class ANTLRTest {
 	}
 
 	@Test
+	public void implicitCrossJoin() {
+		String sql = "select * FROM table1 t1, table2 t2 JOIN table3 ON t1.col = table3.col";
+		String actual = ANTLR.parseSQL(setting, sql);
+		String expected = "select * FROM table1 t1, table2 t2 JOIN table3 ON t1.col = table3.col";
+		Assert.assertEquals(expected, actual);
+	}
+
+
+
+	@Test
 	public void fullOuterJoin() {
 		String sql = "select * from table1 full outer join table2"; // We test that multiple texts can be in front of join
 		String actual = ANTLR.parseSQL(setting, sql);
