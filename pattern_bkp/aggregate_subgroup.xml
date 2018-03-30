@@ -13,7 +13,7 @@
 			  a single value gives null).
 			- When the @value doesn't appear in the propagated table. This can happen because unique
 			  values are collected from the unpropagated tables. And same records may not make it into the propagated
-			  tables because of time constrains or missing links (e.g. a person may not be propagated into table job,
+			  tables because of time constraints or missing links (e.g. a person may not be propagated into table job,
 			  if the person is jobless). A remedy for this problem would be to collect unique values on the propagated
 			  tables. But then we could be forced to do much more work than before (e.g. if there are loops in the
 			  schema, the same table can be propagated several times).

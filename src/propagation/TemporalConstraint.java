@@ -27,14 +27,14 @@ public class TemporalConstraint {
 
 		// 2) If there isn't any candidate, stop. Unfortunately, dates stored as a String or a number are ignored.
 		if (table.getColumns(setting, StatisticalType.TEMPORAL).isEmpty()) {
-			table.temporalConstraintJustification = "No candidate for a time constrain. Are the temporal attributes stored as timestamp/datetime/date or time?";
+			table.temporalConstraintJustification = "No candidate for a time constraint. Are the temporal attributes stored as timestamp/datetime/date or time?";
 			return table;
 		}
 
 		// 3) If idColumn (a set of columns used in this table in the propagation foreign key constraint) is distinct
 		// in the table, it is unnecessary to set time condition.
 		// For example, in Customer table, which contains only static information, like Birth_date,
-		// it is not necessary to set the time constrain.
+		// it is not necessary to set the time constraint.
 		// On the other end, if idColumn is not unique, the table is likely versioned and we likely should use a
 		// temporal constraint.
 		// NOTE: Speed up proposal: If the id is a primary key, I know the relationship between the target table and
@@ -88,8 +88,8 @@ public class TemporalConstraint {
 			return table;
 		}
 
-		// 7) Get an optimistic estimate of count of tuples that fulfill the time constrain (null values are not a match).
-		// If the count of dates that fulfil the time constrain is 0, end here.
+		// 7) Get an optimistic estimate of count of tuples that fulfill the time constraint (null values are not a match).
+		// If the count of dates that fulfil the time constraint is 0, end here.
 		NavigableMap<Integer, String> treeMap = new TreeMap<>();
 
 		for (Column column : candidateSet) {

@@ -110,11 +110,11 @@ public class Propagation {
 					table.rowCount = setting.dialect.getRowCount(setting, setting.outputSchema, table.name);
 					logger.debug("Table \"" + table.originalName + "\" with \"" + table.temporalConstraint + "\" time constraint has " + table.rowCount + " rows.");
 
-					// If the produced table has 0 rows and time constrain was used, repeat without any time constraint.
+					// If the produced table has 0 rows and time constraint was used, repeat without any time constraint.
 					if (table.rowCount == 0 && table.temporalConstraint != null) {
 						setting.dialect.dropTable(setting, table.name);
 						table.temporalConstraint = null;
-						table.temporalConstraintJustification = "The attempt to use time constrain failed - no row satisfies the time frame defined in the initial setting of Predictor Factory.";
+						table.temporalConstraintJustification = "The attempt to use time constraint failed - no row satisfies the time frame defined in the initial setting of Predictor Factory.";
 
 						// Make a new table
 						table.sql = setting.dialect.propagateID(setting, table);

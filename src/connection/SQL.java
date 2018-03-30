@@ -336,7 +336,7 @@ public class SQL {
 			if (table.equals(setting.journalPattern)) dropMap.put(6 + table, table);        // Journal patterns
 			if (table.equals(setting.journalPredictor)) dropMap.put(7 + table, table);      // Journal table
 			if (table.equals(setting.journalTable)) dropMap.put(8 + table, table);          // Journal propagated table
-			if (table.equals(setting.journalTemporal)) dropMap.put(9 + table, table);       // Journal temporal constrains
+			if (table.equals(setting.journalTemporal)) dropMap.put(9 + table, table);       // Journal temporal constraints
 		}
 
 		// Drop the tables
@@ -578,7 +578,7 @@ public class SQL {
 
 
 	// Get the maximal cardinality of the table in respect to targetId. If the cardinality is 1:1,
-	// we may want to remove the bottom time constrain in base propagation.
+	// we may want to remove the bottom time constraint in base propagation.
 	// Note that we are working with the input tables -> alter commands are forbidden.
 	// IS NOT USING SYSTEM ESCAPING
 	// Overwritten in SQLOracle.
@@ -1453,7 +1453,7 @@ public class SQL {
 				"propagation_table_name " + setting.typeVarchar + "(255), " +
 				"propagation_path " + setting.typeVarchar + "(1024), " +
 				"propagation_depth " + setting.typeInteger + ", " +
-				"date_constrain " + setting.typeVarchar + "(255), " +
+				"date_constraint " + setting.typeVarchar + "(255), " +
 				"parameter_list " + setting.typeVarchar + "(1024), " +
 				"pattern_name " + setting.typeVarchar + "(255), " +
 				"pattern_author " + setting.typeVarchar + "(255), " +

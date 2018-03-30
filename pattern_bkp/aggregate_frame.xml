@@ -17,7 +17,7 @@
 
 		Note: Comparison of "timestamp with time zone" to "time without time zone" will fail.
 
-		NOTE: THERE SHOULD BE A SPECIAL NAME FOR @propagationTimeColumn (dateConstrain) - the time column used for time constrain during
+		NOTE: THERE SHOULD BE A SPECIAL NAME FOR @propagationTimeColumn (dateConstrain) - the time column used for time constraint during
 		base propagation.
 
 		DEVELOPMENT:

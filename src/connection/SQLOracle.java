@@ -49,7 +49,7 @@ public final class SQLOracle extends SQL {
 	}
 
 	// Get the maximal cardinality of the table in respect to targetId. If the cardinality is 1:1,
-	// we may want to remove the bottom time constrain in base propagation.
+	// we may want to remove the bottom time constraint in base propagation.
 	// Note that we are working with the input tables -> alter commands are forbidden.
 	// Each derived column in Teradata must have an implicit name.
 	public boolean isIdUnique(Setting setting, OutputTable table) {

@@ -59,7 +59,7 @@ public class ColumnTest {
 		Network.openConnection(setting);
 		Schema schema = new Schema(setting, setting.targetSchema);
 
-		assertTrue(schema.getTable("Address").getColumn("AddressID").isUnique);  // PK constrain
+		assertTrue(schema.getTable("Address").getColumn("AddressID").isUnique);  // PK constraint
 		assertTrue(schema.getTable("Address").getColumn("rowguid").isUnique);    // Unique constrained
 		assertFalse(schema.getTable("Address").getColumn("City").isUnique);
 

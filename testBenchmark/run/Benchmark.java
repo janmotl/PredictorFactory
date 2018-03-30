@@ -53,7 +53,7 @@ public class Benchmark {
 ////				"imdb_MovieLens",	// Time consuming (24 minutes)
 //				"KRK",
 ////				"legalActs",	// 20 minutes. Out of memory during modeling.
-////				"Mondial",		// Works, although uses combined constrains
+////				"Mondial",		// Works, although uses combined constraints
 //				"Mondial_geo",
 //				"MuskLarge",
 //				"MuskSmall",
@@ -88,7 +88,7 @@ public class Benchmark {
 //				"Carcinogenesis",	// On MariaDB (FK violations)
 				"cs",
 				"imdb_MovieLens",	// Time consuming (24 minutes)
-				"Mondial",		// Works, although uses combined constrains
+				"Mondial",		// Works, although uses combined constraints
 				"Mondial_geo",
 				"NCAA",		// Time consuming (10 minutes)
 				"PremierLeague", // 5 minutes

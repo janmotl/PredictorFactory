@@ -455,7 +455,7 @@ public class Meta {
 	public static List<ForeignConstraint> getTableForeignConstraints(List<ForeignConstraint> foreignConstraints, String tableName) {
 		List<ForeignConstraint> result = new ArrayList<>();
 
-		// Select the appropriate foreign constrains
+		// Select the appropriate foreign constraints
 		for (ForeignConstraint foreignConstraint : foreignConstraints) {
 			if (foreignConstraint.table.equals(tableName)) {
 				result.add(foreignConstraint);

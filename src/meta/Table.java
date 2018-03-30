@@ -207,7 +207,7 @@ public class Table {
 
 	// Identify ids based on foreign key constraints
 	public void identifyId() {
-		// Add ids present in FK constrains
+		// Add ids present in FK constraints
 		for (ForeignConstraint relation : foreignConstraintList) {
 			for (String idColumnName : relation.column) {
 				if (columnMap.containsKey(idColumnName)) {

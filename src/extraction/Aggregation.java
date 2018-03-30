@@ -529,7 +529,7 @@ public class Aggregation {
 		// If the execution failed, stop.
 		if (!predictor.isOk()) return;
 
-		// Add Primary Key constrain.
+		// Add Primary Key constraint.
 		// This is not because of speeding things up (indeed it has a negative impact on total runtime because only
 		// a small proportion of the predictors gets into MainSample) but because it validates uniqueness of the tuples.
 		// Azure and Teradata require not-null constraint -> skip it for MSSQL and Teradata.
@@ -592,7 +592,7 @@ public class Aggregation {
 		// If the execution failed, stop.
 		if (!predictor.isOk()) return;
 
-		// Add Primary Key constrain.
+		// Add Primary Key constraint.
 		// This is not because of speeding things up (indeed it has a negative impact on total runtime because only
 		// a small proportion of the predictors gets into MainSample) but because it validates uniqueness of the tuples.
 		// Azure and Teradata require not-null constraint -> skip it for MSSQL and Teradata.

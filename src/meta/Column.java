@@ -92,7 +92,7 @@ public class Column implements Comparable<Column> {
 			if (isNullable) {
 				containsNull = setting.dialect.containsNull(setting, schemaName, tableName, name);
 			} else {
-				containsNull = false;   // We trust the database that it enforces the constrains. In Netezza, we trust the architect...
+				containsNull = false;   // We trust the database that it enforces the constraints. In Netezza, we trust the architect...
 			}
 		}
 		return containsNull;

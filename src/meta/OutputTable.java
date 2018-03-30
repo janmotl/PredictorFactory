@@ -10,7 +10,7 @@ import java.util.List;
 @XmlType(name = "outputTable")
 public class OutputTable extends Table {
 	public String originalName;                     // The table name before propagation.
-	public String temporalConstraint;               // Column used for time constrain during table propagation (in the last table).
+	public String temporalConstraint;               // Column used for time constraint during table propagation (in the last table).
 	public String temporalConstraintJustification;  // Textual justification behind the selection of temporalConstraint.
 	public Integer temporalConstraintRowCountOptimistic; // An optimistic estimate of propagated rows.
 	public String sql;                      // SQL code used for creation of the propagated.
