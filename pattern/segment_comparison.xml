@@ -7,17 +7,14 @@
 		Useful to be used in composition with pattern parent field or parent from hierarchical lookup.
 		
 		select Key
-		  , Ratio(Field, Y)
+		     , Ratio(Field, Y)
 		from Table t
-		  left join (select Segmentor, Y = Statistic(Field)
-		      from Table
-		      where Filter
-		      group by Segmentor) s 
-		    on t.Segmentor=s.Segmentor	
-		    
-		Warning: Data leakage happens as all @baseId are used to calculate the average while only training
-		samples should be used. If you have a lot of samples, balanced classes and no outliers the practical
-		effect of data leakage should be minimal. But beware of extreme scenarios!
+		left join (
+			select Segmentor, Y = Statistic(Field)
+			from Table
+			where Filter
+			group by Segmentor) s
+		on t.Segmentor=s.Segmentor
 
 		This pattern is producing great predictors with reasonable speed.
 	</description>
@@ -25,6 +22,15 @@
 		Note: If the @numericalColumn is an integer, it may happen that @numericalColumn=@nominalColumn (as
 		predictor factory treats integers once as numerical and once as nominal).
 		In that case the pattern intentionally fails.
+
+		Note: We have to be careful about data leakage. While averages can be calculated based on all the data,
+		only training samples should be used. We partially deal with this issue by using LOO. Now, if the nominal
+		attribute is an ID, the predictors will at least have zero Chi2.
+
+		Note: To avoid integer division and subsequent possibility of division by zero, we cast the nominator to float.
+
+		Note: This pattern is similar to WoE. The difference is that we do not compare a nominal attribute to label, but
+		a numerical attribute to some nominal attribute.
 	</note>
 	<example>
 		Subject's position relative to industry average.
@@ -35,13 +41,14 @@
 	<date>2014-12-31</date>
 	<code>SELECT @base
 			, CASE 
-				WHEN Y IS NULL THEN NULL 
-				WHEN Y=0 THEN -9999 
-				ELSE @numericalColumn/Y 
+				WHEN suma IS NULL THEN NULL
+				WHEN (cnt-1) = 0 THEN NULL
+				WHEN (suma-@numericalColumn) = 0 THEN NULL
+				ELSE @numericalColumn/(cast(suma-@numericalColumn as float)/(cnt-1))
 			  END AS @columnName
 	      FROM @propagatedTable a 
 	      LEFT JOIN (
-	      	SELECT @nominalColumn, avg(@numericalColumn) AS Y 
+	      	SELECT @nominalColumn, sum(@numericalColumn) AS suma, count(@nominalColumn) as cnt
 	      	FROM @propagatedTable 
 	      	GROUP BY @nominalColumn) b 
 	      ON a.@nominalColumn = b.@nominalColumn

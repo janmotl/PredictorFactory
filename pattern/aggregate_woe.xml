@@ -9,7 +9,7 @@
 		Consequently, in 1:1 we LOO individual rows. While in 1:n we LOO sets (calculated with count_i_subject).
 		Maybe we should call it leave-subject-out instead of leave-one-out.
 
-		Average(WoE) works empirically better than sum(WoE) and naive Bayes.
+		Average(WoE) works empirically better than naive Bayes and significantly better than sum(WoE).
 	</description>
 	<example>
 		Average logarithmic odds that a customer is a female based ON ids of purchased products.

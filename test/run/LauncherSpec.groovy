@@ -152,7 +152,6 @@ class LauncherSpec extends Specification {
         database << ["mutagenesis_test_setting_leaks"]
     }
 
-
     def "PostgreSQL leaking patterns financial"() {
         String[] arguments = ["PostgreSQL", database];
 
@@ -177,6 +176,30 @@ class LauncherSpec extends Specification {
 
         where:
         database << ["financial_test_setting_leaks"]
+    }
+
+    def "PostgreSQL leaking patterns honeypot"() {
+        String[] arguments = ["PostgreSQL", database];
+
+        when: "we start Predictor Factory"
+        Launcher.main(arguments);
+
+        then: "we expect a table with the features"
+        Setting setting = new Setting("PostgreSQL", database);
+
+        String sql = "select count(*) as cnt from journal_predictor where relevance_label > 2 and column_list not like '%label%'"
+        Network.openConnection(setting);
+        def connection = new Sql(setting.dataSource);
+        def tuple = connection.firstRow(sql);
+        tuple.getProperty("cnt") == 0;
+        Network.closeConnection(setting);
+
+        CountAppender.getCount(Level.INFO) > 0;     // We have to make sure the CountAppender is working
+        CountAppender.getCount(Level.WARN) == 0;
+        CountAppender.getCount(Level.ERROR) == 0;
+
+        where:
+        database << ["ctu_honeypot_test_setting"]
     }
 
 
