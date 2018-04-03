@@ -46,7 +46,7 @@ Description of the fields:
 			urlPrefix="jdbc:hive2://"
 			dbNameSeparator="/"
 			supportsCatalogs="false"
-			supportsSchemas="false"
+			supportsSchemas="true"
 			dateAddSyntax="(@baseDate + INTERVAL '@amount @datePart')"
 			dateAddMonth="add_months(@baseDate, @amount)"
 			dateDiffSyntax="datediff(@dateTo - @dateFrom)"

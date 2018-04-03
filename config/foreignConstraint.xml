@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <foreignConstraints>
     <foreignConstraint>
+        <schema>financial</schema>
         <table>loan</table>
+        <fSchema>financial</fSchema>
         <fTable>account</fTable>
         <column>account_id</column>
         <fColumn>account_id</fColumn>
-        <schema>financial</schema>
-        <fSchema>financial</fSchema>
     </foreignConstraint>
 </foreignConstraints>
