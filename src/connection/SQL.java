@@ -748,6 +748,7 @@ public class SQL {
 				"GROUP BY @column " +
 				"ORDER BY 2 DESC";
 
+		// In hive, there are no default numbered aliases
 		if(setting.driverClass.equalsIgnoreCase("org.apache.hive.jdbc.HiveDriver")) {
 			sql = "SELECT @column, count(*) AS c " +
 					"FROM @schema.@table " +
