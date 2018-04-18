@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 
 <pattern>
-	<name>WOE</name>
+	<name>WOE mod</name>
 	<description>Weight of evidence with leave-one-out.
 
 		WoE = 100 * ln( (#positive_i / #positive) / (#negative_i / #negative) )
@@ -47,7 +47,9 @@
 			See: http://papers.ssrn.com/sol3/papers.cfm?abstract_id=1918410
 
 		We have also tested m-estimate, which does not assume uniform distribution of the label, like Laplace correction.
-		But empirically it performed worse on the testing set than Laplace correction.
+		But empirically it performed worse on the testing set than Laplace correction. This observation is consistent
+		with the results reported in the literature:
+			Optimal Response Modeling: Comparison of Logistic Regression, Random Forest and I* algorithm
 
 		3) Multi-class WoE: http://dspace.library.uu.nl/bitstream/handle/1874/11641/c4.pdf
 
@@ -124,6 +126,10 @@
 		But databases do not automatically cast strings to numbers. Hence, treating the target value as a string works
 		for both, numerical and string targets.
 
+		References:
+			https://business.okstate.edu/site-files/docs/analytics/014-2013.pdf
+			i.giwebb.com/wp-content/papercite-data/pdf/ZhengWebb05.pdf
+
 		Note: Nesting:
 			getWoE(getLOO(getAllCounts(getTotal())))
 
@@ -150,9 +156,13 @@
 							, cast(sum(case when @baseTarget &lt;&gt; '@targetValue' then 1 else 0 end)+1 as float) as neg_i
 						FROM @propagatedTable
 							, (
-								SELECT sum(case when @baseTarget ='@targetValue' then 1 else 0 end)+2 as pos_all
-									, sum(case when @baseTarget &lt;&gt; '@targetValue' then 1 else 0 end)+2 as neg_all
+								SELECT sum(case when @baseTarget ='@targetValue' then 1 else 0 end)+max(cnt) as pos_all
+									, sum(case when @baseTarget &lt;&gt; '@targetValue' then 1 else 0 end)+max(cnt) as neg_all
 								FROM @propagatedTable
+								, (
+									SELECT count(distinct @nominalColumn) as cnt
+									FROM @propagatedTable
+								) distinct_cnt
 							) total
 						GROUP BY @nominalColumn, pos_all, neg_all
 					) raw
