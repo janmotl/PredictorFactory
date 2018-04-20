@@ -19,6 +19,7 @@ How to edit the source code
 4.	Import the project from Git: ```https://github.com/janmotl/PredictorFactory.git```.
 5.	Run the command line interface from: ```src/run/Launcher.java```.
 6.  Or run the graphical user interface from: ```gui/controller/MainApp.java```.
+7.  Deploy with Gradle: other>zip. 
 
 ##### How to compile ANTLR 4 in Idea 
 1. Install ANTLR 4 plugin for IntelliJ IDEA.
