@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<connections>
+    <connection name="Derby" driver="Derby" host="localhost" port="1527" database="PredictorFactory" username="" password=""/>
+    <connection name="MariaDB" description="Read-only access to all databases plus full access to predictor_factory database" driver="MySQL" host="relational.fit.cvut.cz" port="3306" database="predictor_factory" username="guest" password="relational"/>
+    <connection name="MariaDB_profiler" driver="MySQL" host="localhost" port="4040" database="predictor_factory" username="guest" password="relational"/>
+    <connection name="MonetDB" driver="MonetDB" host="localhost" port="50000" database="PredictorFactory" username="monetdb" password="monetdb"/>
+    <connection name="MSSQL" driver="Microsoft SQL Server" host="localhost" port="1433" database="PredictorFactory" username="sa" password=""/>
+    <connection name="MySQL" driver="MySQL" host="localhost" port="3306" database="usetreno" username="root" password=""/>
+    <connection name="Oracle" driver="Oracle" host="localhost" port="1521" database="XE" username="SYSTEM" password=""/>
+    <connection name="PostgreSQL" driver="PostgreSQL" host="localhost" port="5432" database="PredictorFactory" username="jan" password=""/>
+    <connection name="PostgreSQL_pgjdbc-ng" driver="PostgreSQL_pgjdbc-ng" host="localhost" port="5432" database="PredictorFactory" username="jan" password=""/>
+    <connection name="SAS" driver="SAS" host="localhost" port="5010" database="" username="" password=""/>
+    <connection name="Teradata" driver="Teradata" host="192.168.225.128/dbc" port="1025" database="" username="dbc" password="dbc"/>
+    <connection name="GUI" driver="MySQL" host="relational.fit.cvut.cz" port="3306" database="mutagenesis" username="guest" password="relational"/>
+</connections>
